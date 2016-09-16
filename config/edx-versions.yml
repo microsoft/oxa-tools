@@ -1,0 +1,8 @@
+---
+edx_platform_version: "named-release/dogwood.rc"
+edx_ansible_source_repo: "https://github.com/Microsoft/edx-configuration.git"
+configuration_version: "lex/scalable-dogwood"
+certs_version: "named-release/dogwood.rc"
+forum_version: "named-release/dogwood.rc"
+xqueue_version: "named-release/dogwood.rc"
+COMMON_SSH_PASSWORD_AUTH: "yes"
