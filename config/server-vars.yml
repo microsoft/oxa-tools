@@ -53,12 +53,3 @@ EDXAPP_EMAIL_HOST: "openedx-mysql"
 
 # Default log levels: DEBUG, INFO, WARNING, ERROR, CRITICAL
 #EDXAPP_LOG_LEVEL: 'INFO'
-
-# Database configuration for scalable ARM template
-ORA_MYSQL_HOST: "openedx-mysql"
-XQUEUE_MYSQL_HOST: "openedx-mysql"
-EDXAPP_MYSQL_HOST: "openedx-mysql"
-EDXAPP_MEMCACHE: ["openedx-mysql:11211"]
-MONGO_BIND_IP: "0.0.0.0"
-FORUM_MONGO_HOSTS: ["openedx-mongo"]
-EDXAPP_MONGO_HOSTS: ["openedx-mongo"]
