@@ -27,7 +27,7 @@ setup() {
 }
 
 ANSIBLE_ARGS="-i locahost, -c local -e @$OXA_TOOLS_PATH/config/server-vars.yml -e @$OXA_TOOLS_PATH/config/edx-versions.yml"
-ANSIBLE_ARGS_SCALABLE="$ANSIBLE_ARGS -e @$OXA_TOOLS_PATH/config/scalable-server-vars.yml"
+ANSIBLE_ARGS_SCALABLE="$ANSIBLE_ARGS -e @$OXA_TOOLS_PATH/config/scalable.yml"
 case "$EDX_ROLE" in
   mongo)
     setup
@@ -48,7 +48,7 @@ case "$EDX_ROLE" in
     ;;
   fullstack)
     setup
-    sudo ansible-playbook -i locahost, -c local vagrant-fullstack.yml $ANSIBLE_ARGS
+    sudo ansible-playbook vagrant-fullstack.yml $ANSIBLE_ARGS
     ;;
   *)
     echo "Usage: $0 [mongo|mysql|edxapp|fullstack]"
