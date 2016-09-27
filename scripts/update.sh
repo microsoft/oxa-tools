@@ -28,6 +28,7 @@ setup() {
 
 ANSIBLE_ARGS="-i locahost, -c local -e @$OXA_TOOLS_PATH/config/server-vars.yml -e @$OXA_TOOLS_PATH/config/edx-versions.yml"
 ANSIBLE_ARGS_SCALABLE="$ANSIBLE_ARGS -e @$OXA_TOOLS_PATH/config/scalable.yml"
+ANSIBLE_ARGS_OXA_CONFIG="-i localhost, -c local -e scriptsdir=$OXA_TOOLS_PATH/scripts"
 case "$EDX_ROLE" in
   mongo)
     setup
@@ -38,6 +39,7 @@ case "$EDX_ROLE" in
     sudo ansible-playbook edx_mysql.yml $ANSIBLE_ARGS_SCALABLE
     # minimize tags? "install:base,install:system-requirements,install:configuration,install:app-requirements,install:code"
     sudo ansible-playbook edx_sandbox.yml $ANSIBLE_ARGS_SCALABLE -e "migrate_db=yes" --tags "edxapp-sandbox,install,migrate"
+    sudo ansible-playbook $OXA_TOOLS_PATH/playbooks/oxa_configuration.yml $ANSIBLE_ARGS_OXA_CONFIG
     ;;
   edxapp)
     setup
@@ -49,6 +51,7 @@ case "$EDX_ROLE" in
   fullstack)
     setup
     sudo ansible-playbook vagrant-fullstack.yml $ANSIBLE_ARGS
+    sudo ansible-playbook $OXA_TOOLS_PATH/playbooks/oxa_configuration.yml $ANSIBLE_ARGS_OXA_CONFIG
     ;;
   *)
     echo "Usage: $0 [mongo|mysql|edxapp|fullstack]"
