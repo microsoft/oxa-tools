@@ -10,7 +10,7 @@ OXA_PATH=/oxa/oxa-tools
 OXA_LOG_PATH=/var/log/oxa
 
 if [[ ! -d /oxa ]]; then
-  mkdir -p $OXA_LOG_PATH
+  mkdir -p $OXA_PATH
   mkdir -p $OXA_LOG_PATH
   git clone $OXA_REPO $OXA_PATH
 fi
