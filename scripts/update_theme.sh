@@ -19,7 +19,7 @@ fi
 cd $THEME_PATH
 git clone -b pilot $THEME_REPO default
 
-chown -R edxapp:edxapp $THEME_REPO
+sudo chown -R edxapp:edxapp $THEME_REPO
 sudo su edxapp -s /bin/bash
 source /edx/app/edxapp/edxapp_env
 cd /edx/app/edxapp/edx-platform/
