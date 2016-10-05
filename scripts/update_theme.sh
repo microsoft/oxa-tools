@@ -3,7 +3,7 @@
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 set -x
 
-sudo cp ../config/server-vars.yml /edx/app/edx_ansible/
+sudo cp server-vars.yml /edx/app/edx_ansible/
 sudo chown edx-ansible:edx-ansible /edx/app/edx_ansible/server-vars.yml
 
 cd /tmp/configuration/playbooks
