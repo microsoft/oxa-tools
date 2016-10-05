@@ -23,6 +23,8 @@ EDXAPP_PREVIEW_LMS_BASE: "{{ EDXAPP_LMS_BASE }}"
 #EDXAPP_ENABLE_THIRD_PARY_AUTH: true
 #EDXAPP_ENABLE_OAUTH2_PROVIDER: true
 
+edxapp_theme_name: 'default'
+
 # Configure Open edX features
 # see: http://edx.readthedocs.org/projects/edx-installing-configuring-and-running/en/latest/feature_flags/feature_flag_index.html
 EDXAPP_FEATURES:
@@ -35,7 +37,6 @@ EDXAPP_FEATURES:
   DISABLE_COURSE_CREATION: true
   USE_CUSTOM_THEME: true
 
-EDXAPP_THEME_NAME: "default"
 # Configure remote SMTP server
 #EDXAPP_EMAIL_HOST_USER: "username"
 #EDXAPP_EMAIL_HOST_PASSWORD: "password"
