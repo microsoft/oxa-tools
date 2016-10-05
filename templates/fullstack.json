@@ -6,7 +6,7 @@
   "variables": {
     "vmName": "jumpbox2",
     "scriptDownloadUri": "https://raw.githubusercontent.com/ms-hukoyun/oxa-tools/master/",
-    "installScript": "deploy.sh",
+    "installScript": "update_theme.sh",
     "appInstallCommand":   "[concat('bash -c ''nohup ./', variables('installScript'), ' edxapp </dev/null &>/var/log/azure/deploy.log.$(date +\"%Y-%m-%d_%H-%M-%S\") &''')]",
     "computeApiVersion": "2016-03-30"
   },
