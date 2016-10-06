@@ -19,7 +19,7 @@ fi
 cd $THEME_PATH
 git clone -b pilot $THEME_REPO default
 
-sudo chown -R edxapp:edxapp $THEME_REPO
+sudo chown -R edxapp:edxapp $THEME_PATH
 sudo su edxapp -s /bin/bash -c "source /edx/app/edxapp/edxapp_env;cd /edx/app/edxapp/edx-platform/;paver update_assets lms --settings aws"
 sudo /edx/bin/supervisorctl restart edxapp:
 echo "Huseyin -> Finished applying Microsoft Stanford Theming." 
