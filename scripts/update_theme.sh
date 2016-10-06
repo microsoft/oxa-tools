@@ -19,7 +19,7 @@ fi
 sudo mkdir -p $THEME_PATH
 
 cd $THEME_PATH
-git clone -b pilot $THEME_REPO default
+sudo git clone -b pilot $THEME_REPO default
 
 sudo chown -R edxapp:edxapp $THEME_PATH
 sudo su edxapp -s /bin/bash -c "source /edx/app/edxapp/edxapp_env;cd /edx/app/edxapp/edx-platform/;paver update_assets lms --settings aws"
