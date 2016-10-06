@@ -7,6 +7,14 @@
        chdir: "{{scriptsdir}}"
      register: bash
 
+   - name: Apply Microsoft Stanford Theming
+     sudo: yes
+     shell: bash ./update_theme.sh
+     args:
+       chdir: "{{scriptsdir}}"
+     register: bash2
+     
    # Print the shell task's stdout and stderr.
    - debug: var="bash.stdout_lines + [ bash.stderr ]"
+   - debug: var="bash2.stdout_lines + [ bash2.stderr ]"
 

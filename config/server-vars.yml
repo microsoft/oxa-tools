@@ -10,7 +10,7 @@ EDXAPP_PLATFORM_NAME: "Open edX on Azure"
 #EDXAPP_TIME_ZONE: "America/New_York"
 
 # Configure DNS name based on the ARM template parameter
-#EDXAPP_SITE_NAME: "{dnsLabelPrefix}.{region}.cloudapp.azure.com"
+EDXAPP_SITE_NAME: "hukoyunfs.westus.cloudapp.azure.com"
 EDXAPP_LMS_SITE_NAME: "{{ EDXAPP_SITE_NAME }}"
 EDXAPP_CMS_SITE_NAME: "{{ EDXAPP_SITE_NAME }}"
 EDXAPP_LMS_BASE: "{{ EDXAPP_SITE_NAME }}"
@@ -23,6 +23,8 @@ EDXAPP_PREVIEW_LMS_BASE: "{{ EDXAPP_LMS_BASE }}"
 #EDXAPP_ENABLE_THIRD_PARY_AUTH: true
 #EDXAPP_ENABLE_OAUTH2_PROVIDER: true
 
+edxapp_theme_name: 'default'
+
 # Configure Open edX features
 # see: http://edx.readthedocs.org/projects/edx-installing-configuring-and-running/en/latest/feature_flags/feature_flag_index.html
 EDXAPP_FEATURES:
@@ -33,6 +35,7 @@ EDXAPP_FEATURES:
   #REQUIRE_COURSE_EMAIL_AUTH: true
   PREVIEW_LMS_BASE: "{{ EDXAPP_PREVIEW_LMS_BASE }}"
   DISABLE_COURSE_CREATION: true
+  USE_CUSTOM_THEME: true
 
 # Configure remote SMTP server
 #EDXAPP_EMAIL_HOST_USER: "username"
