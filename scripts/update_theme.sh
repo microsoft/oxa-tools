@@ -18,7 +18,9 @@ fi
 sudo mkdir -p $THEME_PATH
 
 cd $THEME_PATH
-sudo git clone -b pilot $THEME_REPO default
+sudo git clone $THEME_REPO default
+cd default
+sudo git checkout pilot
 
 if [[ -d /tmp/sass-cache ]]; then
   sudo rm -fr /tmp/sass-cache
