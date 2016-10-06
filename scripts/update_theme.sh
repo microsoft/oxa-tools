@@ -7,7 +7,7 @@ sudo cp server-vars.yml /edx/app/edx_ansible/
 sudo chown edx-ansible:edx-ansible /edx/app/edx_ansible/server-vars.yml
 
 cd /tmp/configuration/playbooks
-sudo ansible-playbook -i localhost, -c local vagrant-fullstack.yml -e@/edx/app/edx_ansible/server-vars.yml -e@/edx/app/edx_ansible/extra-vars.yml -t 'edxapp_cfg,gather_static_assets'
+sudo ansible-playbook -i localhost, -c local vagrant-fullstack.yml -e@/edx/app/edx_ansible/server-vars.yml -e@/edx/app/edx_ansible/extra-vars.yml
 
 THEME_PATH=/edx/app/edxapp/themes
 THEME_REPO=https://github.com/microsoft/edx-theme.git
