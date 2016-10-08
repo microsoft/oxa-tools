@@ -15,7 +15,7 @@
   "resources": [
     {      
       "type": "Microsoft.Compute/virtualMachines/extensions",
-      "name": "[concat(variables('vmName'), '/configuremaster')]",
+      "name": "[concat(variables('vmName'), '/installscript')]",
       "apiVersion": "[variables('computeApiVersion')]",
       "location": "[resourceGroup().location]",
       "properties": {
