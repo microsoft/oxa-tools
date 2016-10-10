@@ -1,4 +1,6 @@
 #!/bin/bash
+# Copyright (c) Microsoft Corporation. All Rights Reserved.
+# Licensed under the MIT license. See LICENSE file on the project webpage for details.
 if [  $# -eq 2 ] 
     then
 	while IFS="=" read -r key value; do

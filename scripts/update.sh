@@ -26,31 +26,33 @@ setup() {
   cd $OXA_CONFIG_PATH/playbooks
 }
 
-ANSIBLE_ARGS="-i locahost, -c local -e @$OXA_TOOLS_PATH/config/server-vars.yml -e @$OXA_TOOLS_PATH/config/edx-versions.yml"
+ANSIBLE_ARGS="-i localhost, -c local -e @$OXA_TOOLS_PATH/config/server-vars.yml -e @$OXA_TOOLS_PATH/config/edx-versions.yml"
 ANSIBLE_ARGS_SCALABLE="$ANSIBLE_ARGS -e @$OXA_TOOLS_PATH/config/scalable.yml"
-ANSIBLE_ARGS_OXA_CONFIG="-i localhost, -c local -e scriptsdir=$OXA_TOOLS_PATH/scripts"
+ANSIBLE_ARGS_OXA_CONFIG="-i localhost, -c local -e oxa_tools_path=$OXA_TOOLS_PATH"
 case "$EDX_ROLE" in
   mongo)
     setup
     sudo ansible-playbook edx_mongo.yml $ANSIBLE_ARGS_SCALABLE
+    #sudo ansible-playbook $OXA_TOOLS_PATH/playbooks/oxa_configuration.yml $ANSIBLE_ARGS_OXA_CONFIG --tags "mongo"
     ;;
   mysql)
     setup
     sudo ansible-playbook edx_mysql.yml $ANSIBLE_ARGS_SCALABLE
     # minimize tags? "install:base,install:system-requirements,install:configuration,install:app-requirements,install:code"
     sudo ansible-playbook edx_sandbox.yml $ANSIBLE_ARGS_SCALABLE -e "migrate_db=yes" --tags "edxapp-sandbox,install,migrate"
-    sudo ansible-playbook $OXA_TOOLS_PATH/playbooks/oxa_configuration.yml $ANSIBLE_ARGS_OXA_CONFIG
+    sudo ansible-playbook $OXA_TOOLS_PATH/playbooks/oxa_configuration.yml $ANSIBLE_ARGS_OXA_CONFIG --tags "mysql"
     ;;
   edxapp)
     setup
     # Fixes error: RPC failed; result=56, HTTP code = 0'
     # fatal: The remote end hung up unexpectedly
     git config --global http.postBuffer 1048576000
-    sudo ansible-playbook edx_sandbox.yml $ANSIBLE_ARGS_SCALABLE -e "migrate_db=no"
+    sudo ansible-playbook edx_sandbox.yml $ANSIBLE_ARGS_SCALABLE -e "migrate_db=no" --tags "edxapp"
+    #sudo ansible-playbook $OXA_TOOLS_PATH/playbooks/oxa_configuration.yml $ANSIBLE_ARGS_OXA_CONFIG --tags "edxapp"
     ;;
   fullstack)
     setup
-    sudo ansible-playbook vagrant-fullstack.yml $ANSIBLE_ARGS
+    #sudo ansible-playbook vagrant-fullstack.yml $ANSIBLE_ARGS
     sudo ansible-playbook $OXA_TOOLS_PATH/playbooks/oxa_configuration.yml $ANSIBLE_ARGS_OXA_CONFIG
     ;;
   *)
