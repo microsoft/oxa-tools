@@ -1,0 +1,10 @@
+---
+- name: Run OXA script
+  sudo: yes
+  shell: bash ./oxa_configuration.sh
+  args:
+    chdir: "{{ mysql_files_path }}"
+  register: bash
+
+# Print the shell task's stdout and stderr.
+- debug: var="bash.stdout_lines + [ bash.stderr ]"
