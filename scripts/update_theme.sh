@@ -10,7 +10,7 @@ cd /tmp/configuration/playbooks
 sudo ansible-playbook -i localhost, -c local vagrant-fullstack.yml -e@/edx/app/edx_ansible/server-vars.yml -e@/edx/app/edx_ansible/extra-vars.yml -t 'edxapp_cfg'
 
 THEME_PATH=/edx/app/edxapp/themes
-THEME_REPO=https://github.com/microsoft/edx-theme.git
+THEME_REPO=https://github.com/ms-hukoyun/edx-theme.git
 
 if [[ -d $THEME_PATH ]]; then
   sudo rm -fr $THEME_PATH
