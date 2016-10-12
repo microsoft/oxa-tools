@@ -1,0 +1,324 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "apiSettings": {
+            "type": "object",
+            "metadata": {
+                "Description": "API version of the resource type"
+            }
+        },
+        "networkSettings": {
+            "type": "object",
+            "metadata": {
+                "Description": "Network settings object"
+            }
+        },
+        "machineSettings": {
+            "type": "object",
+            "metadata": {
+                "Description": "Machine settings object"
+            }
+        },
+        "storageSettings": {
+            "type": "object",
+            "metadata": {
+                "Description": "Storage settings object"
+            }
+        }
+    },
+
+
+    "variables": {
+        "loadBalancerIpName": "[concat(parameters('networkSettings').loadbalancerSettings.loadBalancerName, parameters('networkSettings').publicIPAddressNameSuffix)]",
+        "newStorageAccountSuffix": "[concat(parameters('networkSettings').clusterName, 'vmsssa')]",
+        "uniqueStringArray": [
+            "[concat(variables('newStorageAccountSuffix'), '0')]",
+            "[concat(variables('newStorageAccountSuffix'), '1')]",
+            "[concat(variables('newStorageAccountSuffix'), '2')]",
+            "[concat(variables('newStorageAccountSuffix'), '3')]",
+            "[concat(variables('newStorageAccountSuffix'), '4')]"
+        ],
+        "frontendVmStorageAccountCount": "[length(variables('uniqueStringArray'))]"
+    },
+
+
+    "resources": [
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "name": "[variables('uniqueStringArray')[copyIndex()]]",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "[parameters('apiSettings').storageApiVersion]",
+            "copy": {
+                "name": "storageLoop",
+                "count": "[variables('frontendVmStorageAccountCount')]"
+            },
+            "properties": {
+                "accountType": "[parameters('storageSettings').storageAccountType]"
+            }
+        },
+
+        {
+            "name": "[variables('loadBalancerIpName')]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "[parameters('apiSettings').networkApiVersion]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publicIPAllocationMethod": "[parameters('networkSettings').publicIPAddressType]",
+                "dnsSettings": {
+                    "domainNameLabel": "[toLower(parameters('networkSettings').loadbalancerSettings.loadBalancerDomainName)]"
+                }
+            }
+        },
+
+        {
+            "name": "[parameters('networkSettings').loadbalancerSettings.loadBalancerName]",
+            "type": "Microsoft.Network/loadBalancers",
+            "apiVersion": "[parameters('apiSettings').networkApiVersion]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[variables('loadBalancerIpName')]"
+            ],
+            "properties": {
+                "frontendIPConfigurations": [
+                    {
+                        "name": "LoadBalancerFrontend",
+                        "properties": {
+                            "publicIpAddress": {
+                                "id": "[resourceId(resourceGroup().name,'Microsoft.Network/publicIpAddresses', variables('loadBalancerIpName'))]"
+                            }
+                        }
+                    }
+                ],
+                "backendAddressPools": [
+                    {
+                        "name": "[parameters('networkSettings').loadbalancerSettings.bePoolName]"
+                    }
+                ],
+                "loadBalancingRules": [
+                    {
+                        "name": "LBRuleLMS",
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[parameters('networkSettings').loadbalancerSettings.frontEndIPConfigID]"
+                            },
+                            "backendAddressPool": {
+                                "id": "[parameters('networkSettings').loadbalancerSettings.lbPoolID]"
+                            },
+                            "protocol": "tcp",
+                            "frontendPort": 80,
+                            "backendPort": 80,
+                            "enableFloatingIP": false,
+                            "idleTimeoutInMinutes": 5,
+                            "loadDistribution": "SourceIP",
+                            "probe": {
+                                "id": "[parameters('networkSettings').loadbalancerSettings.lbProbeLMSID]"
+                            }
+                        }
+                    },
+                    {
+                        "name": "LBRuleCMS",
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[parameters('networkSettings').loadbalancerSettings.frontEndIPConfigID]"
+                            },
+                            "backendAddressPool": {
+                                "id": "[parameters('networkSettings').loadbalancerSettings.lbPoolID]"
+                            },
+                            "protocol": "tcp",
+                            "frontendPort": 18010,
+                            "backendPort": 18010,
+                            "enableFloatingIP": false,
+                            "idleTimeoutInMinutes": 5,
+                            "loadDistribution": "SourceIP",
+                            "probe": {
+                                "id": "[parameters('networkSettings').loadbalancerSettings.lbProbeCMSID]"
+                            }
+                        }
+                    }
+                ],
+                "probes": [
+                    {
+                        "name": "tcpProbeLMS",
+                        "properties": {
+                            "protocol": "tcp",
+                            "port": 80,
+                            "intervalInSeconds": "5",
+                            "numberOfProbes": "2"
+                        }
+                    },
+                    {
+                        "name": "tcpProbeCMS",
+                        "properties": {
+                            "protocol": "tcp",
+                            "port": 18010,
+                            "intervalInSeconds": "5",
+                            "numberOfProbes": "2"
+                        }
+                    }
+                ],
+                "inboundNatPools": [
+                    {
+                        "name": "[parameters('networkSettings').loadbalancerSettings.natPoolName]",
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[parameters('networkSettings').loadbalancerSettings.frontEndIPConfigID]"
+                            },
+                            "protocol": "tcp",
+                            "frontendPortRangeStart": "[parameters('networkSettings').loadbalancerSettings.natStartPort]",
+                            "frontendPortRangeEnd": "[parameters('networkSettings').loadbalancerSettings.natEndPort]",
+                            "backendPort": "[parameters('networkSettings').loadbalancerSettings.natBackendPort]"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachineScaleSets",
+            "name": "[parameters('networkSettings').clusterVirtualMachineScaleSetName]",
+            "apiVersion": "[parameters('apiSettings').computeApiVersion]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "storageLoop"
+            ],
+            "sku": {
+                "name": "[parameters('machineSettings').vmSize]",
+                "tier": "Standard",
+                "capacity": "[parameters('networkSettings').loadbalancerSettings.frontendNodeCount]"
+            },
+            "properties": {
+                "overprovision": "true",
+                "upgradePolicy": {
+                    "mode": "Manual"
+                },
+                "virtualMachineProfile": {
+                    "storageProfile": {
+                        "osDisk": {
+                            "vhdContainers": [
+                                "[concat('https://', variables('uniqueStringArray')[0], '.blob.core.windows.net/', parameters('storageSettings').storageContainerName)]",
+                                "[concat('https://', variables('uniqueStringArray')[1], '.blob.core.windows.net/', parameters('storageSettings').storageContainerName)]",
+                                "[concat('https://', variables('uniqueStringArray')[2], '.blob.core.windows.net/', parameters('storageSettings').storageContainerName)]",
+                                "[concat('https://', variables('uniqueStringArray')[3], '.blob.core.windows.net/', parameters('storageSettings').storageContainerName)]",
+                                "[concat('https://', variables('uniqueStringArray')[4], '.blob.core.windows.net/', parameters('storageSettings').storageContainerName)]"
+                            ],
+                            "name":"[concat(parameters('networkSettings').clusterVirtualMachineScaleSetName, parameters('networkSettings').osDiskSuffix)]",
+                            "caching": "ReadOnly",
+                            "createOption": "FromImage"
+                        },
+                        "imageReference": "[parameters('machineSettings').osImageReference]"
+                    },
+                    "osProfile": {
+                        "computerNamePrefix": "[parameters('networkSettings').clusterVirtualMachineScaleSetDomainName]",
+                        "adminUsername": "[parameters('networkSettings').adminUsername]",
+                        "linuxConfiguration": {
+                            "disablePasswordAuthentication": "true",
+                            "ssh": {
+                                "publicKeys": [
+                                    {
+                                        "path": "[concat('/home/', parameters('networkSettings').adminUsername, '/.ssh/authorized_keys')]",
+                                        "keyData": "[parameters('networkSettings').adminPublicKey]"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+
+                    "networkProfile": {
+                        "networkInterfaceConfigurations": [
+                            {
+                                "name": "[concat(parameters('networkSettings').clusterVirtualMachineScaleSetName, parameters('networkSettings').networkInterfaceNameSuffix)]",
+                                "properties": {
+                                    "primary": "true",
+                                    "ipConfigurations": [
+                                        {
+                                            "name": "[concat(parameters('networkSettings').clusterVirtualMachineScaleSetName, parameters('networkSettings').ipConfigSuffix)]",
+                                            "properties": {
+                                                "subnet": {
+                                                    "id": "[parameters('networkSettings').subnetRef]"
+                                                },
+                                                "loadBalancerBackendAddressPools": [
+                                                    {
+                                                        "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/loadBalancers/', parameters('networkSettings').loadbalancerSettings.loadBalancerName, '/backendAddressPools/', parameters('networkSettings').loadbalancerSettings.bePoolName)]"
+                                                    }
+                                                ],
+                                                "loadBalancerInboundNatPools": [
+                                                    {
+                                                        "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/loadBalancers/', parameters('networkSettings').loadbalancerSettings.loadBalancerName, '/inboundNatPools/', parameters('networkSettings').loadbalancerSettings.natPoolName)]"
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Insights/autoscaleSettings",
+            "name": "[concat(parameters('networkSettings').clusterName, parameters('networkSettings').loadbalancerSettings.vmssAutoscaleSettingNameSuffix)]",
+            "apiVersion": "[parameters('apiSettings').insightsApiVersion]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[parameters('networkSettings').clusterVirtualMachineScaleSetName]"
+            ],
+            "properties": {
+                "name": "[concat(parameters('networkSettings').clusterName, parameters('networkSettings').loadbalancerSettings.vmssAutoscaleSettingNameSuffix)]",
+                "targetResourceUri": "[concat('/subscriptions/',subscription().subscriptionId, '/resourceGroups/',  resourceGroup().name, '/providers/Microsoft.Compute/virtualMachineScaleSets/', parameters('networkSettings').clusterVirtualMachineScaleSetName)]",
+                "enabled": true,
+                "profiles": [
+                    {
+                        "name": "Profile1",
+                        "capacity": {
+                            "minimum": "1",
+                            "maximum": "20",
+                            "default": "1"
+                        },
+                        "rules": [
+                            {
+                                "metricTrigger": {
+                                    "metricName": "\\Processor\\PercentProcessorTime",
+                                    "metricNamespace": "",
+                                    "metricResourceUri": "[concat('/subscriptions/',subscription().subscriptionId, '/resourceGroups/',  resourceGroup().name, '/providers/Microsoft.Compute/virtualMachineScaleSets/', parameters('networkSettings').clusterVirtualMachineScaleSetName)]",
+                                    "timeGrain": "PT1M",
+                                    "statistic": "Average",
+                                    "timeWindow": "PT5M",
+                                    "timeAggregation": "Average",
+                                    "operator": "GreaterThan",
+                                    "threshold": 60
+                                },
+                                "scaleAction": {
+                                    "direction": "Increase",
+                                    "type": "ChangeCount",
+                                    "value": "1",
+                                    "cooldown": "PT1M"
+                                }
+                            },
+                            {
+                                "metricTrigger": {
+                                    "metricName": "\\Processor\\PercentProcessorTime",
+                                    "metricNamespace": "",
+                                    "metricResourceUri": "[concat('/subscriptions/',subscription().subscriptionId, '/resourceGroups/',  resourceGroup().name, '/providers/Microsoft.Compute/virtualMachineScaleSets/', parameters('networkSettings').clusterVirtualMachineScaleSetName)]",
+                                    "timeGrain": "PT1M",
+                                    "statistic": "Average",
+                                    "timeWindow": "PT5M",
+                                    "timeAggregation": "Average",
+                                    "operator": "LessThan",
+                                    "threshold": 50
+                                },
+                                "scaleAction": {
+                                    "direction": "Decrease",
+                                    "type": "ChangeCount",
+                                    "value": "1",
+                                    "cooldown": "PT1M"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}

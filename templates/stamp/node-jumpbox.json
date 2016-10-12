@@ -1,0 +1,171 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "apiSettings": {
+            "type": "object",
+            "metadata": {
+                "Description": "API version of the resource type"
+            }
+        },
+
+        "networkSettings": {
+            "type": "object",
+            "metadata": {
+                "Description": "Network settings object"
+            }
+        },
+
+        "machineSettings": {
+            "type": "object",
+            "metadata": {
+                "Description": "Machine settings object"
+            }
+        },
+        "storageSettings": {
+            "type": "object",
+            "metadata": {
+                "Description": "Storage settings object"
+            }
+        }
+    },
+    "resources": [
+        {
+            "name": "[parameters('networkSettings').jbNetworkSecurityGroupName]",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "[parameters('apiSettings').apiVersion]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "default-allow-ssh",
+                        "properties": {
+                            "priority": 1000,
+                            "sourceAddressPrefix": "*",
+                            "protocol": "TCP",
+                            "destinationPortRange": "22",
+                            "access": "Allow",
+                            "direction": "Inbound",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[concat(parameters('networkSettings').clusterJumpBoxName, parameters('networkSettings').publicIPAddressNameSuffix)]",
+            "apiVersion": "[parameters('apiSettings').apiVersion]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publicIPAllocationMethod": "[parameters('networkSettings').publicIPAddressType]",
+                "dnsSettings": {
+                    "domainNameLabel": "[toLower(parameters('networkSettings').clusterJumpBoxDomainName)]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[concat(parameters('networkSettings').clusterJumpBoxName, parameters('networkSettings').networkInterfaceNameSuffix)]",
+            "apiVersion": "[parameters('apiSettings').apiVersion]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/networkSecurityGroups/', parameters('networkSettings').jbNetworkSecurityGroupName)]",
+                "[concat(parameters('networkSettings').clusterJumpBoxName, parameters('networkSettings').publicIPAddressNameSuffix)]"
+            ],
+            "properties": {
+                "primary": true,
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "subnet": {
+                                "id": "[parameters('networkSettings').subnetRef]"
+                            },
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIpAddress": {
+                                "id": "[resourceId(resourceGroup().name,'Microsoft.Network/publicIpAddresses', concat(parameters('networkSettings').clusterJumpBoxName, parameters('networkSettings').publicIPAddressNameSuffix))]"
+                            }
+                        }
+                    }
+                ],
+                "networkSecurityGroup": {
+                    "id": "[resourceId(resourceGroup().name, 'Microsoft.Network/networkSecurityGroups', parameters('networkSettings').jbNetworkSecurityGroupName)]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[parameters('networkSettings').clusterJumpBoxName]",
+            "apiVersion": "[parameters('apiSettings').virtualMachineApiVersion]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat(parameters('networkSettings').clusterJumpBoxName, parameters('networkSettings').networkInterfaceNameSuffix)]"
+            ],
+            "properties": {
+                "availabilitySet": {
+                    "id": "[resourceId('Microsoft.Compute/availabilitySets', concat(parameters('networkSettings').clusterJumpBoxName, parameters('networkSettings').availabilitySetNameSuffix))]"
+                },
+                "hardwareProfile": {
+                    "vmSize": "[parameters('machineSettings').vmSize]"
+                },
+                "osProfile": {
+                    "computerName": "[parameters('networkSettings').clusterJumpBoxDomainName]",
+                    "adminUsername": "[parameters('networkSettings').adminUsername]",
+                    "linuxConfiguration": {
+                        "disablePasswordAuthentication": "true",
+                        "ssh": {
+                            "publicKeys": [
+                                {
+                                    "path": "[concat('/home/', parameters('networkSettings').adminUsername, '/.ssh/authorized_keys')]",
+                                    "keyData": "[parameters('networkSettings').adminPublicKey]"
+                                }
+                            ]
+                        }
+                    }
+                },
+                "storageProfile": {
+                    "imageReference": "[parameters('machineSettings').osImageReference]",
+                    "osDisk": {
+                        "name": "[concat(parameters('networkSettings').clusterJumpBoxName, parameters('networkSettings').osDiskSuffix)]",
+                        "vhd": {
+                            "uri": "[concat(parameters('storageSettings').storageContainer, parameters('networkSettings').clusterJumpBoxName, uniqueString(resourceGroup().id), '.vhd')]"
+                        },
+                        "createOption": "fromImage",
+                        "caching": "ReadWrite"
+                    },
+                    "dataDisks": [
+                        {
+                            "name": "dataDisk0",
+                            "diskSizeGB": "[parameters('machineSettings').dataDiskSize]",
+                            "lun": 0,
+                            "vhd": {
+                                "uri": "[concat(parameters('storageSettings').storageContainer, parameters('networkSettings').clusterJumpBoxName, 'dataDisk0.vhd')]"
+                            },
+                            "caching": "ReadOnly",
+                            "createOption": "Empty"
+                        },
+                        {
+                            "name": "dataDisk1",
+                            "diskSizeGB": "[parameters('machineSettings').dataDiskSize]",
+                            "lun": 1,
+                            "vhd": {
+                                "uri": "[concat(parameters('storageSettings').storageContainer, parameters('networkSettings').clusterJumpBoxName, 'dataDisk1.vhd')]"
+                            },
+                            "caching": "ReadOnly",
+                            "createOption": "Empty"
+                        }
+                    ]
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(parameters('networkSettings').clusterJumpBoxName, parameters('networkSettings').networkInterfaceNameSuffix))]"
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}

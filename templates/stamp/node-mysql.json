@@ -1,0 +1,158 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "apiSettings": {
+            "type": "object",
+            "metadata": {
+                "Description": "API version of the resource type"
+            }
+        },
+
+        "networkSettings": {
+            "type": "object",
+            "metadata": {
+                "Description": "Network settings object"
+            }
+        },
+
+        "machineSettings": {
+            "type": "object",
+            "metadata": {
+                "Description": "Machine settings object"
+            }
+        },
+        "storageSettings": {
+            "type": "object",
+            "metadata": {
+                "Description": "Storage settings object"
+            }
+        },
+        "customSettings": {
+            "type": "object",
+            "metadata": {
+                "Description": "Template replication settings object"
+            }
+        }
+    },
+    "resources": [
+        
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[concat(parameters('networkSettings').clusterMysqlDataNodeName, parameters('customSettings').machineIndex, parameters('networkSettings').networkInterfaceNameSuffix)]",
+            "apiVersion": "[parameters('apiSettings').apiVersion]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "primary": true,
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "subnet": {
+                                "id": "[parameters('networkSettings').subnetRef]"
+                            },
+                            "privateIPAllocationMethod": "Static",
+                            "privateIPAddress": "[concat(parameters('networkSettings').serverIpPrefix, add(int(parameters('customSettings').machineIpOffset), parameters('customSettings').machineIndex))]"
+                        }
+                    }
+                ],
+                "networkSecurityGroup": {
+                    "id": "[resourceId(resourceGroup().name, 'Microsoft.Network/networkSecurityGroups', parameters('networkSettings').mysqlNetworkSecurityGroupName)]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[concat(parameters('networkSettings').clusterMysqlDataNodeName, parameters('customSettings').machineIndex)]",
+            "apiVersion": "[parameters('apiSettings').virtualMachineApiVersion]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat(parameters('networkSettings').clusterMysqlDataNodeName, parameters('customSettings').machineIndex, parameters('networkSettings').networkInterfaceNameSuffix)]"
+            ],
+            "properties": {
+                "availabilitySet": {
+                    "id": "[resourceId('Microsoft.Compute/availabilitySets', concat(parameters('networkSettings').clusterMysqlDataNodeName, parameters('networkSettings').availabilitySetNameSuffix))]"
+                },
+                "hardwareProfile": {
+                    "vmSize": "[parameters('machineSettings').vmSize]"
+                },
+                "osProfile": {
+                    "computerName": "[concat(parameters('networkSettings').clusterMysqlDataNodeDomainName, parameters('customSettings').machineIndex)]",
+                    "adminUsername": "[parameters('networkSettings').adminUsername]",
+                    "linuxConfiguration": {
+                        "disablePasswordAuthentication": "true",
+                        "ssh": {
+                            "publicKeys": [
+                                {
+                                    "path": "[concat('/home/', parameters('networkSettings').adminUsername, '/.ssh/authorized_keys')]",
+                                    "keyData": "[parameters('networkSettings').adminPublicKey]"
+                                }
+                            ]
+                        }
+                    }
+                },
+                "storageProfile": {
+                    "imageReference": "[parameters('machineSettings').osImageReference]",
+                    "osDisk": {
+                        "name": "[concat(parameters('networkSettings').clusterMysqlDataNodeName, parameters('customSettings').machineIndex, parameters('networkSettings').osDiskSuffix)]",
+                        "vhd": {
+                            "uri": "[concat(parameters('storageSettings').storageContainer, parameters('networkSettings').clusterMysqlDataNodeName, parameters('customSettings').machineIndex, uniqueString(resourceGroup().id), '.vhd')]"
+                        },
+                        "createOption": "fromImage",
+                        "caching": "ReadWrite"
+                    },
+                    "dataDisks": [
+                        {
+                            "name": "dataDisk0",
+                            "diskSizeGB": "[parameters('machineSettings').dataDiskSize]",
+                            "lun": 0,
+                            "vhd": {
+                                "uri": "[concat(parameters('storageSettings').storageContainer, parameters('networkSettings').clusterMysqlDataNodeName, parameters('customSettings').machineIndex, 'dataDisk0.vhd')]"
+                            },
+                            "caching": "ReadOnly",
+                            "createOption": "Empty"
+                        },
+                        {
+                            "name": "dataDisk1",
+                            "diskSizeGB": "[parameters('machineSettings').dataDiskSize]",
+                            "lun": 1,
+                            "vhd": {
+                                "uri": "[concat(parameters('storageSettings').storageContainer, parameters('networkSettings').clusterMysqlDataNodeName, parameters('customSettings').machineIndex, 'dataDisk1.vhd')]"
+                            },
+                            "caching": "ReadOnly",
+                            "createOption": "Empty"
+                        }
+                    ]
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(parameters('networkSettings').clusterMysqlDataNodeName, parameters('customSettings').machineIndex, parameters('networkSettings').networkInterfaceNameSuffix))]"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(parameters('networkSettings').clusterMysqlDataNodeName, parameters('customSettings').machineIndex, '/installmysql')]",
+            "apiVersion": "[parameters('apiSettings').virtualMachineExtensionsApiVersion]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat(parameters('networkSettings').clusterMysqlDataNodeName, parameters('customSettings').machineIndex)]"
+            ],
+            "properties": {
+                "publisher": "Microsoft.Azure.Extensions",
+                "type": "CustomScript",
+                "typeHandlerVersion": "2.0",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "fileUris": "[parameters('customSettings').vmScripts]"
+                },
+                "protectedSettings": {
+                    "commandToExecute": "[parameters('customSettings').commandToExecute]"
+                }
+            }
+        }
+    ]
+}
