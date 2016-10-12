@@ -44,7 +44,7 @@ EDXAPP_FEATURES:
 #EDXAPP_EMAIL_HOST: "smtp.live.com"
 #EDXAPP_EMAIL_PORT: 25
 #EDXAPP_EMAIL_USE_TLS: true
-EDXAPP_EMAIL_HOST: "openedx-mysql"
+#EDXAPP_EMAIL_HOST: "openedx-mysql"
 
 # Configure email addresses
 #EDXAPP_CONTACT_EMAIL: "email"
