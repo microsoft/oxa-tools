@@ -27,7 +27,7 @@
             }
         },
         "customSettings": {
-            "type": "object",
+            "type": "secureObject",
             "metadata": {
                 "Description": "Template replication settings object"
             }
