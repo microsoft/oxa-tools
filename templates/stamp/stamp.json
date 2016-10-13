@@ -342,7 +342,7 @@
 
         "mongodbHaInstallScriptBaseUrl": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/mongodb-high-availability/",
         "azureSharedScriptUrl": "[concat('https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/shared_scripts/', variables('ubuntuOsConfigs').osName, '/')]",
-        "templateBaseUrl": "https: //raw.githubusercontent.com/microsoft/oxa-tools/eltonc/templates/stamp/",
+        "templateBaseUrl": "https: //raw.githubusercontent.com/microsoft/oxa-tools/master/templates/stamp/",
 
         "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources.json')]",
         "jumpboxTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-jumpbox.json')]",
