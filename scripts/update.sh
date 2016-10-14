@@ -86,13 +86,13 @@ setup() {
 
   # Remove the oxa-tools-config directory if it exists to avoid the error
   # "fatal: destination path 'oxa-tools-config' already exists and is not an empty directory."
-#  if [[ -d $OXA_TOOLS_PATH/oxa-tools-config ]]; then
-#    sudo rm -R $OXA_TOOLS_PATH/oxa-tools-config
-#  fi
+  if [[ -d $OXA_TOOLS_PATH/oxa-tools-config ]]; then
+    sudo rm -R $OXA_TOOLS_PATH/oxa-tools-config
+  fi
 
   # Fetch the latest secrets from the private repo via a personal access token
   cd $OXA_TOOLS_PATH
-#  sudo git clone https://$ACCESS_TOKEN@github.com/microsoft/oxa-tools-config.git
+  sudo git clone https://$ACCESS_TOKEN@github.com/microsoft/oxa-tools-config.git
 
   # Apply secrets to the configuration file
   bash scripts/replace.sh $OXA_TOOLS_PATH/oxa-tools-config/env/$DEPLOYMENT_ENV/$DEPLOYMENT_ENV.sh $OXA_TOOLS_PATH/config/server-vars.yml
