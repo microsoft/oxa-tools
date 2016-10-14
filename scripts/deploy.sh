@@ -5,7 +5,7 @@ set -x
 
 OXA_VERSION=${1:-master}
 
-OXA_REPO=https://github.com/microsoft/master/oxa-tools.git
+OXA_REPO=https://github.com/Microsoft/oxa-tools.git
 OXA_PATH=/oxa/oxa-tools
 OXA_LOG_PATH=/var/log/oxa
 
