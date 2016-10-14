@@ -7,8 +7,9 @@ EDX_ROLE="edxapp"
 DEPLOYMENT_ENV="dev"
 ACCESS_TOKEN=""
 
-OXA_TOOLS_PATH=/oxa/oxa-tools
-OXA_CONFIG_PATH=/oxa/configuration
+OXA_PATH=/oxa
+OXA_TOOLS_PATH=$OXA_PATH/oxa-tools
+OXA_CONFIG_PATH=$OXA_PATH/configuration
 
 display_usage() {
   echo "Usage: $0 -a|--access_token {access token} [-r|--role {mongo|mysql|edxapp|fullstack}] [-e|--environment {dev|bvt|int|prod}]"
@@ -34,7 +35,7 @@ parse_args() {
     case "$1" in
       -r|--role)
         EDX_ROLE="${2,,}" # convert to lowercase
-        if is_valid_arg "mongo mysql edxapp fullstack" $EDX_ROLE ; then
+        if is_valid_arg "mongo mysql edxapp fullstack" $EDX_ROLE; then
           shift # past argument
         else
           echo "Invalid role specified\n"
@@ -43,7 +44,7 @@ parse_args() {
         ;;
       -e|--environment)
         DEPLOYMENT_ENV="${2,,}" # convert to lowercase
-        if is_valid_arg "dev bvt int prod" $DEPLOYMENT_ENV ; then
+        if is_valid_arg "dev bvt int prod" $DEPLOYMENT_ENV; then
           shift # past argument
         else
           echo "Invalid environment specified\n"
@@ -52,7 +53,7 @@ parse_args() {
         ;;
       -a|--access_token)
         ACCESS_TOKEN="$2"
-        if [[ ${#ACCESS_TOKEN} -eq 40 ]] ; then
+        if [[ ${#ACCESS_TOKEN} -eq 40 ]]; then
           shift # past argument
         else
           echo "Invalid access token specified\n"
@@ -84,18 +85,15 @@ setup() {
     pip install -r requirements.txt
   fi
 
-  # Remove the oxa-tools-config directory if it exists to avoid the error
-  # "fatal: destination path 'oxa-tools-config' already exists and is not an empty directory."
-  if [[ -d $OXA_TOOLS_PATH/oxa-tools-config ]]; then
-    sudo rm -R $OXA_TOOLS_PATH/oxa-tools-config
+  if [[ ! -d $OXA_PATH/oxa-tools-config ]]; then
+    cd $OXA_PATH
+
+    # Fetch the latest secrets from the private repo via a personal access token
+    sudo git clone -b master https://$ACCESS_TOKEN@github.com/microsoft/oxa-tools-config.git
   fi
 
-  # Fetch the latest secrets from the private repo via a personal access token
-  cd $OXA_TOOLS_PATH
-  sudo git clone https://$ACCESS_TOKEN@github.com/microsoft/oxa-tools-config.git
-
   # Apply secrets to the configuration file
-  bash scripts/replace.sh $OXA_TOOLS_PATH/oxa-tools-config/env/$DEPLOYMENT_ENV/$DEPLOYMENT_ENV.sh $OXA_TOOLS_PATH/config/server-vars.yml
+  bash $OXA_TOOLS_PATH/scripts/replace.sh $OXA_PATH/oxa-tools-config/env/$DEPLOYMENT_ENV/$DEPLOYMENT_ENV.sh $OXA_TOOLS_PATH/config/server-vars.yml
 
   cd $OXA_CONFIG_PATH/playbooks
 }
