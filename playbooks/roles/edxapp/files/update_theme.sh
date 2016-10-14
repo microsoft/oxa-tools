@@ -7,7 +7,7 @@ set -x
 sudo cp /oxa/oxa-tools/config/server-vars.yml /edx/app/edx_ansible/
 sudo chown edx-ansible:edx-ansible /edx/app/edx_ansible/server-vars.yml
 
-cd /tmp/configuration/playbooks
+cd /oxa/configuration/playbooks
 sudo ansible-playbook -i localhost, -c local vagrant-fullstack.yml -e@/edx/app/edx_ansible/server-vars.yml -e@/edx/app/edx_ansible/extra-vars.yml -t 'edxapp_cfg'
 
 THEME_PATH=/edx/app/edxapp/themes
