@@ -681,10 +681,6 @@
         "mongoReplicaSetName": {
             "type": "string",
             "value": "[variables('mongoReplicaSetName')]"
-        },
-        "mongoServerAdminPassword": {
-            "type": "string",
-            "value": "[variables('networkSettings').mongoServerAdminPassword]"
         }
     }
 }
