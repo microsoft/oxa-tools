@@ -104,9 +104,6 @@
                 "[concat(parameters('networkSettings').clusterJumpBoxName, parameters('networkSettings').networkInterfaceNameSuffix)]"
             ],
             "properties": {
-                "availabilitySet": {
-                    "id": "[resourceId('Microsoft.Compute/availabilitySets', concat(parameters('networkSettings').clusterJumpBoxName, parameters('networkSettings').availabilitySetNameSuffix))]"
-                },
                 "hardwareProfile": {
                     "vmSize": "[parameters('machineSettings').vmSize]"
                 },
