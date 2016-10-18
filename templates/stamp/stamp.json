@@ -18,8 +18,12 @@
         },
         "jumpBoxVmSize": {
             "type": "string",
-            "defaultValue": "Standard_DS2_v2",
+            "defaultValue": "Standard_D1_v2",
             "allowedValues": [
+                "Standard_D1_v2",
+                "Standard_D2_v2",
+                "Standard_D3_v2",
+                "Standard_D4_v2",
                 "Standard_DS2_v2",
                 "Standard_DS3_v2",
                 "Standard_DS4_v2",
@@ -33,8 +37,12 @@
         },
         "mongoVmSize": {
             "type": "string",
-            "defaultValue": "Standard_DS2_v2",
+            "defaultValue": "Standard_D2_v2",
             "allowedValues": [
+                "Standard_D1_v2",
+                "Standard_D2_v2",
+                "Standard_D3_v2",
+                "Standard_D4_v2",
                 "Standard_DS2_v2",
                 "Standard_DS3_v2",
                 "Standard_DS4_v2",
@@ -48,8 +56,12 @@
         },
         "mysqlVmSize": {
             "type": "string",
-            "defaultValue": "Standard_DS2_v2",
+            "defaultValue": "Standard_D2_v2",
             "allowedValues": [
+                "Standard_D1_v2",
+                "Standard_D2_v2",
+                "Standard_D3_v2",
+                "Standard_D4_v2",
                 "Standard_DS2_v2",
                 "Standard_DS3_v2",
                 "Standard_DS4_v2",
@@ -63,8 +75,12 @@
         },
         "frontendVmSize": {
             "type": "string",
-            "defaultValue": "Standard_DS2_v2",
+            "defaultValue": "Standard_D2_v2",
             "allowedValues": [
+                "Standard_D1_v2",
+                "Standard_D2_v2",
+                "Standard_D3_v2",
+                "Standard_D4_v2",
                 "Standard_DS2_v2",
                 "Standard_DS3_v2",
                 "Standard_DS4_v2",
@@ -138,7 +154,7 @@
                 "description": "The GitHub branch from which scripts and other files will be downloaded"
             }
         },
-        "vmssUbuntuOs": {
+        "vmssUbuntuOsImageSku": {
             "type": "string",
             "defaultValue": "14.04.0-LTS",
             "allowedValues": [
@@ -150,7 +166,7 @@
                 "description": "The Azure Ubuntu Image version to use for VMSS instances"
             }
         },
-        "mysqlUbuntuOs": {
+        "mysqlUbuntuOsImageSku": {
             "type": "string",
             "defaultValue": "16.04.0-LTS",
             "allowedValues": [
@@ -162,7 +178,7 @@
                 "description": "The Azure Ubuntu Image version to use for Mysql instances"
             }
         },
-        "mongoUbuntuOs": {
+        "mongoUbuntuOsImageSku": {
             "type": "string",
             "defaultValue": "16.04.0-LTS",
             "allowedValues": [
@@ -174,7 +190,7 @@
                 "description": "The Azure Ubuntu Image version to use for Mongo instances"
             }
         },
-        "defaultUbuntuOs": {
+        "defaultUbuntuOsImageSku": {
             "type": "string",
             "defaultValue": "16.04.0-LTS",
             "allowedValues": [
@@ -220,7 +236,7 @@
         "virtualMachineApiVersion": "[variables('defaultApiVersion')]",
         "storageApiVersion": "[variables('defaultApiVersion')]",
 
-        "storageAccountName": "[concat(parameters('clusterName'), 'vhdsa')]",
+        "storageAccountName": "[concat(toLower(parameters('clusterName')), 'vhdsa')]",
         "storageAccountType": "Standard_LRS",
         "storageContainer": "[concat('https://', variables('storageAccountName'),'.blob.core.windows.net/vhds/')]",
 
@@ -290,35 +306,7 @@
         "supportedOSName": "ubuntu",
         "supportedOSImagePublisher": "Canonical",
         "supportedOSImageOffer": "UbuntuServer",
-        "ubuntuOsConfigsList": [
-            [
-                "16.04.0-LTS",
-                {
-                    "osName": "[variables('supportedOSName')]",
-                    "imagePublisher": "[variables('supportedOSImagePublisher')]",
-                    "imageOffer": "[variables('supportedOSImageOffer')]",
-                    "imageSku": "16.04.0-LTS"
-                }
-            ],
-            [
-                "14.04.0-LTS",
-                {
-                    "osName": "[variables('supportedOSName')]",
-                    "imagePublisher": "[variables('supportedOSImagePublisher')]",
-                    "imageOffer": "[variables('supportedOSImageOffer')]",
-                    "imageSku": "12.04.0-LTS"
-                }
-            ],
-            [
-                "12.04.0-LTS",
-                {
-                    "osName": "[variables('supportedOSName')]",
-                    "imagePublisher": "[variables('supportedOSImagePublisher')]",
-                    "imageOffer": "[variables('supportedOSImageOffer')]",
-                    "imageSku": "12.04.0-LTS"
-                }
-            ]
-        ],
+
         "storageSettings": {
             "storageContainer": "[variables('storageContainer')]",
             "storageContainerName": "vhds",
@@ -328,9 +316,9 @@
         "jumpboxMachineSettings": {
             "vmSize": "[parameters('jumpBoxVmSize')]",
             "osImageReference": {
-                "publisher": "[variables('ubuntuOsConfigsList')[parameters('defaultUbuntuOs')].imagePublisher]",
-                "offer": "[variables('ubuntuOsConfigsList')[parameters('defaultUbuntuOs')].imageOffer]",
-                "sku": "[variables('ubuntuOsConfigsList')[parameters('defaultUbuntuOs')].imageSku]",
+                "publisher": "[variables('supportedOSImagePublisher')]",
+                "offer": "[variables('supportedOSImageOffer')]",
+                "sku": "[parameters('defaultUbuntuOsImageSku')]",
                 "version": "latest"
             },
             "dataDiskSize": "[parameters('jumpBoxDataDiskSizeGB')]"
@@ -338,9 +326,9 @@
         "mongoMachineSettings": {
             "vmSize": "[parameters('mongoVmSize')]",
             "osImageReference": {
-                "publisher": "[variables('ubuntuOsConfigsList')[parameters('mongoUbuntuOs')].imagePublisher]",
-                "offer": "[variables('ubuntuOsConfigsList')[parameters('mongoUbuntuOs')].imageOffer]",
-                "sku": "[variables('ubuntuOsConfigsList')[parameters('mongoUbuntuOs')].imageSku]",
+                "publisher": "[variables('supportedOSImagePublisher')]",
+                "offer": "[variables('supportedOSImageOffer')]",
+                "sku": "[parameters('mongoUbuntuOsImageSku')]",
                 "version": "latest"
             },
             "dataDiskSize": "[parameters('mongoNodeDataDiskSizeGB')]",
@@ -350,9 +338,9 @@
         "mysqlMachineSettings": {
             "vmSize": "[parameters('mysqlVmSize')]",
             "osImageReference": {
-                "publisher": "[variables('ubuntuOsConfigsList')[parameters('mysqlUbuntuOs')].imagePublisher]",
-                "offer": "[variables('ubuntuOsConfigsList')[parameters('mysqlUbuntuOs')].imageOffer]",
-                "sku": "[variables('ubuntuOsConfigsList')[parameters('mysqlUbuntuOs')].imageSku]",
+                "publisher": "[variables('supportedOSImagePublisher')]",
+                "offer": "[variables('supportedOSImageOffer')]",
+                "sku": "[parameters('mysqlUbuntuOsImageSku')]",
                 "version": "latest"
             },
             "dataDiskSize": "[parameters('mysqlNodeDataDiskSizeGB')]"
@@ -360,9 +348,9 @@
         "frontendMachineSettings": {
             "vmSize": "[parameters('frontendVmSize')]",
             "osImageReference": {
-                "publisher": "[variables('ubuntuOsConfigsList')[parameters('vmssUbuntuOs')].imagePublisher]",
-                "offer": "[variables('ubuntuOsConfigsList')[parameters('vmssUbuntuOs')].imageOffer]",
-                "sku": "[variables('ubuntuOsConfigsList')[parameters('vmssUbuntuOs')].imageSku]",
+                "publisher": "[variables('supportedOSImagePublisher')]",
+                "offer": "[variables('supportedOSImageOffer')]",
+                "sku": "[parameters('vmssUbuntuOsImageSku')]",
                 "version": "latest"
             },
             "capacity": "[parameters('frontendVmSize')]",
@@ -392,12 +380,14 @@
         "mongoReplicaSetName": "[concat(parameters('clusterName'), 'rs1')]",
         "mongoReplicaSetKey": "[uniqueString(resourceGroup().id)]",
 
+        "installerUtilitiesScript": "utilities.sh",
         "mongoDbInstallerScript": "[concat('mongodb-', variables('supportedOSName'), '-install.sh')]",
         "mongoDbInstallerCommand": "[concat('bash ', variables('mongoDbInstallerScript'), ' -i ', variables('mongoMachineSettings').installerBaseUrl, ' -b ', variables('mongoMachineSettings').installerPackages, ' -r ', variables('mongoReplicaSetName'), ' -k ', variables('mongoReplicaSetKey'), ' -u ', parameters('mongoServerAdminUserName'), ' -p ', parameters('mongoServerAdminPassword'), ' -x ', variables('networkSettings').serverIpPrefix, ' -n ', variables('networkSettings').mongoDataNodeCount)]",
         "mongoDBInstallerSettings": {
             "scriptsToDownload": [
                 "[concat(variables('stampFilesUrl'), variables('mongoDbInstallerScript'))]",
-                "[concat(variables('azureSharedScriptUrl'), 'vm-disk-utils-0.1.sh')]"
+                "[concat(variables('azureSharedScriptUrl'), 'vm-disk-utils-0.1.sh')]",
+                "[concat(variables('stampFilesUrl'), variables('installerUtilitiesScript'))]"
             ],
             "regularNodeInstallCommand": "[variables('mongoDbInstallerCommand')]",
             "lastNodeInstallCommand": "[concat(variables('mongoDbInstallerCommand'), ' -l')]",
@@ -410,7 +400,8 @@
             "scriptsToDownload": [
                 "[concat(variables('stampFilesUrl'), variables('mysqlDbInstallerScript'))]",
                 "[concat(variables('stampFilesUrl'), 'mysqld.template.cnf')]",
-                "[concat(variables('azureSharedScriptUrl'), 'vm-disk-utils-0.1.sh')]"
+                "[concat(variables('azureSharedScriptUrl'), 'vm-disk-utils-0.1.sh')]",
+                "[concat(variables('stampFilesUrl'), variables('installerUtilitiesScript'))]"
             ],
             "regularNodeInstallCommand": "[variables('mysqlDbInstallerCommand')]"
         },

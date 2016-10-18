@@ -9,7 +9,7 @@
             }
         },
         "networkSettings": {
-            "type": "object",
+            "type": "secureObject",
             "metadata": {
                 "Description": "Network settings object"
             }
