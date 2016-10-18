@@ -28,10 +28,9 @@
         }
     },
 
-
     "variables": {
         "loadBalancerIpName": "[concat(parameters('networkSettings').loadbalancerSettings.loadBalancerName, parameters('networkSettings').publicIPAddressNameSuffix)]",
-        "newStorageAccountSuffix": "[concat(parameters('networkSettings').clusterName, 'vmsssa')]",
+        "newStorageAccountSuffix": "[toLower(concat(parameters('networkSettings').clusterName, 'vmsssa'))]",
         "uniqueStringArray": [
             "[concat(variables('newStorageAccountSuffix'), '0')]",
             "[concat(variables('newStorageAccountSuffix'), '1')]",
@@ -41,7 +40,6 @@
         ],
         "frontendVmStorageAccountCount": "[length(variables('uniqueStringArray'))]"
     },
-
 
     "resources": [
         {
