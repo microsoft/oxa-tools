@@ -380,13 +380,15 @@
         },
 
         "azureSharedScriptUrl": "[concat('https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/shared_scripts/', variables('supportedOSName'), '/')]",
-        "templateBaseUrl": "[concat('https://raw.githubusercontent.com/microsoft/oxa-tools/', parameters('branch'), '/templates/stamp/')]",
+        "baseUrl": "[concat('https://raw.githubusercontent.com/microsoft/oxa-tools/', parameters('branch'))]",
+        "stampFilesUrl": "[concat('variables('baseUrl'), '/templates/stamp/')]",
+        "configFilesUrl": "[concat('variables('baseUrl'), '/config/')]",
 
-        "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources.json')]",
-        "jumpboxTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-jumpbox.json')]",
-        "mongoNodeTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-mongo.json')]",
-        "mysqlNodeTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-mysql.json')]",
-        "vmssTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-vmss.json')]",
+        "sharedTemplateUrl": "[concat(variables('stampFilesUrl'), 'shared-resources.json')]",
+        "jumpboxTemplateUrl": "[concat(variables('stampFilesUrl'), 'node-jumpbox.json')]",
+        "mongoNodeTemplateUrl": "[concat(variables('stampFilesUrl'), 'node-mongo.json')]",
+        "mysqlNodeTemplateUrl": "[concat(variables('stampFilesUrl'), 'node-mysql.json')]",
+        "vmssTemplateUrl": "[concat(variables('stampFilesUrl'), 'node-vmss.json')]",
         "mongoReplicaSetName": "[concat(parameters('clusterName'), 'rs1')]",
         "mongoReplicaSetKey": "[uniqueString(resourceGroup().id)]",
 
@@ -394,7 +396,7 @@
         "mongoDbInstallerCommand": "[concat('bash ', variables('mongoDbInstallerScript'), ' -i ', variables('mongoMachineSettings').installerBaseUrl, ' -b ', variables('mongoMachineSettings').installerPackages, ' -r ', variables('mongoReplicaSetName'), ' -k ', variables('mongoReplicaSetKey'), ' -u ', parameters('mongoServerAdminUserName'), ' -p ', parameters('mongoServerAdminPassword'), ' -x ', variables('networkSettings').serverIpPrefix, ' -n ', variables('networkSettings').mongoDataNodeCount)]",
         "mongoDBInstallerSettings": {
             "scriptsToDownload": [
-                "[concat(variables('templateBaseUrl'), variables('mongoDbInstallerScript'))]",
+                "[concat(variables('stampFilesUrl'), variables('mongoDbInstallerScript'))]",
                 "[concat(variables('azureSharedScriptUrl'), 'vm-disk-utils-0.1.sh')]"
             ],
             "regularNodeInstallCommand": "[variables('mongoDbInstallerCommand')]",
@@ -406,11 +408,22 @@
         "mysqlDbInstallerCommand": "[concat('bash ', variables('mysqlDbInstallerScript'), ' -r ', parameters('mysqlServerReplUserName'), ' -k \"', parameters('mysqlServerReplPassword'),'\" -u ', parameters('mysqlServerAdminUserName'), ' -p \"', parameters('mysqlServerAdminPassword'), '\" -v ', parameters('mysqlServerPackageVersion'), ' -m ', variables('networkSettings').serverIpPrefix, add(int(variables('networkSettings').mysqlServerIpOffset),1) )]",
         "mysqlDBInstallerSettings": {
             "scriptsToDownload": [
-                "[concat(variables('templateBaseUrl'), variables('mysqlDbInstallerScript'))]",
-                "[concat(variables('templateBaseUrl'), 'mysqld.template.cnf')]",
+                "[concat(variables('stampFilesUrl'), variables('mysqlDbInstallerScript'))]",
+                "[concat(variables('stampFilesUrl'), 'mysqld.template.cnf')]",
                 "[concat(variables('azureSharedScriptUrl'), 'vm-disk-utils-0.1.sh')]"
             ],
             "regularNodeInstallCommand": "[variables('mysqlDbInstallerCommand')]"
+        },
+
+        "vmssAppInstallerScript": "[concat('vmssapp-', variables('supportedOSName'), '-deploy.sh')]", // todo:
+        "vmssAppConfiguration": "[server-vars.yml]",
+        "vmssAppInstallerCommand": "[concat('bash -c ''nohup ./', variables('vmssAppInstallerScript'), ' edxapp </dev/null &>/var/log/azure/deploy.log.$(date +\"%Y-%m-%d_%H-%M-%S\") &''')]",
+        "vmssAppInstallerSettings": {
+            "scriptsToDownload": [
+                "[concat(variables('stampFilesUrl'), variables('vmssAppInstallerScript'))]",
+                "[concat(variables('configFilesUrl'), variables('vmssAppConfiguration'))]"
+            ],
+            "regularNodeInstallCommand": "[variables('vmssAppInstallerCommand')]"
         }
     },
     "resources": [
@@ -668,6 +681,12 @@
                     },
                     "storageSettings": {
                         "value": "[variables('storageSettings')]"
+                    },
+                    "customSettings": {
+                        "value": {
+                            "vmScripts": "[variables('vmssAppInstallerSettings').scriptsToDownload]",
+                            "commandToExecute": "[variables('vmssAppInstallerSettings').regularNodeInstallCommand]"
+                        }
                     }
                 }
             }
