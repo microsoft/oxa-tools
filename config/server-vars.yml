@@ -26,6 +26,7 @@ EDXAPP_PREVIEW_LMS_BASE: "{{ EDXAPP_LMS_BASE }}"
 # Configure Open edX features
 # see: http://edx.readthedocs.org/projects/edx-installing-configuring-and-running/en/latest/feature_flags/feature_flag_index.html
 EDXAPP_FEATURES:
+  USE_CUSTOM_THEME: true
   #ENABLE_THIRD_PARTY_AUTH: "{{ EDXAPP_ENABLE_THIRD_PARTY_AUTH }}"
   #ENABLE_OAUTH2_PROVIDER: "{{ EDXAPP_ENABLE_OAUTH2_PROVIDER }}"
   #ENABLE_SYSADMIN_DASHBOARD: true
