@@ -71,12 +71,17 @@ parse_args() {
 }
 
 setup() {
+  if [[ ! -d $OXA_PATH/oxa-tools-config ]]; then
+    cd $OXA_PATH
+
+    # Fetch the latest secrets from the private repo via a personal access token
+    sudo git clone -b master https://$ACCESS_TOKEN@github.com/microsoft/oxa-tools-config.git
+  fi
+  source $OXA_PATH/oxa-tools-config/env/$DEPLOYMENT_ENV/$DEPLOYMENT_ENV.sh
+  export CONFIGURATION_REPO CONFIGURATION_VERSION
+
   if [[ ! -d $OXA_CONFIG_PATH ]]; then
     wget https://raw.githubusercontent.com/edx/configuration/master/util/install/ansible-bootstrap.sh -O - | bash
-
-    # must match $OXA_TOOLS_PATH/config/edx-versions.yml for now
-    local CONFIGURATION_REPO=https://github.com/Microsoft/edx-configuration.git
-    local CONFIGURATION_VERSION="lex/scalable-dogwood"
 
     git clone $CONFIGURATION_REPO $OXA_CONFIG_PATH
     cd $OXA_CONFIG_PATH
@@ -85,15 +90,9 @@ setup() {
     pip install -r requirements.txt
   fi
 
-  if [[ ! -d $OXA_PATH/oxa-tools-config ]]; then
-    cd $OXA_PATH
-
-    # Fetch the latest secrets from the private repo via a personal access token
-    sudo git clone -b master https://$ACCESS_TOKEN@github.com/microsoft/oxa-tools-config.git
-  fi
-
   # Apply secrets to the configuration file
   bash $OXA_TOOLS_PATH/scripts/replace.sh $OXA_PATH/oxa-tools-config/env/$DEPLOYMENT_ENV/$DEPLOYMENT_ENV.sh $OXA_TOOLS_PATH/config/server-vars.yml
+  bash $OXA_TOOLS_PATH/scripts/replace.sh $OXA_PATH/oxa-tools-config/env/$DEPLOYMENT_ENV/$DEPLOYMENT_ENV.sh $OXA_TOOLS_PATH/config/edx-versions.yml
 
   cd $OXA_CONFIG_PATH/playbooks
 }
@@ -118,7 +117,7 @@ update() {
       # Fixes error: RPC failed; result=56, HTTP code = 0'
       # fatal: The remote end hung up unexpectedly
       git config --global http.postBuffer 1048576000
-      sudo ansible-playbook edx_sandbox.yml $ANSIBLE_ARGS_SCALABLE -e "migrate_db=no" --tags "edxapp"
+      sudo ansible-playbook edx_sandbox.yml $ANSIBLE_ARGS_SCALABLE -e "migrate_db=no"
       #sudo ansible-playbook $OXA_TOOLS_PATH/playbooks/oxa_configuration.yml $ANSIBLE_ARGS_OXA_CONFIG --tags "edxapp"
       ;;
     fullstack)
