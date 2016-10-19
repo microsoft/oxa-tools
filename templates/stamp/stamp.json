@@ -368,15 +368,17 @@
         },
 
         "azureSharedScriptUrl": "[concat('https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/shared_scripts/', variables('supportedOSName'), '/')]",
+
         "baseUrl": "[concat('https://raw.githubusercontent.com/microsoft/oxa-tools/', parameters('branch'))]",
-        "stampFilesUrl": "[concat('variables('baseUrl'), '/templates/stamp/')]",
+        "stampTemplateFilesUrl": "[concat('variables('baseUrl'), '/templates/stamp/')]",
+        "stampEdxScriptFilesUrl": "[concat('variables('baseUrl'), '/scripts/stamp/')]",
         "configFilesUrl": "[concat('variables('baseUrl'), '/config/')]",
 
-        "sharedTemplateUrl": "[concat(variables('stampFilesUrl'), 'shared-resources.json')]",
-        "jumpboxTemplateUrl": "[concat(variables('stampFilesUrl'), 'node-jumpbox.json')]",
-        "mongoNodeTemplateUrl": "[concat(variables('stampFilesUrl'), 'node-mongo.json')]",
-        "mysqlNodeTemplateUrl": "[concat(variables('stampFilesUrl'), 'node-mysql.json')]",
-        "vmssTemplateUrl": "[concat(variables('stampFilesUrl'), 'node-vmss.json')]",
+        "sharedTemplateUrl": "[concat(variables('stampTemplateFilesUrl'), 'shared-resources.json')]",
+        "jumpboxTemplateUrl": "[concat(variables('stampTemplateFilesUrl'), 'node-jumpbox.json')]",
+        "mongoNodeTemplateUrl": "[concat(variables('stampTemplateFilesUrl'), 'node-mongo.json')]",
+        "mysqlNodeTemplateUrl": "[concat(variables('stampTemplateFilesUrl'), 'node-mysql.json')]",
+        "vmssTemplateUrl": "[concat(variables('stampTemplateFilesUrl'), 'node-vmss.json')]",
         "mongoReplicaSetName": "[concat(parameters('clusterName'), 'rs1')]",
         "mongoReplicaSetKey": "[uniqueString(resourceGroup().id)]",
 
@@ -385,9 +387,9 @@
         "mongoDbInstallerCommand": "[concat('bash ', variables('mongoDbInstallerScript'), ' -i ', variables('mongoMachineSettings').installerBaseUrl, ' -b ', variables('mongoMachineSettings').installerPackages, ' -r ', variables('mongoReplicaSetName'), ' -k ', variables('mongoReplicaSetKey'), ' -u ', parameters('mongoServerAdminUserName'), ' -p ', parameters('mongoServerAdminPassword'), ' -x ', variables('networkSettings').serverIpPrefix, ' -n ', variables('networkSettings').mongoDataNodeCount)]",
         "mongoDBInstallerSettings": {
             "scriptsToDownload": [
-                "[concat(variables('stampFilesUrl'), variables('mongoDbInstallerScript'))]",
+                "[concat(variables('stampTemplateFilesUrl'), variables('mongoDbInstallerScript'))]",
                 "[concat(variables('azureSharedScriptUrl'), 'vm-disk-utils-0.1.sh')]",
-                "[concat(variables('stampFilesUrl'), variables('installerUtilitiesScript'))]"
+                "[concat(variables('stampTemplateFilesUrl'), variables('installerUtilitiesScript'))]"
             ],
             "regularNodeInstallCommand": "[variables('mongoDbInstallerCommand')]",
             "lastNodeInstallCommand": "[concat(variables('mongoDbInstallerCommand'), ' -l')]",
@@ -398,20 +400,21 @@
         "mysqlDbInstallerCommand": "[concat('bash ', variables('mysqlDbInstallerScript'), ' -r ', parameters('mysqlServerReplUserName'), ' -k \"', parameters('mysqlServerReplPassword'),'\" -u ', parameters('mysqlServerAdminUserName'), ' -p \"', parameters('mysqlServerAdminPassword'), '\" -v ', parameters('mysqlServerPackageVersion'), ' -m ', variables('networkSettings').serverIpPrefix, add(int(variables('networkSettings').mysqlServerIpOffset),1) )]",
         "mysqlDBInstallerSettings": {
             "scriptsToDownload": [
-                "[concat(variables('stampFilesUrl'), variables('mysqlDbInstallerScript'))]",
-                "[concat(variables('stampFilesUrl'), 'mysqld.template.cnf')]",
+                "[concat(variables('stampTemplateFilesUrl'), variables('mysqlDbInstallerScript'))]",
+                "[concat(variables('stampTemplateFilesUrl'), 'mysqld.template.cnf')]",
                 "[concat(variables('azureSharedScriptUrl'), 'vm-disk-utils-0.1.sh')]",
-                "[concat(variables('stampFilesUrl'), variables('installerUtilitiesScript'))]"
+                "[concat(variables('stampTemplateFilesUrl'), variables('installerUtilitiesScript'))]"
             ],
             "regularNodeInstallCommand": "[variables('mysqlDbInstallerCommand')]"
         },
 
-        "vmssAppInstallerScript": "[concat('vmssapp-', variables('supportedOSName'), '-deploy.sh')]", // todo:
+        // todo:plumb db credentials and git branch
+        "vmssAppInstallerScript": "[concat('vmssapp-', variables('supportedOSName'), '-deploy.sh')]",
         "vmssAppConfiguration": "[server-vars.yml]",
         "vmssAppInstallerCommand": "[concat('bash -c ''nohup ./', variables('vmssAppInstallerScript'), ' edxapp </dev/null &>/var/log/azure/deploy.log.$(date +\"%Y-%m-%d_%H-%M-%S\") &''')]",
         "vmssAppInstallerSettings": {
             "scriptsToDownload": [
-                "[concat(variables('stampFilesUrl'), variables('vmssAppInstallerScript'))]",
+                "[concat(variables('stampEdxScriptFilesUrl'), variables('vmssAppInstallerScript'))]",
                 "[concat(variables('configFilesUrl'), variables('vmssAppConfiguration'))]"
             ],
             "regularNodeInstallCommand": "[variables('vmssAppInstallerCommand')]"
@@ -673,11 +676,31 @@
                     "storageSettings": {
                         "value": "[variables('storageSettings')]"
                     },
+                    //todo:reviewers, should i go with this approach or the one below?
                     "customSettings": {
                         "value": {
                             "vmScripts": "[variables('vmssAppInstallerSettings').scriptsToDownload]",
                             "commandToExecute": "[variables('vmssAppInstallerSettings').regularNodeInstallCommand]"
                         }
+                    }
+                },
+                //todo:reviewers, should i go with this approach or the one above?
+                "virtualMachineProfile" : {
+                    "extensionProfile" : {
+                        "extensions" : [{
+                                "name" : "edxappExtension",
+                                "properties" : {
+                                    "publisher" : "Microsoft.OSTCExtensions",
+                                    "type" : "CustomScriptForLinux",
+                                    "typeHandlerVersion" : "1.4",
+                                    "autoUpgradeMinorVersion" : false,
+                                    "settings" : {
+                                        "fileUris" : "[variables('vmssAppInstallerSettings').scriptsToDownload]",
+                                        "commandToExecute" : "[variables('vmssAppInstallerSettings').regularNodeInstallCommand]"
+                                    }
+                                }
+                            }
+                        ]
                     }
                 }
             }
