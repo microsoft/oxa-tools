@@ -3,6 +3,8 @@
   hosts: localhost
   vars:
     mysql_files_path: "{{ oxa_tools_path }}/playbooks/roles/mysql/files"
+    edxapp_files_path: "{{ oxa_tools_path }}/playbooks/roles/edxapp/files"
+
   sudo: True
   gather_facts: True
   roles:

@@ -5,13 +5,13 @@ set -x
 
 OXA_VERSION=${1:-master}
 
-OXA_REPO=https://github.com/chenriksson/oxa-tools.git
+OXA_REPO=https://github.com/Microsoft/oxa-tools.git
 OXA_PATH=/oxa/oxa-tools
 OXA_LOG_PATH=/var/log/oxa
 
 if [[ ! -d /oxa ]]; then
   mkdir -p $OXA_LOG_PATH
-  mkdir -p $OXA_LOG_PATH
+  mkdir -p $OXA_PATH
   git clone $OXA_REPO $OXA_PATH
 fi
 
