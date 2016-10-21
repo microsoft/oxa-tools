@@ -101,7 +101,7 @@ setup() {
 update() {
   local ANSIBLE_ARGS="-i localhost, -c local -e @$OXA_TOOLS_PATH/config/server-vars.yml -e @$OXA_TOOLS_PATH/config/edx-versions.yml"
   local ANSIBLE_ARGS_SCALABLE="$ANSIBLE_ARGS -e @$OXA_TOOLS_PATH/config/scalable.yml"
-  local ANSIBLE_ARGS_OXA_CONFIG="-i localhost, -c local -e oxa_tools_path=$OXA_TOOLS_PATH -e oxa_tools_config_path=$OXA_TOOLS_CONFIG_PATH"
+  local ANSIBLE_ARGS_OXA_CONFIG="-i localhost, -c local -e oxa_tools_path=$OXA_TOOLS_PATH -e oxa_tools_config_path=$OXA_TOOLS_CONFIG_PATH -e lms_port=$LMS_PORT"
 
   case "$EDX_ROLE" in
     mongo)
@@ -117,8 +117,8 @@ update() {
     edxapp)
       # Fixes error: RPC failed; result=56, HTTP code = 0'
       # fatal: The remote end hung up unexpectedly
-#      git config --global http.postBuffer 1048576000
-#      sudo ansible-playbook edx_sandbox.yml $ANSIBLE_ARGS_SCALABLE -e "migrate_db=no"
+      git config --global http.postBuffer 1048576000
+      sudo ansible-playbook edx_sandbox.yml $ANSIBLE_ARGS_SCALABLE -e "migrate_db=no"
       sudo ansible-playbook $OXA_TOOLS_PATH/playbooks/oxa_configuration.yml $ANSIBLE_ARGS_OXA_CONFIG --tags "edxapp"
       ;;
     fullstack)
