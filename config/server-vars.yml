@@ -48,6 +48,7 @@ EDXAPP_COUNTRIES_OVERRIDE:
   PS: "Palestinian Authority"
   PN: "Pitcairn Island"
   RU: "Russia"
+  XE: "Sint Eustatius"
   SX: "Sint Maarten"
   XS: "Saba"
   MF: "Saint Martin"
@@ -64,7 +65,7 @@ EDXAPP_COUNTRIES_OVERRIDE:
   VE: "Venezuela"
   VN: "Vietnam"
   EH: null
-
+ 
 # Country made required field in registration.
 EDXAPP_REGISTRATION_EXTRA_FIELDS: 
   city: "hidden"
