@@ -1,0 +1,5 @@
+- name: Compile Assets Workaround
+  sudo: yes
+  shell: bash ./compile-assets.sh
+  args:
+    chdir: "{{ edxapp_files_path }}"
