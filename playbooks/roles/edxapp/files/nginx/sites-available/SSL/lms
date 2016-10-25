@@ -1,0 +1,176 @@
+upstream lms-backend {
+  server 127.0.0.1:8000 fail_timeout=0;
+}
+
+server {
+  listen 80;
+  return 301 https://$host$request_uri;
+}
+
+server {
+  # LMS configuration file for nginx, templated by ansible
+
+  
+  # error pages
+  error_page 504 /server/server-error.html;
+  error_page 502 /server/server-error.html;
+  error_page 500 /server/server-error.html;
+  
+
+  listen 443 ssl;
+
+  ssl_certificate /etc/nginx/ssl/openedx.microsoft.com.crt;
+  ssl_certificate_key /etc/nginx/ssl/openedx.microsoft.com.key;
+
+  # SSL 3 is vulnerable so we will allow only TLS protocol
+  ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+
+  ssl_prefer_server_ciphers on;
+  ssl_ciphers EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH;
+ 
+  access_log /edx/var/log/nginx/access.log p_combined;
+  error_log /edx/var/log/nginx/error.log error;
+
+  # CS184 requires uploads of up to 4MB for submitting screenshots.
+  # CMS requires larger value for course assest, values provided
+  # via hiera.
+  client_max_body_size 4M;
+
+  rewrite ^(.*)/favicon.ico$ /static/images/favicon.ico last;
+
+  location @proxy_to_lms_app {
+    proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
+    proxy_set_header X-Forwarded-Port $http_x_forwarded_port;
+    proxy_set_header X-Forwarded-For $http_x_forwarded_for;
+    proxy_set_header Host $http_host;
+
+    proxy_redirect off;
+    proxy_pass http://lms-backend;
+  }
+
+  location / {
+    try_files $uri @proxy_to_lms_app;
+  }
+
+
+  # No basic auth for /segmentio/event
+  location /segmentio/event {
+    try_files $uri @proxy_to_lms_app;
+  }
+
+  # The api is accessed using OAUTH2 which
+  # uses the authorization header so we can't have
+  # basic auth on it as well.
+  location /api {
+    try_files $uri @proxy_to_lms_app;
+  }
+
+  # Need a separate location for the image uploads endpoint to limit upload sizes
+  location ~ ^/api/profile_images/[^/]*/[^/]*/upload$ {
+    try_files $uri @proxy_to_lms_app;
+    client_max_body_size 1049576;
+  }
+
+  location /notifier_api {
+    try_files $uri @proxy_to_lms_app;
+  }
+
+  location /user_api {
+    try_files $uri @proxy_to_lms_app;
+  }
+
+  # No basic auth security on the github_service_hook url, so that github can use it for cms
+  location /github_service_hook {
+    try_files $uri @proxy_to_lms_app;
+  }
+
+  # No basic auth security on oauth2 endpoint
+  location /oauth2 {
+    try_files $uri @proxy_to_lms_app;
+  }
+  
+  
+  # No basic auth security on third party auth endpoints
+  location /auth {
+    try_files $uri @proxy_to_lms_app;
+  }
+
+  # No basic auth security on the heartbeat url, so that ELB can use it
+  location /heartbeat {
+    try_files $uri @proxy_to_lms_app;
+  }
+  
+  # No basic auth on the LTI provider endpoint, it does OAuth1
+  location /lti_provider {
+    try_files $uri @proxy_to_lms_app;
+  }
+
+  # No basic auth on LTI component grade.
+  location ~ /handler_noauth {
+    try_files $uri @proxy_to_lms_app;
+  }
+
+  location /courses {    try_files $uri @proxy_to_lms_app;
+  }
+
+  location ~ ^/media/(?P<file>.*) {
+    root /edx/var/edxapp/media;
+    try_files /$file =404;
+    expires 31536000s;
+  }
+
+  # static pages for server status
+  location ~ ^/server/(?P<file>.*) {
+    root /edx/var/nginx/server-static;
+    try_files /$file =404;
+  }
+
+  location ~ ^/static/(?P<file>.*) {
+    root /edx/var/edxapp;
+    try_files /staticfiles/$file /course_static/$file =404;
+
+    # return a 403 for static files that shouldn't be
+    # in the staticfiles directory
+    location ~ ^/static/(?:.*)(?:\.xml|\.json|README.TXT) {
+        return 403;
+    }
+
+    # http://www.red-team-design.com/firefox-doesnt-allow-cross-domain-fonts-by-default
+    location ~ "/static/(?P<collected>.*\.[0-9a-f]{12}\.(eot|otf|ttf|woff|woff2)$)" {
+      expires max;
+      add_header Access-Control-Allow-Origin *;
+      try_files /staticfiles/$collected /course_static/$collected =404;
+    }
+
+    # Set django-pipelined files to maximum cache time
+    location ~ "/static/(?P<collected>.*\.[0-9a-f]{12}\..*)" {
+      expires max;
+      # Without this try_files, files that have been run through
+      # django-pipeline return 404s
+      try_files /staticfiles/$collected /course_static/$collected =404;
+    }
+
+    # Set django-pipelined files for studio to maximum cache time
+    location ~ "/static/(?P<collected>[0-9a-f]{7}/.*)" {
+      expires max;
+
+      # Without this try_files, files that have been run through
+      # django-pipeline return 404s
+      try_files /staticfiles/$collected /course_static/$collected =404;
+    }
+
+    # Expire other static files immediately (there should be very few / none of these)
+    expires epoch;
+  }
+
+
+  # Forward to HTTPS if we're an HTTP request...
+  if ($http_x_forwarded_proto = "http") {
+    set $do_redirect "true";
+  }
+
+  # Run our actual redirect...
+  if ($do_redirect = "true") {
+    rewrite ^ https://$host$request_uri? permanent;
+  }
+}

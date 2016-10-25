@@ -2,7 +2,10 @@
 - name: Configure OXA
   hosts: localhost
   vars:
-    mysql_files_path: "{{ oxa_tools_path }}/playbooks/roles/mysql/files"
+    secrets_path: "{{ oxa_tools_config_path }}"
+    roles_path: "{{ oxa_tools_path }}/playbooks/roles"
+    edxapp_files_path: "{{ roles_path }}/edxapp/files"
+    mysql_files_path: "{{ roles_path }}/mysql/files"
   sudo: True
   gather_facts: True
   roles:

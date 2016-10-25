@@ -1,0 +1,120 @@
+upstream cms-backend {
+  server 127.0.0.1:8010 fail_timeout=0;
+}
+
+server {
+  # CMS configuration file for nginx, templated by ansible
+      
+  # Proxy to a remote maintanence page
+  
+  # error pages
+  error_page 504 /server/server-error.html;
+  error_page 502 /server/server-error.html;
+  error_page 500 /server/server-error.html;
+  
+  listen 18010 ssl; 
+     
+  ssl_certificate /etc/nginx/ssl/openedx.microsoft.com.crt;
+  ssl_certificate_key /etc/nginx/ssl/openedx.microsoft.com.key;
+
+  # SSL 3 is vulnerable so we will allow only TLS protocol
+  ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+
+  ssl_prefer_server_ciphers on;
+  ssl_ciphers EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH;
+
+  error_page 497 =307 https://$host:$server_port$request_uri;
+  
+  server_name ~^((stage|prod)-)?studio.*;
+
+  access_log /edx/var/log/nginx/access.log p_combined;
+  error_log /edx/var/log/nginx/error.log error;
+
+  # CS184 requires uploads of up to 4MB for submitting screenshots. 
+  # CMS requires larger value for course assest, values provided 
+  # via hiera.
+  client_max_body_size 100M;
+  
+  rewrite ^(.*)/favicon.ico$ /static/images/favicon.ico last;
+
+
+  location @proxy_to_cms_app {
+    proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
+    proxy_set_header X-Forwarded-Port $http_x_forwarded_port;
+    proxy_set_header X-Forwarded-For $http_x_forwarded_for;
+    proxy_set_header Host $http_host;
+
+    proxy_redirect off;
+    proxy_pass http://cms-backend;
+  }
+
+  location / {
+    try_files $uri @proxy_to_cms_app;
+  }
+
+  # No basic auth security on the github_service_hook url, so that github can use it for cms
+  location /github_service_hook {
+    try_files $uri @proxy_to_cms_app;
+  }
+
+  # No basic auth security on the heartbeat url, so that ELB can use it
+  location /heartbeat {
+    try_files $uri @proxy_to_cms_app;
+  }
+
+  # static pages for server status
+  location ~ ^/server/(?P<file>.*) {
+    root /edx/var/nginx/server-static;
+    try_files /$file =404;
+  }
+
+  location ~ ^/static/(?P<file>.*) {
+    root /edx/var/edxapp;
+    try_files /staticfiles/$file /course_static/$file =404;
+
+    # return a 403 for static files that shouldn't be
+    # in the staticfiles directory
+    location ~ ^/static/(?:.*)(?:\.xml|\.json|README.TXT) {
+      return 403;
+    }
+
+    # http://www.red-team-design.com/firefox-doesnt-allow-cross-domain-fonts-by-default
+    location ~ "/static/(?P<collected>.*\.[0-9a-f]{12}\.(eot|otf|ttf|woff|woff2)$)" {
+      expires max;
+      add_header Access-Control-Allow-Origin *;
+      try_files /staticfiles/$collected /course_static/$collected =404;
+    }
+
+    # Set django-pipelined files to maximum cache time
+    location ~ "/static/(?P<collected>.*\.[0-9a-f]{12}\..*)" {
+      expires max;
+      # Without this try_files, files that have been run through
+      # django-pipeline return 404s
+      try_files /staticfiles/$collected /course_static/$collected =404;
+    }
+
+    # Set django-pipelined files for studio to maximum cache time
+    location ~ "/static/(?P<collected>[0-9a-f]{7}/.*)" {
+      expires max;
+
+      # Without this try_files, files that have been run through
+      # django-pipeline return 404s
+      try_files /staticfiles/$collected /course_static/$collected =404;
+    }
+
+    # Expire other static files immediately (there should be very few / none of these)
+    expires epoch;
+  }
+
+
+  # Forward to HTTPS if we're an HTTP request...
+  if ($http_x_forwarded_proto = "http") {
+    set $do_redirect "true";
+  }
+
+  # Run our actual redirect...
+  if ($do_redirect = "true") {
+    rewrite ^ https://$host$request_uri? permanent;
+  }
+
+}
