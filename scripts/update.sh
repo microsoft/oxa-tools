@@ -118,7 +118,7 @@ update() {
       # fatal: The remote end hung up unexpectedly
       git config --global http.postBuffer 1048576000
       sudo ansible-playbook edx_sandbox.yml $ANSIBLE_ARGS_SCALABLE -e "migrate_db=no"
-      #sudo ansible-playbook $OXA_TOOLS_PATH/playbooks/oxa_configuration.yml $ANSIBLE_ARGS_OXA_CONFIG --tags "edxapp"
+      sudo ansible-playbook $OXA_TOOLS_PATH/playbooks/oxa_configuration.yml $ANSIBLE_ARGS_OXA_CONFIG --tags "edxapp"
       ;;
     fullstack)
       sudo ansible-playbook vagrant-fullstack.yml $ANSIBLE_ARGS

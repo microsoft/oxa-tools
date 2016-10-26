@@ -1,0 +1,5 @@
+- name: Compile Assets Workaround
+  shell: source ../edxapp_env && sudo -E -u edxapp env "PATH=$PATH" paver update_assets lms --settings aws
+  args:
+    chdir: /edx/app/edxapp/edx-platform
+    executable: /bin/bash
