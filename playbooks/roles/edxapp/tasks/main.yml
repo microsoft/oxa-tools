@@ -1,5 +1,5 @@
 - name: Compile Assets Workaround
-  sudo: yes
-  shell: bash ./compile-assets.sh
+  shell: source ../edxapp_env && sudo -E -u edxapp env "PATH=$PATH" paver update_assets lms --settings aws
   args:
-    chdir: "{{ edxapp_files_path }}"
+    chdir: /edx/app/edxapp/edx-platform
+    executable: /bin/bash
