@@ -83,12 +83,13 @@ setup() {
   export CONFIGURATION_REPO CONFIGURATION_VERSION
 
   if [[ ! -d $OXA_CONFIG_PATH ]]; then
-    sudo git clone -b $CONFIGURATION_VERSION $CONFIGURATION_REPO $OXA_CONFIG_PATH
+    git clone -b $CONFIGURATION_VERSION $CONFIGURATION_REPO $OXA_CONFIG_PATH
     cd $OXA_CONFIG_PATH
 
     # install ansible
     util/install/ansible-bootstrap.sh
 
+    # install python packages
     pip install -r requirements.txt
   fi
 

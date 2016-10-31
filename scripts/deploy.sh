@@ -10,12 +10,12 @@ OXA_PATH=/oxa/oxa-tools
 OXA_LOG_PATH=/var/log/oxa
 
 if [[ ! -d /oxa ]]; then
-  sudo mkdir -p $OXA_PATH
-  sudo mkdir -p $OXA_LOG_PATH
-  sudo git clone --recursive $OXA_REPO $OXA_PATH
+  mkdir -p $OXA_PATH
+  mkdir -p $OXA_LOG_PATH
+  git clone --recursive $OXA_REPO $OXA_PATH
 fi
 
 cd $OXA_PATH
-sudo git checkout $OXA_VERSION
+git checkout $OXA_VERSION
 
 scripts/update.sh &>$OXA_LOG_PATH/update.log.$(date +%Y-%m-%d_%H-%M-%S)
