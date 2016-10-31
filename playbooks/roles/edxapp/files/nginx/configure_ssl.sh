@@ -7,12 +7,11 @@ add_port_to_url_rewrite() {
 }
 
 harden_ssl_config() {
-  # To prevent downgrade attacks, we will disable old SSL protocols. SSL was superseded by TLS 1.0 in 1999; TLS 1.2 is the latest version.
-  # SSLv2 is disabled by default but we will also disable SSLv3, as TLS 1.0 suffers a downgrade attack, allowing an adversary to force a connection
-  # to use SSLv3 and thus disable PFS.  Note that all versions of Edge, Chrome, Firefox and Safari support at least TLS 1.0. With this change we will
-  # break Internet Explorer 6 and earlier, which top out at SSLv3.  The list of cyphers we atre using is based on the MVA site which scores an A rating
-  # using Qualys SSL Lab's online security service (https://www.ssllabs.com/ssltest) which performs a deep analysis of the configuration of any SSL web
-  # server on the Internet.
+  # To prevent downgrade attacks we will disable old SSL protocols. SSL was superseded by TLS 1.0 in 1999; TLS 1.2 is the latest version.
+  # SSLv2 is disabled by default but we will also disable SSLv3.  Note that all versions of Edge, Chrome, Firefox and Safari support at 
+  # least TLS 1.0. With this change we will break Internet Explorer 6 and earlier, which top out at SSLv3.  The list of cyphers we are using 
+  # is based on the MVA site which scores an A rating using Qualys SSL Lab's online security service (https://www.ssllabs.com/ssltest) which 
+  # performs a deep analysis of the configuration of any SSL web server on the Internet.
   local pattern="# request the browser to use SSL for all connections"
   local line1="  ssl_protocols TLSv1 TLSv1.1 TLSv1.2;"
   local line2="  ssl_ciphers 'ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES128-SHA:AES256-SHA256:AES128-SHA256:AES256-SHA:AES128-SHA:DES-CBC3-SHA';"
