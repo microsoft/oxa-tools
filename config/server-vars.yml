@@ -23,6 +23,16 @@ EDXAPP_SITE_NAME: "{{ EDXAPP_LMS_SITE_NAME }}"
 # see: https://github.com/MSOpenTech/edx-documentation/blob/master/en_us/install_operations/source/configuration/enable_sso.rst
 #EDXAPP_ENABLE_THIRD_PARY_AUTH: true
 #EDXAPP_ENABLE_OAUTH2_PROVIDER: true
+
+# Configure mongo database
+EDXAPP_MONGO_USER: '%%MONGO_USER%%'
+EDXAPP_MONGO_PASSWORD: '%%MONGO_PASSWORD%%'
+
+# Configure mysql database
+EDXAPP_MYSQL_USER_ADMIN: '%%MYSQL_ADMIN_USER%%'
+EDXAPP_MYSQL_PASSWORD_ADMIN: '%%MYSQL_ADMIN_PASSWORD%%'
+EDXAPP_MYSQL_USER: '%%MYSQL_USER%%'
+EDXAPP_MYSQL_PASSWORD: '%%MYSQL_PASSWORD%%'
  
 # Country made required field in registration.
 EDXAPP_REGISTRATION_EXTRA_FIELDS: 
