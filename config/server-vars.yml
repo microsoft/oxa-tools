@@ -23,6 +23,20 @@ EDXAPP_PREVIEW_LMS_BASE: "{{ EDXAPP_LMS_BASE }}"
 #EDXAPP_ENABLE_THIRD_PARY_AUTH: true
 #EDXAPP_ENABLE_OAUTH2_PROVIDER: true
 
+# Configure mongo database
+EDXAPP_MONGO_USER: '%%MONGO_USER%%'
+EDXAPP_MONGO_PASSWORD: '%%MONGO_PASSWORD%%'
+#todo:stepdo
+#EDXAPP_MONGO_HOSTS: ['localhost']
+#EDXAPP_MONGO_USE_SSL: True
+
+# Configure mysql database
+EDXAPP_MYSQL_USER_ADMIN: '%%MYSQL_ADMIN_USER%%'
+EDXAPP_MYSQL_PASSWORD_ADMIN: '%%MYSQL_ADMIN_PASSWORD%%'
+EDXAPP_MYSQL_USER: '%%MYSQL_USER%%'
+EDXAPP_MYSQL_PASSWORD: '%%MYSQL_PASSWORD%%'
+#todo:stepdo
+#EDXAPP_MYSQL_HOST: 'localhost'
 
 # Modifying Country or Region list. null means country is removed from the list. Others either country is a new added country or display name is changed.
 EDXAPP_COUNTRIES_OVERRIDE:

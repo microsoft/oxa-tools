@@ -76,18 +76,20 @@ setup() {
     cd $OXA_PATH
 
     # Fetch the latest secrets from the private repo via a personal access token
+    # This will create $OXA_TOOLS_CONFIG_PATH directory. 
     sudo git clone -b master https://$ACCESS_TOKEN@github.com/microsoft/oxa-tools-config.git
   fi
   source $OXA_TOOLS_CONFIG_PATH/env/$DEPLOYMENT_ENV/$DEPLOYMENT_ENV.sh
   export CONFIGURATION_REPO CONFIGURATION_VERSION
 
   if [[ ! -d $OXA_CONFIG_PATH ]]; then
-    wget https://raw.githubusercontent.com/edx/configuration/master/util/install/ansible-bootstrap.sh -O - | bash
-
-    git clone $CONFIGURATION_REPO $OXA_CONFIG_PATH
+    git clone -b $CONFIGURATION_VERSION $CONFIGURATION_REPO $OXA_CONFIG_PATH
     cd $OXA_CONFIG_PATH
-    git checkout $CONFIGURATION_VERSION
 
+    # Install ansible
+    bash util/install/ansible-bootstrap.sh
+
+    # Install python packages
     pip install -r requirements.txt
   fi
 
