@@ -3,3 +3,17 @@
   args:
     chdir: /edx/app/edxapp/edx-platform
     executable: /bin/bash
+
+- name: Configure Nginx SSL
+  sudo: yes
+  shell: bash ./configure_ssl.sh {{ NGINX_ENABLE_SSL }} {{ EDXAPP_LMS_SSL_NGINX_PORT }} {{ EDXAPP_CMS_SSL_NGINX_PORT }}
+  args:
+    chdir: "{{ edxapp_files_path }}/nginx"
+  register: bash
+
+# Print the shell tasks's stdout and stderr.
+- debug: var="bash.stdout_lines + [ bash.stderr ]"
+
+- name: Restart Nginx to use the new settings
+  sudo: yes
+  command: service nginx restart
