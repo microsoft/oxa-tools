@@ -9,6 +9,7 @@ ACCESS_TOKEN=""
 
 OXA_PATH=/oxa
 OXA_TOOLS_PATH=$OXA_PATH/oxa-tools
+OXA_TOOLS_CONFIG_PATH=$OXA_PATH/oxa-tools-config
 OXA_CONFIG_PATH=$OXA_PATH/configuration
 
 display_usage() {
@@ -71,28 +72,30 @@ parse_args() {
 }
 
 setup() {
-  if [[ ! -d $OXA_PATH/oxa-tools-config ]]; then
+  if [[ ! -d $OXA_TOOLS_CONFIG_PATH ]]; then
     cd $OXA_PATH
 
     # Fetch the latest secrets from the private repo via a personal access token
+    # This will create $OXA_TOOLS_CONFIG_PATH directory. 
     sudo git clone -b master https://$ACCESS_TOKEN@github.com/microsoft/oxa-tools-config.git
   fi
-  source $OXA_PATH/oxa-tools-config/env/$DEPLOYMENT_ENV/$DEPLOYMENT_ENV.sh
+  source $OXA_TOOLS_CONFIG_PATH/env/$DEPLOYMENT_ENV/$DEPLOYMENT_ENV.sh
   export CONFIGURATION_REPO CONFIGURATION_VERSION
 
   if [[ ! -d $OXA_CONFIG_PATH ]]; then
-    wget https://raw.githubusercontent.com/edx/configuration/master/util/install/ansible-bootstrap.sh -O - | bash
-
-    git clone $CONFIGURATION_REPO $OXA_CONFIG_PATH
+    git clone -b $CONFIGURATION_VERSION $CONFIGURATION_REPO $OXA_CONFIG_PATH
     cd $OXA_CONFIG_PATH
-    git checkout $CONFIGURATION_VERSION
 
+    # Install ansible
+    bash util/install/ansible-bootstrap.sh
+
+    # Install python packages
     pip install -r requirements.txt
   fi
 
   # Apply secrets to the configuration file
-  bash $OXA_TOOLS_PATH/scripts/replace.sh $OXA_PATH/oxa-tools-config/env/$DEPLOYMENT_ENV/$DEPLOYMENT_ENV.sh $OXA_TOOLS_PATH/config/server-vars.yml
-  bash $OXA_TOOLS_PATH/scripts/replace.sh $OXA_PATH/oxa-tools-config/env/$DEPLOYMENT_ENV/$DEPLOYMENT_ENV.sh $OXA_TOOLS_PATH/config/edx-versions.yml
+  bash $OXA_TOOLS_PATH/scripts/replace.sh $OXA_TOOLS_CONFIG_PATH/env/$DEPLOYMENT_ENV/$DEPLOYMENT_ENV.sh $OXA_TOOLS_PATH/config/server-vars.yml
+  bash $OXA_TOOLS_PATH/scripts/replace.sh $OXA_TOOLS_CONFIG_PATH/env/$DEPLOYMENT_ENV/$DEPLOYMENT_ENV.sh $OXA_TOOLS_PATH/config/edx-versions.yml
 
   cd $OXA_CONFIG_PATH/playbooks
 }
@@ -100,7 +103,7 @@ setup() {
 update() {
   local ANSIBLE_ARGS="-i localhost, -c local -e @$OXA_TOOLS_PATH/config/server-vars.yml -e @$OXA_TOOLS_PATH/config/edx-versions.yml"
   local ANSIBLE_ARGS_SCALABLE="$ANSIBLE_ARGS -e @$OXA_TOOLS_PATH/config/scalable.yml"
-  local ANSIBLE_ARGS_OXA_CONFIG="-i localhost, -c local -e oxa_tools_path=$OXA_TOOLS_PATH"
+  local ANSIBLE_ARGS_OXA_CONFIG="-i localhost, -c local -e @$OXA_TOOLS_PATH/config/server-vars.yml -e oxa_tools_path=$OXA_TOOLS_PATH -e oxa_tools_config_path=$OXA_TOOLS_CONFIG_PATH"
 
   case "$EDX_ROLE" in
     mongo)
