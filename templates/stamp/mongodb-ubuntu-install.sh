@@ -3,8 +3,6 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
-set -x
-
 # general parameters
 PACKAGE_URL=http://repo.mongodb.org/apt/ubuntu
 PACKAGE_NAME=mongodb-org
@@ -211,6 +209,7 @@ configure_replicaset()
 
 configure_mongodb()
 {
+    set -x
     log "Configuring MongoDB"
 
     # first setup the unit file
@@ -333,13 +332,13 @@ configure_db_users()
 #tune_system
 
 # Step 3
-install_mongodb
+#install_mongodb
 
 # Step 4
-#configure_mongodb
+configure_mongodb
 
 # Step 5
-#start_mongodb
+start_mongodb
 
 # Step 6
 #configure_db_users
