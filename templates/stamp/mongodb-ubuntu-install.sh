@@ -333,19 +333,19 @@ tune_memory
 tune_system
 
 # Step 3
-install_mongodb
+#install_mongodb
 
 # Step 4
-configure_mongodb
+#configure_mongodb
 
 # Step 5
-start_mongodb
+#start_mongodb
 
 # Step 6
-configure_db_users
+#configure_db_users
 
 # Step 7
-configure_replicaset
+#configure_replicaset
 
 # Exit (proudly)
-exit 0
+#exit 0

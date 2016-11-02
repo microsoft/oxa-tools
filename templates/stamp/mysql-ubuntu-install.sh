@@ -317,8 +317,6 @@ tune_system
 
 # Step 3: Install Mysql Server & Initial Configuration"
 
-set -x
-
 install_mysql_server
 #create_config_file
 #restart_mysql
