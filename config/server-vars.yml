@@ -70,10 +70,10 @@ EDXAPP_COUNTRIES_OVERRIDE:
 EDXAPP_REGISTRATION_EXTRA_FIELDS: 
   city: "hidden"
   country: "required"
-  gender: "hidden"
+  gender: "optional"
   goals: "optional"
   honor_code: "required"
-  level_of_education: "hidden"
+  level_of_education: "optional"
   mailing_address: "hidden"
   year_of_birth: "hidden"
 
