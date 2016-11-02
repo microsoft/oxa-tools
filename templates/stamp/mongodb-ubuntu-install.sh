@@ -165,7 +165,7 @@ configure_replicaset()
     
     # Stop the currently running MongoDB daemon as we will need to reload its configuration
     stop_mongodb
-    
+
     # Attempt to start the MongoDB daemon so that configuration changes take effect
     start_mongodb
     
@@ -333,6 +333,10 @@ configure_db_users()
 
 # Step 3
 #install_mongodb
+
+#todo:move to the end of install_mongodb 
+# Ensure systemctl is installed prior to starting mongo for the fist time.
+sudo apt-get -y install systemctl
 
 # Step 4
 configure_mongodb
