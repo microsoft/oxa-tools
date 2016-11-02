@@ -61,6 +61,8 @@ tune_system()
 # Configure Blob storage attached to current server 
 #############################################################################
 
+# todo: normalize tabs and spaces in this file
+
 configure_datadisks()
 {
 	# Stripe all of the data 
