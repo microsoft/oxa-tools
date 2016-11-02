@@ -37,7 +37,7 @@
 # Note : 
 # This script has only been tested on Ubuntu 12.04 LTS and must be root
 
-#set -x
+set -x
 
 help()
 {
