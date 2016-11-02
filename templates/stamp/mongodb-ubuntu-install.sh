@@ -3,7 +3,7 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
-#set -x
+set -x
 
 # general parameters
 PACKAGE_URL=http://repo.mongodb.org/apt/ubuntu
@@ -326,14 +326,14 @@ configure_db_users()
 }
 
 # Step 1
-configure_datadisks
+#configure_datadisks
 
 # Step 2
-tune_memory
-tune_system
+#tune_memory
+#tune_system
 
 # Step 3
-#install_mongodb
+install_mongodb
 
 # Step 4
 #configure_mongodb

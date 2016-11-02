@@ -37,8 +37,6 @@
 # Note : 
 # This script has only been tested on Ubuntu 12.04 LTS and must be root
 
-set -x
-
 help()
 {
     echo "Usage: $(basename $0) [-b data_base] [-h] [-s]"
