@@ -301,7 +301,7 @@ start_mongodb()
         systemctl start mongodb
     else
         # Older OS. See https://fedoraproject.org/wiki/SysVinit_to_Systemd_Cheatsheet
-        service mongodb start
+        service mongod start
     fi
     
 
@@ -315,7 +315,7 @@ start_mongodb()
         systemctl enable mongodb
     else
         # Older OS
-        sysv-rc-conf mongodb on
+        sysv-rc-conf mongod on
     fi
 }
 
