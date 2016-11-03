@@ -293,13 +293,30 @@ EOF
 start_mongodb()
 {
     log "Starting MongoDB daemon processes"
-    systemctl start mongodb
+
+    OS_VER=$(lsb_release -rs)
+    if (( $(echo "$OS_VER > 16" |bc -l) ))
+    then
+        # UBuntu 16 or greater
+        systemctl start mongodb
+    else
+        # Older OS. See https://fedoraproject.org/wiki/SysVinit_to_Systemd_Cheatsheet
+        service mongodb start
+    fi
+    
 
     # Wait for MongoDB daemon to start and initialize for the first time (this may take up to a minute or so)
     while ! timeout 1 bash -c "echo > /dev/tcp/localhost/$MONGODB_PORT"; do sleep 10; done
 
     # enable mongodb on startup
-    systemctl enable mongodb
+    if (( $(echo "$OS_VER > 16" |bc -l) ))
+    then
+        # UBuntu 16 or greater
+        systemctl enable mongodb
+    else
+        # Older OS
+        sysv-rc-conf mongodb on
+    fi
 }
 
 stop_mongodb()
@@ -334,9 +351,11 @@ configure_db_users()
 # Step 3
 #install_mongodb
 
+set -x
+
 #todo:move to the end of install_mongodb 
-# Ensure systemctl is installed prior to starting mongo for the fist time.
-sudo apt-get -y install systemctl
+# Ensure sysv-rc-conf is installed prior to starting mongo.
+sudo apt-get -y install sysv-rc-conf
 
 # Step 4
 configure_mongodb
