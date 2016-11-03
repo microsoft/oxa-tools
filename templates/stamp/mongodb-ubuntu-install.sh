@@ -355,16 +355,16 @@ set -x
 
 #todo:move to the end of install_mongodb 
 # Ensure sysv-rc-conf is installed prior to starting mongo.
-sudo apt-get -y install sysv-rc-conf
+#sudo apt-get -y install sysv-rc-conf
 
 # Step 4
-configure_mongodb
+#configure_mongodb
 
 # Step 5
-start_mongodb
+#start_mongodb
 
 # Step 6
-#configure_db_users
+configure_db_users
 
 # Step 7
 #configure_replicaset

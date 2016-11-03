@@ -68,9 +68,9 @@ configure_datadisks()
 	# Stripe all of the data 
 	log "Formatting and configuring the data disks"
 
-    # vm-disk-utils-0.1 can install mdadm which also installs postfix.
-    # The postfix installation cannot be made silent using the same techniques
-    # that keep the mdadm quiet: -y AND DEBIAN_FRONTEND=noninteractive.
+    # vm-disk-utils-0.1 can install mdadm which installs postfix. The postfix
+    # installation cannot be made silent using the techniques that keep the
+    # mdadm installation quiet: a) -y AND b) DEBIAN_FRONTEND=noninteractive.
     # Therefore, we'll install postfix early with the "No configuration" option.
     echo "postfix postfix/main_mailer_type select No configuration" | sudo debconf-set-selections
     sudo apt-get install -y postfix
