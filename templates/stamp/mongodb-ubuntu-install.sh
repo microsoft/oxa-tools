@@ -165,7 +165,7 @@ configure_replicaset()
     
     # Stop the currently running MongoDB daemon as we will need to reload its configuration
     stop_mongodb
-    
+
     # Attempt to start the MongoDB daemon so that configuration changes take effect
     start_mongodb
     
@@ -292,30 +292,13 @@ EOF
 start_mongodb()
 {
     log "Starting MongoDB daemon processes"
-
-    OS_VER=$(lsb_release -rs)
-    if (( $(echo "$OS_VER > 16" |bc -l) ))
-    then
-        # UBuntu 16 or greater
-        systemctl start mongodb
-    else
-        # Older OS. See https://fedoraproject.org/wiki/SysVinit_to_Systemd_Cheatsheet
-        service mongod start
-    fi
-    
+    systemctl start mongodb
 
     # Wait for MongoDB daemon to start and initialize for the first time (this may take up to a minute or so)
     while ! timeout 1 bash -c "echo > /dev/tcp/localhost/$MONGODB_PORT"; do sleep 10; done
 
     # enable mongodb on startup
-    if (( $(echo "$OS_VER > 16" |bc -l) ))
-    then
-        # UBuntu 16 or greater
-        systemctl enable mongodb
-    else
-        # Older OS
-        sysv-rc-conf mongod on
-    fi
+    systemctl enable mongodb
 }
 
 stop_mongodb()
@@ -349,10 +332,6 @@ tune_system
 
 # Step 3
 install_mongodb
-
-#todo:move to the end of install_mongodb 
-# Ensure sysv-rc-conf is installed prior to starting mongo.
-#sudo apt-get -y install sysv-rc-conf
 
 # Step 4
 configure_mongodb

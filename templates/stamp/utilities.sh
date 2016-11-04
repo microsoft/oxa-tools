@@ -20,7 +20,7 @@ log()
 
 tune_memory()
 {
-    log "Disabling THP (transpernt huge pages)"
+    log "Disabling THP (transparent huge pages)"
 
     # Disable THP on a running system
     echo never > /sys/kernel/mm/transparent_hugepage/enabled
