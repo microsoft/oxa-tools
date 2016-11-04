@@ -61,12 +61,10 @@ tune_system()
 # Configure Blob storage attached to current server 
 #############################################################################
 
-# todo: normalize tabs and spaces in this file
-
 configure_datadisks()
 {
-	# Stripe all of the data 
-	log "Formatting and configuring the data disks"
+    # Stripe all of the data 
+    log "Formatting and configuring the data disks"
 
     # vm-disk-utils-0.1 can install mdadm which installs postfix. The postfix
     # installation cannot be made silent using the techniques that keep the
@@ -75,5 +73,5 @@ configure_datadisks()
     echo "postfix postfix/main_mailer_type select No configuration" | sudo debconf-set-selections
     sudo apt-get install -y postfix
 
-	bash ./vm-disk-utils-0.1.sh -b $DATA_DISKS -s
+    bash ./vm-disk-utils-0.1.sh -b $DATA_DISKS -s
 }
