@@ -165,7 +165,6 @@ configure_replicaset()
     
     # Stop the currently running MongoDB daemon as we will need to reload its configuration
     stop_mongodb
-
     # Attempt to start the MongoDB daemon so that configuration changes take effect
     start_mongodb
     
@@ -209,7 +208,6 @@ configure_replicaset()
 
 configure_mongodb()
 {
-    set -x
     log "Configuring MongoDB"
 
     # first setup the unit file
@@ -342,32 +340,30 @@ configure_db_users()
 }
 
 # Step 1
-#configure_datadisks
+configure_datadisks
 
 # Step 2
-#tune_memory
-#tune_system
+tune_memory
+tune_system
 
 # Step 3
-#install_mongodb
-
-set -x
+install_mongodb
 
 #todo:move to the end of install_mongodb 
 # Ensure sysv-rc-conf is installed prior to starting mongo.
 #sudo apt-get -y install sysv-rc-conf
 
 # Step 4
-#configure_mongodb
+configure_mongodb
 
 # Step 5
-#start_mongodb
+start_mongodb
 
 # Step 6
 configure_db_users
 
 # Step 7
-#configure_replicaset
+configure_replicaset
 
 # Exit (proudly)
-#exit 0
+exit 0
