@@ -454,7 +454,7 @@
 
         "installerUtilitiesScript": "utilities.sh",
         "mongoDbInstallerScript": "[concat('mongodb-', variables('supportedOSName'), '-install.sh')]",
-        "mongoDbInstallerCommand": "[concat('bash ', variables('mongoDbInstallerScript'), ' -i ', variables('mongoMachineSettings').installerBaseUrl, ' -b ', variables('mongoMachineSettings').installerPackages, ' -r ', variables('mongoReplicaSetName'), ' -k ', variables('mongoReplicaSetKey'), ' -u ', parameters('mongoServerAdminUserName'), ' -p ', parameters('mongoServerAdminPassword'), ' -x ', variables('networkSettings').serverIpPrefix, ' -n ', variables('networkSettings').mongoDataNodeCount)]",
+        "mongoDbInstallerCommand": "[concat('bash ', variables('mongoDbInstallerScript'), ' -i ', variables('mongoMachineSettings').installerBaseUrl, ' -b ', variables('mongoMachineSettings').installerPackages, ' -r ', variables('mongoReplicaSetName'), ' -k ', variables('mongoReplicaSetKey'), ' -u ', parameters('mongoServerAdminUserName'), ' -p ', base64(parameters('mongoServerAdminPassword')), ' -x ', variables('networkSettings').serverIpPrefix, ' -n ', variables('networkSettings').mongoDataNodeCount)]",
         "mongoDBInstallerSettings": {
             "scriptsToDownload": [
                 "[concat(variables('templateBaseUrl'), variables('mongoDbInstallerScript'))]",
@@ -468,7 +468,7 @@
         },
 
         "mysqlDbInstallerScript": "[concat('mysql-', variables('supportedOSName'), '-install.sh')]",
-        "mysqlDbInstallerCommand": "[concat('bash ', variables('mysqlDbInstallerScript'), ' -r ', parameters('mysqlServerReplUserName'), ' -k \"', parameters('mysqlServerReplPassword'),'\" -u ', parameters('mysqlServerAdminUserName'), ' -p \"', parameters('mysqlServerAdminPassword'), '\" -v ', parameters('mysqlServerPackageVersion'), ' -m ', variables('networkSettings').serverIpPrefix, add(int(variables('networkSettings').mysqlServerIpOffset),1) )]",
+        "mysqlDbInstallerCommand": "[concat('bash ', variables('mysqlDbInstallerScript'), ' -r ', parameters('mysqlServerReplUserName'), ' -k ', base64(parameters('mysqlServerReplPassword')), ' -u ', parameters('mysqlServerAdminUserName'), ' -p ', base64(parameters('mysqlServerAdminPassword')), ' -v ', parameters('mysqlServerPackageVersion'), ' -m ', variables('networkSettings').serverIpPrefix, add(int(variables('networkSettings').mysqlServerIpOffset),1) )]",
         "mysqlDBInstallerSettings": {
             "scriptsToDownload": [
                 "[concat(variables('templateBaseUrl'), variables('mysqlDbInstallerScript'))]",
