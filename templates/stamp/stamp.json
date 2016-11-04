@@ -482,7 +482,7 @@
                         "value": "[variables('apiSettings')]"
                     },
                     "machineSettings": {
-                        "value": "[variables('jumpboxMachineSettings')]"
+                        "value": "[variables('mongoMachineSettings')]"
                     },
                     "storageSettings": {
                         "value": "[variables('storageSettings')]"
@@ -530,7 +530,7 @@
                         "value": "[variables('apiSettings')]"
                     },
                     "machineSettings": {
-                        "value": "[variables('jumpboxMachineSettings')]"
+                        "value": "[variables('mongoMachineSettings')]"
                     },
                     "storageSettings": {
                         "value": "[variables('storageSettings')]"

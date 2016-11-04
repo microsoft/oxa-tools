@@ -24,6 +24,8 @@ NODE_IP_PREFIX="10.0.0.1"
 LOGGING_KEY="[logging-key]"
 NODE_IP_OFFSET=0
 
+OS_VER=$(lsb_release -rs)
+
 help()
 {
     echo "This script installs MongoDB on the Ubuntu virtual machine image"
@@ -129,8 +131,14 @@ install_mongodb()
     log "Downloading MongoDB package $PACKAGE_NAME from $PACKAGE_URL"
 
     # Configure mongodb.list file with the correct location
-    apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv EA312927
-    echo "deb ${PACKAGE_URL} "$(lsb_release -sc)"/mongodb-org/3.2 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-3.2.list
+    if [[ $OS_VER =~ ^16 ]]
+    then
+        apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv EA312927
+        echo "deb ${PACKAGE_URL} "$(lsb_release -sc)"/mongodb-org/3.2 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-3.2.list
+    else
+        apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10
+        echo "deb ${PACKAGE_URL} "$(lsb_release -sc)"/mongodb-org/3.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-3.0.list
+    fi
 
     # Install updates
     apt-get -y update
@@ -292,13 +300,17 @@ EOF
 start_mongodb()
 {
     log "Starting MongoDB daemon processes"
-    systemctl start mongodb
+
+    if [[ $OS_VER =~ ^16 ]]
+    then
+        systemctl start mongodb
+        systemctl enable mongodb
+    else
+        service mongod start
+    fi
 
     # Wait for MongoDB daemon to start and initialize for the first time (this may take up to a minute or so)
     while ! timeout 1 bash -c "echo > /dev/tcp/localhost/$MONGODB_PORT"; do sleep 10; done
-
-    # enable mongodb on startup
-    systemctl enable mongodb
 }
 
 stop_mongodb()
