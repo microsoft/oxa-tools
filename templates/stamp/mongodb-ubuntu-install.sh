@@ -165,7 +165,7 @@ configure_replicaset()
     
     # Stop the currently running MongoDB daemon as we will need to reload its configuration
     stop_mongodb
-
+    
     # Attempt to start the MongoDB daemon so that configuration changes take effect
     start_mongodb
     
