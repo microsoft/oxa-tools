@@ -90,6 +90,13 @@ EDXAPP_FEATURES:
   DISABLE_COURSE_CREATION: true
   ALLOW_ALL_ADVANCED_COMPONENTS: true
 
+
+# Install the xblocks that are not installed by default but required on the platform
+# We can add new xblocks here as needed later
+EDXAPP_EXTRA_REQUIREMENTS:
+ - name: git+https://github.com/pmitros/DoneXBlock.git@1ce0ac14d9f3df3083b951262ec82e84b58d16d1#egg=done-xblock
+ - name: git+https://github.com/edx-solutions/xblock-drag-and-drop-v2.git@v2.0.11#egg=xblock-drag-and-drop-v2
+
 # Configure remote SMTP server
 #EDXAPP_EMAIL_HOST_USER: "%%EDXAPP_EMAIL_HOST_USER%%"
 #EDXAPP_EMAIL_HOST_PASSWORD: "%%EDXAPP_EMAIL_HOST_PASSWORD%%"
