@@ -29,7 +29,7 @@
         "customSettings": {
             "type": "secureObject",
             "metadata": {
-                "Description": "Template replication settings object"
+                "Description": "Custom settings object"
             }
         }
     },

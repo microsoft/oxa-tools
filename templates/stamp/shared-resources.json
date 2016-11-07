@@ -56,6 +56,15 @@
             }
         },
         {
+            "name": "[parameters('storageSettings').diagnosticStorageAccountName]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "[parameters('apiSettings').storageApiVersion]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "accountType": "[parameters('storageSettings').storageAccountType]"
+            }
+        },
+        {
             "type": "Microsoft.Compute/availabilitySets",
             "name": "[concat(parameters('networkSettings').clusterMongoDataNodeName, parameters('networkSettings').availabilitySetNameSuffix)]",
             "apiVersion": "[parameters('apiSettings').availabilitySetApiVersion]",

@@ -147,11 +147,59 @@
                 "description": "Number of application virtual machines behind the load balancer."
             }
         },
-        "branch": {
+        "customInstallerGithubAccountName": {
+            "type": "string",
+            "defaultValue": "microsoft",
+            "metadata": {
+                "description": "Name of the GitHub account where the custom installer lives"
+            }
+        },
+        "customInstallerGithubProjectName": {
+            "type": "string",
+            "defaultValue": "oxa-tools",
+            "metadata": {
+                "description": "Name of the GitHub project within the GitHub account where the custom installer lives"
+            }
+        },
+        "customInstallerGithubBranch": {
             "type": "string",
             "defaultValue": "master",
             "metadata": {
-                "description": "The GitHub branch from which scripts and other files will be downloaded"
+                "description": "The branch of the GitHub project from which custom installer scripts and other files will be downloaded"
+            }
+        },
+        "customInstallerGithubAccessToken": {
+            "type": "secureString",
+            "metadata": {
+                "description": "The personal access token to use when interacting with the private GitHub repository where the custom installer lives"
+            }
+        },
+        "githubAccountName": {
+            "type": "string",
+            "defaultValue": "microsoft",
+            "metadata": {
+                "description": "Name of the GitHub account where the Azure Arm Template lives"
+            }
+        },
+        "githubProjectName": {
+            "type": "string",
+            "defaultValue": "oxa-tools",
+            "metadata": {
+                "description": "Name of the GitHub project within the GitHub account where the Azure Arm Template lives"
+            }
+        },
+        "githubBranch": {
+            "type": "string",
+            "defaultValue": "master",
+            "metadata": {
+                "description": "The branch of the GitHub project from which scripts and other files will be downloaded"
+            }
+        },
+        "armTemplateRelativePath": {
+            "type": "string",
+            "defaultValue": "templates/stamp",
+            "metadata": {
+                "description": "The path relative to the root of the GitHub project's branch where the Azure Arm Template lives"
             }
         },
         "vmssUbuntuOsImageSku": {
@@ -222,6 +270,27 @@
             "metadata": {
                 "description": "The size of data disk to provision and attach to the VM"
             }
+        },
+        "customInstallerLaunchScript": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Name of the bootstrap script to trigger the custom installation. This script will call the customInstallerMainScriptRelativePath"
+            }
+        },
+        "customInstallerMainScriptRelativePath": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Relative path to the custom installer file to execute. This path is relative to the root of github repository."
+            }
+        },
+        "cloud": {
+            "type": "string",
+            "defaultValue": "bvt",
+            "metadata": {
+                "description": "The target cloud/environment"
+            }
         }
     },
     "variables": {
@@ -236,6 +305,7 @@
         "virtualMachineApiVersion": "[variables('defaultApiVersion')]",
         "storageApiVersion": "[variables('defaultApiVersion')]",
 
+        "diagnosticStorageAccountName": "[concat(toLower(parameters('clusterName')), 'diagnostics')]",
         "storageAccountName": "[concat(toLower(parameters('clusterName')), 'vhdsa')]",
         "storageAccountType": "Standard_LRS",
         "storageContainer": "[concat('https://', variables('storageAccountName'),'.blob.core.windows.net/vhds/')]",
@@ -248,6 +318,7 @@
         "lbID": "[resourceId('Microsoft.Network/loadBalancers',variables('loadBalancerName'))]",
 
         "vmssAutoscaleSettingNameSuffix": "-autoscale",
+        "vmssName": "[concat(parameters('clusterName'), '-vmss')]",
 
         "networkSettings": {
             "virtualNetworkName": "[variables('virtualNetworkName')]",
@@ -278,7 +349,7 @@
             "clusterMongoDataNodeDomainName": "[concat(parameters('clusterName'), 'mongo')]",
             "clusterMysqlDataNodeName": "[concat(parameters('clusterName'), '-mysql')]",
             "clusterMysqlDataNodeDomainName": "[concat(parameters('clusterName'), 'mysql')]",
-            "clusterVirtualMachineScaleSetName": "[concat(parameters('clusterName'), '-vmss')]",
+            "clusterVirtualMachineScaleSetName": "[variables('vmssName')]",
             "clusterVirtualMachineScaleSetDomainName": "[concat(parameters('clusterName'), 'vmss')]",
             "jumpBoxAvailabilitySetFaultDomainCount": "1",
             "jumpBoxNodeCount": "1",
@@ -311,7 +382,8 @@
             "storageContainer": "[variables('storageContainer')]",
             "storageContainerName": "vhds",
             "storageAccountType": "[variables('storageAccountType')]",
-            "storageAccountName": "[variables('storageAccountName')]"
+            "storageAccountName": "[variables('storageAccountName')]",
+            "diagnosticStorageAccountName": "[variables('diagnosticStorageAccountName')]"
         },
         "jumpboxMachineSettings": {
             "vmSize": "[parameters('jumpBoxVmSize')]",
@@ -368,7 +440,9 @@
         },
 
         "azureSharedScriptUrl": "[concat('https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/shared_scripts/', variables('supportedOSName'), '/')]",
-        "templateBaseUrl": "[concat('https://raw.githubusercontent.com/microsoft/oxa-tools/', parameters('branch'), '/templates/stamp/')]",
+        "templateBaseUrl": "[concat('https://raw.githubusercontent.com/',parameters('githubAccountName'), '/', parameters('githubProjectName'), '/', parameters('githubBranch'), '/', parameters('armTemplateRelativePath'), '/')]",
+        "clusterCustomInstallerScriptFullPath": "[concat( variables('templateBaseUrl'), parameters('customInstallerLaunchScript') )]",
+        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'), ' -a ', parameters('customInstallerGithubAccountName'),' -n ', parameters('customInstallerGithubProjectName'),' -b ', parameters('customInstallerGithubBranch'),' -i ', parameters('customInstallerMainScriptRelativePath'),' -p ', parameters('customInstallerGithubAccessToken'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'))]",
 
         "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources.json')]",
         "jumpboxTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-jumpbox.json')]",
@@ -385,11 +459,12 @@
             "scriptsToDownload": [
                 "[concat(variables('templateBaseUrl'), variables('mongoDbInstallerScript'))]",
                 "[concat(variables('azureSharedScriptUrl'), 'vm-disk-utils-0.1.sh')]",
-                "[concat(variables('templateBaseUrl'), variables('installerUtilitiesScript'))]"
+                "[concat(variables('clusterCustomInstallerScriptFullPath'))]",
+                "[concat(variables('templateBaseUrl'), variables('installerUtilitiesScript'))]",
+                "[concat(variables('clusterCustomInstallerScriptFullPath'))]"
             ],
-            "regularNodeInstallCommand": "[variables('mongoDbInstallerCommand')]",
-            "lastNodeInstallCommand": "[concat(variables('mongoDbInstallerCommand'), ' -l')]",
-            "arbiterNodeInstallCommand": "[concat(variables('mongoDbInstallerCommand'), ' -a')]"
+            "regularNodeInstallCommand": "[concat(variables('customInstallerCommand'), ' && ', variables('mongoDbInstallerCommand'))]",
+            "lastNodeInstallCommand": "[concat(variables('customInstallerCommand'), ' && ', variables('mongoDbInstallerCommand'), ' -l ')]"
         },
 
         "mysqlDbInstallerScript": "[concat('mysql-', variables('supportedOSName'), '-install.sh')]",
@@ -399,9 +474,36 @@
                 "[concat(variables('templateBaseUrl'), variables('mysqlDbInstallerScript'))]",
                 "[concat(variables('templateBaseUrl'), 'mysqld.template.cnf')]",
                 "[concat(variables('azureSharedScriptUrl'), 'vm-disk-utils-0.1.sh')]",
+                "[concat(variables('templateBaseUrl'), variables('installerUtilitiesScript'))]",
+                "[concat(variables('clusterCustomInstallerScriptFullPath'))]"
+            ],
+            "regularNodeInstallCommand": "[concat(variables('customInstallerCommand'), ' && ', variables('mysqlDbInstallerCommand'))]"
+        },
+
+        "jumpBoxInstallerSettings": {
+            "scriptsToDownload": [
+                "[concat(variables('clusterCustomInstallerScriptFullPath'))]",
                 "[concat(variables('templateBaseUrl'), variables('installerUtilitiesScript'))]"
             ],
-            "regularNodeInstallCommand": "[variables('mysqlDbInstallerCommand')]"
+            "customInstallerCommand": "[variables('customInstallerCommand')]"
+        },
+
+        "vmssInstallerSettings": {
+            "scriptsToDownload": [
+                "[concat(variables('clusterCustomInstallerScriptFullPath'))]",
+                "[concat(variables('templateBaseUrl'), variables('installerUtilitiesScript'))]"
+            ],
+            "customInstallerCommand": "[variables('customInstallerCommand')]"
+        },
+
+        "wadperfcounters1": "<PerformanceCounters scheduledTransferPeriod=\"PT1M\"><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\AvailableMemory\" sampleRate=\"PT15S\" unit=\"Bytes\"><annotation displayName=\"Memory available\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\PercentAvailableMemory\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Mem. percent available\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\UsedMemory\" sampleRate=\"PT15S\" unit=\"Bytes\"><annotation displayName=\"Memory used\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\PercentUsedMemory\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Memory percentage\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\PercentUsedByCache\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Mem. used by cache\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentIdleTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU idle time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentUserTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU user time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentProcessorTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU percentage guest OS\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentIOWaitTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU IO wait time\" locale=\"en-us\"/></PerformanceCounterConfiguration>",
+        "wadperfcounters2": "<PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\BytesPerSecond\" sampleRate=\"PT15S\" unit=\"BytesPerSecond\"><annotation displayName=\"Disk total bytes\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\ReadBytesPerSecond\" sampleRate=\"PT15S\" unit=\"BytesPerSecond\"><annotation displayName=\"Disk read guest OS\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\WriteBytesPerSecond\" sampleRate=\"PT15S\" unit=\"BytesPerSecond\"><annotation displayName=\"Disk write guest OS\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\TransfersPerSecond\" sampleRate=\"PT15S\" unit=\"CountPerSecond\"><annotation displayName=\"Disk transfers\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\ReadsPerSecond\" sampleRate=\"PT15S\" unit=\"CountPerSecond\"><annotation displayName=\"Disk reads\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\WritesPerSecond\" sampleRate=\"PT15S\" unit=\"CountPerSecond\"><annotation displayName=\"Disk writes\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\AverageReadTime\" sampleRate=\"PT15S\" unit=\"Seconds\"><annotation displayName=\"Disk read time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\AverageWriteTime\" sampleRate=\"PT15S\" unit=\"Seconds\"><annotation displayName=\"Disk write time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\AverageTransferTime\" sampleRate=\"PT15S\" unit=\"Seconds\"><annotation displayName=\"Disk transfer time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\AverageDiskQueueLength\" sampleRate=\"PT15S\" unit=\"Count\"><annotation displayName=\"Disk queue length\" locale=\"en-us\"/></PerformanceCounterConfiguration></PerformanceCounters>",
+        "vmssLinuxDiagnosticsSettings": {
+            "diagnosticsStorageAccountName": "[variables('diagnosticStorageAccountName')]",
+            "diagnosticsStorageAccountId": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/','Microsoft.Storage/storageAccounts/', variables('diagnosticStorageAccountName'))]",
+            "wadcfgxstart": "[concat('<WadCfg><DiagnosticMonitorConfiguration>',variables('wadperfcounters1'),variables('wadperfcounters2'),'<Metrics resourceId=\"')]",
+            "wadmetricsresourceid": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name ,'/providers/','Microsoft.Compute/virtualMachineScaleSets/',variables('vmssName'))]",
+            "wadcfgxend": "[concat('\"><MetricAggregation scheduledTransferPeriod=\"PT1H\"/><MetricAggregation scheduledTransferPeriod=\"PT1M\"/></Metrics></DiagnosticMonitorConfiguration></WadCfg>')]"
         }
     },
     "resources": [
@@ -453,6 +555,12 @@
                     },
                     "storageSettings": {
                         "value": "[variables('storageSettings')]"
+                    },
+                    "customSettings": {
+                        "value": {
+                            "vmScripts": "[variables('jumpBoxInstallerSettings').scriptsToDownload]",
+                            "customInstallerCommandToExecute": "[variables('jumpBoxInstallerSettings').customInstallerCommand]"
+                        }
                     }
                 }
             }
@@ -482,7 +590,7 @@
                         "value": "[variables('apiSettings')]"
                     },
                     "machineSettings": {
-                        "value": "[variables('jumpboxMachineSettings')]"
+                        "value": "[variables('mongoMachineSettings')]"
                     },
                     "storageSettings": {
                         "value": "[variables('storageSettings')]"
@@ -530,7 +638,7 @@
                         "value": "[variables('apiSettings')]"
                     },
                     "machineSettings": {
-                        "value": "[variables('jumpboxMachineSettings')]"
+                        "value": "[variables('mongoMachineSettings')]"
                     },
                     "storageSettings": {
                         "value": "[variables('storageSettings')]"
@@ -641,6 +749,9 @@
             "name": "vmss",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[variables('apiVersion')]",
+            "dependsOn": [
+                "[concat('Microsoft.Resources/deployments/', 'shared-resources')]"
+            ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -659,6 +770,13 @@
                     },
                     "storageSettings": {
                         "value": "[variables('storageSettings')]"
+                    },
+                    "customSettings": {
+                        "value": {
+                            "vmScripts": "[variables('vmssInstallerSettings').scriptsToDownload]",
+                            "commandToExecute": "[variables('vmssInstallerSettings').customInstallerCommand]",
+                            "linuxDiagnosticsSettings": "[variables('vmssLinuxDiagnosticsSettings')]"
+                        }
                     }
                 }
             }
