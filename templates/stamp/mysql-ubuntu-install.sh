@@ -63,7 +63,7 @@ while getopts :n:m:v:k:r:u:p:h optname; do
     m) # Ip address of the Mysql master node
         MASTER_NODE_IPADDRESS=${OPTARG}
         ;;
-    v) Mysql package version
+    v) # Mysql package version
         PACKAGE_VERSION=${OPTARG}
         ;;
     r) # Mysql replication user name
@@ -78,7 +78,7 @@ while getopts :n:m:v:k:r:u:p:h optname; do
     p) # Mysql administrator user password
         MYSQL_ADMIN_PASSWORD=`echo ${OPTARG} | base64 --decode`
         ;;
-    h)  # Helpful hints
+    h) # Helpful hints
         help
         exit 2
         ;;

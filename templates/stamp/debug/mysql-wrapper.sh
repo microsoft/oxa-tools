@@ -19,8 +19,9 @@ mysqlServerAdminUserName=lexoxamysqladmin
 mysqlServerAdminPassword=`echo a$$P@55w0rd1 1e1z1 | base64`
 mysqlServerPackageVersion="5.7"
 networkSettings_Ip="10.0.0.15"
+copyindex=1
 
-bash $mysqlDbInstallerScript -r $mysqlServerReplUserName -k $mysqlServerReplPassword -u $mysqlServerAdminUserName -p $mysqlServerAdminPassword -v $mysqlServerPackageVersion -m $networkSettings_Ip
+bash $mysqlDbInstallerScript -r $mysqlServerReplUserName -k $mysqlServerReplPassword -u $mysqlServerAdminUserName -p $mysqlServerAdminPassword -v $mysqlServerPackageVersion -m $networkSettings_Ip -n $copyindex
 
 # cleanup
 rm vm-disk-utils-0.1*
