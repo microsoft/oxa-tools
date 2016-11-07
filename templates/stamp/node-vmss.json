@@ -137,18 +137,18 @@
                 ],
                 "probes": [
                     {
-                        "name": "tcpProbeLMS",
+                        "name": "probeLMS",
                         "properties": {
-                            "protocol": "tcp",
+                            "protocol": "http",
                             "port": 80,
                             "intervalInSeconds": "5",
                             "numberOfProbes": "2"
                         }
                     },
                     {
-                        "name": "tcpProbeCMS",
+                        "name": "probeCMS",
                         "properties": {
-                            "protocol": "tcp",
+                            "protocol": "http",
                             "port": 18010,
                             "intervalInSeconds": "5",
                             "numberOfProbes": "2"
