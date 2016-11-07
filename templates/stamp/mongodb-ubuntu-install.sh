@@ -80,7 +80,7 @@ while getopts :i:b:r:k:u:p:x:n:o:alh optname; do
         ADMIN_USER_NAME=${OPTARG}
         ;;
     p) # Administrator's user name
-        ADMIN_USER_PASSWORD=${OPTARG}
+        ADMIN_USER_PASSWORD=`echo ${OPTARG} | base64 --decode`
         ;;
     x) # Private IP address prefix
         NODE_IP_PREFIX=${OPTARG}

@@ -70,13 +70,13 @@ while getopts :n:m:v:k:r:u:p:h optname; do
         MYSQL_REPLICATION_USER=${OPTARG}
         ;;    
     k) # Mysql replication password
-        MYSQL_REPLICATION_PASSWORD=${OPTARG}
+        MYSQL_REPLICATION_PASSWORD=`echo ${OPTARG} | base64 --decode`
         ;;    
     u) # Mysql administrator user name
         MYSQL_ADMIN_USER=${OPTARG}
         ;;        
     p) # Mysql administrator user password
-        MYSQL_ADMIN_PASSWORD=${OPTARG}
+        MYSQL_ADMIN_PASSWORD=`echo ${OPTARG} | base64 --decode`
         ;;
     h)  # Helpful hints
         help
