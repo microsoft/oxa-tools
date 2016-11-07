@@ -28,6 +28,6 @@ mongoReplicaSetKey=tcvhiyu5h2o5o
 
 bash $mongoDbInstallerScript -i $mongoMachineSettings_installerBaseUrl -b $mongoMachineSettings_installerPackages -r $mongoReplicaSetName -k $mongoReplicaSetKey -u $mongoServerAdminUserName -p $mongoServerAdminPassword -x $networkSettings_serverIpPrefix -n $networkSettings_mongoDataNodeCount
 
-cleanup
+# cleanup
 rm vm-disk-utils-0.1*
-popd debug
+popd
