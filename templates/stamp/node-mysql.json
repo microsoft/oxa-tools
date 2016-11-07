@@ -31,12 +31,12 @@
         "customSettings": {
             "type": "secureObject",
             "metadata": {
-                "Description": "Template replication settings object"
+                "Description": "Custom settings object"
             }
         }
     },
     "resources": [
-        
+
         {
             "type": "Microsoft.Network/networkInterfaces",
             "name": "[concat(parameters('networkSettings').clusterMysqlDataNodeName, parameters('customSettings').machineIndex, parameters('networkSettings').networkInterfaceNameSuffix)]",

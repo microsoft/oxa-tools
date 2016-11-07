@@ -27,6 +27,12 @@
             "metadata": {
                 "Description": "Storage settings object"
             }
+        },
+        "customSettings": {
+            "type": "secureObject",
+            "metadata": {
+                "Description": "Custom settings object"
+            }
         }
     },
     "resources": [
@@ -161,6 +167,27 @@
                             "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(parameters('networkSettings').clusterJumpBoxName, parameters('networkSettings').networkInterfaceNameSuffix))]"
                         }
                     ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(parameters('networkSettings').clusterJumpBoxName, '/installmdm')]",
+            "apiVersion": "[parameters('apiSettings').virtualMachineExtensionsApiVersion]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[parameters('networkSettings').clusterJumpBoxName]"
+            ],
+            "properties": {
+                "publisher": "Microsoft.Azure.Extensions",
+                "type": "CustomScript",
+                "typeHandlerVersion": "2.0",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "fileUris": "[parameters('customSettings').vmScripts]"
+                },
+                "protectedSettings": {
+                    "commandToExecute": "[parameters('customSettings').customInstallerCommandToExecute]"
                 }
             }
         }

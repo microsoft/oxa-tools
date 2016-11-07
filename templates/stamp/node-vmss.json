@@ -25,6 +25,12 @@
             "metadata": {
                 "Description": "Storage settings object"
             }
+        },
+        "customSettings": {
+            "type": "secureObject",
+            "metadata": {
+                "Description": "Custom settings object"
+            }
         }
     },
 
@@ -190,6 +196,7 @@
                     "mode": "Manual"
                 },
                 "virtualMachineProfile": {
+
                     "storageProfile": {
                         "osDisk": {
                             "vhdContainers": [
@@ -199,12 +206,13 @@
                                 "[concat('https://', variables('uniqueStringArray')[3], '.blob.core.windows.net/', parameters('storageSettings').storageContainerName)]",
                                 "[concat('https://', variables('uniqueStringArray')[4], '.blob.core.windows.net/', parameters('storageSettings').storageContainerName)]"
                             ],
-                            "name":"[concat(parameters('networkSettings').clusterVirtualMachineScaleSetName, parameters('networkSettings').osDiskSuffix)]",
+                            "name": "[concat(parameters('networkSettings').clusterVirtualMachineScaleSetName, parameters('networkSettings').osDiskSuffix)]",
                             "caching": "ReadOnly",
                             "createOption": "FromImage"
                         },
                         "imageReference": "[parameters('machineSettings').osImageReference]"
                     },
+
                     "osProfile": {
                         "computerNamePrefix": "[parameters('networkSettings').clusterVirtualMachineScaleSetDomainName]",
                         "adminUsername": "[parameters('networkSettings').adminUsername]",
@@ -247,6 +255,44 @@
                                             }
                                         }
                                     ]
+                                }
+                            }
+                        ]
+                    },
+
+                    "extensionProfile": {
+                        "extensions": [
+                            {
+                                "name": "[concat(parameters('networkSettings').clusterVirtualMachineScaleSetName, '-installmdm')]",
+                                "properties": {
+                                    "publisher": "Microsoft.Azure.Extensions",
+                                    "type": "CustomScript",
+                                    "typeHandlerVersion": "2.0",
+                                    "autoUpgradeMinorVersion": true,
+                                    "settings": {
+                                        "fileUris": "[parameters('customSettings').vmScripts]"
+                                    },
+                                    "protectedSettings": {
+                                        "commandToExecute": "[parameters('customSettings').commandToExecute]"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "[concat(parameters('networkSettings').clusterVirtualMachineScaleSetName, '-linuxdiagnostics')]",
+                                "properties": {
+                                    "publisher": "Microsoft.OSTCExtensions",
+                                    "type": "LinuxDiagnostic",
+                                    "typeHandlerVersion": "2.3",
+                                    "autoUpgradeMinorVersion": true,
+                                    "settings": {
+                                        "xmlCfg": "[base64(concat(parameters('customSettings').linuxDiagnosticsSettings.wadcfgxstart, parameters('customSettings').linuxDiagnosticsSettings.wadmetricsresourceid, parameters('customSettings').linuxDiagnosticsSettings.wadcfgxend)) ]",
+                                        "storageAccount": "[parameters('customSettings').linuxDiagnosticsSettings.diagnosticsStorageAccountName]"
+                                    },
+                                    "protectedSettings": {
+                                        "storageAccountName": "[parameters('customSettings').linuxDiagnosticsSettings.diagnosticsStorageAccountName]",
+                                        "storageAccountKey": "[listkeys(parameters('customSettings').linuxDiagnosticsSettings.diagnosticsStorageAccountId , parameters('apiSettings').storageApiVersion).key1]",
+                                        "storageAccountEndPoint": "https://core.windows.net"
+                                    }
                                 }
                             }
                         ]

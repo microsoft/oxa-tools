@@ -10,9 +10,27 @@
 
 log()
 {
-    # If you want to enable this logging add a un-comment the line below and add your account key 
+    # By default, we'd like logged messages to be sent to syslog. 
+    # We also want to enable logging for error messages
+    
+    # $1 - the message to log
+    # $2 - flag for error message = 1 (only presence test)
+    
     TIMESTAMP=`date +"%D %T"`
-    echo "${TIMESTAMP} :: $1"
+    
+    # check if this is an error message
+    LOG_MESSAGE="${TIMESTAMP} :: $1"
+    
+    if [ ! -z $2 ]; then
+        # stderr logging
+        LOG_MESSAGE="${TIMESTAMP} :: [ERROR] $1"
+        echo $LOG_MESSAGE >&2
+    else
+        echo $LOG_MESSAGE
+    fi
+    
+    # send the message to syslog
+    logger $1
 }
 
 #############################################################################
@@ -60,8 +78,22 @@ tune_system()
 
 configure_datadisks()
 {
-	# Stripe all of the data 
-	log "Formatting and configuring the data disks"
-	
-	bash ./vm-disk-utils-0.1.sh -b $DATA_DISKS -s
+    # Stripe all of the data 
+    log "Formatting and configuring the data disks"
+
+    bash ./vm-disk-utils-0.1.sh -b $DATA_DISKS -s
+}
+
+#############################################################################
+# Install GIT client
+#############################################################################
+
+install-git()
+{
+    if type git >/dev/null 2>&1; then
+        log "Git already installed"
+    else
+        log "Installing Git Client"
+        apt-get install -y git
+    fi
 }
