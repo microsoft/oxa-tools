@@ -20,8 +20,8 @@ networkSettings_mongoDataNodeCount=1
 
 # configurable, but hardcoded for now
 mongoReplicaSetName=clustername-rs1
-mongoServerAdminUserName=stepdo
-mongoServerAdminPassword="hokie"
+mongoServerAdminUserName=mongoUser
+mongoServerAdminPassword=`echo mongoPassword | base64`
 
 # generally randomly generated, but hardcoded for now
 mongoReplicaSetKey=tcvhiyu5h2o5o
