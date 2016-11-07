@@ -1,0 +1,41 @@
+# Modifying Country or Region list. null means country is removed from the list. Others either country is a new added country or display name is changed.
+EDXAPP_COUNTRIES_OVERRIDE:
+  BO: "Bolivia"
+  BQ: "Bonaire"
+  VG: "British Virgin Islands"
+  BN: "Brunei"
+  CD: "Congo (DRC)"
+  IR: null
+  CB: null
+  FK: "Falkland Islands"
+  VA: null
+  HK: "Hong Kong SAR"
+  XJ: "Jan Mayen"
+  KP: null
+  KR: "Korea"
+  XK: "Kosova"
+  LA: "Laos"
+  MO: "Macao SAR"
+  MK: "Macedonia, FYRO"
+  FM: "Micronesia"
+  MD: "Moldova"
+  PS: "Palestinian Authority"
+  PN: "Pitcairn Island"
+  RU: "Russia"
+  XE: "Sint Eustatius"
+  SX: "Sint Maarten"
+  XS: "Saba"
+  MF: "Saint Martin"
+  SH: "St Helena, Ascension, Tristan da Cunha"
+  SJ: "Svalbard"
+  SD: null
+  SY: null
+  TW: "Taiwan"
+  TZ: "Tanzania"
+  UM: "U.S. Outlying Islands"
+  VI: "U.S. Virgin Islands"
+  US: "United States"
+  GB: "United Kingdom"
+  VE: "Venezuela"
+  VN: "Vietnam"
+  EH: null
