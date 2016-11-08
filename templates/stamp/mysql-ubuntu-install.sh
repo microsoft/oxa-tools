@@ -229,7 +229,6 @@ create_config_file()
     # update the generic settings
     #sed -i "s/^bind-address=.*/bind-address=${NODE_ADDRESS}/I" $TEMP_MYCNF_PATH
     sed -i "s/^server-id=.*/server-id=${MYSQL_REPLICATION_NODEID}/I" $TEMP_MYCNF_PATH
-    
 
     # 1. perform necessary settings replacements
     if [ ${MYSQL_REPLICATION_NODEID} -eq 1 ];
@@ -239,14 +238,12 @@ create_config_file()
         sed -i "s/^#log_bin=.*/log_bin=\/var\/log\/mysql\/mysql-bin-${HOSTNAME}.log/I" $TEMP_MYCNF_PATH
         sed -i "s/^#expire_logs_days=.*/expire_logs_days=${REPL_EXPIRE_LOG_DAYS}/I" $TEMP_MYCNF_PATH
         sed -i "s/^#max_binlog_size=.*/max_binlog_size=${REPL_MAX_BINLOG_SIZE}/I" $TEMP_MYCNF_PATH
-
     else
         log "Mysql Replication Slave Node detected. Creating *.cnf for the SlaveNode on ${HOSTNAME}"
 
         sed -i "s/^\#relay-log=.*/relay-log=\/var\/log\/mysql\/mysql-relay-bin-${HOSTNAME}.log/I" $TEMP_MYCNF_PATH
         sed -i "s/^\#relay-log-space-limit=.*/expire_logs_days=${REPL_RELAY_LOG_SPACE_LIMIT}/I" $TEMP_MYCNF_PATH
         sed -i "s/^\#read-only=.*/read-only=1/I" $TEMP_MYCNF_PATH
-
     fi
     
     # 2. backup any existing configuration
@@ -334,7 +331,6 @@ y
 y'
 
 }
-
 
 # Step 1: Configuring Disks"
 configure_datadisks
