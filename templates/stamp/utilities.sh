@@ -84,7 +84,13 @@ configure_datadisks()
     # Stripe all of the data 
     log "Formatting and configuring the data disks"
 
-<<<<<<< HEAD
+    # vm-disk-utils-0.1 can install mdadm which installs postfix. The postfix
+    # installation cannot be made silent using the techniques that keep the
+    # mdadm installation quiet: a) -y AND b) DEBIAN_FRONTEND=noninteractive.
+    # Therefore, we'll install postfix early with the "No configuration" option.
+    echo "postfix postfix/main_mailer_type select No configuration" | sudo debconf-set-selections
+    sudo apt-get install -y postfix
+
     bash ./vm-disk-utils-0.1.sh -b $DATA_DISKS -s
 }
 
@@ -100,14 +106,4 @@ install-git()
         log "Installing Git Client"
         apt-get install -y git
     fi
-=======
-    # vm-disk-utils-0.1 can install mdadm which installs postfix. The postfix
-    # installation cannot be made silent using the techniques that keep the
-    # mdadm installation quiet: a) -y AND b) DEBIAN_FRONTEND=noninteractive.
-    # Therefore, we'll install postfix early with the "No configuration" option.
-    echo "postfix postfix/main_mailer_type select No configuration" | sudo debconf-set-selections
-    sudo apt-get install -y postfix
-
-    bash ./vm-disk-utils-0.1.sh -b $DATA_DISKS -s
->>>>>>> Stepdo/stamp mongo wrapper (#15)
 }
