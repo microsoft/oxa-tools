@@ -105,15 +105,20 @@ MYSQL_SERVER_PACKAGE_NAME="${PACKAGE_NAME}-${PACKAGE_VERSION}"
 start_mysql()
 {
     log "Starting Mysql Server"
-    systemctl start mysqld
+
+    if (( $(echo "$OS_VER > 16" |bc -l) ))
+    then
+        systemctl start mysqld
+        # enable mysqld on startup
+        systemctl enable mysqld
+    else
+        service mysql start
+    fi
 
     # Wait for Mysql daemon to start and initialize for the first time (this may take up to a minute or so)
     while ! timeout 1 bash -c "echo > /dev/tcp/localhost/$MYSQL_PORT"; do sleep 10; done
 
     log "${MYSQL_SERVER_PACKAGE_NAME} has been started"
-
-    # enable mysqld on startup
-    systemctl enable mysqld
 }
 
 stop_mysql()
