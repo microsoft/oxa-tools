@@ -154,17 +154,16 @@ install_mysql_server()
 
         debFileName=mysql-apt-config_0.8.0-1_all
         wget -q http://dev.mysql.com/get/$debFileName.deb -O $debFileName.deb
-        echo mysql-apt-config mysql-apt-config/select-server select mysql-5.7 | sudo debconf-set-selections
-        echo mysql-apt-config mysql-apt-config/select-product select Apply | sudo debconf-set-selections
-        #echo mysql-apt-config mysql-apt-config/select-product select Ok | sudo debconf-set-selections
+        export DEBIAN_FRONTEND=noninteractive
+        echo mysql-apt-config mysql-apt-config/select-product select Ok | debconf-set-selections
         dpkg -i $debFileName.deb
         rm $debFileName*
     fi
 
     apt-get -y update
 
-    echo $MYSQL_SERVER_PACKAGE_NAME mysql-server/root_password password $MYSQL_ADMIN_PASSWORD | debconf-set-selections
-    echo $MYSQL_SERVER_PACKAGE_NAME mysql-server/root_password_again password $MYSQL_ADMIN_PASSWORD | debconf-set-selections
+    echo $package mysql-server/root_password password $MYSQL_ADMIN_PASSWORD | debconf-set-selections
+    echo $package mysql-server/root_password_again password $MYSQL_ADMIN_PASSWORD | debconf-set-selections
     apt-get install -y $package
 
     log "Installing Mysql packages: Completed"
