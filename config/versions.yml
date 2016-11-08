@@ -10,5 +10,3 @@ xqueue_version: "%%EDX_VERSION%%"
 edxapp_theme_source_repo: "%%THEME_REPO%%"
 edxapp_theme_version: "%%THEME_VERSION%%"
 edxapp_theme_name: "default"
-
-COMMON_SSH_PASSWORD_AUTH: "yes"

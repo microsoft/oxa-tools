@@ -1,0 +1,12 @@
+---
+# SMTP configuration, depends on VM host or SMTP credentials
+EDXAPP_EMAIL_HOST: "openedx-mysql"
+
+# Database connections
+ORA_MYSQL_HOST: "openedx-mysql"
+XQUEUE_MYSQL_HOST: "openedx-mysql"
+EDXAPP_MYSQL_HOST: "openedx-mysql"
+EDXAPP_MEMCACHE: ["openedx-mysql:11211"]
+MONGO_BIND_IP: "0.0.0.0"
+FORUM_MONGO_HOSTS: ["openedx-mongo"]
+EDXAPP_MONGO_HOSTS: ["openedx-mongo"]
