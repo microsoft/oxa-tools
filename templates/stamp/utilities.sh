@@ -97,3 +97,33 @@ install-git()
         apt-get install -y git
     fi
 }
+
+#############################################################################
+# Install Mongo Shell
+#############################################################################
+
+install-mongodb-shell()
+{
+    if type mongo >/dev/null 2>&1; then
+        log "MongoDB Shell is already installed"
+    else
+        log "Installing MongoDB Shell"
+        apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv EA312927
+        apt-get update
+        apt-get install -y mongodb-org-shell
+    fi
+}
+
+#############################################################################
+# Install Mysql Client
+#############################################################################
+
+install-mysql-client()
+{
+    if type mysql >/dev/null 2>&1; then
+        log "Mysql Client is already installed"
+    else
+        log "Installing Mysql Client"
+        apt-get install -y mysql-client-core*
+    fi
+}
