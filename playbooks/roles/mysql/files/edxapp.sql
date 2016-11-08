@@ -16,9 +16,12 @@ ALTER TABLE auth_user ADD UNIQUE (email);
 
 
 /*
-  Create the certificate HTML view configuration
+  Create the certificate HTML view configuration in the edxapp database which is used by Open edX and also showed on Django admin panel.
+
   In the certificates_certificatehtmlviewconfiguration table we can have only one certification row defined so first delete any existing ones
-  and then insret the certificate. It is inserted as enabled, ready to be used in the courses.
+  and then insert the certificate. It is inserted as enabled, ready to be used in the courses.
+
+  It is safe to run this multiple times.
 */
 DELETE FROM certificates_certificatehtmlviewconfiguration;
 
@@ -32,6 +35,6 @@ VALUES
 ( 
   NOW(),
   True,
-  '{"default": {"accomplishment_class_append": "accomplishment-certificate", "platform_name": "Your Platform Name Here", "logo_src": "/static/certificates/images/logo.png", "logo_url": "http://www.example.com", "company_verified_certificate_url": "http://www.example.com/verified-certificate", "company_privacy_url": "http://www.example.com/privacy-policy", "company_tos_url": "http://www.example.com/terms-service", "company_about_url": "http://www.example.com/about-us"}, "verified": {"certificate_type": "Verified", "certificate_title": "Verified Certificate of Achievement"}, "honor": {"certificate_type": "Honor Code", "certificate_title": "Certificate of Achievement"}}'
+  '{"default":{"platform_name":"Microsoft","company_about_url":"https://www.microsoft.com/en-us/about","company_privacy_url":"https://privacy.microsoft.com/en-us/privacystatement/","company_tos_url":"https://openedx.microsoft.com/tos","logo_src":"https://openedx.microsoft.com/static/themes/default/images/ms-logo.png","logo_url":"www.microsoft.com"},"honor":{"certificate_type":"honor","certificate_title":"Honor Certificate","document_body_class_append":"is-honorcode"},"verified":{"certificate_type":"verified","certificate_title":"Verified Certificate","document_body_class_append":"is-idverified"},"base":{"certificate_type":"base","certificate_title":"Certificate of Achievement","document_body_class_append":"is-base"},"distinguished":{"certificate_type":"distinguished","certificate_title":"Distinguished Certificate of Achievement","document_body_class_append":"is-distinguished"}}'
  );
 
