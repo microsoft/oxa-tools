@@ -74,35 +74,20 @@ parse_args() {
 }
 
 sync_repo() {
-  REPO_URL=$1, REPO_VERSION=$2, REPO_PATH=$3, ACCESS_TOKEN=$4
+  REPO_URL=$1; REPO_VERSION=$2; REPO_PATH=$3
+  REPO_TOKEN=$4 # optional
+
+  if [ "$#" -lt 3 ]; then
+    echo "sync_repo: invalid number of arguments" && exit 1
+  fi
   
   # todo: scorch support?
   
   if [[ ! -d $REPO_PATH ]]; then
     mkdir -p $REPO_PATH
-    git clone ${REPO_URL} $REPO_PATH
+    git clone ${REPO_URL/github/$REPO_TOKEN@github} $REPO_PATH
   fi
   pushd $REPO_PATH && git checkout ${REPO_VERSION:-master} && popd
-}
-
-##
-## Deployment-specific defaults, in case they're missing from ${env}.sh
-##
-setup_defaults() {
-  case "$EDX_ROLE" in
-    jb|vmss)
-      ADMIN_USER=lexoxaadmin
-      TEMPLATE_TYPE=stamp
-      ;;
-    edxapp|mongo|mysql
-      ADMIN_USER=openedxuser
-      TEMPLATE_TYPE=scalable
-      ;;
-    fullstack)
-      ADMIN_USER=openedxuser
-      TEMPLATE_TYPE=fullstack
-      ;;
-  esac
 }
 
 ##
@@ -121,12 +106,18 @@ setup() {
   export ANSIBLE_REPO=CONFIGURATION_REPO
   export ANSIBLE_VERSION=CONFIGURATION_VERSION
   
+  # deployment environment overrides for debugging
+  OXA_ENV_OVERRIDE_FILE="$BOOTSTRAP_HOME/overrides.sh"
+  if [[ -d $OXA_ENV_OVERRIDE_FILE ]]; then
+    source $OXA_ENV_OVERRIDE_FILE
+  fi
+  
   # sync public repositories
   sync_repo $OXA_TOOLS_REPO $OXA_TOOLS_VERSION $OXA_TOOLS_PATH
   sync_repo $CONFIGURATION_REPO $CONFIGURATION_VERSION $CONFIGURATION_PATH
   
   # run edx bootstrap and install requirements
-  cd $OXA_CONFIG_PATH
+  cd $CONFIGURATION_PATH
   bash util/install/ansible-bootstrap.sh
   pip install -r requirements.txt
   
@@ -137,7 +128,7 @@ setup() {
   # warning: beware of yaml variable dependencies due to order of aggregation
   echo "---" > $OXA_PLAYBOOK_CONFIG
   for config in $OXA_TOOLS_PATH/config/$TEMPLATE_TYPE/*.yml $OXA_TOOLS_PATH/config/*.yml; do
-    sed -e "s/%%\(.*\)%%/$\\1/g" -e "s/^---.*$//g" $config | envsubst >> $OXA_PLAYBOOK_CONFIG
+    sed -e "s/%%\([^%]*\)%%/$\{\\1\}/g" -e "s/^---.*$//g" $config | envsubst >> $OXA_PLAYBOOK_CONFIG
   done
 }
 
@@ -145,73 +136,85 @@ setup() {
 ## Role-based ansible command lines
 ##
 
+exit_on_error() {
+  if [[ $? -ne 0 ]]; then
+    echo $1 && exit 1
+  fi
+}
+
 update_stamp_jb() {    
   # edx playbooks - mysql and memcached
   $ANSIBLE_PLAYBOOK -i ${CLUSTERNAME}mysql1, $OXA_SSH_ARGS -e@$OXA_PLAYBOOK_CONFIG edx_mysql.yml
+  exit_on_error "Execution of edX MySQL playbook failed"  
   # minimize tags? "install:base,install:system-requirements,install:configuration,install:app-requirements,install:code"
   $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_sandbox.yml -e "migrate_db=yes" --tags "edxapp-sandbox,install,migrate"
+  exit_on_error "Execution of edX MySQL migrations failed"
   
   # oxa playbooks - mongo (enable when customized) and mysql
   #$ANSIBLE_PLAYBOOK -i ${CLUSTERNAME}mongo1, $OXA_SSH_ARGS -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mongo"
+  #exit_on_error "Execution of OXA Mongo playbook failed"
   $ANSIBLE_PLAYBOOK -i ${CLUSTERNAME}mysql1, $OXA_SSH_ARGS -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mysql"
+  exit_on_error "Execution of OXA MySQL playbook failed"
 }
 
 update_stamp_vmss() {
   # edx playbooks - sandbox with remote mongo/mysql
   $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_sandbox.yml -e "migrate_db=no"
+  exit_on_error "Execution of edX sandbox playbook failed"
   
   # oxa playbooks
   $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "edxapp"
+  exit_on_error "Execution of OXA edxapp playbook failed"
 }
 
 update_scalable_mongo() {
   # edx playbooks - mongo
   $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_mongo.yml
+  exit_on_error "Execution of edX Mongo playbook failed"
   
   # oxa playbooks - mongo (enable when customized)
   #$ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mongo"
+  #exit_on_error "Execution of OXA Mongo playbook failed"
 }
 
 update_scalable_mysql() {
   # edx playbooks - mysql and memcached
   $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_mysql.yml
+  exit_on_error "Execution of edX MySQL playbook failed"  
   # minimize tags? "install:base,install:system-requirements,install:configuration,install:app-requirements,install:code"
   $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_sandbox.yml -e "migrate_db=yes" --tags "edxapp-sandbox,install,migrate"
+  exit_on_error "Execution of edX MySQL migrations failed"
   
   # oxa playbooks - mysql
   $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mysql"
-}
-
-update_scalable_edxapp() {
-  # edx playbooks - sandbox with remote mongo/mysql
-  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_sandbox.yml -e "migrate_db=no"
-  
-  # oxa playbooks - edxapp
-  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "edxapp"
+  exit_on_error "Execution of OXA MySQL playbook failed"
 }
 
 update_fullstack() {
   # edx playbooks - fullstack (single VM)
   $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG vagrant-fullstack.yml
+  exit_on_error "Execution of edX fullstack playbook failed"
 
   # oxa playbooks - all (single VM)
   $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK
+  exit_on_error "Execution of OXA playbook failed"
 }
+
+parse_args $@ # pass existing command line arguments
 
 ##
 ## Execute role-independent OXA environment bootstrap
 ##
+BOOTSTRAP_HOME=$(dirname $0)
 OXA_PATH=/oxa
 OXA_TOOLS_REPO="https://github.com/microsoft/oxa-tools.git"
 OXA_TOOLS_PATH=$OXA_PATH/oxa-tools
 OXA_TOOLS_CONFIG_REPO="https://github.com/microsoft/oxa-tools-config.git"
 OXA_TOOLS_CONFIG_PATH=$OXA_PATH/oxa-tools-config
-OXA_CONFIG_PATH=$OXA_PATH/configuration
+CONFIGURATION_PATH=$OXA_PATH/configuration
 OXA_ENV_FILE=$OXA_TOOLS_CONFIG_PATH/env/$DEPLOYMENT_ENV/$DEPLOYMENT_ENV.sh
 OXA_PLAYBOOK_CONFIG=$OXA_PATH/oxa.yml
 
-parse_args $@ # pass existing command line arguments
-setup_defaults
 setup
 
 ##
@@ -228,13 +231,13 @@ OXA_SSH_ARGS="-u $OXA_ADMIN_USER --private-key=/home/$OXA_ADMIN_USER/.ssh/id_rsa
 # fatal: The remote end hung up unexpectedly
 git config --global http.postBuffer 1048576000
 
-cd $OXA_CONFIG_PATH/playbooks
+cd $CONFIGURATION_PATH/playbooks
 case "$EDX_ROLE" in
   jb)
-#    update_stamp_jb
+    update_stamp_jb
     ;;
   vmss)
-#    update_stamp_vmss
+    update_stamp_vmss
     ;;
   edxapp)
     # scalable and stamp vmss are equivalent; can combine vmss and edxapp once stamp is ready
@@ -253,3 +256,5 @@ case "$EDX_ROLE" in
     display_usage
     ;;
 esac
+
+echo "OXA bootstrap complete"
