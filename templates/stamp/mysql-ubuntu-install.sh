@@ -156,6 +156,7 @@ install_mysql_server()
 create_mysql_unitfile()
 {
     log "Creating the Mysql Unit File"
+
     tee /etc/systemd/system/mysqld.service > /dev/null <<EOF
 [Unit]
 Description=MySQL Community Server
@@ -184,7 +185,7 @@ EOF
     then
         # Ubuntu 16 and above
         systemctl daemon-reload
-    else
+    #else
         # Ubuntu 14 and below doesn't support systemctl
         # todo: determine if there is an equivalent command to "daemon-reload" using: service, update-rc.d, or sysv-rc-conf
         # note: chkconfig can't be used on any version 12 and above
