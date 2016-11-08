@@ -132,27 +132,6 @@
                     ]
                 }
             }
-        },
-        {
-            "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat(parameters('networkSettings').clusterMysqlDataNodeName, parameters('customSettings').machineIndex, '/installmysql')]",
-            "apiVersion": "[parameters('apiSettings').virtualMachineExtensionsApiVersion]",
-            "location": "[resourceGroup().location]",
-            "dependsOn": [
-                "[concat(parameters('networkSettings').clusterMysqlDataNodeName, parameters('customSettings').machineIndex)]"
-            ],
-            "properties": {
-                "publisher": "Microsoft.Azure.Extensions",
-                "type": "CustomScript",
-                "typeHandlerVersion": "2.0",
-                "autoUpgradeMinorVersion": true,
-                "settings": {
-                    "fileUris": "[parameters('customSettings').vmScripts]"
-                },
-                "protectedSettings": {
-                    "commandToExecute": "[parameters('customSettings').commandToExecute]"
-                }
-            }
         }
     ]
 }
