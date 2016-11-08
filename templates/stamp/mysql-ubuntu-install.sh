@@ -5,7 +5,6 @@
 # general parameters
 PACKAGE_VERSION=5.7
 PACKAGE_NAME=mysql-server
-MYSQL_SERVER_PACKAGE_NAME="${PACKAGE_NAME}-${PACKAGE_VERSION}"
 
 MYSQL_REPLICATION_NODEID=
 NODE_ADDRESS=`ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'`
@@ -21,6 +20,8 @@ MYSQL_PORT=3306
 DATA_DISKS="/datadisks"
 DATA_MOUNTPOINT="$DATA_DISKS/disk1"
 MYSQL_DATA="$DATA_MOUNTPOINT/mysql"
+
+OS_VER=$(lsb_release -rs)
 
 help()
 {
@@ -63,7 +64,7 @@ while getopts :n:m:v:k:r:u:p:h optname; do
     m) # Ip address of the Mysql master node
         MASTER_NODE_IPADDRESS=${OPTARG}
         ;;
-    v) Mysql package version
+    v) # Mysql package version
         PACKAGE_VERSION=${OPTARG}
         ;;
     r) # Mysql replication user name
@@ -78,7 +79,7 @@ while getopts :n:m:v:k:r:u:p:h optname; do
     p) # Mysql administrator user password
         MYSQL_ADMIN_PASSWORD=`echo ${OPTARG} | base64 --decode`
         ;;
-    h)  # Helpful hints
+    h) # Helpful hints
         help
         exit 2
         ;;
@@ -98,19 +99,26 @@ then
     exit 3
 fi
 
+MYSQL_SERVER_PACKAGE_NAME="${PACKAGE_NAME}-${PACKAGE_VERSION}"
+
 #############################################################################
 start_mysql()
 {
     log "Starting Mysql Server"
-    systemctl start mysqld
+
+    if (( $(echo "$OS_VER > 16" |bc -l) ))
+    then
+        systemctl start mysqld
+        # enable mysqld on startup
+        systemctl enable mysqld
+    else
+        service mysql start
+    fi
 
     # Wait for Mysql daemon to start and initialize for the first time (this may take up to a minute or so)
     while ! timeout 1 bash -c "echo > /dev/tcp/localhost/$MYSQL_PORT"; do sleep 10; done
 
     log "${MYSQL_SERVER_PACKAGE_NAME} has been started"
-
-    # enable mysqld on startup
-    systemctl enable mysqld
 }
 
 stop_mysql()
@@ -142,11 +150,27 @@ install_mysql_server()
     
     create_mysql_unitfile
 
+    export DEBIAN_FRONTEND=noninteractive
+
+    package=$MYSQL_SERVER_PACKAGE_NAME
+
+    if (( $(echo "$OS_VER < 16" |bc -l) ))
+    then
+        # Allow sql 5.7 on ubuntu 14 and below.
+        package=${PACKAGE_NAME}
+
+        debFileName=mysql-apt-config_0.8.0-1_all
+        wget -q http://dev.mysql.com/get/$debFileName.deb -O $debFileName.deb
+        echo mysql-apt-config mysql-apt-config/select-product select Ok | debconf-set-selections
+        dpkg -i $debFileName.deb
+        rm $debFileName*
+    fi
+
     apt-get -y update
 
-    echo $MYSQL_SERVER_PACKAGE_NAME mysql-server/root_password password $MYSQL_ADMIN_PASSWORD | debconf-set-selections
-    echo MYSQL_SERVER_PACKAGE_NAME mysql-server/root_password_again password $MYSQL_ADMIN_PASSWORD | debconf-set-selections
-    apt-get install -y $MYSQL_SERVER_PACKAGE_NAME
+    echo $package mysql-server/root_password password $MYSQL_ADMIN_PASSWORD | debconf-set-selections
+    echo $package mysql-server/root_password_again password $MYSQL_ADMIN_PASSWORD | debconf-set-selections
+    apt-get install -y $package
 
     log "Installing Mysql packages: Completed"
 }
@@ -154,6 +178,7 @@ install_mysql_server()
 create_mysql_unitfile()
 {
     log "Creating the Mysql Unit File"
+
     tee /etc/systemd/system/mysqld.service > /dev/null <<EOF
 [Unit]
 Description=MySQL Community Server
@@ -178,7 +203,15 @@ EOF
     sed -i "s/--port=default_port/--port=${MYSQL_PORT}/I" /etc/systemd/system/mysqld.service
 
     # reload the unit
-    systemctl daemon-reload
+    if (( $(echo "$OS_VER > 16" |bc -l) ))
+    then
+        # Ubuntu 16 and above
+        systemctl daemon-reload
+    #else
+        # Ubuntu 14 and below doesn't support systemctl
+        # todo: determine if there is an equivalent command to "daemon-reload" using: service, update-rc.d, or sysv-rc-conf
+        # note: chkconfig can't be used on any version 12 and above
+    fi
 }
 
 
@@ -201,7 +234,6 @@ create_config_file()
     # update the generic settings
     #sed -i "s/^bind-address=.*/bind-address=${NODE_ADDRESS}/I" $TEMP_MYCNF_PATH
     sed -i "s/^server-id=.*/server-id=${MYSQL_REPLICATION_NODEID}/I" $TEMP_MYCNF_PATH
-    
 
     # 1. perform necessary settings replacements
     if [ ${MYSQL_REPLICATION_NODEID} -eq 1 ];
@@ -211,14 +243,12 @@ create_config_file()
         sed -i "s/^#log_bin=.*/log_bin=\/var\/log\/mysql\/mysql-bin-${HOSTNAME}.log/I" $TEMP_MYCNF_PATH
         sed -i "s/^#expire_logs_days=.*/expire_logs_days=${REPL_EXPIRE_LOG_DAYS}/I" $TEMP_MYCNF_PATH
         sed -i "s/^#max_binlog_size=.*/max_binlog_size=${REPL_MAX_BINLOG_SIZE}/I" $TEMP_MYCNF_PATH
-
     else
         log "Mysql Replication Slave Node detected. Creating *.cnf for the SlaveNode on ${HOSTNAME}"
 
         sed -i "s/^\#relay-log=.*/relay-log=\/var\/log\/mysql\/mysql-relay-bin-${HOSTNAME}.log/I" $TEMP_MYCNF_PATH
         sed -i "s/^\#relay-log-space-limit=.*/expire_logs_days=${REPL_RELAY_LOG_SPACE_LIMIT}/I" $TEMP_MYCNF_PATH
         sed -i "s/^\#read-only=.*/read-only=1/I" $TEMP_MYCNF_PATH
-
     fi
     
     # 2. backup any existing configuration
@@ -306,7 +336,6 @@ y
 y'
 
 }
-
 
 # Step 1: Configuring Disks"
 configure_datadisks
