@@ -108,9 +108,10 @@ setup() {
   
   # deployment environment overrides for debugging
   OXA_ENV_OVERRIDE_FILE="$BOOTSTRAP_HOME/overrides.sh"
-  if [[ -d $OXA_ENV_OVERRIDE_FILE ]]; then
+  if [[ -f $OXA_ENV_OVERRIDE_FILE ]]; then
     source $OXA_ENV_OVERRIDE_FILE
   fi
+  export $(sed -e 's/#.*$//' $OXA_ENV_OVERRIDE_FILE | cut -d= -f1)
   
   # sync public repositories
   sync_repo $OXA_TOOLS_REPO $OXA_TOOLS_VERSION $OXA_TOOLS_PATH
@@ -205,7 +206,7 @@ parse_args $@ # pass existing command line arguments
 ##
 ## Execute role-independent OXA environment bootstrap
 ##
-BOOTSTRAP_HOME=$(dirname $0)
+BOOTSTRAP_HOME=$(readlink -f $(dirname $0))
 OXA_PATH=/oxa
 OXA_TOOLS_REPO="https://github.com/microsoft/oxa-tools.git"
 OXA_TOOLS_PATH=$OXA_PATH/oxa-tools
