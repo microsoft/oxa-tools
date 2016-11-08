@@ -144,6 +144,18 @@ install_mysql_server()
     
     create_mysql_unitfile
 
+    if (( $(echo "$OS_VER < 16" |bc -l) ))
+    then
+        # Allow sql 5.7 on ubuntu 14 and below.
+        debFileName=mysql-apt-config_0.8.0-1_all
+        wget -q http://dev.mysql.com/get/$debFileName.deb -O $debFileName.deb
+        echo mysql-apt-config mysql-apt-config/select-server select mysql-5.7 | sudo debconf-set-selections
+        echo mysql-apt-config mysql-apt-config/select-product select Apply | sudo debconf-set-selections
+        #echo mysql-apt-config mysql-apt-config/select-product select Ok | sudo debconf-set-selections
+        dpkg -i $debFileName.deb
+        rm $debFileName*
+    fi
+
     apt-get -y update
 
     echo $MYSQL_SERVER_PACKAGE_NAME mysql-server/root_password password $MYSQL_ADMIN_PASSWORD | debconf-set-selections
