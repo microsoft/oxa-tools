@@ -145,6 +145,8 @@ install_mysql_server()
     
     create_mysql_unitfile
 
+    export DEBIAN_FRONTEND=noninteractive
+
     package=$MYSQL_SERVER_PACKAGE_NAME
 
     if (( $(echo "$OS_VER < 16" |bc -l) ))
@@ -154,7 +156,6 @@ install_mysql_server()
 
         debFileName=mysql-apt-config_0.8.0-1_all
         wget -q http://dev.mysql.com/get/$debFileName.deb -O $debFileName.deb
-        export DEBIAN_FRONTEND=noninteractive
         echo mysql-apt-config mysql-apt-config/select-product select Ok | debconf-set-selections
         dpkg -i $debFileName.deb
         rm $debFileName*
