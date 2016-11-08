@@ -3,7 +3,6 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
-
 #############################################################################
 # Log a message
 #############################################################################
@@ -39,6 +38,8 @@ log()
 
 tune_memory()
 {
+    log "Disabling THP (transparent huge pages)"
+
     # Disable THP on a running system
     echo never > /sys/kernel/mm/transparent_hugepage/enabled
     echo never > /sys/kernel/mm/transparent_hugepage/defrag
@@ -60,13 +61,15 @@ tune_memory()
 
 tune_system()
 {
+    log "Adding local machine for IP address resolution"
+
     # Add local machine name to the hosts file to facilitate IP address resolution
     if grep -q "${HOSTNAME}" /etc/hosts
     then
       log "${HOSTNAME} was found in /etc/hosts"
     else
       log "${HOSTNAME} was not found in and will be added to /etc/hosts"
-      # Append it to the hsots file if not there
+      # Append it to the hosts file if not there
       echo "127.0.0.1 ${HOSTNAME}" >> /etc/hosts
       log "Hostname ${HOSTNAME} added to /etc/hosts"
     fi    
@@ -80,6 +83,13 @@ configure_datadisks()
 {
     # Stripe all of the data 
     log "Formatting and configuring the data disks"
+
+    # vm-disk-utils-0.1 can install mdadm which installs postfix. The postfix
+    # installation cannot be made silent using the techniques that keep the
+    # mdadm installation quiet: a) -y AND b) DEBIAN_FRONTEND=noninteractive.
+    # Therefore, we'll install postfix early with the "No configuration" option.
+    echo "postfix postfix/main_mailer_type select No configuration" | sudo debconf-set-selections
+    sudo apt-get install -y postfix
 
     bash ./vm-disk-utils-0.1.sh -b $DATA_DISKS -s
 }
