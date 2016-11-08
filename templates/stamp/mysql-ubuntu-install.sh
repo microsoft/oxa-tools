@@ -22,6 +22,8 @@ DATA_DISKS="/datadisks"
 DATA_MOUNTPOINT="$DATA_DISKS/disk1"
 MYSQL_DATA="$DATA_MOUNTPOINT/mysql"
 
+OS_VER=$(lsb_release -rs)
+
 help()
 {
     echo "This script installs Mysql on the Ubuntu virtual machine image"
@@ -145,7 +147,7 @@ install_mysql_server()
     apt-get -y update
 
     echo $MYSQL_SERVER_PACKAGE_NAME mysql-server/root_password password $MYSQL_ADMIN_PASSWORD | debconf-set-selections
-    echo MYSQL_SERVER_PACKAGE_NAME mysql-server/root_password_again password $MYSQL_ADMIN_PASSWORD | debconf-set-selections
+    echo $MYSQL_SERVER_PACKAGE_NAME mysql-server/root_password_again password $MYSQL_ADMIN_PASSWORD | debconf-set-selections
     apt-get install -y $MYSQL_SERVER_PACKAGE_NAME
 
     log "Installing Mysql packages: Completed"
@@ -178,7 +180,15 @@ EOF
     sed -i "s/--port=default_port/--port=${MYSQL_PORT}/I" /etc/systemd/system/mysqld.service
 
     # reload the unit
-    systemctl daemon-reload
+    if (( $(echo "$OS_VER > 16" |bc -l) ))
+    then
+        # Ubuntu 16 and above
+        systemctl daemon-reload
+    else
+        # Ubuntu 14 and below doesn't support systemctl
+        # todo: determine if there is an equivalent command to "daemon-reload" using: service, update-rc.d, or sysv-rc-conf
+        # note: chkconfig can't be used on any version 12 and above
+    fi
 }
 
 
