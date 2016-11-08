@@ -125,6 +125,14 @@ fi
 # 3. Remove the Github repository
 clean_repository
 
+#4. Install Tools for the JumpBox
+
+#4.1 Mongo shell for querying mongodb
+install-mongodb-shell
+
+#4.2 Mysql Client
+install-mysql-client
+
 # Exit (proudly)
 log "Completed Repository cloning, custom install and cleanups. Exiting cleanly."
 exit 0

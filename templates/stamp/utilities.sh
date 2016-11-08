@@ -97,3 +97,46 @@ install-git()
         apt-get install -y git
     fi
 }
+
+#############################################################################
+# Install Mongo Shell
+#############################################################################
+
+install-mongodb-shell()
+{
+    if type mongo >/dev/null 2>&1; then
+        log "MongoDB Shell is already installed"
+    else
+        log "Installing MongoDB Shell"
+        
+        PACKAGE_URL=http://repo.mongodb.org/apt/ubuntu
+        SHORT_RELEASE_NUMBER=`lsb_release -sr`
+        SHORT_CODENAME=`lsb_release -sc`
+
+        if (( $(echo "$SHORT_RELEASE_NUMBER > 16" |bc -l) ))
+        then
+            apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv EA312927
+            echo "deb ${PACKAGE_URL} "${SHORT_CODENAME}"/mongodb-org/3.2 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-3.2.list
+        else
+            apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10
+            echo "deb ${PACKAGE_URL} "${SHORT_CODENAME}"/mongodb-org/3.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-3.0.list
+        fi
+
+        apt-get update
+        apt-get install -y mongodb-org-shell
+    fi
+}
+
+#############################################################################
+# Install Mysql Client
+#############################################################################
+
+install-mysql-client()
+{
+    if type mysql >/dev/null 2>&1; then
+        log "Mysql Client is already installed"
+    else
+        log "Installing Mysql Client"
+        apt-get install -y mysql-client-core*
+    fi
+}
