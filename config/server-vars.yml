@@ -35,6 +35,23 @@ EDXAPP_REGISTRATION_EXTRA_FIELDS:
   mailing_address: "hidden"
   year_of_birth: "hidden"
 
+
+# Enable social sharing icons for courses. For now we are just enabling linkedin. 
+# Facebook and Twitter is not enabled for now.
+EDXAPP_SOCIAL_SHARING_SETTINGS:
+  CERTIFICATE_FACEBOOK: false
+  CERTIFICATE_LINKEDIN: true
+  CERTIFICATE_TWITTER: false
+  DASHBOARD_FACEBOOK: false
+  DASHBOARD_LINKEDIN: true
+  DASHBOARD_TWITTER: false
+
+
+# Order of the social media links we want learners to see in the footer
+# We can also add facebook, twitter, youtube, google_plus and reddit here later if we enable them in SOCIAL_SHARING_SETTINGS above
+EDXAPP_SOCIAL_MEDIA_FOOTER_NAMES: [ "linkedin" ]
+
+
 # see: http://edx.readthedocs.org/projects/edx-installing-configuring-and-running/en/latest/feature_flags/feature_flag_index.html
 EDXAPP_FEATURES:
   USE_CUSTOM_THEME: true
