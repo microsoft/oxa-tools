@@ -22,6 +22,17 @@ harden_ssl_config() {
   sed "/$pattern/i $append" -i $1
 }
 
+support_http_heartbeat() {
+  local pattern="if (\$do_redirect_to_https \="
+  local line1="  if (\$request_uri \~ \^\/heartbeat\$)"
+  local line2="  \{"
+  local line3="   set \$do_redirect_to_https \"false\";"
+  local line4="  \}"
+  local newline="\n"
+  local append="$line1$newline$line2$newline$line3$newline$line4$newline"
+
+  sed "/$pattern/i $append" -i $1
+}
 
 update_nginx_site_configs() {
   local sites_available_path="/edx/app/nginx/sites-available"
@@ -38,6 +49,10 @@ update_nginx_site_configs() {
     echo "Harden LMS/CMS SSL configurations"
     harden_ssl_config $lms_file_path
     harden_ssl_config $cms_file_path
+
+    echo "Update LMS/CMS to allow the heartbeat to remain accessible via http"
+    support_http_heartbeat $lms_file_path $2
+    support_http_heartbeat $cms_file_path $3
   fi
 }
 
