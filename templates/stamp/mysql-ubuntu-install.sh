@@ -3,7 +3,7 @@
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
 # general parameters
-PACKAGE_VERSION=5.7
+PACKAGE_VERSION=5.6
 PACKAGE_NAME=mysql-server
 
 MYSQL_REPLICATION_NODEID=
@@ -154,7 +154,8 @@ install_mysql_server()
 
     package=$MYSQL_SERVER_PACKAGE_NAME
 
-    if (( $(echo "$OS_VER < 16" |bc -l) ))
+    # todo: another conditional is required for sql5.6 on ubuntu16. 
+    if (( $(echo "$OS_VER < 16" |bc -l) )) && [ $mysqlServerPackageVersion == "5.7" ]
     then
         # Allow sql 5.7 on ubuntu 14 and below.
         package=${PACKAGE_NAME}

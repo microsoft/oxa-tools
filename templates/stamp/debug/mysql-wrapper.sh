@@ -17,7 +17,7 @@ mysqlServerReplUserName=lexoxamysqlrepl
 mysqlServerReplPassword=`echo a$$P@55w0rd11e1z1 | base64`
 mysqlServerAdminUserName=lexoxamysqladmin
 mysqlServerAdminPassword=`echo a$$P@55w0rd11e1z1 | base64`
-mysqlServerPackageVersion="5.7"
+mysqlServerPackageVersion="5.6"
 networkSettings_Ip="10.0.0.15"
 copyindex=1
 
