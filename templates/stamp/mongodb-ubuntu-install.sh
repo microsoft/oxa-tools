@@ -25,6 +25,7 @@ LOGGING_KEY="[logging-key]"
 NODE_IP_OFFSET=0
 
 OS_VER=$(lsb_release -rs)
+DEBUG_MODE=
 
 help()
 {
@@ -41,6 +42,7 @@ help()
     echo "        -a (arbiter indicator)"    
     echo "        -l (last member indicator)"    
     echo "        -o (IP Address Offset)"    
+	echo "        -Z (Debug Mode)"    
 }
 
 # source our utilities for logging and other base functions
@@ -56,7 +58,7 @@ then
 fi
 
 # Parse script parameters
-while getopts :i:b:r:k:u:p:x:n:o:alh optname; do
+while getopts :i:b:r:k:u:p:x:n:o:z:alh optname; do
 
     # Log input parameters (except the admin password) to facilitate troubleshooting
     if [ ! "$optname" == "p" ] && [ ! "$optname" == "k" ]; then
@@ -97,6 +99,9 @@ while getopts :i:b:r:k:u:p:x:n:o:alh optname; do
         ;;
     l) # Last member indicator
         IS_LAST_MEMBER=true
+        ;;
+    z) # Debug mode indicator
+        DEBUG_MODE=true
         ;;
     h)  # Helpful hints
         help
@@ -332,7 +337,12 @@ configure_db_users()
 {
     # Create a system administrator
     log "Creating a system administrator"
-    mongo master --host 127.0.0.1 --eval "db.createUser({user: '${ADMIN_USER_NAME}', pwd: '${ADMIN_USER_PASSWORD}', roles:[{ role: 'userAdminAnyDatabase', db: 'admin' }, { role: 'clusterAdmin', db: 'admin' }, { role: 'readWriteAnyDatabase', db: 'admin' }, { role: 'dbAdminAnyDatabase', db: 'admin' } ]})"
+    if [ "$DEBUG_MODE" = true ]; then
+        log "Administrator User Credentials: UserName '$ADMIN_USER_NAME' Password: '$ADMIN_USER_PASSWORD'"
+    fi
+
+    # this command will re-create (remove if necessary) the admin user account
+    mongo master --host 127.0.0.1 --eval "db.dropUser('${ADMIN_USER_NAME}'); db.createUser({user: '${ADMIN_USER_NAME}', pwd: '${ADMIN_USER_PASSWORD}', roles:[{ role: 'userAdminAnyDatabase', db: 'admin' }, { role: 'clusterAdmin', db: 'admin' }, { role: 'readWriteAnyDatabase', db: 'admin' }, { role: 'dbAdminAnyDatabase', db: 'admin' } ]})"
 }
 
 # Step 1
