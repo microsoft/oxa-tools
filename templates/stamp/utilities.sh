@@ -120,7 +120,7 @@ install-mongodb-shell()
         log "Installing MongoDB Shell"
         
         PACKAGE_URL=http://repo.mongodb.org/apt/ubuntu
-        SHORT_RELEASE_NUMBER=`lsb_release -sr`
+        SHORT_RELEASE_NUMBER=$(lsb_release -rs)
         SHORT_CODENAME=`lsb_release -sc`
 
         if (( $(echo "$SHORT_RELEASE_NUMBER > 16" |bc -l) ))

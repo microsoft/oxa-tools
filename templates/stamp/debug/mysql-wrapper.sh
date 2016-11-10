@@ -14,11 +14,11 @@ wget -q https://raw.githubusercontent.com/Azure/azure-quickstart-templates/maste
 
 mysqlDbInstallerScript=mysql-ubuntu-install.sh
 mysqlServerReplUserName=lexoxamysqlrepl
-mysqlServerReplPassword=`echo aP@55w0rd11e1z1 | base64`
+mysqlServerReplPassword=`echo 1ezP@55w0rd | base64`
 mysqlServerAdminUserName=lexoxamysqladmin
-mysqlServerAdminPassword=`echo aP@55w0rd11e1z1 | base64`
+mysqlServerAdminPassword=`echo 1ezP@55w0rd | base64`
 mysqlServerPackageVersion="5.6"
-networkSettings_Ip="10.0.0.15"
+networkSettings_Ip="10.0.0.16"
 copyindex=1
 
 bash $mysqlDbInstallerScript -r $mysqlServerReplUserName -k $mysqlServerReplPassword -u $mysqlServerAdminUserName -p $mysqlServerAdminPassword -v $mysqlServerPackageVersion -m $networkSettings_Ip -n $copyindex
