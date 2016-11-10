@@ -1,5 +1,5 @@
 - name: Configure OXA
-  hosts: localhost
+  hosts: all
   vars:
     secrets_path: "{{ oxa-tools_config_path }}"
     roles_path: "{{ oxa_tools_path }}/playbooks/roles"
