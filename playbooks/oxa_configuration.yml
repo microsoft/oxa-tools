@@ -1,3 +1,4 @@
+---
 - name: Configure OXA
   hosts: all
   vars:
