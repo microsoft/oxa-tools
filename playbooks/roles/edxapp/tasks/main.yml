@@ -1,3 +1,4 @@
+---
 - name: Apply theming compile assets workaround
   sudo: yes
   shell: bash ./update_theme.sh
