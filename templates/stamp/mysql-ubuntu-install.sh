@@ -266,8 +266,9 @@ create_config_file()
     TIMESTAMP=`date +"%s"`
     if [ -e "$TARGET_MYCNF_PATH" ]
     then
-        log "Existing configuration detected at ${TARGET_MYCNF_PATH} and will be backed up to ${TARGET_MYCNF_DIR}/mysqld.backup_${TIMESTAMP}"
-        mv $TARGET_MYCNF_PATH "${TARGET_MYCNF_DIR}/mysqld.backup_${TIMESTAMP}"
+        BACKUP_FILE_PATH="${TARGET_MYCNF_DIR}/mysqld.backup_${TIMESTAMP}"
+        log "Existing configuration detected at ${TARGET_MYCNF_PATH} and will be backed up to ${BACKUP_FILE_PATH}"
+        mv $TARGET_MYCNF_PATH $BACKUP_FILE_PATH
     else
         log "No existing mysql server configuration found at ${TARGET_MYCNF_PATH}"
     fi
