@@ -263,21 +263,6 @@
                     "extensionProfile": {
                         "extensions": [
                             {
-                                "name": "[concat(parameters('networkSettings').clusterVirtualMachineScaleSetName, '-installmdm')]",
-                                "properties": {
-                                    "publisher": "Microsoft.Azure.Extensions",
-                                    "type": "CustomScript",
-                                    "typeHandlerVersion": "2.0",
-                                    "autoUpgradeMinorVersion": true,
-                                    "settings": {
-                                        "fileUris": "[parameters('customSettings').vmScripts]"
-                                    },
-                                    "protectedSettings": {
-                                        "commandToExecute": "[parameters('customSettings').commandToExecute]"
-                                    }
-                                }
-                            },
-                            {
                                 "name": "[concat(parameters('networkSettings').clusterVirtualMachineScaleSetName, '-linuxdiagnostics')]",
                                 "properties": {
                                     "publisher": "Microsoft.OSTCExtensions",
