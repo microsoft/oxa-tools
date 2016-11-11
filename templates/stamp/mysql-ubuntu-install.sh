@@ -223,7 +223,7 @@ create_config_file()
     MYCNF_FILENAME="my.cnf"
     TARGET_MYCNF_DIR="/etc/mysql"
 
-    if [ $(echo "$PACKAGE_VERSION < 5.7" | bc -l)  ];
+    if [ $(echo "$PACKAGE_VERSION == 5.7" | bc -l)  ];
     then
         TARGET_MYCNF_DIR="/etc/mysql/conf.d"
         MYCNF_FILENAME="mysqld.cnf"
