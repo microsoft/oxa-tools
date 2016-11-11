@@ -12,21 +12,23 @@
 pushd ..
 wget -q https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/shared_scripts/ubuntu/vm-disk-utils-0.1.sh -O vm-disk-utils-0.1.sh
 
-mongoDbInstallerScript=mongodb-ubuntu-install.sh
-mongoMachineSettings_installerBaseUrl=http:\/\/repo.mongodb.org\/apt\/ubuntu
-mongoMachineSettings_installerPackages=mongodb-org
-networkSettings_serverIpPrefix=10.0.0.
-networkSettings_mongoDataNodeCount=1
+  INSTALLER=mongodb-ubuntu-install.sh
+  mongoMachineSettings_installerBaseUrl=http://repo.mongodb.org/apt/ubuntu
+  mongoMachineSettings_installerPackages=mongodb-org
+  networkSettings_serverIpPrefix=10.0.0.
+  mongoIpOffset=10
 
-# configurable, but hardcoded for now
-mongoReplicaSetName=clustername-rs1
-mongoServerAdminUserName=mongoUser
-mongoServerAdminPassword=`echo mongoPassword | base64`
+  #master
+  NODE_COUNT=3
+  EXTRA_ARGS="-l"
 
-# generally randomly generated, but hardcoded for now
-mongoReplicaSetKey=tcvhiyu5h2o5o
+  MONGO_USER=lexoxamongoadmin
+  MONGO_PASSWORD=`echo 1ezP@55w0rd | base64`
 
-bash $mongoDbInstallerScript -i $mongoMachineSettings_installerBaseUrl -b $mongoMachineSettings_installerPackages -r $mongoReplicaSetName -k $mongoReplicaSetKey -u $mongoServerAdminUserName -p $mongoServerAdminPassword -x $networkSettings_serverIpPrefix -n $networkSettings_mongoDataNodeCount
+  mongoReplicaSetKey=tcvhiyu5h2o5o
+  mongoReplicaSetName=loxabvtwuc2rs1
+
+  bash $INSTALLER -i $mongoMachineSettings_installerBaseUrl -b $mongoMachineSettings_installerPackages -r $mongoReplicaSetName -k $mongoReplicaSetKey -u $MONGO_USER -p $MONGO_PASSWORD -x $networkSettings_serverIpPrefix -n $NODE_COUNT -o $mongoIpOffset $EXTRA_ARGS
 
 # cleanup
 rm vm-disk-utils-0.1*
