@@ -178,5 +178,6 @@ setup-ssh()
         cp $CERTS_PATH/id_rsa* /home/$ADMIN_USER/.ssh
         chmod 600 /home/$ADMIN_USER/.ssh/id_rsa
         chmod 644 /home/$ADMIN_USER/.ssh/id_rsa.pub
+        chown $ADMIN_USER:$ADMIN_USER /home/$ADMIN_USER/.ssh/id_rsa*
     fi
 }
