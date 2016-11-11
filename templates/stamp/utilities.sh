@@ -145,7 +145,7 @@ install-mongodb-shell()
 update-package-index()
 {
     log "Updating index of packages..."
-    apt-get update -y -qq
+    apt-get -y -qq update
 }
 
 
