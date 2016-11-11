@@ -31,7 +31,7 @@ help()
 }
 
 # Parse script parameters
-while getopts :i:p:a:n:b:c:m:h optname; do
+while getopts :i:p:a:n:b:c:m:u:h optname; do
 
     # Log input parameters to facilitate troubleshooting
     if [ ! "$optname" == "p" ]; then
