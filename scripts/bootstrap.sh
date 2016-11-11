@@ -103,8 +103,6 @@ setup() {
   # populate the deployment environment
   source $OXA_ENV_FILE
   export $(sed -e 's/#.*$//' $OXA_ENV_FILE | cut -d= -f1)
-  export ANSIBLE_REPO=CONFIGURATION_REPO
-  export ANSIBLE_VERSION=CONFIGURATION_VERSION
   
   # deployment environment overrides for debugging
   OXA_ENV_OVERRIDE_FILE="$BOOTSTRAP_HOME/overrides.sh"
@@ -112,6 +110,8 @@ setup() {
     source $OXA_ENV_OVERRIDE_FILE
   fi
   export $(sed -e 's/#.*$//' $OXA_ENV_OVERRIDE_FILE | cut -d= -f1)
+  export ANSIBLE_REPO=CONFIGURATION_REPO
+  export ANSIBLE_VERSION=CONFIGURATION_VERSION
   
   # sync public repositories
   sync_repo $OXA_TOOLS_REPO $OXA_TOOLS_VERSION $OXA_TOOLS_PATH
@@ -145,7 +145,7 @@ exit_on_error() {
 
 update_stamp_jb() {    
   # edx playbooks - mysql and memcached
-  $ANSIBLE_PLAYBOOK -i ${CLUSTERNAME}mysql1, $OXA_SSH_ARGS -e@$OXA_PLAYBOOK_CONFIG edx_mysql.yml
+  $ANSIBLE_PLAYBOOK -i 10.0.0.16, $OXA_SSH_ARGS -e@$OXA_PLAYBOOK_CONFIG edx_mysql.yml
   exit_on_error "Execution of edX MySQL playbook failed"  
   # minimize tags? "install:base,install:system-requirements,install:configuration,install:app-requirements,install:code"
   $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_sandbox.yml -e "migrate_db=yes" --tags "edxapp-sandbox,install,migrate"
@@ -154,7 +154,7 @@ update_stamp_jb() {
   # oxa playbooks - mongo (enable when customized) and mysql
   #$ANSIBLE_PLAYBOOK -i ${CLUSTERNAME}mongo1, $OXA_SSH_ARGS -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mongo"
   #exit_on_error "Execution of OXA Mongo playbook failed"
-  $ANSIBLE_PLAYBOOK -i ${CLUSTERNAME}mysql1, $OXA_SSH_ARGS -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mysql"
+  $ANSIBLE_PLAYBOOK -i 10.0.0.16, $OXA_SSH_ARGS -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mysql"
   exit_on_error "Execution of OXA MySQL playbook failed"
 }
 
@@ -226,7 +226,7 @@ PATH=$PATH:/edx/bin
 ANSIBLE_PLAYBOOK=ansible-playbook
 OXA_PLAYBOOK=$OXA_TOOLS_PATH/playbooks/oxa_configuration.yml
 OXA_PLAYBOOK_ARGS="-e oxa_tools_path=$OXA_TOOLS_PATH -e oxa_tools_config_path=$OXA_TOOLS_CONFIG_PATH"
-OXA_SSH_ARGS="-u $OXA_ADMIN_USER --private-key=/home/$OXA_ADMIN_USER/.ssh/id_rsa"
+OXA_SSH_ARGS="-u $ADMIN_USER --private-key=/home/$ADMIN_USER/.ssh/id_rsa"
 
 # Fixes error: RPC failed; result=56, HTTP code = 0'
 # fatal: The remote end hung up unexpectedly
