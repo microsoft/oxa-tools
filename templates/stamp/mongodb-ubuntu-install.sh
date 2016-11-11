@@ -316,6 +316,8 @@ start_mongodb()
 
     # Wait for MongoDB daemon to start and initialize for the first time (this may take up to a minute or so)
     while ! timeout 1 bash -c "echo > /dev/tcp/localhost/$MONGODB_PORT"; do sleep 10; done
+
+    log "${PACKAGE_NAME} has been started"
 }
 
 stop_mongodb()
