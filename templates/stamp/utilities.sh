@@ -150,3 +150,22 @@ install-mysql-client()
         apt-get install -y mysql-client-core*
     fi
 }
+
+#############################################################################
+# Setup SSH
+#############################################################################
+
+setup-ssh()
+{
+    log "Setting up SSH"
+
+    # implicit assumptions: private repository with secrets has been cloned and certificates live at /{repository_root}/env/{cloud}/id_rsa*
+    REPOSITORY_ROOT=$1;
+    CLOUD=$2;
+
+    CERTS_PATH="${REPOSITORY_ROOT}/env/${CLOUD}"
+
+    cp $CERTS_PATH/id_rsa* ~/.ssh
+    chmod 600 ~/.ssh/id_rsa
+    chmod 644 ~/.ssh/id_rsa.pub
+}

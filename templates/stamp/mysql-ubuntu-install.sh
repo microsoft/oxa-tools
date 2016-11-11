@@ -218,12 +218,23 @@ EOF
 # create the mysql replication configuration file
 create_config_file()
 {
-    MYCNF_PATH="/etc/my.cnf"
-    MYCNF_TEMPLATE_PATH="./mysqld.template.cnf"
-    TEMP_MYCNF_PATH="./mysqld.custom.cnf"
-    TARGET_MYCNF_DIR="/etc/mysql/conf.d"
-    TARGET_MYCNF_PATH="${TARGET_MYCNF_DIR}/mysqld.cnf"
+    # set the output file name and path
+    MYCNF_FILENAME="my.cnf"
+    TARGET_MYCNF_DIR="/etc/mysql"
+    if [ ${PACKAGE_VERSION} -eq "5.7" ];
+    then
+        TARGET_MYCNF_DIR="/etc/mysql/conf.d"
+        MYCNF_FILENAME="mysqld.cnf"
+    fi
 
+    # establish the configuration template to use
+    MYCNF_TEMPLATE_PATH="./mysqld.template-${PACKAGE_VERSION}.cnf"
+    TEMP_MYCNF_PATH="./mysqld.custom.cnf"
+    TARGET_MYCNF_PATH="${TARGET_MYCNF_DIR}/${MYCNF_FILENAME}"
+
+    log "${PACKAGE_VERSION} detected. Mysql configuration will be dropped at '${TARGET_MYCNF_PATH}'"
+
+    #TODO: Move this to configuration
     REPL_EXPIRE_LOG_DAYS=10
     REPL_MAX_BINLOG_SIZE=100M
     REPL_RELAY_LOG_SPACE_LIMIT=20GB
@@ -262,8 +273,8 @@ create_config_file()
     fi
 
     # 3. move the custom file to the proper location & update permissions
-    cp $TEMP_MYCNF_PATH "${TARGET_MYCNF_DIR}/mysqld.cnf"
-    chmod 544 "${TARGET_MYCNF_DIR}/mysqld.cnf"
+    cp $TEMP_MYCNF_PATH $TARGET_MYCNF_PATH
+    chmod 544 $TARGET_MYCNF_PATH
 
     rm $TEMP_MYCNF_PATH
 }

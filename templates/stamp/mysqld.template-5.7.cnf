@@ -20,6 +20,7 @@
 # Here is entries for some specific programs
 # The following values assume you have at least 32M ram
 
+# This was formally known as [safe_mysqld]. Both versions are currently parsed.
 [mysqld_safe]
 socket=/var/run/mysqld/mysqld.sock
 nice=0
@@ -105,7 +106,6 @@ enforce-gtid-consistency=ON
 #relay-log-space-limit=16G
 #read-only=1
 
-#
 # * InnoDB
 #
 # InnoDB is enabled by default with a 10MB datafile in /var/lib/mysql/.
