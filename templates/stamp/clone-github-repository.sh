@@ -10,6 +10,7 @@ GITHUB_PROJECTBRANCH=""
 CUSTOM_INSTALLER_RELATIVEPATH=""
 CLOUD_NAME=""
 MONITORING_CLUSTER_NAME=""
+OS_ADMIN_USERNAME=""
 
 # source our utilities for logging and other base functions (we need this staged with the installer script)
 CURRENT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -26,6 +27,7 @@ help()
     echo "        -i Custom Installer Relative Path"
     echo "        -c Cloud Name"
     echo "        -m Monitoring Cluster Name"
+    echo "        -u OS Admin User Name"
 }
 
 # Parse script parameters
@@ -58,6 +60,9 @@ while getopts :i:p:a:n:b:c:m:h optname; do
     m) # Monitoring Cluster Name
         MONITORING_CLUSTER_NAME=${OPTARG}
         ;;
+    u) # OS Admin User Name
+        OS_ADMIN_USERNAME=${OPTARG}
+        ;;
     h)  # Helpful hints
         help
         exit 2
@@ -85,9 +90,6 @@ clone_repository()
     # clean up any residue of the repository
     clean_repository
     
-    # conditionally install the git client
-    install-git
-
     log "Cloning the project with: https://{GITHUB_PERSONAL_ACCESS_TOKEN}@github/${GITHUB_ACCOUNTNAME}/${GITHUB_PROJECTNAME}.git from the '$GITHUB_PROJECTBRANCH' branch and saved at ~/$GITHUB_PROJECTNAME"
     git clone -b $GITHUB_PROJECTBRANCH https://$GITHUB_PERSONAL_ACCESS_TOKEN@github.com/$GITHUB_ACCOUNTNAME/$GITHUB_PROJECTNAME.git ~/$GITHUB_PROJECTNAME
 }
@@ -101,6 +103,11 @@ clean_repository()
 ###############################################
 # Start Execution
 ###############################################
+
+# 0. Install Tools: git client, mongo shell, mysql client
+install-git
+install-mongodb-shell
+install-mysql-client
 
 # 1. Clone the GitHub repository with the secrets and other support files
 clone_repository
@@ -122,16 +129,11 @@ else
     log "$CUSTOM_INSTALLER_PATH does not exist"
 fi
 
+# Setup SSH
+setup-ssh ~/$GITHUB_PROJECTNAME $CLOUD_NAME $OS_ADMIN_USERNAME
+
 # 3. Remove the Github repository
 clean_repository
-
-#4. Install Tools for the JumpBox
-
-#4.1 Mongo shell for querying mongodb
-install-mongodb-shell
-
-#4.2 Mysql Client
-install-mysql-client
 
 # Exit (proudly)
 log "Completed Repository cloning, custom install and cleanups. Exiting cleanly."
