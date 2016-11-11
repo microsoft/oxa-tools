@@ -358,7 +358,7 @@ EOF
     sed -i "s/{ROOT_PASSWORD}/${MYSQL_ADMIN_PASSWORD}/I" $TMP_QUERY_FILE
 
     # secure the installation
-    mysql -u root < ./$TMP_QUERY_FILE
+    mysql -u root -p$MYSQL_ADMIN_PASSWORD< ./$TMP_QUERY_FILE
 }
 
 # Step 1: Configuring Disks"
