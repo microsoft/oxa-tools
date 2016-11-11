@@ -146,7 +146,7 @@ install_mongodb()
     fi
 
     # Install updates
-    apt-get -y update
+    update-package-index
 
     # Remove any previously created configuration file to avoid a prompt
     if [ -f /etc/mongod.conf ]; then

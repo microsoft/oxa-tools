@@ -88,8 +88,8 @@ configure_datadisks()
     # installation cannot be made silent using the techniques that keep the
     # mdadm installation quiet: a) -y AND b) DEBIAN_FRONTEND=noninteractive.
     # Therefore, we'll install postfix early with the "No configuration" option.
-    echo "postfix postfix/main_mailer_type select No configuration" | sudo debconf-set-selections
-    sudo apt-get install -y postfix
+    echo "postfix postfix/main_mailer_type select No configuration" | debconf-set-selections
+    apt-get install -y postfix
 
     bash ./vm-disk-utils-0.1.sh -b $DATA_DISKS -s
 }
@@ -132,10 +132,22 @@ install-mongodb-shell()
             echo "deb ${PACKAGE_URL} "${SHORT_CODENAME}"/mongodb-org/3.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-3.0.list
         fi
 
-        apt-get update
+        update-package-index
+
         apt-get install -y mongodb-org-shell
     fi
 }
+
+#############################################################################
+# Update Package Index
+#############################################################################
+
+update-package-index()
+{
+    log "Updating index of packages..."
+    apt-get update -y -qq
+}
+
 
 #############################################################################
 # Install Mysql Client
