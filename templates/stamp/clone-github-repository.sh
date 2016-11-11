@@ -10,6 +10,7 @@ GITHUB_PROJECTBRANCH=""
 CUSTOM_INSTALLER_RELATIVEPATH=""
 CLOUD_NAME=""
 MONITORING_CLUSTER_NAME=""
+OS_ADMIN_USERNAME=""
 
 # source our utilities for logging and other base functions (we need this staged with the installer script)
 CURRENT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -26,6 +27,7 @@ help()
     echo "        -i Custom Installer Relative Path"
     echo "        -c Cloud Name"
     echo "        -m Monitoring Cluster Name"
+    echo "        -u OS Admin User Name"
 }
 
 # Parse script parameters
@@ -57,6 +59,9 @@ while getopts :i:p:a:n:b:c:m:h optname; do
         ;;
     m) # Monitoring Cluster Name
         MONITORING_CLUSTER_NAME=${OPTARG}
+        ;;
+    u) # OS Admin User Name
+        OS_ADMIN_USERNAME=${OPTARG}
         ;;
     h)  # Helpful hints
         help
@@ -125,7 +130,7 @@ else
 fi
 
 # Setup SSH
-setup-ssh ~/$GITHUB_PROJECTNAME $CLOUD_NAME
+setup-ssh ~/$GITHUB_PROJECTNAME $CLOUD_NAME $OS_ADMIN_USERNAME
 
 # 3. Remove the Github repository
 clean_repository
