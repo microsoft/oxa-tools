@@ -296,10 +296,10 @@ configure_mysql_replication()
         log "Mysql Replication Master Node detected. Setting up Master Replication on ${HOSTNAME}"
 
         tee ./$TMP_QUERY_FILE > /dev/null <<EOF
-CREATE USER IF NOT EXISTS '{MYSQL_ADMIN_USER}'@'{NETWORK_PREFIX}.%' IDENTIFIED BY '{MYSQL_ADMIN_PASSWORD}';    
-GRANT ALL PRIVILEGES ON *.* TO '{MYSQL_ADMIN_USER}'@'{NETWORK_PREFIX}.%';
-GRANT REPLICATION SLAVE ON *.* TO '{MYSQL_ADMIN_USER}'@'{NETWORK_PREFIX}.%';
-GRANT REPLICATION CLIENT ON *.* TO '{MYSQL_ADMIN_USER}'@'{NETWORK_PREFIX}.%';
+CREATE USER IF NOT EXISTS '{MYSQL_ADMIN_USER}'@'%' IDENTIFIED BY '{MYSQL_ADMIN_PASSWORD}';    
+GRANT ALL PRIVILEGES ON *.* TO '{MYSQL_ADMIN_USER}'@'%';
+GRANT REPLICATION SLAVE ON *.* TO '{MYSQL_ADMIN_USER}'@'%';
+GRANT REPLICATION CLIENT ON *.* TO '{MYSQL_ADMIN_USER}'@'%';
 CREATE USER IF NOT EXISTS '{MYSQL_REPLICATION_USER}'@'%' IDENTIFIED BY '{MYSQL_REPLICATION_PASSWORD}';
 GRANT REPLICATION SLAVE ON *.* TO '{MYSQL_REPLICATION_USER}'@'%' ; 
 FLUSH PRIVILEGES;
@@ -309,10 +309,10 @@ EOF
         log "Mysql Replication Slave Node detected. Setting up Slave Replication on ${HOSTNAME} with master at ${MASTER_NODE_IPADDRESS}"
 
         tee ./$TMP_QUERY_FILE > /dev/null <<EOF
-CREATE USER IF NOT EXISTS '{MYSQL_ADMIN_USER}'@'{NETWORK_PREFIX}.%' IDENTIFIED BY '{MYSQL_ADMIN_PASSWORD}';    
-GRANT ALL PRIVILEGES ON *.* TO '{MYSQL_ADMIN_USER}'@'{NETWORK_PREFIX}.%';
-GRANT REPLICATION SLAVE ON *.* TO '{MYSQL_ADMIN_USER}'@'{NETWORK_PREFIX}.%';
-GRANT REPLICATION CLIENT ON *.* TO '{MYSQL_ADMIN_USER}'@'{NETWORK_PREFIX}.%';
+CREATE USER IF NOT EXISTS '{MYSQL_ADMIN_USER}'@'%' IDENTIFIED BY '{MYSQL_ADMIN_PASSWORD}';    
+GRANT ALL PRIVILEGES ON *.* TO '{MYSQL_ADMIN_USER}'@'%';
+GRANT REPLICATION SLAVE ON *.* TO '{MYSQL_ADMIN_USER}'@'%';
+GRANT REPLICATION CLIENT ON *.* TO '{MYSQL_ADMIN_USER}'@'%';
 change master to master_host='{MASTER_NODE_IPADDRESS}', master_port={MYSQL_PORT}, master_user='{MYSQL_REPLICATION_USER}', master_password='{MYSQL_REPLICATION_PASSWORD}', master_auto_position=1; 
 START slave;
 EOF
@@ -340,14 +340,25 @@ EOF
 secure_mysql_installation()
 {
     log "Running Mysql secure installation script"
-    /usr/bin/mysql_secure_installation -p$MYSQL_ADMIN_PASSWORD <<<'
-n
-y
-y
-y
-y
-y'
 
+    # this query matches most of what is available in the secure installation bash script:
+    # reset root password, remove anonymous users, remove root network login (only local host allowed), remove test db
+
+    TMP_QUERY_FILE="tmp.query.secure.sql"
+     tee ./$TMP_QUERY_FILE > /dev/null <<EOF
+UPDATE mysql.user SET Password=PASSWORD('{ROOT_PASSWORD}') WHERE User='root';
+DELETE FROM mysql.user WHERE User='';
+DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
+DROP DATABASE IF EXISTS test;
+DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
+FLUSH PRIVILEGES;
+EOF
+
+    # replace the place holders
+    sed -i "s/{ROOT_PASSWORD}/${MYSQL_ADMIN_PASSWORD}/I" $TMP_QUERY_FILE
+
+    # secure the installation
+    mysql -u root < ./$TMP_QUERY_FILE
 }
 
 # Step 1: Configuring Disks"
