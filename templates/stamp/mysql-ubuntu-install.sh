@@ -222,7 +222,8 @@ create_config_file()
     # set the output file name and path
     MYCNF_FILENAME="my.cnf"
     TARGET_MYCNF_DIR="/etc/mysql"
-    if [ $PACKAGE_VERSION -eq "5.7" ];
+
+    if [ $(echo "$PACKAGE_VERSION < 5.7" | bc -l)  ];
     then
         TARGET_MYCNF_DIR="/etc/mysql/conf.d"
         MYCNF_FILENAME="mysqld.cnf"
@@ -246,13 +247,12 @@ create_config_file()
     # update the generic settings
     #sed -i "s/^bind-address=.*/bind-address=${NODE_ADDRESS}/I" $TEMP_MYCNF_PATH
     sed -i "s/^server-id=.*/server-id=${MYSQL_REPLICATION_NODEID}/I" $TEMP_MYCNF_PATH
+    sed -i "s/^#log_bin=.*/log_bin=\/var\/log\/mysql\/mysql-bin-${HOSTNAME}.log/I" $TEMP_MYCNF_PATH
 
     # 1. perform necessary settings replacements
     if [ ${MYSQL_REPLICATION_NODEID} -eq 1 ];
     then
-        log "Mysql Replication Master Node detected. Creating *.cnf for the MasterNode on ${HOSTNAME}"
-        
-        sed -i "s/^#log_bin=.*/log_bin=\/var\/log\/mysql\/mysql-bin-${HOSTNAME}.log/I" $TEMP_MYCNF_PATH
+        log "Mysql Replication Master Node detected. Creating cnf for the MasterNode on ${HOSTNAME}"
         sed -i "s/^#expire_logs_days=.*/expire_logs_days=${REPL_EXPIRE_LOG_DAYS}/I" $TEMP_MYCNF_PATH
         sed -i "s/^#max_binlog_size=.*/max_binlog_size=${REPL_MAX_BINLOG_SIZE}/I" $TEMP_MYCNF_PATH
     else
