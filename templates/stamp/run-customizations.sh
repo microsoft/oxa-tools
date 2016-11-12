@@ -111,7 +111,7 @@ CUSTOM_INSTALLER_PATH=~/$GITHUB_PROJECTNAME/$CUSTOM_INSTALLER_RELATIVEPATH
 
 if [[ -e $CUSTOM_INSTALLER_PATH ]]; then  
     log "Launching the custom installer at '$CUSTOM_INSTALLER_PATH'"
-    bash $CUSTOM_INSTALLER_PATH --root-path ~/$GITHUB_PROJECTNAME --cloud $CLOUD_NAME --admin-user $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --access-token $GITHUB_PERSONAL_ACCESS_TOKEN
+    bash $CUSTOM_INSTALLER_PATH --root-path ~/$GITHUB_PROJECTNAME --cloud $CLOUD_NAME --admin-user $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --access-token $GITHUB_PERSONAL_ACCESS_TOKEN --branch $GITHUB_PROJECTBRANCH 
 else
     log "$CUSTOM_INSTALLER_PATH does not exist"
 fi
