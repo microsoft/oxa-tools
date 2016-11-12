@@ -104,7 +104,7 @@ install-git()
         log "Git already installed"
     else
         log "Installing Git Client"
-        apt-get install -y git
+        apt-get install -y -qq git
     fi
 }
 
@@ -132,8 +132,11 @@ install-mongodb-shell()
             echo "deb ${PACKAGE_URL} "${SHORT_CODENAME}"/mongodb-org/3.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-3.0.list
         fi
 
+        log "Updating Repository"
         apt-get update
-        apt-get install -y mongodb-org-shell
+
+        log "Installing Mongo Shell"
+        apt-get install -y -qq mongodb-org-shell
     fi
 }
 
@@ -147,7 +150,7 @@ install-mysql-client()
         log "Mysql Client is already installed"
     else
         log "Installing Mysql Client"
-        apt-get install -y mysql-client-core*
+        apt-get install -y -qq mysql-client-core*
     fi
 }
 
@@ -180,4 +183,84 @@ setup-ssh()
         chmod 644 /home/$ADMIN_USER/.ssh/id_rsa.pub
         chown $ADMIN_USER:$ADMIN_USER /home/$ADMIN_USER/.ssh/id_rsa*
     fi
+}
+
+#############################################################################
+# Clone GitHub Repository
+#############################################################################
+
+clone_repository()
+{
+    # required params
+    ACCOUNT_NAME=$1; PROJECT_NAME=$2; BRANCH=$3
+
+    #optional args
+    ACCESS_TOKEN=$4; REPO_PATH=$5
+
+    # Validate parameters
+    if [ "$ACCOUNT_NAME" == "" ] || [ "$PROJECT_NAME" == "" ] || [ "$BRANCH" == "" ] ;
+    then
+        log "You must specify the GitHub account name, project name and branch " "ERROR"
+        exit 3
+    fi
+    
+    # setup the access token 
+    if [ ! -z $ACCESS_TOKEN ]
+    then
+        ACCESS_TOKEN_WITH_SEPARATOR="${ACCESS_TOKEN}@github"
+    else
+        ACCESS_TOKEN_WITH_SEPARATOR="github"
+    fi
+
+    # if repository path is not specified, default it to the user's home directory'
+    if [ -z $REPO_PATH ]
+    then
+        REPO_PATH=~/$GITHUB_PROJECTNAME
+    fi 
+
+    # clean up any residue of the repository
+    clean_repository $PROJECT_NAME
+
+    log "Cloning the project with: https://${ACCESS_TOKEN_WITH_SEPARATOR}/${ACCOUNT_NAME}/${PROJECT_NAME}.git from the '$GITHUB_PROJECTBRANCH' branch and saved at ~/$GITHUB_PROJECTNAME"
+    git clone -b $GITHUB_PROJECTBRANCH https://$ACCESS_TOKEN_WITH_SEPARATOR/$ACCOUNT_NAME/$PROJECT_NAME.git ~/$GITHUB_PROJECTNAME
+}
+
+#############################################################################
+# Clean GitHub Repository - delete only
+#############################################################################
+
+clean_repository()
+{
+    PROJECT_NAME=$1
+
+    log "Cleaning up the cloned GitHub Repository at '~/${PROJECT_NAME}'"
+    if [ -d "$DIRECTORY" ]; 
+    then
+        rm -rf ~/$PROJECT_NAME
+    fi
+}
+
+#############################################################################
+# Get Machine Role 
+#############################################################################
+
+get_machine_role()
+{
+    # determine the role of the machine based on its name
+    if [[ $HOSTNAME =~ ^(.*)jb$ ]]; then
+        MACHINE_ROLE="jumpbox"
+    elif [[ $HOSTNAME =~ ^(.*)mongo[0-3]{1}$ ]]; then
+        MACHINE_ROLE="mongodb"
+    elif [[ $HOSTNAME =~ ^(.*)mysql[0-3]{1}$ ]]; then
+        MACHINE_ROLE="mysql"
+    elif [[ $HOSTNAME =~ ^(.*)vmss[0-9]+$ ]]; then
+        MACHINE_ROLE="vmss"
+    else
+        log "Could not determine the role of the '${HOSTNAME}'. Defaulting to 'unknown' role"
+        MACHINE_ROLE="unknown"
+    fi
+
+    log "Resolving ${HOSTNAME} to ${MACHINE_ROLE}"
+
+    echo $MACHINE_ROLE
 }
