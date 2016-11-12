@@ -23,7 +23,7 @@ wget -q https://raw.githubusercontent.com/Azure/azure-quickstart-templates/maste
   EXTRA_ARGS="-l"
 
   MONGO_USER=lexoxamongoadmin
-  MONGO_PASSWORD=`echo 1ezP@55w0rd | base64`
+  MONGO_PASSWORD=`echo hidden | base64`
 
   mongoReplicaSetKey=tcvhiyu5h2o5o
   mongoReplicaSetName=loxabvtwuc2rs1
