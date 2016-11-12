@@ -207,9 +207,9 @@ clone_repository()
     # setup the access token 
     if [ ! -z $ACCESS_TOKEN ]
     then
-        ACCESS_TOKEN_WITH_SEPARATOR="${ACCESS_TOKEN}@github"
+        ACCESS_TOKEN_WITH_SEPARATOR="${ACCESS_TOKEN}@github.com"
     else
-        ACCESS_TOKEN_WITH_SEPARATOR="github"
+        ACCESS_TOKEN_WITH_SEPARATOR="github.com"
     fi
 
     # if repository path is not specified, default it to the user's home directory'

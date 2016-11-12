@@ -35,7 +35,7 @@ while getopts :c:p:a:n:b:u:m:i:h optname; do
 
     # Log input parameters to facilitate troubleshooting
     if [ ! "$optname" == "p" ]; then
-        log "Option $optname set with value ${OPTARG}"
+        echo "Option $optname set with value ${OPTARG}"
     fi
     
     case $optname in
