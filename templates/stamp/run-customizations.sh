@@ -32,11 +32,12 @@ help()
     echo "        -u OS Admin User Name"
     echo "        -i Custom script relative path"
     echo "        -u OS Admin User Name"
+    echo "        -m Monitoring cluster name"
 
 }
 
 # Parse script parameters
-while getopts :c:p:a:n:b:u:i:h optname; do
+while getopts :c:p:a:n:b:u:m:i:h optname; do
 
     # Log input parameters to facilitate troubleshooting
     if [ ! "$optname" == "p" ]; then
@@ -65,7 +66,7 @@ while getopts :c:p:a:n:b:u:i:h optname; do
     i) # Custom script relative path
         CUSTOM_INSTALLER_RELATIVEPATH=${OPTARG}
         ;;
-    m) # Custom script relative path
+    m) # Monitoring cluster name
         MONITORING_CLUSTER_NAME=${OPTARG}
         ;;
     h)  # Helpful hints
