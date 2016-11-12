@@ -13,12 +13,6 @@ OS_ADMIN_USERNAME=""
 CUSTOM_INSTALLER_RELATIVEPATH=""
 MONITORING_CLUSTER_NAME=""
 
-# source our utilities for logging and other base functions (we need this staged with the installer script)
-# the file needs to be first downloaded from the public repository
-CURRENT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-UTILITIES_PATH=$CURRENT_PATH/utilities.sh
-wget -q https://raw.githubusercontent.com/Microsoft/oxa-tools/master/templates/stamp/utilities.sh -O $UTILITIES_PATH
-source $UTILITIES_PATH
 
 help()
 {
@@ -74,12 +68,26 @@ while getopts :c:p:a:n:b:u:m:i:h optname; do
         exit 2
         ;;
     \?) # Unrecognized option - show help
-        log "Option -${BOLD}$OPTARG${NORM} not allowed." $ERROR_MESSAGE
+        echo "Option -${BOLD}$OPTARG${NORM} not allowed."
         help
         exit 2
         ;;
   esac
 done
+
+# source our utilities for logging and other base functions (we need this staged with the installer script)
+# the file needs to be first downloaded from the public repository
+CURRENT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+UTILITIES_PATH=$CURRENT_PATH/utilities.sh
+
+# check if the utilities file exists. If not, download it from the public repository
+if [[ ! -e $UTILITIES_PATH ]]; 
+then  
+    wget -q https://raw.githubusercontent.com/Microsoft/oxa-tools/$GITHUB_PROJECTBRANCH/templates/stamp/utilities.sh -O $UTILITIES_PATH
+fi
+
+# source the utilities now
+source $UTILITIES_PATH
 
 # Validate parameters
 if [ "GITHUB_PERSONAL_ACCESS_TOKEN" == "" ] || [ "GITHUB_ACCOUNTNAME" == "" ] || [ "GITHUB_PROJECTNAME" == "" ] || [ "GITHUB_PROJECTBRANCH" == "" ] || [ "CLOUDNAME" == "" ] ;
