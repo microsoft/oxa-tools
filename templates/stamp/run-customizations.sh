@@ -13,12 +13,6 @@ OS_ADMIN_USERNAME=""
 CUSTOM_INSTALLER_RELATIVEPATH=""
 MONITORING_CLUSTER_NAME=""
 
-echo "\n\n"
-echo "#############################################"
-echo "Starting run-customizations"
-echo "#############################################"
-
-
 help()
 {
     echo "This script bootstraps the OXA Stamp"
@@ -94,6 +88,9 @@ fi
 
 # source the utilities now
 source $UTILITIES_PATH
+
+# Script self-idenfitication
+print_script_header
 
 # Validate parameters
 if [ "GITHUB_PERSONAL_ACCESS_TOKEN" == "" ] || [ "GITHUB_ACCOUNTNAME" == "" ] || [ "GITHUB_PROJECTNAME" == "" ] || [ "GITHUB_PROJECTBRANCH" == "" ] || [ "CLOUDNAME" == "" ] ;

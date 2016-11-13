@@ -273,9 +273,9 @@ print_script_header()
 {
     SCRIPT_NAME=`basename "$0"`
 
-    log "\n\n"
+    log " "
     log "#############################################"
     log "Starting ${SCRIPT_NAME}"
     log "#############################################"
-    log "\n\n"
+    log " "
 }
