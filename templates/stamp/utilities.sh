@@ -234,7 +234,7 @@ clean_repository()
     REPO_PATH=$1
 
     log "Cleaning up the cloned GitHub Repository at '${REPO_PATH}'"
-    if [ -d "$DIRECTORY" ]; 
+    if [ -d "$REPO_PATH" ]; 
     then
         rm -rf $REPO_PATH
     fi
