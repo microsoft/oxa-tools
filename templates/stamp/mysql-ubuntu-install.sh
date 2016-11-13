@@ -6,6 +6,10 @@
 PACKAGE_VERSION=5.6
 PACKAGE_NAME=mysql-server
 
+# Support Packages that OXA needs
+MYSQL_PYTHON_PACKAGE=MySQL-python==1.2.5
+MYSQL_CLIENTDEV_PACKAGE=libmysqlclient-dev
+
 MYSQL_REPLICATION_NODEID=
 NODE_ADDRESS=`ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'`
 
@@ -171,7 +175,13 @@ install_mysql_server()
 
     echo $package mysql-server/root_password password $MYSQL_ADMIN_PASSWORD | debconf-set-selections
     echo $package mysql-server/root_password_again password $MYSQL_ADMIN_PASSWORD | debconf-set-selections
-    apt-get install -y -qq $package
+    apt-get install -y -qq $package $MYSQL_CLIENTDEV_PACKAGE
+
+    # Install additional dependencies
+    install-pip
+
+    # PIP Install Mysql-Python package
+    pip install $MYSQL_PYTHON_PACKAGE
 
     log "Installing Mysql packages: Completed"
 }
