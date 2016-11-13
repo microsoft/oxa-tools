@@ -215,14 +215,14 @@ clone_repository()
     # if repository path is not specified, default it to the user's home directory'
     if [ -z $REPO_PATH ]
     then
-        REPO_PATH=~/$GITHUB_PROJECTNAME
+        REPO_PATH=~/$PROJECT_NAME
     fi 
 
     # clean up any residue of the repository
     clean_repository $PROJECT_NAME
 
     log "Cloning the project with: https://${ACCESS_TOKEN_WITH_SEPARATOR}/${ACCOUNT_NAME}/${PROJECT_NAME}.git from the '$GITHUB_PROJECTBRANCH' branch and saved at ~/$GITHUB_PROJECTNAME"
-    git clone -b $GITHUB_PROJECTBRANCH https://$ACCESS_TOKEN_WITH_SEPARATOR/$ACCOUNT_NAME/$PROJECT_NAME.git ~/$GITHUB_PROJECTNAME
+    git clone -b $BRANCH https://$ACCESS_TOKEN_WITH_SEPARATOR/$ACCOUNT_NAME/$PROJECT_NAME.git $REPO_PATH
 }
 
 #############################################################################
