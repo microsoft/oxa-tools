@@ -85,10 +85,11 @@ done
 CURRENT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 UTILITIES_PATH=$CURRENT_PATH/utilities.sh
 
-# check if the utilities file exists. If not, download it from the public repository
+# check if the utilities file exists. If not, bail out.
 if [[ ! -e $UTILITIES_PATH ]]; 
 then  
-    wget -q https://raw.githubusercontent.com/Microsoft/oxa-tools/$GITHUB_PROJECTBRANCH/templates/stamp/utilities.sh -O $UTILITIES_PATH
+    echo :"Utilities not present"
+    exit 3
 fi
 
 # source the utilities now
@@ -108,8 +109,9 @@ install-git
 install-mongodb-shell
 install-mysql-client
 
-# 2. Clone the GitHub repository
+# 2. Clone the GitHub repository & setup the utilities
 clone_repository $GITHUB_ACCOUNTNAME $GITHUB_PROJECTNAME $GITHUB_PROJECTBRANCH $GITHUB_PERSONAL_ACCESS_TOKEN ~/$GITHUB_PROJECTNAME
+cp $UTILITIES_PATH ~/$GITHUB_PROJECTNAME/scripts/
 
 # 3. Launch custom installer
 CUSTOM_INSTALLER_PATH=~/$GITHUB_PROJECTNAME/$CUSTOM_INSTALLER_RELATIVEPATH
