@@ -256,11 +256,11 @@ get_machine_role()
     elif [[ $HOSTNAME =~ ^(.*)vmss[0-9]+$ ]]; then
         MACHINE_ROLE="vmss"
     else
-        log "Could not determine the role of the '${HOSTNAME}'. Defaulting to 'unknown' role"
+        #log "Could not determine the role of the '${HOSTNAME}'. Defaulting to 'unknown' role"
         MACHINE_ROLE="unknown"
     fi
 
-    log "Resolving ${HOSTNAME} to ${MACHINE_ROLE}"
+    #log "Resolving ${HOSTNAME} to ${MACHINE_ROLE}"
 
     echo $MACHINE_ROLE
 }
@@ -273,9 +273,9 @@ print_script_header()
 {
     SCRIPT_NAME=`basename "$0"`
 
-    log " "
+    log "-"
     log "#############################################"
     log "Starting ${SCRIPT_NAME}"
     log "#############################################"
-    log " "
+    log "-"
 }

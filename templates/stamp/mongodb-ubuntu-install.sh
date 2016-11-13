@@ -146,7 +146,7 @@ install_mongodb()
     fi
 
     # Install updates
-    apt-get -y update
+    apt-get -y -qq update
 
     # Remove any previously created configuration file to avoid a prompt
     if [ -f /etc/mongod.conf ]; then
@@ -155,7 +155,7 @@ install_mongodb()
     
     #Install Mongo DB
     log "Installing MongoDB package $PACKAGE_NAME"
-    apt-get -y install $PACKAGE_NAME
+    apt-get -y -qq install $PACKAGE_NAME
     
     # Stop Mongod as it may be auto-started during the above step (which is not desirable)
     stop_mongodb
