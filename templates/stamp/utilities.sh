@@ -219,7 +219,7 @@ clone_repository()
     fi 
 
     # clean up any residue of the repository
-    clean_repository $PROJECT_NAME
+    clean_repository $REPO_PATH
 
     log "Cloning the project with: https://${ACCESS_TOKEN_WITH_SEPARATOR}/${ACCOUNT_NAME}/${PROJECT_NAME}.git from the '$GITHUB_PROJECTBRANCH' branch and saved at ~/$GITHUB_PROJECTNAME"
     git clone -b $BRANCH https://$ACCESS_TOKEN_WITH_SEPARATOR/$ACCOUNT_NAME/$PROJECT_NAME.git $REPO_PATH
@@ -231,12 +231,12 @@ clone_repository()
 
 clean_repository()
 {
-    PROJECT_NAME=$1
+    REPO_PATH=$1
 
-    log "Cleaning up the cloned GitHub Repository at '~/${PROJECT_NAME}'"
+    log "Cleaning up the cloned GitHub Repository at '${REPO_PATH}'"
     if [ -d "$DIRECTORY" ]; 
     then
-        rm -rf ~/$PROJECT_NAME
+        rm -rf $REPO_PATH
     fi
 }
 
