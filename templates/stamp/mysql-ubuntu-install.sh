@@ -219,12 +219,24 @@ EOF
 # create the mysql replication configuration file
 create_config_file()
 {
-    MYCNF_PATH="/etc/my.cnf"
-    MYCNF_TEMPLATE_PATH="./mysqld.template.cnf"
-    TEMP_MYCNF_PATH="./mysqld.custom.cnf"
-    TARGET_MYCNF_DIR="/etc/mysql/conf.d"
-    TARGET_MYCNF_PATH="${TARGET_MYCNF_DIR}/mysqld.cnf"
+    # set the output file name and path
+    MYCNF_FILENAME="my.cnf"
+    TARGET_MYCNF_DIR="/etc/mysql"
 
+    if [ $(echo "$PACKAGE_VERSION == 5.7" | bc -l)  ];
+    then
+        TARGET_MYCNF_DIR="/etc/mysql/conf.d"
+        MYCNF_FILENAME="mysqld.cnf"
+    fi
+
+    # establish the configuration template to use
+    MYCNF_TEMPLATE_PATH="./mysqld.template-${PACKAGE_VERSION}.cnf"
+    TEMP_MYCNF_PATH="./mysqld.custom.cnf"
+    TARGET_MYCNF_PATH="${TARGET_MYCNF_DIR}/${MYCNF_FILENAME}"
+
+    log "${PACKAGE_VERSION} detected. Mysql configuration will be dropped at '${TARGET_MYCNF_PATH}'"
+
+    #TODO: Move this to configuration
     REPL_EXPIRE_LOG_DAYS=10
     REPL_MAX_BINLOG_SIZE=100M
     REPL_RELAY_LOG_SPACE_LIMIT=20GB
@@ -235,13 +247,12 @@ create_config_file()
     # update the generic settings
     #sed -i "s/^bind-address=.*/bind-address=${NODE_ADDRESS}/I" $TEMP_MYCNF_PATH
     sed -i "s/^server-id=.*/server-id=${MYSQL_REPLICATION_NODEID}/I" $TEMP_MYCNF_PATH
+    sed -i "s/^#log_bin=.*/log_bin=\/var\/log\/mysql\/mysql-bin-${HOSTNAME}.log/I" $TEMP_MYCNF_PATH
 
     # 1. perform necessary settings replacements
     if [ ${MYSQL_REPLICATION_NODEID} -eq 1 ];
     then
-        log "Mysql Replication Master Node detected. Creating *.cnf for the MasterNode on ${HOSTNAME}"
-        
-        sed -i "s/^#log_bin=.*/log_bin=\/var\/log\/mysql\/mysql-bin-${HOSTNAME}.log/I" $TEMP_MYCNF_PATH
+        log "Mysql Replication Master Node detected. Creating cnf for the MasterNode on ${HOSTNAME}"
         sed -i "s/^#expire_logs_days=.*/expire_logs_days=${REPL_EXPIRE_LOG_DAYS}/I" $TEMP_MYCNF_PATH
         sed -i "s/^#max_binlog_size=.*/max_binlog_size=${REPL_MAX_BINLOG_SIZE}/I" $TEMP_MYCNF_PATH
     else
@@ -256,15 +267,16 @@ create_config_file()
     TIMESTAMP=`date +"%s"`
     if [ -e "$TARGET_MYCNF_PATH" ]
     then
-        log "Existing configuration detected at ${TARGET_MYCNF_PATH} and will be backed up to ${TARGET_MYCNF_DIR}/mysqld.backup_${TIMESTAMP}"
-        mv $TARGET_MYCNF_PATH "${TARGET_MYCNF_DIR}/mysqld.backup_${TIMESTAMP}"
+        BACKUP_FILE_PATH="${TARGET_MYCNF_DIR}/mysqld.backup_${TIMESTAMP}"
+        log "Existing configuration detected at ${TARGET_MYCNF_PATH} and will be backed up to ${BACKUP_FILE_PATH}"
+        mv $TARGET_MYCNF_PATH $BACKUP_FILE_PATH
     else
         log "No existing mysql server configuration found at ${TARGET_MYCNF_PATH}"
     fi
 
     # 3. move the custom file to the proper location & update permissions
-    cp $TEMP_MYCNF_PATH "${TARGET_MYCNF_DIR}/mysqld.cnf"
-    chmod 544 "${TARGET_MYCNF_DIR}/mysqld.cnf"
+    cp $TEMP_MYCNF_PATH $TARGET_MYCNF_PATH
+    chmod 544 $TARGET_MYCNF_PATH
 
     rm $TEMP_MYCNF_PATH
 }
@@ -282,25 +294,27 @@ configure_mysql_replication()
     if [ ${MYSQL_REPLICATION_NODEID} -eq 1 ];
     then
         log "Mysql Replication Master Node detected. Setting up Master Replication on ${HOSTNAME}"
+ 
 
         tee ./$TMP_QUERY_FILE > /dev/null <<EOF
-CREATE USER IF NOT EXISTS '{MYSQL_ADMIN_USER}'@'{NETWORK_PREFIX}.%' IDENTIFIED BY '{MYSQL_ADMIN_PASSWORD}';    
-GRANT ALL PRIVILEGES ON *.* TO '{MYSQL_ADMIN_USER}'@'{NETWORK_PREFIX}.%';
-GRANT REPLICATION SLAVE ON *.* TO '{MYSQL_ADMIN_USER}'@'{NETWORK_PREFIX}.%';
-GRANT REPLICATION CLIENT ON *.* TO '{MYSQL_ADMIN_USER}'@'{NETWORK_PREFIX}.%';
-CREATE USER IF NOT EXISTS '{MYSQL_REPLICATION_USER}'@'%' IDENTIFIED BY '{MYSQL_REPLICATION_PASSWORD}';
-GRANT REPLICATION SLAVE ON *.* TO '{MYSQL_REPLICATION_USER}'@'%' ; 
+-- CREATE USER IF NOT EXISTS '{MYSQL_ADMIN_USER}'@'%' IDENTIFIED BY '{MYSQL_ADMIN_PASSWORD}';
+GRANT ALL PRIVILEGES ON *.* TO '{MYSQL_ADMIN_USER}'@'%' IDENTIFIED BY '{MYSQL_ADMIN_PASSWORD}' WITH GRANT OPTION;
+GRANT REPLICATION SLAVE ON *.* TO '{MYSQL_ADMIN_USER}'@'%';
+GRANT REPLICATION CLIENT ON *.* TO '{MYSQL_ADMIN_USER}'@'%';
+-- CREATE USER IF NOT EXISTS '{MYSQL_REPLICATION_USER}'@'%' IDENTIFIED BY '{MYSQL_REPLICATION_PASSWORD}';
+GRANT REPLICATION SLAVE ON *.* TO '{MYSQL_REPLICATION_USER}'@'%' IDENTIFIED BY '{MYSQL_REPLICATION_PASSWORD}'; 
 FLUSH PRIVILEGES;
 EOF
 
     else
         log "Mysql Replication Slave Node detected. Setting up Slave Replication on ${HOSTNAME} with master at ${MASTER_NODE_IPADDRESS}"
 
+
         tee ./$TMP_QUERY_FILE > /dev/null <<EOF
-CREATE USER IF NOT EXISTS '{MYSQL_ADMIN_USER}'@'{NETWORK_PREFIX}.%' IDENTIFIED BY '{MYSQL_ADMIN_PASSWORD}';    
-GRANT ALL PRIVILEGES ON *.* TO '{MYSQL_ADMIN_USER}'@'{NETWORK_PREFIX}.%';
-GRANT REPLICATION SLAVE ON *.* TO '{MYSQL_ADMIN_USER}'@'{NETWORK_PREFIX}.%';
-GRANT REPLICATION CLIENT ON *.* TO '{MYSQL_ADMIN_USER}'@'{NETWORK_PREFIX}.%';
+-- CREATE USER IF NOT EXISTS '{MYSQL_ADMIN_USER}'@'%' IDENTIFIED BY '{MYSQL_ADMIN_PASSWORD}';
+GRANT ALL PRIVILEGES ON *.* TO '{MYSQL_ADMIN_USER}'@'%' IDENTIFIED BY '{MYSQL_ADMIN_PASSWORD}' WITH GRANT OPTION;
+GRANT REPLICATION SLAVE ON *.* TO '{MYSQL_ADMIN_USER}'@'%';
+GRANT REPLICATION CLIENT ON *.* TO '{MYSQL_ADMIN_USER}'@'%';
 change master to master_host='{MASTER_NODE_IPADDRESS}', master_port={MYSQL_PORT}, master_user='{MYSQL_REPLICATION_USER}', master_password='{MYSQL_REPLICATION_PASSWORD}', master_auto_position=1; 
 START slave;
 EOF
@@ -328,14 +342,25 @@ EOF
 secure_mysql_installation()
 {
     log "Running Mysql secure installation script"
-    /usr/bin/mysql_secure_installation -p$MYSQL_ADMIN_PASSWORD <<<'
-n
-y
-y
-y
-y
-y'
 
+    # this query matches most of what is available in the secure installation bash script:
+    # reset root password, remove anonymous users, remove root network login (only local host allowed), remove test db
+
+    TMP_QUERY_FILE="tmp.query.secure.sql"
+     tee ./$TMP_QUERY_FILE > /dev/null <<EOF
+UPDATE mysql.user SET Password=PASSWORD('{ROOT_PASSWORD}') WHERE User='root';
+DELETE FROM mysql.user WHERE User='';
+DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
+DROP DATABASE IF EXISTS test;
+DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
+FLUSH PRIVILEGES;
+EOF
+
+    # replace the place holders
+    sed -i "s/{ROOT_PASSWORD}/${MYSQL_ADMIN_PASSWORD}/I" $TMP_QUERY_FILE
+
+    # secure the installation
+    mysql -u root -p$MYSQL_ADMIN_PASSWORD< ./$TMP_QUERY_FILE
 }
 
 # Step 1: Configuring Disks"
