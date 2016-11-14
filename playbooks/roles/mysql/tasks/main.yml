@@ -1,7 +1,8 @@
 ---
+
 - name: Run OXA script
   sudo: yes
-  shell: bash ./oxa_configuration.sh
+  shell: mysql edxapp -h "{{ EDXAPP_MYSQL_HOST }}" -u "{{ EDXAPP_MYSQL_USER_ADMIN }}" -p"{{ EDXAPP_MYSQL_PASSWORD_ADMIN }}" < edxapp.sql
   args:
     chdir: "{{ mysql_files_path }}"
   register: bash
