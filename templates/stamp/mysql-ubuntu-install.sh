@@ -8,7 +8,6 @@ PACKAGE_NAME=mysql-server
 
 # Support Packages that OXA needs
 MYSQL_PYTHON_PACKAGE=MySQL-python==1.2.5
-MYSQL_CLIENTDEV_PACKAGE=libmysqlclient-dev
 
 MYSQL_REPLICATION_NODEID=
 NODE_ADDRESS=`ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'`
@@ -42,6 +41,9 @@ help()
 
 # source our utilities for logging and other base functions
 source ./utilities.sh
+
+# Script self-idenfitication
+print_script_header
 
 log "Begin execution of Mysql installation script extension on ${HOSTNAME}"
 
@@ -175,12 +177,13 @@ install_mysql_server()
 
     echo $package mysql-server/root_password password $MYSQL_ADMIN_PASSWORD | debconf-set-selections
     echo $package mysql-server/root_password_again password $MYSQL_ADMIN_PASSWORD | debconf-set-selections
-    apt-get install -y -qq $package $MYSQL_CLIENTDEV_PACKAGE
+    apt-get install -y -qq $package 
 
     # Install additional dependencies
-    install-pip
+    log "Installing additional dependencies: Python-Pip, Python-Dev, MysqlClient Dev Lib"
+    apt-get install -y -qq python-pip python-dev libmysqlclient-dev
 
-    # PIP Install Mysql-Python package
+    log "Pip installing $MYSQL_PYTHON_PACKAGE"
     pip install $MYSQL_PYTHON_PACKAGE
 
     log "Installing Mysql packages: Completed"

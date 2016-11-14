@@ -48,6 +48,9 @@ help()
 # source our utilities for logging and other base functions
 source ./utilities.sh
 
+# Script self-idenfitication
+print_script_header
+
 log "Begin execution of MongoDB installation script extension on ${HOSTNAME}"
 
 if [ "${UID}" -ne 0 ];
