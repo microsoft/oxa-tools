@@ -84,21 +84,6 @@ fi
 
 log "Begin installation of the Geneva Monitoring WarmPath Package MDSD on '${HOSTNAME}'"
 
-# Clone the GitHub repository
-clone_repository()
-{
-    # clean up any residue of the repository
-    clean_repository
-    
-    log "Cloning the project with: https://{GITHUB_PERSONAL_ACCESS_TOKEN}@github/${GITHUB_ACCOUNTNAME}/${GITHUB_PROJECTNAME}.git from the '$GITHUB_PROJECTBRANCH' branch and saved at ~/$GITHUB_PROJECTNAME"
-    git clone -b $GITHUB_PROJECTBRANCH https://$GITHUB_PERSONAL_ACCESS_TOKEN@github.com/$GITHUB_ACCOUNTNAME/$GITHUB_PROJECTNAME.git ~/$GITHUB_PROJECTNAME
-}
-
-clean_repository()
-{
-    log "Cleaning up the cloned GitHub Repository at '~/${GITHUB_PROJECTNAME}'"
-    rm -rf ~/$GITHUB_PROJECTNAME
-}
 
 ###############################################
 # Start Execution
@@ -110,7 +95,7 @@ install-mongodb-shell
 install-mysql-client
 
 # 1. Clone the GitHub repository with the secrets and other support files
-clone_repository
+clone_repository $GITHUB_ACCOUNTNAME $GITHUB_PROJECTNAME $GITHUB_PROJECTBRANCH $GITHUB_PERSONAL_ACCESS_TOKEN
 
 #2. Launch custom installer
 # REFACTOR: point to the appropriate file for the cloud-specific deployment or pass parameters
