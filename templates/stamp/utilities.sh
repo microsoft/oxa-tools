@@ -279,3 +279,30 @@ print_script_header()
     log "#############################################"
     log "-"
 }
+
+#############################################################################
+# Sync Repo
+# TODO: reconcile duplication with clone_repository
+#############################################################################
+
+sync_repo() {
+    REPO_URL=$1; REPO_VERSION=$2; REPO_PATH=$3
+    REPO_TOKEN=$4 # optional
+  
+    if [ "$#" -lt 3 ]; then
+        echo "sync_repo: invalid number of arguments" && exit 1
+    fi
+  
+    # todo: scorch support?
+  
+    if [[ ! -d $REPO_PATH ]]; then
+        sudo mkdir -p $REPO_PATH
+        sudo git clone ${REPO_URL/github/$REPO_TOKEN@github} $REPO_PATH
+    else
+        pushd $REPO_PATH
+        sudo git pull
+        popd
+    fi
+
+    pushd $REPO_PATH && sudo git checkout ${REPO_VERSION:-master} && popd
+}

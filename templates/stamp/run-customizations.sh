@@ -101,10 +101,17 @@ fi
 
 log "Begin customization from '${HOSTNAME}' for the OXA Stamp"
 
+MACHINE_ROLE=$(get_machine_role)
+log "${HOSTNAME} has been identified as a member of the '${MACHINE_ROLE}' role"
+
 # 1. Setup Tools
 install-git
-install-mongodb-shell
-install-mysql-client
+
+if [ "$MACHINE_ROLE" == "jumpbox" ] ;
+then
+    install-mongodb-shell
+    install-mysql-client
+fi
 
 # 2. Clone the GitHub repository & setup the utilities
 clone_repository $GITHUB_ACCOUNTNAME $GITHUB_PROJECTNAME $GITHUB_PROJECTBRANCH $GITHUB_PERSONAL_ACCESS_TOKEN ~/$GITHUB_PROJECTNAME
