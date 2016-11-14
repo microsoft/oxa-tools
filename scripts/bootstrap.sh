@@ -94,8 +94,10 @@ sync_repo() {
 ## Role-independent OXA environment bootstrap
 ##
 setup() {  
-  apt-get -y update
-  apt-get -y install git
+  echo "updating package repository..."
+  apt-get -y -qq update
+  echo "installing git..."
+  apt-get -y -qq install git
   
   # sync the private repository
   sync_repo $OXA_TOOLS_CONFIG_REPO $OXA_TOOLS_CONFIG_VERSION $OXA_TOOLS_CONFIG_PATH $ACCESS_TOKEN

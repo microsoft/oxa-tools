@@ -83,13 +83,14 @@ configure_datadisks()
 {
     # Stripe all of the data 
     log "Formatting and configuring the data disks"
+    log "installing postfix..."
 
     # vm-disk-utils-0.1 can install mdadm which installs postfix. The postfix
     # installation cannot be made silent using the techniques that keep the
     # mdadm installation quiet: a) -y AND b) DEBIAN_FRONTEND=noninteractive.
     # Therefore, we'll install postfix early with the "No configuration" option.
     echo "postfix postfix/main_mailer_type select No configuration" | debconf-set-selections
-    apt-get install -y postfix
+    apt-get install -y -qq postfix
 
     bash ./vm-disk-utils-0.1.sh -b $DATA_DISKS -s
 }
@@ -133,7 +134,7 @@ install-mongodb-shell()
         fi
 
         log "Updating Package Repository..."
-        apt-get -y -qq -y update
+        apt-get -y -qq update
 
         log "Installing Mongo Shell"
         apt-get install -y -qq mongodb-org-shell
