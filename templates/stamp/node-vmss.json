@@ -142,7 +142,7 @@
                             "idleTimeoutInMinutes": 5,
                             "loadDistribution": "SourceIP",
                             "probe": {
-                                "id": "[parameters('networkSettings').loadbalancerSettings.lbProbeLMSID]"
+                                "id": "[parameters('networkSettings').loadbalancerSettings.lbProbeLMSSSLID]"
                             }
                         }
                     },
@@ -182,7 +182,7 @@
                             "idleTimeoutInMinutes": 5,
                             "loadDistribution": "SourceIP",
                             "probe": {
-                                "id": "[parameters('networkSettings').loadbalancerSettings.lbProbeCMSID]"
+                                "id": "[parameters('networkSettings').loadbalancerSettings.lbProbeCMSSSLID]"
                             }
                         }
                     },
@@ -209,7 +209,7 @@
                 ],
                 "probes": [
                     {
-                        "name": "tcpProbeLMS",
+                        "name": "[parameters('networkSettings').loadbalancerSettings.lbProbeLMSName]",
                         "properties": {
                             "protocol": "tcp",
                             "port": 80,
@@ -218,26 +218,30 @@
                         }
                     },
                     {
-                        "name": "tcpProbeCMS",
+                        "name": "[parameters('networkSettings').loadbalancerSettings.lbProbeLMSSSLName]",
+                        "properties": {
+                            "protocol": "tcp",
+                            "port": 443,
+                            "intervalInSeconds": "5",
+                            "numberOfProbes": "2"
+                        }
+                    },
+                    {
+                        "name": "[parameters('networkSettings').loadbalancerSettings.lbProbeCMSName]",
                         "properties": {
                             "protocol": "tcp",
                             "port": 18010,
                             "intervalInSeconds": "5",
                             "numberOfProbes": "2"
                         }
-                    }
-                ],
-                "inboundNatPools": [
+                    },
                     {
-                        "name": "[parameters('networkSettings').loadbalancerSettings.natPoolName]",
+                        "name": "[parameters('networkSettings').loadbalancerSettings.lbProbeCMSSSLName]",
                         "properties": {
-                            "frontendIPConfiguration": {
-                                "id": "[parameters('networkSettings').loadbalancerSettings.frontEndIPConfigID]"
-                            },
                             "protocol": "tcp",
-                            "frontendPortRangeStart": "[parameters('networkSettings').loadbalancerSettings.natStartPort]",
-                            "frontendPortRangeEnd": "[parameters('networkSettings').loadbalancerSettings.natEndPort]",
-                            "backendPort": "[parameters('networkSettings').loadbalancerSettings.natBackendPort]"
+                            "port": 48010,
+                            "intervalInSeconds": "5",
+                            "numberOfProbes": "2"
                         }
                     }
                 ]

@@ -345,6 +345,10 @@
 
         "cmsPublicAddressName": "cmsPublicAddress",
         "lmsPublicAddressName": "lmsPublicAddress",
+        "lbProbeLMSName": "tcpProbeLMS",
+        "lbProbeCMSName": "tcpProbeCMS",
+        "lbProbeLMSSSLName": "[concat(variables('lbProbeLMSName'),'SSL')]",
+        "lbProbeCMSSSLName": "[concat(variables('lbProbeCMSName'),'SSL')]",
 
         "networkSettings": {
             "virtualNetworkName": "[variables('virtualNetworkName')]",
@@ -399,8 +403,17 @@
                 "frontEndIPConfigID": "[concat(variables('lbID'),'/frontendIPConfigurations/loadBalancerFrontEnd')]",
                 "lbPoolID": "[concat(variables('lbID'),'/backendAddressPools/', variables('bePoolName'))]",
                 "bePoolName": "[variables('bePoolName')]",
-                "lbProbeLMSID": "[concat(variables('lbID'),'/probes/tcpProbeLMS')]",
-                "lbProbeCMSID": "[concat(variables('lbID'),'/probes/tcpProbeCMS')]",
+
+                "lbProbeLMSName": "[variables('lbProbeLMSName')]",
+                "lbProbeCMSName": "[variables('lbProbeCMSName')]",
+                "lbProbeLMSSSLName": "[variables('lbProbeLMSSSLName')]",
+                "lbProbeCMSSSLName": "[variables('lbProbeCMSSSLName')]",
+
+                "lbProbeLMSID": "[concat(variables('lbID'),'/probes/', variables('lbProbeLMSName'))]",
+                "lbProbeCMSID": "[concat(variables('lbID'),'/probes/', variables('lbProbeCMSName'))]",
+                "lbProbeLMSSSLID": "[concat(variables('lbID'),'/probes/', variables('lbProbeLMSSSLName'))]",
+                "lbProbeCMSSSLID": "[concat(variables('lbID'),'/probes/', variables('lbProbeCMSSSLName'))]",
+
                 "natStartPort": 50000,
                 "natEndPort": 50119,
                 "natBackendPort": 22,
