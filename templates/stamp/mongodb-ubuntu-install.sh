@@ -346,8 +346,14 @@ configure_db_users()
 
     # this command will re-create (remove if necessary) the admin user account
     # OpenEdX assumes the authentication database is already operational. Otherwise it fails. Therefore, setting authentication against the expected/default database OpenEdx expects
+    log "Setting up authentication database in 'edxapp'"
     mongo edxapp --host 127.0.0.1 --eval "db.dropUser('${ADMIN_USER_NAME}'); db.createUser({user: '${ADMIN_USER_NAME}', pwd: '${ADMIN_USER_PASSWORD}', roles:[{ role: 'userAdminAnyDatabase', db: 'admin' }, { role: 'clusterAdmin', db: 'admin' }, { role: 'readWriteAnyDatabase', db: 'admin' }, { role: 'dbAdminAnyDatabase', db: 'admin' } ]})"
+
+    log "Setting up authentication database in 'master'"
     mongo master --host 127.0.0.1 --eval "db.dropUser('${ADMIN_USER_NAME}'); db.createUser({user: '${ADMIN_USER_NAME}', pwd: '${ADMIN_USER_PASSWORD}', roles:[{ role: 'userAdminAnyDatabase', db: 'admin' }, { role: 'clusterAdmin', db: 'admin' }, { role: 'readWriteAnyDatabase', db: 'admin' }, { role: 'dbAdminAnyDatabase', db: 'admin' } ]})"
+
+    log "Setting up authentication database in 'cs_comments_service'"
+    mongo cs_comments_service --host 127.0.0.1 --eval "db.dropUser('${ADMIN_USER_NAME}'); db.createUser({user: '${ADMIN_USER_NAME}', pwd: '${ADMIN_USER_PASSWORD}', roles:[{ role: 'userAdminAnyDatabase', db: 'admin' }, { role: 'clusterAdmin', db: 'admin' }, { role: 'readWriteAnyDatabase', db: 'admin' }, { role: 'dbAdminAnyDatabase', db: 'admin' } ]})"
 }
 
 # Step 1
