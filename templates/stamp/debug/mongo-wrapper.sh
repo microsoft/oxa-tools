@@ -15,8 +15,10 @@ wget -q https://raw.githubusercontent.com/Azure/azure-quickstart-templates/maste
   INSTALLER=mongodb-ubuntu-install.sh
   mongoMachineSettings_installerBaseUrl=http://repo.mongodb.org/apt/ubuntu
   mongoMachineSettings_installerPackages=mongodb-org
+  mongoVer=2.6.12
   networkSettings_serverIpPrefix=10.0.0.
   mongoIpOffset=10
+
 
   #master
   NODE_COUNT=3
@@ -28,7 +30,7 @@ wget -q https://raw.githubusercontent.com/Azure/azure-quickstart-templates/maste
   mongoReplicaSetKey=tcvhiyu5h2o5o
   mongoReplicaSetName=loxabvtwuc2rs1
 
-  bash $INSTALLER -i $mongoMachineSettings_installerBaseUrl -b $mongoMachineSettings_installerPackages -r $mongoReplicaSetName -k $mongoReplicaSetKey -u $MONGO_USER -p $MONGO_PASSWORD -x $networkSettings_serverIpPrefix -n $NODE_COUNT -o $mongoIpOffset $EXTRA_ARGS
+  bash $INSTALLER -i $mongoMachineSettings_installerBaseUrl -b $mongoMachineSettings_installerPackages -v $mongoVer -r $mongoReplicaSetName -k $mongoReplicaSetKey -u $MONGO_USER -p $MONGO_PASSWORD -x $networkSettings_serverIpPrefix -n $NODE_COUNT -o $mongoIpOffset $EXTRA_ARGS
 
 # cleanup
 rm vm-disk-utils-0.1*
