@@ -111,7 +111,7 @@
         },
         "mysqlServerPackageVersion": {
             "type": "string",
-            "defaultValue": "5.7"
+            "defaultValue": "5.6"
         },
         "mysqlServerAdminUserName": {
             "type": "string",
@@ -139,12 +139,35 @@
                 "description": "Deployment slot for the frontend"
             }
         },
-        "frontendNodeCount": {
+        "autoScaleEnabled": {
+            "type": "bool",
+            "defaultValue": "false",
+            "metadata": {
+                "description": "Indicator of whether or not autoscaling would be enabled on the Vm Scale Set"
+            }
+        },
+        "autoScaleCapacityDefault": {
+            "type": "int",
+            "maxValue": 20,
+            "defaultValue": 5,
+            "metadata": {
+                "description": "Default number of application virtual machines within the VM Scale Set."
+            }
+        },
+        "autoScaleCapacityMaximum": {
+            "type": "int",
+            "maxValue": 20,
+            "defaultValue": 20,
+            "metadata": {
+                "description": "Maximum number of application virtual machines within the VM Scale Set."
+            }
+        },
+        "autoScaleCapacityMinimum": {
             "type": "int",
             "maxValue": 20,
             "defaultValue": 1,
             "metadata": {
-                "description": "Number of application virtual machines behind the load balancer."
+                "description": "Default number of application virtual machines within the VM Scale Set."
             }
         },
         "customInstallerGithubAccountName": {
@@ -320,6 +343,9 @@
         "vmssAutoscaleSettingNameSuffix": "-autoscale",
         "vmssName": "[concat(parameters('clusterName'), '-vmss')]",
 
+        "cmsPublicAddressName": "cmsPublicAddress",
+        "lmsPublicAddressName": "lmsPublicAddress",
+
         "networkSettings": {
             "virtualNetworkName": "[variables('virtualNetworkName')]",
             "clusterName": "[parameters('clusterName')]",
@@ -357,10 +383,19 @@
             "mongoDataNodeCount": 3,
             "mysqlDataNodesAvailabilitySetFaultDomainCount": "3",
             "mysqlDataNodeCount": 3,
+
             "loadbalancerSettings": {
                 "loadBalancerName": "[variables('loadBalancerName')]",
-                "loadBalancerDomainName": "[concat(parameters('clusterNameDomainName'), '-', parameters('deploymentSlot'))]",
+                "cmsLoadBalancerDomainName": "[concat('cms-', parameters('clusterNameDomainName'), '-', parameters('deploymentSlot'))]",
+                "lmsLoadBalancerDomainName": "[concat('lms-', parameters('clusterNameDomainName'), '-', parameters('deploymentSlot'))]",
                 "natPoolName": "[concat(parameters('clusterName'), '-natpool')]",
+
+                "cmsPublicAddressName": "[variables('cmsPublicAddressName')]",
+                "lmsPublicAddressName": "[variables('lmsPublicAddressName')]",
+
+                "cmsIPConfigID": "[concat(variables('lbID'),'/frontendIPConfigurations/', variables('cmsPublicAddressName'))]",
+                "lmsIPConfigID": "[concat(variables('lbID'),'/frontendIPConfigurations/', variables('lmsPublicAddressName'))]",
+
                 "frontEndIPConfigID": "[concat(variables('lbID'),'/frontendIPConfigurations/loadBalancerFrontEnd')]",
                 "lbPoolID": "[concat(variables('lbID'),'/backendAddressPools/', variables('bePoolName'))]",
                 "bePoolName": "[variables('bePoolName')]",
@@ -369,7 +404,10 @@
                 "natStartPort": 50000,
                 "natEndPort": 50119,
                 "natBackendPort": 22,
-                "frontendNodeCount": "[parameters('frontendNodeCount')]",
+                "AutoscaleEnabled": "[parameters('autoScaleEnabled')]",
+                "AutoscaleCapacityDefault": "[parameters('autoScaleCapacityDefault')]",
+                "AutoscaleCapacityMaximum": "[parameters('autoScaleCapacityMaximum')]",
+                "AutoscaleCapacityMinimum": "[parameters('autoScaleCapacityMinimum')]",
                 "vmssAutoscaleSettingNameSuffix": "[variables('vmssAutoscaleSettingNameSuffix')]"
             }
         },

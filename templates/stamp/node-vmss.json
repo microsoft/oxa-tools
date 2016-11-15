@@ -35,7 +35,12 @@
     },
 
     "variables": {
-        "loadBalancerIpName": "[concat(parameters('networkSettings').loadbalancerSettings.loadBalancerName, parameters('networkSettings').publicIPAddressNameSuffix)]",
+        "cmsIpName": "LoadBalancerCmsPublicIp",
+        "lmsIpName": "LoadBalancerLmsPublicIp",
+        "cmsIPNamePrefix": "-cms",
+        "lmsIPNamePrefix": "-lms",
+        "loadBalancerLMSIpName": "[concat(parameters('networkSettings').loadbalancerSettings.loadBalancerName, variables('cmsIPNamePrefix'), parameters('networkSettings').publicIPAddressNameSuffix)]",
+        "loadBalancerCMSIpName": "[concat(parameters('networkSettings').loadbalancerSettings.loadBalancerName, variables('lmsIPNamePrefix'), parameters('networkSettings').publicIPAddressNameSuffix)]",
         "newStorageAccountSuffix": "[toLower(concat(parameters('networkSettings').clusterName, 'vmsssa'))]",
         "uniqueStringArray": [
             "[concat(variables('newStorageAccountSuffix'), '0')]",
@@ -63,14 +68,26 @@
         },
 
         {
-            "name": "[variables('loadBalancerIpName')]",
+            "name": "[variables('cmsIpName')]",
             "type": "Microsoft.Network/publicIPAddresses",
             "apiVersion": "[parameters('apiSettings').networkApiVersion]",
             "location": "[resourceGroup().location]",
             "properties": {
                 "publicIPAllocationMethod": "[parameters('networkSettings').publicIPAddressType]",
                 "dnsSettings": {
-                    "domainNameLabel": "[toLower(parameters('networkSettings').loadbalancerSettings.loadBalancerDomainName)]"
+                    "domainNameLabel": "[toLower(parameters('networkSettings').loadbalancerSettings.cmsLoadBalancerDomainName)]"
+                }
+            }
+        },
+        {
+            "name": "[variables('lmsIpName')]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "[parameters('apiSettings').networkApiVersion]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publicIPAllocationMethod": "[parameters('networkSettings').publicIPAddressType]",
+                "dnsSettings": {
+                    "domainNameLabel": "[toLower(parameters('networkSettings').loadbalancerSettings.lmsLoadBalancerDomainName)]"
                 }
             }
         },
@@ -81,15 +98,24 @@
             "apiVersion": "[parameters('apiSettings').networkApiVersion]",
             "location": "[resourceGroup().location]",
             "dependsOn": [
-                "[variables('loadBalancerIpName')]"
+                "[variables('lmsIpName')]",
+                "[variables('cmsIpName')]"
             ],
             "properties": {
                 "frontendIPConfigurations": [
                     {
-                        "name": "LoadBalancerFrontend",
+                        "name": "cmsPublicAddress",
                         "properties": {
                             "publicIpAddress": {
-                                "id": "[resourceId(resourceGroup().name,'Microsoft.Network/publicIpAddresses', variables('loadBalancerIpName'))]"
+                                "id": "[resourceId(resourceGroup().name,'Microsoft.Network/publicIpAddresses', variables('cmsIpName'))]"
+                            }
+                        }
+                    },
+                    {
+                        "name": "lmsPublicAddress",
+                        "properties": {
+                            "publicIpAddress": {
+                                "id": "[resourceId(resourceGroup().name,'Microsoft.Network/publicIpAddresses', variables('lmsIpName'))]"
                             }
                         }
                     }
@@ -101,10 +127,30 @@
                 ],
                 "loadBalancingRules": [
                     {
+                        "name": "LBRuleLMS_SSL",
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[parameters('networkSettings').loadbalancerSettings.lmsIPConfigID]"
+                            },
+                            "backendAddressPool": {
+                                "id": "[parameters('networkSettings').loadbalancerSettings.lbPoolID]"
+                            },
+                            "protocol": "tcp",
+                            "frontendPort": 443,
+                            "backendPort": 443,
+                            "enableFloatingIP": false,
+                            "idleTimeoutInMinutes": 5,
+                            "loadDistribution": "SourceIP",
+                            "probe": {
+                                "id": "[parameters('networkSettings').loadbalancerSettings.lbProbeLMSID]"
+                            }
+                        }
+                    },
+                    {
                         "name": "LBRuleLMS",
                         "properties": {
                             "frontendIPConfiguration": {
-                                "id": "[parameters('networkSettings').loadbalancerSettings.frontEndIPConfigID]"
+                                "id": "[parameters('networkSettings').loadbalancerSettings.lmsIPConfigID]"
                             },
                             "backendAddressPool": {
                                 "id": "[parameters('networkSettings').loadbalancerSettings.lbPoolID]"
@@ -121,16 +167,36 @@
                         }
                     },
                     {
-                        "name": "LBRuleCMS",
+                        "name": "LBRuleCMS_SSL",
                         "properties": {
                             "frontendIPConfiguration": {
-                                "id": "[parameters('networkSettings').loadbalancerSettings.frontEndIPConfigID]"
+                                "id": "[parameters('networkSettings').loadbalancerSettings.cmsIPConfigID]"
                             },
                             "backendAddressPool": {
                                 "id": "[parameters('networkSettings').loadbalancerSettings.lbPoolID]"
                             },
                             "protocol": "tcp",
-                            "frontendPort": 18010,
+                            "frontendPort": 443,
+                            "backendPort": 48010,
+                            "enableFloatingIP": false,
+                            "idleTimeoutInMinutes": 5,
+                            "loadDistribution": "SourceIP",
+                            "probe": {
+                                "id": "[parameters('networkSettings').loadbalancerSettings.lbProbeCMSID]"
+                            }
+                        }
+                    },
+                    {
+                        "name": "LBRuleCMS",
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[parameters('networkSettings').loadbalancerSettings.cmsIPConfigID]"
+                            },
+                            "backendAddressPool": {
+                                "id": "[parameters('networkSettings').loadbalancerSettings.lbPoolID]"
+                            },
+                            "protocol": "tcp",
+                            "frontendPort": 80,
                             "backendPort": 18010,
                             "enableFloatingIP": false,
                             "idleTimeoutInMinutes": 5,
@@ -188,7 +254,7 @@
             "sku": {
                 "name": "[parameters('machineSettings').vmSize]",
                 "tier": "Standard",
-                "capacity": "[parameters('networkSettings').loadbalancerSettings.frontendNodeCount]"
+                "capacity": "[parameters('networkSettings').loadbalancerSettings.AutoscaleCapacityDefault]"
             },
             "properties": {
                 "overprovision": "true",
@@ -311,14 +377,14 @@
             "properties": {
                 "name": "[concat(parameters('networkSettings').clusterName, parameters('networkSettings').loadbalancerSettings.vmssAutoscaleSettingNameSuffix)]",
                 "targetResourceUri": "[concat('/subscriptions/',subscription().subscriptionId, '/resourceGroups/',  resourceGroup().name, '/providers/Microsoft.Compute/virtualMachineScaleSets/', parameters('networkSettings').clusterVirtualMachineScaleSetName)]",
-                "enabled": true,
+                "enabled": "[parameters('networkSettings').loadbalancerSettings.AutoscaleEnabled]",
                 "profiles": [
                     {
                         "name": "Profile1",
                         "capacity": {
-                            "minimum": "1",
-                            "maximum": "20",
-                            "default": "1"
+                            "minimum": "[parameters('networkSettings').loadbalancerSettings.AutoscaleCapacityMinimum]",
+                            "maximum": "[parameters('networkSettings').loadbalancerSettings.AutoscaleCapacityMaximum]",
+                            "default": "[parameters('networkSettings').loadbalancerSettings.AutoscaleCapacityDefault]"
                         },
                         "rules": [
                             {
