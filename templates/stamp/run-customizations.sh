@@ -46,7 +46,7 @@ fi
 source $UTILITIES_PATH
 
 # Parse script parameters
-while getopts :c:p:a:n:b:u:m:i:h optname; do
+while getopts :c:p:a:n:b:u:m:i:s:h optname; do
 
     # Log input parameters to facilitate troubleshooting
     if [ ! "$optname" == "p" ]; then
