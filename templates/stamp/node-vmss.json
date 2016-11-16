@@ -316,11 +316,6 @@
                                                     {
                                                         "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/loadBalancers/', parameters('networkSettings').loadbalancerSettings.loadBalancerName, '/backendAddressPools/', parameters('networkSettings').loadbalancerSettings.bePoolName)]"
                                                     }
-                                                ],
-                                                "loadBalancerInboundNatPools": [
-                                                    {
-                                                        "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/loadBalancers/', parameters('networkSettings').loadbalancerSettings.loadBalancerName, '/inboundNatPools/', parameters('networkSettings').loadbalancerSettings.natPoolName)]"
-                                                    }
                                                 ]
                                             }
                                         }
