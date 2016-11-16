@@ -1,0 +1,7 @@
+edx_platform_path: /edx/app/edxapp/edx-platform
+forms_py: "{{ edx_platform_path }}/common/djangoapps/student/forms.py"
+test_password_policy_py: "{{ edx_platform_path }}/common/djangoapps/student/tests/test_password_policy.py"
+test_reset_password_py: "{{ edx_platform_path }}/common/djangoapps/student/tests/test_reset_password.py"
+views_py: "{{ edx_platform_path }}/common/djangoapps/student/views.py"
+password_policy_validators_py: "{{ edx_platform_path }}/common/djangoapps/util/password_policy_validators.py"
+test_password_history_py: "{{ edx_platform_path }}/lms/djangoapps/courseware/tests/test_password_history.py"
