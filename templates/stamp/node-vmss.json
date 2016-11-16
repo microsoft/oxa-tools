@@ -35,8 +35,8 @@
     },
 
     "variables": {
-        "cmsIpName": "LoadBalancerCmsPublicIp",
-        "lmsIpName": "LoadBalancerLmsPublicIp",
+        "cmsIpName": "[concat('loadBalancerCms', parameters('networkSettings').publicIPAddressNameSuffix)]",
+        "lmsIpName": "[concat('loadBalancerLms', parameters('networkSettings').publicIPAddressNameSuffix)]",
         "cmsIPNamePrefix": "-cms",
         "lmsIPNamePrefix": "-lms",
         "loadBalancerLMSIpName": "[concat(parameters('networkSettings').loadbalancerSettings.loadBalancerName, variables('cmsIPNamePrefix'), parameters('networkSettings').publicIPAddressNameSuffix)]",

@@ -285,7 +285,8 @@ print_script_header()
 # TODO: reconcile duplication with clone_repository
 #############################################################################
 
-sync_repo() {
+sync_repo() 
+{
     REPO_URL=$1; REPO_VERSION=$2; REPO_PATH=$3
     REPO_TOKEN=$4 # optional
   
@@ -305,4 +306,22 @@ sync_repo() {
     fi
 
     pushd $REPO_PATH && sudo git checkout ${REPO_VERSION:-master} && popd
+}
+
+#############################################################################
+# Is Args Valid 
+#############################################################################
+
+is_valid_arg() 
+{
+    local list="$1"
+    local arg="$2"
+
+    if [[ $list =~ (^|[[:space:]])"$arg"($|[[:space:]]) ]] ; then
+        result=0
+    else
+        result=1
+    fi
+
+    return $result
 }
