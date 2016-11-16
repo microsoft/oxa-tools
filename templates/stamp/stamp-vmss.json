@@ -1,0 +1,609 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "clusterName": {
+            "type": "string",
+            "maxLength": 12
+        },
+        "clusterNameDomainName": {
+            "type": "string"
+        },
+        "osFamilySpec": {
+            "type": "string",
+            "defaultValue": "ubuntu",
+            "allowedValues": [
+                "ubuntu"
+            ]
+        },
+        "jumpBoxVmSize": {
+            "type": "string",
+            "defaultValue": "Standard_D1_v2",
+            "allowedValues": [
+                "Standard_D1_v2",
+                "Standard_D2_v2",
+                "Standard_D3_v2",
+                "Standard_D4_v2",
+                "Standard_DS2_v2",
+                "Standard_DS3_v2",
+                "Standard_DS4_v2",
+                "Standard_DS5_v2",
+                "Standard_DS11_v2",
+                "Standard_DS12_v2",
+                "Standard_DS13_v2",
+                "Standard_DS14_v2",
+                "Standard_DS15_v2"
+            ]
+        },
+        "mongoVmSize": {
+            "type": "string",
+            "defaultValue": "Standard_D2_v2",
+            "allowedValues": [
+                "Standard_D1_v2",
+                "Standard_D2_v2",
+                "Standard_D3_v2",
+                "Standard_D4_v2",
+                "Standard_DS2_v2",
+                "Standard_DS3_v2",
+                "Standard_DS4_v2",
+                "Standard_DS5_v2",
+                "Standard_DS11_v2",
+                "Standard_DS12_v2",
+                "Standard_DS13_v2",
+                "Standard_DS14_v2",
+                "Standard_DS15_v2"
+            ]
+        },
+        "mysqlVmSize": {
+            "type": "string",
+            "defaultValue": "Standard_D2_v2",
+            "allowedValues": [
+                "Standard_D1_v2",
+                "Standard_D2_v2",
+                "Standard_D3_v2",
+                "Standard_D4_v2",
+                "Standard_DS2_v2",
+                "Standard_DS3_v2",
+                "Standard_DS4_v2",
+                "Standard_DS5_v2",
+                "Standard_DS11_v2",
+                "Standard_DS12_v2",
+                "Standard_DS13_v2",
+                "Standard_DS14_v2",
+                "Standard_DS15_v2"
+            ]
+        },
+        "frontendVmSize": {
+            "type": "string",
+            "defaultValue": "Standard_D2_v2",
+            "allowedValues": [
+                "Standard_D1_v2",
+                "Standard_D2_v2",
+                "Standard_D3_v2",
+                "Standard_D4_v2",
+                "Standard_DS2_v2",
+                "Standard_DS3_v2",
+                "Standard_DS4_v2",
+                "Standard_DS5_v2",
+                "Standard_DS11_v2",
+                "Standard_DS12_v2",
+                "Standard_DS13_v2",
+                "Standard_DS14_v2",
+                "Standard_DS15_v2"
+            ],
+            "metadata": {
+                "description": "SKU, or size of the application virtual machine(s)."
+            }
+        },
+        "adminUsername": {
+            "type": "string",
+            "defaultValue": "lexoxaadmin"
+        },
+        "adminPublicKey": {
+            "type": "securestring"
+        },
+        "mongoServerAdminUserName": {
+            "type": "string",
+            "defaultValue": "lexoxamongoadmin"
+        },
+        "mongoServerAdminPassword": {
+            "type": "securestring"
+        },
+        "mysqlServerPackageVersion": {
+            "type": "string",
+            "defaultValue": "5.6"
+        },
+        "mysqlServerAdminUserName": {
+            "type": "string",
+            "defaultValue": "lexoxamysqladmin"
+        },
+        "mysqlServerReplUserName": {
+            "type": "string",
+            "defaultValue": "lexoxamysqlrepl"
+        },
+        "mysqlServerAdminPassword": {
+            "type": "securestring"
+        },
+        "mysqlServerReplPassword": {
+            "type": "securestring"
+        },
+
+        "deploymentSlot": {
+            "type": "string",
+            "defaultValue": "staging",
+            "allowedValues": [
+                "production",
+                "staging"
+            ],
+            "metadata": {
+                "description": "Deployment slot for the frontend"
+            }
+        },
+        "autoScaleEnabled": {
+            "type": "bool",
+            "defaultValue": "false",
+            "metadata": {
+                "description": "Indicator of whether or not autoscaling would be enabled on the Vm Scale Set"
+            }
+        },
+        "autoScaleCapacityDefault": {
+            "type": "int",
+            "maxValue": 20,
+            "defaultValue": 5,
+            "metadata": {
+                "description": "Default number of application virtual machines within the VM Scale Set."
+            }
+        },
+        "autoScaleCapacityMaximum": {
+            "type": "int",
+            "maxValue": 20,
+            "defaultValue": 20,
+            "metadata": {
+                "description": "Maximum number of application virtual machines within the VM Scale Set."
+            }
+        },
+        "autoScaleCapacityMinimum": {
+            "type": "int",
+            "maxValue": 20,
+            "defaultValue": 1,
+            "metadata": {
+                "description": "Default number of application virtual machines within the VM Scale Set."
+            }
+        },
+        "customInstallerGithubAccountName": {
+            "type": "string",
+            "defaultValue": "microsoft",
+            "metadata": {
+                "description": "Name of the GitHub account where the custom installer lives"
+            }
+        },
+        "customInstallerGithubProjectName": {
+            "type": "string",
+            "defaultValue": "oxa-tools",
+            "metadata": {
+                "description": "Name of the GitHub project within the GitHub account where the custom installer lives"
+            }
+        },
+        "customInstallerGithubBranch": {
+            "type": "string",
+            "defaultValue": "master",
+            "metadata": {
+                "description": "The branch of the GitHub project from which custom installer scripts and other files will be downloaded"
+            }
+        },
+        "customInstallerGithubAccessToken": {
+            "type": "secureString",
+            "metadata": {
+                "description": "The personal access token to use when interacting with the private GitHub repository where the custom installer lives"
+            }
+        },
+        "githubAccountName": {
+            "type": "string",
+            "defaultValue": "microsoft",
+            "metadata": {
+                "description": "Name of the GitHub account where the Azure Arm Template lives"
+            }
+        },
+        "githubProjectName": {
+            "type": "string",
+            "defaultValue": "oxa-tools",
+            "metadata": {
+                "description": "Name of the GitHub project within the GitHub account where the Azure Arm Template lives"
+            }
+        },
+        "githubBranch": {
+            "type": "string",
+            "defaultValue": "master",
+            "metadata": {
+                "description": "The branch of the GitHub project from which scripts and other files will be downloaded"
+            }
+        },
+        "armTemplateRelativePath": {
+            "type": "string",
+            "defaultValue": "templates/stamp",
+            "metadata": {
+                "description": "The path relative to the root of the GitHub project's branch where the Azure Arm Template lives"
+            }
+        },
+        "vmssUbuntuOsImageSku": {
+            "type": "string",
+            "defaultValue": "14.04.0-LTS",
+            "allowedValues": [
+                "16.04.0-LTS",
+                "14.04.0-LTS",
+                "12.04.5-LTS"
+            ],
+            "metadata": {
+                "description": "The Azure Ubuntu Image version to use for VMSS instances"
+            }
+        },
+        "mysqlUbuntuOsImageSku": {
+            "type": "string",
+            "defaultValue": "16.04.0-LTS",
+            "allowedValues": [
+                "16.04.0-LTS",
+                "14.04.0-LTS",
+                "12.04.5-LTS"
+            ],
+            "metadata": {
+                "description": "The Azure Ubuntu Image version to use for Mysql instances"
+            }
+        },
+        "mongoUbuntuOsImageSku": {
+            "type": "string",
+            "defaultValue": "16.04.0-LTS",
+            "allowedValues": [
+                "16.04.0-LTS",
+                "14.04.0-LTS",
+                "12.04.5-LTS"
+            ],
+            "metadata": {
+                "description": "The Azure Ubuntu Image version to use for Mongo instances"
+            }
+        },
+        "defaultUbuntuOsImageSku": {
+            "type": "string",
+            "defaultValue": "16.04.0-LTS",
+            "allowedValues": [
+                "16.04.0-LTS",
+                "14.04.0-LTS",
+                "12.04.5-LTS"
+            ],
+            "metadata": {
+                "description": "The default Azure Ubuntu Image version to use for VMs"
+            }
+        },
+        "jumpBoxDataDiskSizeGB": {
+            "type": "int",
+            "defaultValue": 50,
+            "metadata": {
+                "description": "The size of data disk to provision and attach to the VM"
+            }
+        },
+        "mongoNodeDataDiskSizeGB": {
+            "type": "int",
+            "defaultValue": 256,
+            "metadata": {
+                "description": "The size of data disk to provision and attach to the VM"
+            }
+        },
+        "mysqlNodeDataDiskSizeGB": {
+            "type": "int",
+            "defaultValue": 256,
+            "metadata": {
+                "description": "The size of data disk to provision and attach to the VM"
+            }
+        },
+        "customInstallerLaunchScript": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Name of the bootstrap script to trigger the custom installation. This script will call the customInstallerMainScriptRelativePath"
+            }
+        },
+        "customInstallerMainScriptRelativePath": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Relative path to the custom installer file to execute. This path is relative to the root of github repository."
+            }
+        },
+        "cloud": {
+            "type": "string",
+            "defaultValue": "bvt",
+            "metadata": {
+                "description": "The target cloud/environment"
+            }
+        }
+    },
+    "variables": {
+        "defaultApiVersion": "2015-05-01-preview",
+        "apiVersion": "2016-09-01",
+        "availabilitySetApiVersion": "2015-06-15",
+        "networkApiVersion": "2016-03-30",
+        "computeApiVersion": "2016-03-30",
+        "insightsApiVersion": "2015-04-01",
+
+        "virtualMachineExtensionsApiVersion": "[variables('defaultApiVersion')]",
+        "virtualMachineApiVersion": "[variables('defaultApiVersion')]",
+        "storageApiVersion": "[variables('defaultApiVersion')]",
+
+        "diagnosticStorageAccountName": "[concat(toLower(parameters('clusterName')), 'diagnostics')]",
+        "storageAccountName": "[concat(toLower(parameters('clusterName')), 'vhdsa')]",
+        "storageAccountType": "Standard_LRS",
+        "storageContainer": "[concat('https://', variables('storageAccountName'),'.blob.core.windows.net/vhds/')]",
+
+        "loadBalancerName": "[concat(parameters('clusterName'), '-lb')]",
+        "virtualNetworkName": "[concat(parameters('clusterName'), '-vnet')]",
+        "subnetName": "[concat(parameters('clusterName'), '-subnet')]",
+        "bePoolName": "[concat(parameters('clusterName'), '-bepool')]",
+        "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
+        "lbID": "[resourceId('Microsoft.Network/loadBalancers',variables('loadBalancerName'))]",
+
+        "vmssAutoscaleSettingNameSuffix": "-autoscale",
+        "vmssName": "[concat(parameters('clusterName'), '-vmss')]",
+
+        "cmsPublicAddressName": "cmsPublicAddress",
+        "lmsPublicAddressName": "lmsPublicAddress",
+        "lbProbeLMSName": "tcpProbeLMS",
+        "lbProbeCMSName": "tcpProbeCMS",
+        "lbProbeLMSSSLName": "[concat(variables('lbProbeLMSName'),'SSL')]",
+        "lbProbeCMSSSLName": "[concat(variables('lbProbeCMSName'),'SSL')]",
+
+        "networkSettings": {
+            "virtualNetworkName": "[variables('virtualNetworkName')]",
+            "clusterName": "[parameters('clusterName')]",
+            "networkInterfaceNameSuffix": "-nic",
+            "publicIPAddressNameSuffix": "-ip",
+            "osDiskSuffix": "-osDisk",
+            "availabilitySetNameSuffix": "-as",
+            "ipConfigSuffix": "-ipconfig",
+            "adminUsername": "[parameters('adminUsername')]",
+            "adminPublicKey": "[parameters('adminPublicKey')]",
+            "mongoServerAdminPassword": "[parameters('mongoServerAdminPassword')]",
+            "publicIpAddressType": "Dynamic",
+            "subnetName": "[variables('subnetName')]",
+            "subnetRef": "[concat(variables('vnetID'), '/subnets/', variables('subnetName'))]",
+            "subnetPrefix": "10.0.0.0/24",
+            "addressPrefix": "10.0.0.0/16",
+            "serverIpPrefix": "10.0.0.",
+            "mongoServerIpOffset": 10,
+            "mysqlServerIpOffset": 15,
+            "jbNetworkSecurityGroupName": "[concat(parameters('clusterName'),'-jb-', 'nsg')]",
+            "vmssNetworkSecurityGroupName": "[concat(parameters('clusterName'), '-vmss-', 'nsg')]",
+            "mongoNetworkSecurityGroupName": "[concat(parameters('clusterName'), '-mongo-', 'nsg')]",
+            "mysqlNetworkSecurityGroupName": "[concat(parameters('clusterName'), '-mysql-', 'nsg')]",
+            "clusterJumpBoxName": "[concat(parameters('clusterName'), '-jb')]",
+            "clusterJumpBoxDomainName": "[concat(parameters('clusterName'), 'jb')]",
+            "clusterMongoDataNodeName": "[concat(parameters('clusterName'), '-mongo')]",
+            "clusterMongoDataNodeDomainName": "[concat(parameters('clusterName'), 'mongo')]",
+            "clusterMysqlDataNodeName": "[concat(parameters('clusterName'), '-mysql')]",
+            "clusterMysqlDataNodeDomainName": "[concat(parameters('clusterName'), 'mysql')]",
+            "clusterVirtualMachineScaleSetName": "[variables('vmssName')]",
+            "clusterVirtualMachineScaleSetDomainName": "[concat(parameters('clusterName'), 'vmss')]",
+            "jumpBoxAvailabilitySetFaultDomainCount": "1",
+            "jumpBoxNodeCount": "1",
+            "mongoDataNodesAvailabilitySetFaultDomainCount": "3",
+            "mongoDataNodeCount": 3,
+            "mysqlDataNodesAvailabilitySetFaultDomainCount": "3",
+            "mysqlDataNodeCount": 3,
+
+            "loadbalancerSettings": {
+                "loadBalancerName": "[variables('loadBalancerName')]",
+                "cmsLoadBalancerDomainName": "[concat('cms-', parameters('clusterNameDomainName'), '-', parameters('deploymentSlot'))]",
+                "lmsLoadBalancerDomainName": "[concat('lms-', parameters('clusterNameDomainName'), '-', parameters('deploymentSlot'))]",
+                "natPoolName": "[concat(parameters('clusterName'), '-natpool')]",
+
+                "cmsPublicAddressName": "[variables('cmsPublicAddressName')]",
+                "lmsPublicAddressName": "[variables('lmsPublicAddressName')]",
+
+                "cmsIPConfigID": "[concat(variables('lbID'),'/frontendIPConfigurations/', variables('cmsPublicAddressName'))]",
+                "lmsIPConfigID": "[concat(variables('lbID'),'/frontendIPConfigurations/', variables('lmsPublicAddressName'))]",
+
+                "frontEndIPConfigID": "[concat(variables('lbID'),'/frontendIPConfigurations/loadBalancerFrontEnd')]",
+                "lbPoolID": "[concat(variables('lbID'),'/backendAddressPools/', variables('bePoolName'))]",
+                "bePoolName": "[variables('bePoolName')]",
+
+                "lbProbeLMSName": "[variables('lbProbeLMSName')]",
+                "lbProbeCMSName": "[variables('lbProbeCMSName')]",
+                "lbProbeLMSSSLName": "[variables('lbProbeLMSSSLName')]",
+                "lbProbeCMSSSLName": "[variables('lbProbeCMSSSLName')]",
+
+                "lbProbeLMSID": "[concat(variables('lbID'),'/probes/', variables('lbProbeLMSName'))]",
+                "lbProbeCMSID": "[concat(variables('lbID'),'/probes/', variables('lbProbeCMSName'))]",
+                "lbProbeLMSSSLID": "[concat(variables('lbID'),'/probes/', variables('lbProbeLMSSSLName'))]",
+                "lbProbeCMSSSLID": "[concat(variables('lbID'),'/probes/', variables('lbProbeCMSSSLName'))]",
+
+                "natStartPort": 50000,
+                "natEndPort": 50119,
+                "natBackendPort": 22,
+                "AutoscaleEnabled": "[parameters('autoScaleEnabled')]",
+                "AutoscaleCapacityDefault": "[parameters('autoScaleCapacityDefault')]",
+                "AutoscaleCapacityMaximum": "[parameters('autoScaleCapacityMaximum')]",
+                "AutoscaleCapacityMinimum": "[parameters('autoScaleCapacityMinimum')]",
+                "vmssAutoscaleSettingNameSuffix": "[variables('vmssAutoscaleSettingNameSuffix')]"
+            }
+        },
+
+        "supportedOSName": "ubuntu",
+        "supportedOSImagePublisher": "Canonical",
+        "supportedOSImageOffer": "UbuntuServer",
+
+        "storageSettings": {
+            "storageContainer": "[variables('storageContainer')]",
+            "storageContainerName": "vhds",
+            "storageAccountType": "[variables('storageAccountType')]",
+            "storageAccountName": "[variables('storageAccountName')]",
+            "diagnosticStorageAccountName": "[variables('diagnosticStorageAccountName')]"
+        },
+        "jumpboxMachineSettings": {
+            "vmSize": "[parameters('jumpBoxVmSize')]",
+            "osImageReference": {
+                "publisher": "[variables('supportedOSImagePublisher')]",
+                "offer": "[variables('supportedOSImageOffer')]",
+                "sku": "[parameters('defaultUbuntuOsImageSku')]",
+                "version": "latest"
+            },
+            "dataDiskSize": "[parameters('jumpBoxDataDiskSizeGB')]"
+        },
+        "mongoMachineSettings": {
+            "vmSize": "[parameters('mongoVmSize')]",
+            "osImageReference": {
+                "publisher": "[variables('supportedOSImagePublisher')]",
+                "offer": "[variables('supportedOSImageOffer')]",
+                "sku": "[parameters('mongoUbuntuOsImageSku')]",
+                "version": "latest"
+            },
+            "dataDiskSize": "[parameters('mongoNodeDataDiskSizeGB')]",
+            "installerBaseUrl": "http://repo.mongodb.org/apt/ubuntu",
+            "installerPackages": "mongodb-org"
+        },
+        "mysqlMachineSettings": {
+            "vmSize": "[parameters('mysqlVmSize')]",
+            "osImageReference": {
+                "publisher": "[variables('supportedOSImagePublisher')]",
+                "offer": "[variables('supportedOSImageOffer')]",
+                "sku": "[parameters('mysqlUbuntuOsImageSku')]",
+                "version": "latest"
+            },
+            "dataDiskSize": "[parameters('mysqlNodeDataDiskSizeGB')]"
+        },
+        "frontendMachineSettings": {
+            "vmSize": "[parameters('frontendVmSize')]",
+            "osImageReference": {
+                "publisher": "[variables('supportedOSImagePublisher')]",
+                "offer": "[variables('supportedOSImageOffer')]",
+                "sku": "[parameters('vmssUbuntuOsImageSku')]",
+                "version": "latest"
+            },
+            "capacity": "[parameters('frontendVmSize')]",
+            "dataDiskSize": 256
+        },
+        "apiSettings": {
+            "apiVersion": "[variables('apiVersion')]",
+            "storageApiVersion": "[variables('storageApiVersion')]",
+            "virtualMachineApiVersion": "[variables('virtualMachineApiVersion')]",
+            "availabilitySetApiVersion": "[variables('availabilitySetApiVersion')]",
+            "virtualMachineExtensionsApiVersion": "[variables('virtualMachineExtensionsApiVersion')]",
+            "networkApiVersion": "[variables('networkApiVersion')]",
+            "computeApiVersion": "[variables('computeApiVersion')]",
+            "insightsApiVersion": "[variables('insightsApiVersion')]"
+        },
+
+        "azureSharedScriptUrl": "[concat('https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/shared_scripts/', variables('supportedOSName'), '/')]",
+        "templateBaseUrl": "[concat('https://raw.githubusercontent.com/',parameters('githubAccountName'), '/', parameters('githubProjectName'), '/', parameters('githubBranch'), '/', parameters('armTemplateRelativePath'), '/')]",
+        "clusterCustomInstallerScriptFullPath": "[concat( variables('templateBaseUrl'), parameters('customInstallerLaunchScript') )]",
+        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'), ' -a ', parameters('customInstallerGithubAccountName'),' -n ', parameters('customInstallerGithubProjectName'),' -b ', parameters('customInstallerGithubBranch'),' -i ', parameters('customInstallerMainScriptRelativePath'),' -p ', parameters('customInstallerGithubAccessToken'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'))]",
+
+        "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources.json')]",
+        "jumpboxTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-jumpbox.json')]",
+        "mongoNodeTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-mongo.json')]",
+        "mysqlNodeTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-mysql.json')]",
+        "vmssTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-vmss.json')]",
+        "mongoReplicaSetName": "[concat(parameters('clusterName'), 'rs1')]",
+        "mongoReplicaSetKey": "[uniqueString(resourceGroup().id)]",
+
+        "installerUtilitiesScript": "utilities.sh",
+        "mongoDbInstallerScript": "[concat('mongodb-', variables('supportedOSName'), '-install.sh')]",
+        "mongoDbInstallerCommand": "[concat('bash ', variables('mongoDbInstallerScript'), ' -i ', variables('mongoMachineSettings').installerBaseUrl, ' -b ', variables('mongoMachineSettings').installerPackages, ' -r ', variables('mongoReplicaSetName'), ' -k ', variables('mongoReplicaSetKey'), ' -u ', parameters('mongoServerAdminUserName'), ' -p ', base64(parameters('mongoServerAdminPassword')), ' -x ', variables('networkSettings').serverIpPrefix, ' -n ', variables('networkSettings').mongoDataNodeCount)]",
+        "mongoDBInstallerSettings": {
+            "scriptsToDownload": [
+                "[concat(variables('templateBaseUrl'), variables('mongoDbInstallerScript'))]",
+                "[concat(variables('azureSharedScriptUrl'), 'vm-disk-utils-0.1.sh')]",
+                "[concat(variables('clusterCustomInstallerScriptFullPath'))]",
+                "[concat(variables('templateBaseUrl'), variables('installerUtilitiesScript'))]",
+                "[concat(variables('clusterCustomInstallerScriptFullPath'))]"
+            ],
+            "regularNodeInstallCommand": "[concat(variables('customInstallerCommand'), ' && ', variables('mongoDbInstallerCommand'))]",
+            "lastNodeInstallCommand": "[concat(variables('customInstallerCommand'), ' && ', variables('mongoDbInstallerCommand'), ' -l ')]"
+        },
+
+        "mysqlDbInstallerScript": "[concat('mysql-', variables('supportedOSName'), '-install.sh')]",
+        "mysqlDbInstallerCommand": "[concat('bash ', variables('mysqlDbInstallerScript'), ' -r ', parameters('mysqlServerReplUserName'), ' -k ', base64(parameters('mysqlServerReplPassword')), ' -u ', parameters('mysqlServerAdminUserName'), ' -p ', base64(parameters('mysqlServerAdminPassword')), ' -v ', parameters('mysqlServerPackageVersion'), ' -m ', variables('networkSettings').serverIpPrefix, add(int(variables('networkSettings').mysqlServerIpOffset),1) )]",
+        "mysqlDBInstallerSettings": {
+            "scriptsToDownload": [
+                "[concat(variables('templateBaseUrl'), variables('mysqlDbInstallerScript'))]",
+                "[concat(variables('templateBaseUrl'), 'mysqld.template.cnf')]",
+                "[concat(variables('azureSharedScriptUrl'), 'vm-disk-utils-0.1.sh')]",
+                "[concat(variables('templateBaseUrl'), variables('installerUtilitiesScript'))]",
+                "[concat(variables('clusterCustomInstallerScriptFullPath'))]"
+            ],
+            "regularNodeInstallCommand": "[concat(variables('customInstallerCommand'), ' && ', variables('mysqlDbInstallerCommand'))]"
+        },
+
+        "jumpBoxInstallerSettings": {
+            "scriptsToDownload": [
+                "[concat(variables('clusterCustomInstallerScriptFullPath'))]",
+                "[concat(variables('templateBaseUrl'), variables('installerUtilitiesScript'))]"
+            ],
+            "customInstallerCommand": "[variables('customInstallerCommand')]"
+        },
+
+        "vmssInstallerSettings": {
+            "scriptsToDownload": [
+                "[concat(variables('clusterCustomInstallerScriptFullPath'))]",
+                "[concat(variables('templateBaseUrl'), variables('installerUtilitiesScript'))]"
+            ],
+            "customInstallerCommand": "[variables('customInstallerCommand')]"
+        },
+
+        "wadperfcounters1": "<PerformanceCounters scheduledTransferPeriod=\"PT1M\"><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\AvailableMemory\" sampleRate=\"PT15S\" unit=\"Bytes\"><annotation displayName=\"Memory available\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\PercentAvailableMemory\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Mem. percent available\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\UsedMemory\" sampleRate=\"PT15S\" unit=\"Bytes\"><annotation displayName=\"Memory used\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\PercentUsedMemory\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Memory percentage\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\PercentUsedByCache\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Mem. used by cache\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentIdleTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU idle time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentUserTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU user time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentProcessorTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU percentage guest OS\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentIOWaitTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU IO wait time\" locale=\"en-us\"/></PerformanceCounterConfiguration>",
+        "wadperfcounters2": "<PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\BytesPerSecond\" sampleRate=\"PT15S\" unit=\"BytesPerSecond\"><annotation displayName=\"Disk total bytes\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\ReadBytesPerSecond\" sampleRate=\"PT15S\" unit=\"BytesPerSecond\"><annotation displayName=\"Disk read guest OS\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\WriteBytesPerSecond\" sampleRate=\"PT15S\" unit=\"BytesPerSecond\"><annotation displayName=\"Disk write guest OS\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\TransfersPerSecond\" sampleRate=\"PT15S\" unit=\"CountPerSecond\"><annotation displayName=\"Disk transfers\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\ReadsPerSecond\" sampleRate=\"PT15S\" unit=\"CountPerSecond\"><annotation displayName=\"Disk reads\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\WritesPerSecond\" sampleRate=\"PT15S\" unit=\"CountPerSecond\"><annotation displayName=\"Disk writes\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\AverageReadTime\" sampleRate=\"PT15S\" unit=\"Seconds\"><annotation displayName=\"Disk read time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\AverageWriteTime\" sampleRate=\"PT15S\" unit=\"Seconds\"><annotation displayName=\"Disk write time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\AverageTransferTime\" sampleRate=\"PT15S\" unit=\"Seconds\"><annotation displayName=\"Disk transfer time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\AverageDiskQueueLength\" sampleRate=\"PT15S\" unit=\"Count\"><annotation displayName=\"Disk queue length\" locale=\"en-us\"/></PerformanceCounterConfiguration></PerformanceCounters>",
+        "vmssLinuxDiagnosticsSettings": {
+            "diagnosticsStorageAccountName": "[variables('diagnosticStorageAccountName')]",
+            "diagnosticsStorageAccountId": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/','Microsoft.Storage/storageAccounts/', variables('diagnosticStorageAccountName'))]",
+            "wadcfgxstart": "[concat('<WadCfg><DiagnosticMonitorConfiguration>',variables('wadperfcounters1'),variables('wadperfcounters2'),'<Metrics resourceId=\"')]",
+            "wadmetricsresourceid": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name ,'/providers/','Microsoft.Compute/virtualMachineScaleSets/',variables('vmssName'))]",
+            "wadcfgxend": "[concat('\"><MetricAggregation scheduledTransferPeriod=\"PT1H\"/><MetricAggregation scheduledTransferPeriod=\"PT1M\"/></Metrics></DiagnosticMonitorConfiguration></WadCfg>')]"
+        }
+    },
+    "resources": [
+        {
+            "name": "vmss",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('apiVersion')]",
+            "dependsOn": [
+                "[concat('Microsoft.Resources/deployments/', 'shared-resources')]",
+                "jumpbox"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('vmssTemplateUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "networkSettings": {
+                        "value": "[variables('networkSettings')]"
+                    },
+                    "apiSettings": {
+                        "value": "[variables('apiSettings')]"
+                    },
+                    "machineSettings": {
+                        "value": "[variables('frontendMachineSettings')]"
+                    },
+                    "storageSettings": {
+                        "value": "[variables('storageSettings')]"
+                    },
+                    "customSettings": {
+                        "value": {
+                            "vmScripts": "[variables('vmssInstallerSettings').scriptsToDownload]",
+                            "commandToExecute": "[variables('vmssInstallerSettings').customInstallerCommand]",
+                            "linuxDiagnosticsSettings": "[variables('vmssLinuxDiagnosticsSettings')]"
+                        }
+                    }
+                }
+            }
+        }
+    ],
+    "outputs": {
+        "mongoReplicaSetKey": {
+            "type": "string",
+            "value": "[variables('mongoReplicaSetKey')]"
+        },
+        "mongoReplicaSetName": {
+            "type": "string",
+            "value": "[variables('mongoReplicaSetName')]"
+        }
+    }
+}
