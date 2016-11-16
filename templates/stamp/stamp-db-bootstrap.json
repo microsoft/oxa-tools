@@ -493,7 +493,7 @@
         "azureSharedScriptUrl": "[concat('https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/shared_scripts/', variables('supportedOSName'), '/')]",
         "templateBaseUrl": "[concat('https://raw.githubusercontent.com/',parameters('githubAccountName'), '/', parameters('githubProjectName'), '/', parameters('githubBranch'), '/', parameters('armTemplateRelativePath'), '/')]",
         "clusterCustomInstallerScriptFullPath": "[concat( variables('templateBaseUrl'), parameters('customInstallerLaunchScript') )]",
-        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'), ' -a ', parameters('customInstallerGithubAccountName'),' -n ', parameters('customInstallerGithubProjectName'),' -b ', parameters('customInstallerGithubBranch'),' -i ', parameters('customInstallerMainScriptRelativePath'),' -p ', parameters('customInstallerGithubAccessToken'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), '-s 1')]",
+        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'), ' -a ', parameters('customInstallerGithubAccountName'),' -n ', parameters('customInstallerGithubProjectName'),' -b ', parameters('customInstallerGithubBranch'),' -i ', parameters('customInstallerMainScriptRelativePath'),' -p ', parameters('customInstallerGithubAccessToken'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' -s 1')]",
 
         "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources.json')]",
         "jumpboxTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-jumpbox.json')]",
