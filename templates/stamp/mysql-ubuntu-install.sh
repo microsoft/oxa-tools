@@ -252,8 +252,9 @@ create_config_file()
     #TODO: Move this to configuration
     REPL_EXPIRE_LOG_DAYS=10
     REPL_MAX_BINLOG_SIZE=100M
+    REPL_BINLOG_FORMAT="row"
     REPL_RELAY_LOG_SPACE_LIMIT=20GB
-
+    
     # we expect the configuration template to be already downloaded and locally available
     cp $MYCNF_TEMPLATE_PATH $TEMP_MYCNF_PATH
 
@@ -268,6 +269,7 @@ create_config_file()
         log "Mysql Replication Master Node detected. Creating cnf for the MasterNode on ${HOSTNAME}"
         sed -i "s/^#expire_logs_days=.*/expire_logs_days=${REPL_EXPIRE_LOG_DAYS}/I" $TEMP_MYCNF_PATH
         sed -i "s/^#max_binlog_size=.*/max_binlog_size=${REPL_MAX_BINLOG_SIZE}/I" $TEMP_MYCNF_PATH
+        sed -i "s/^#binlog_format=.*/binlog_format=${REPL_BINLOG_FORMAT}/I" $TEMP_MYCNF_PATH
     else
         log "Mysql Replication Slave Node detected. Creating *.cnf for the SlaveNode on ${HOSTNAME}"
 

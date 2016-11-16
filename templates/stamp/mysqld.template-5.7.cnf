@@ -96,7 +96,7 @@ server-id=
 # In case we want to target the replication (not recommended)
 #binlog_do_db=include_database_name
 #binlog_ignore_db=include_database_name
-binlog_format= row
+#binlog_format= row
 
 # enable Global Transaction Identifierrs
 gtid-mode=ON
