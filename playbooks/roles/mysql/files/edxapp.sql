@@ -31,5 +31,29 @@ VALUES
   NOW(),
   True,
   '{"default":{"platform_name":"Microsoft","company_about_url":"https://www.microsoft.com/en-us/about","company_privacy_url":"https://privacy.microsoft.com/en-us/privacystatement/","company_tos_url":"https://openedx.microsoft.com/tos","logo_src":"https://openedx.microsoft.com/static/themes/default/images/ms-logo.png","logo_url":"http://www.microsoft.com"},"honor":{"certificate_type":"honor","certificate_title":"Honor Certificate","document_body_class_append":"is-honorcode"},"verified":{"certificate_type":"verified","certificate_title":"Verified Certificate","document_body_class_append":"is-idverified"},"base":{"certificate_type":"base","certificate_title":"Certificate of Achievement","document_body_class_append":"is-base"},"distinguished":{"certificate_type":"distinguished","certificate_title":"Distinguished Certificate of Achievement","document_body_class_append":"is-distinguished"}}'
- );
+);
 
+/*
+  Insert the entry so that self_paced courses are allowed on the platform.
+
+  In the self_paced_selfpacedconfiguration table we can have only one row defined so first delete any existing ones
+  and then insert the selfpacedconfiguration. It is inserted as enabled, ready to be used.
+  
+  It is safe to run this multiple times.
+
+*/
+
+DELETE FROM self_paced_selfpacedconfiguration;
+
+INSERT INTO self_paced_selfpacedconfiguration 
+(
+  change_date,
+  enabled,
+  enable_course_home_improvements
+) 
+VALUES
+(
+  NOW(),
+  1,
+  1
+);
