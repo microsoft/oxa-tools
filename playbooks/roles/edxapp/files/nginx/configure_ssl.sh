@@ -19,7 +19,9 @@ harden_ssl_config() {
   local newline="\n"
   local append="$line1$newline$line2$newline$line3$newline"
 
-  sed "/$pattern/i $append" -i $1
+  if ! grep -Fq "ssl_protocols" $1 ; then
+    sed "/$pattern/i $append" -i $1
+  fi
 }
 
 support_http_heartbeat() {
@@ -31,7 +33,9 @@ support_http_heartbeat() {
   local newline="\n"
   local append="$line1$newline$line2$newline$line3$newline$line4$newline"
 
-  sed "/$pattern/i $append" -i $1
+  if ! grep -Fq "request_uri ~ ^/heartbeat" $1 ; then
+    sed "/$pattern/i $append" -i $1
+  fi
 }
 
 update_nginx_site_configs() {

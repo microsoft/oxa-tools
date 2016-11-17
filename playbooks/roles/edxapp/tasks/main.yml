@@ -10,7 +10,7 @@
 
 - name: Configure Nginx SSL
   sudo: yes
-  shell: bash ./configure_ssl.sh {{ NGINX_ENABLE_SSL }} {{ EDXAPP_LMS_SSL_NGINX_PORT }} {{ EDXAPP_CMS_SSL_NGINX_PORT }}
+  shell: bash ./configure_ssl.sh {{ NGINX_ENABLE_SSL }} {{ EDXAPP_LMS_SSL_NGINX_PORT }} {{ EDXAPP_CMS_SSL_NGINX_FRONTEND_PORT }}
   args:
     chdir: "{{ edxapp_files_path }}/nginx"
   register: bash
