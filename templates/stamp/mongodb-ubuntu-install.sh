@@ -6,6 +6,7 @@
 # general parameters
 PACKAGE_URL=http://repo.mongodb.org/apt/ubuntu
 PACKAGE_NAME=mongodb-org
+PACKAGE_VERSION=3 # or higher
 REPLICA_SET_KEY_DATA=""
 REPLICA_SET_NAME=""
 REPLICA_SET_KEY_FILE="/etc/mongo-replicaset-key"
@@ -33,6 +34,7 @@ help()
     echo "Options:"
     echo "        -i Installation package URL"
     echo "        -b Installation package name"
+    echo "        -v Installation package version"
     echo "        -r Replica set name"
     echo "        -k Replica set key"
     echo "        -u System administrator's user name"
@@ -61,7 +63,7 @@ then
 fi
 
 # Parse script parameters
-while getopts :i:b:r:k:u:p:x:n:o:z:alh optname; do
+while getopts :i:b:v:r:k:u:p:x:n:o:z:alh optname; do
 
     # Log input parameters (except the admin password) to facilitate troubleshooting
     if [ ! "$optname" == "p" ] && [ ! "$optname" == "k" ]; then
@@ -74,6 +76,9 @@ while getopts :i:b:r:k:u:p:x:n:o:z:alh optname; do
         ;;
     b) # Installation package name
         PACKAGE_NAME=${OPTARG}
+        ;;
+    b) # Installation package version
+        PACKAGE_VERSION=${OPTARG}
         ;;
     r) # Replica set name
         REPLICA_SET_NAME=${OPTARG}
@@ -145,11 +150,19 @@ install_mongodb()
         echo "deb ${PACKAGE_URL} "$(lsb_release -sc)"/mongodb-org/3.2 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-3.2.list
     else
         apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10
-        echo "deb ${PACKAGE_URL} "$(lsb_release -sc)"/mongodb-org/3.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-3.0.list
+
+        if (( $(echo "$PACKAGE_VERSION < 3" |bc -l) ))
+        then
+            echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' | tee /etc/apt/sources.list.d/mongodb-org-2.list
+            PACKAGE_NAME="$PACKAGE_NAME=$PACKAGE_VERSION"
+        else
+            echo "deb ${PACKAGE_URL} "$(lsb_release -sc)"/mongodb-org/3.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-3.0.list
+        fi
     fi
 
     # Install updates
-    apt-get -y -qq update
+    log "Checking for package updates..."
+    apt-get -y update #todo: reintroduce -qq
 
     # Remove any previously created configuration file to avoid a prompt
     if [ -f /etc/mongod.conf ]; then
@@ -319,6 +332,8 @@ start_mongodb()
 
     # Wait for MongoDB daemon to start and initialize for the first time (this may take up to a minute or so)
     while ! timeout 1 bash -c "echo > /dev/tcp/localhost/$MONGODB_PORT"; do sleep 10; done
+
+    log "${PACKAGE_NAME} has been started"
 }
 
 stop_mongodb()

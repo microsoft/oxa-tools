@@ -173,6 +173,7 @@ install_mysql_server()
         rm $debFileName*
     fi
 
+    log "Checking for package updates..."
     apt-get -y -qq update
 
     echo $package mysql-server/root_password password $MYSQL_ADMIN_PASSWORD | debconf-set-selections
