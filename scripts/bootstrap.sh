@@ -62,6 +62,7 @@ parse_args() {
         ;;
       --cron)
         CRON_MODE=1
+        shift # past argument
         ;;
       -v|--version)
         OXA_TOOLS_CONFIG_VERSION="$2"
