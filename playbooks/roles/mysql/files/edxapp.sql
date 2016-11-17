@@ -79,3 +79,64 @@ VALUES
   1
 );
 
+
+/*
+  Create the super user that will be used for DRI. We will use oxamaster@microsoft.com for this account.
+  We must have auth_user and auth_userprofile entries for oxamaster. We first delete these rows if they exist in the tables.
+  So this code is rerunnable. 
+  
+  If we create courses or enroll for courses in production environment there will be FK entries in other tables that will block us from deleting these entries if we rerun. 
+  In such a case we can use django admin panel to delete superuser if needed. Later we can add logic here don't try to recreate if it already exists. 
+
+  We will set is_active = False. So we must use reset password inorder to set password and to activate the account.
+*/
+DELETE FROM auth_userprofile where user_id in (select id FROM auth_user WHERE username='oxamaster');
+DELETE FROM auth_user WHERE username='oxamaster';
+
+
+INSERT into auth_user 
+(
+  password,
+  is_superuser,
+  username,
+  first_name,
+  last_name,
+  email,
+  is_staff,
+  is_active,
+  date_joined
+) 
+VALUES
+(
+  '',
+  1,
+  'oxamaster',
+  '',
+  '',
+  'oxamaster@microsoft.com',
+  1,
+  0,
+  NOW()
+);
+
+INSERT INTO auth_userprofile
+(
+  name,
+  meta,
+  courseware,
+  language,
+  location,
+  allow_certificate,
+  user_id
+) 
+VALUES 
+(
+  'oxamaster',
+  '',
+  'course.xml',
+  '',
+  '',
+  1,
+  (select id FROM auth_user WHERE username='oxamaster')
+);
+
