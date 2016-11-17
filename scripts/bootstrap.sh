@@ -10,6 +10,8 @@ DEPLOYMENT_ENV="dev"
 ACCESS_TOKEN=""
 OXA_TOOLS_CONFIG_VERSION="master"
 CRON_MODE=0
+TARGET_FILE=""
+PROGRESS_FILE=""
 
 display_usage() {
   echo "Usage: $0 -a|--access_token {access token} -v|--version {oxa-tools-config version} [-r|--role {jb|vmss|mongo|mysql|edxapp|fullstack}] [-e|--environment {dev|bvt|int|prod}] [--cron]"
@@ -106,16 +108,28 @@ get_bootstrap_status()
     # we will perform a presence test for a /var/log/bootstrap-$EDX_ROLE.log
     # the expectation is that when the bootstrap script completes successfully, this file will be created
 
+    # 0 - Proceed with setup
+    # 1 - Wait on backend
+    # 2 - Bootstrap done
+    # 3 - Bootstrap in progress
+
     PRESENCE=0
     TARGET_FILE=/var/log/bootstrap-$EDX_ROLE.log
+    PROGRESS_FILE=/var/log/bootstrap-$EDX_ROLE.progress
+
     if [ -e $TARGET_FILE ];
     then
         # The crumb exists:: bootstrap is done
         PRESENCE=2
     else
-        # The crumb doesn't exist:: we need to execute boostrap
-        if [ "$EDX_ROLE" == "vmss" ];
+        # check if there is an ongoing execution
+        if [ -e PROGRESS_FILE ];
         then
+            # execution is in progress
+            PRESENCE=3
+        elif [ "$EDX_ROLE" == "vmss" ];
+        then
+            # The crumb doesn't exist:: we need to execute boostrap
             # For VMSS role, we have to wait on the backend Mysql bootstrap operation
             # The Mysql master is known. This is the one we really care about. If it is up, we will call backend bootstrap done
             # It is expected that the client tools are already installed
@@ -131,6 +145,7 @@ get_bootstrap_status()
     fi
     echo $PRESENCE
 }
+
 ##
 ## Role-independent OXA environment bootstrap
 ##
@@ -184,6 +199,9 @@ exit_on_error() {
   if [[ $? -ne 0 ]]; then
     echo $1 && exit 1
   fi
+
+  # in case there is an error, remove the progress crumb
+  remove_progress_file
 }
 
 update_stamp_jb() {    
@@ -244,6 +262,15 @@ update_fullstack() {
   exit_on_error "Execution of OXA playbook failed"
 }
 
+remove_progress_file()
+{
+    echo "Removing progress file at ${PROGRESS_FILE}"
+    if [ -e $PROGRESS_FILE ];
+    then
+        rm $PROGRESS_FILE
+    fi
+
+}
 ###############################################
 # START CORE EXECUTION
 ###############################################
@@ -260,7 +287,7 @@ parse_args $@ # pass existing command line arguments
 if [ "$CRON_MODE" == "1" ];
 then
     echo "Cron execution for ${EDX_ROLE} on ${HOSTNAME} detected."
-        
+
     # check if we need to run the setup
     RUN_BOOTSTRAP=$(get_bootstrap_status)
 
@@ -270,12 +297,20 @@ then
             ;;
         "1")
             echo "Bootstrap is not complete. Waiting on backend bootstrap..."
+            exit
             ;;
         "2")
             echo "Bootstrap is complete."
             exit
             ;;
+        "3")
+            echo "Bootstrap is in progress."
+            exit
+            ;;
     esac
+
+    # setup the lock to indicate setup is in progress
+    touch $PROGRESS_FILE
 fi
 
 ##
@@ -332,6 +367,9 @@ case "$EDX_ROLE" in
     display_usage
     ;;
 esac
+
+# check for the progress files & clean it up
+remove_progress_file
 
 # log a closing message and leave expected bread crumb for status tracking
 TIMESTAMP=`date +"%D %T"`
