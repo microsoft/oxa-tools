@@ -32,12 +32,13 @@
 # Print the results from patching.
 - debug: var="patch_result.stdout_lines + [ patch_result.stderr ]"
 
-- name: Recompile python files touched by patching
-  sudo: yes
-  shell: python -m py_compile {{ forms_py }} {{ test_password_policy_py }} {{ test_reset_password_py }} {{ views_py }} {{ password_policy_validators_py }} {{ test_password_history_py }}
-  register: compile_result
-  when: patch_result|success
+# Patch fails on stamp - re-enable once fixed
+#- name: Recompile python files touched by patching
+#  sudo: yes
+#  shell: python -m py_compile {{ forms_py }} {{ test_password_policy_py }} {{ test_reset_password_py }} {{ views_py }} {{ password_policy_validators_py }} {{ test_password_history_py }}
+#  register: compile_result
+#  when: patch_result|success
 
 # Print the results from compiling.
-- debug: var="compile_result.stdout_lines + [ compile_result.stderr ]"
-  when: patch_result|success
+#- debug: var="compile_result.stdout_lines + [ compile_result.stderr ]"
+#  when: patch_result|success
