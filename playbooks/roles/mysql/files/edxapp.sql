@@ -40,7 +40,6 @@ VALUES
   and then insert the selfpacedconfiguration. It is inserted as enabled, ready to be used.
   
   It is safe to run this multiple times.
-
 */
 
 DELETE FROM self_paced_selfpacedconfiguration;
@@ -57,3 +56,26 @@ VALUES
   1,
   1
 );
+
+
+/*
+  Insert the entry so that certificate generation is allowed on the platform.
+
+  In the certificates_certificategenerationconfiguration table we can have only one row defined so first delete any existing ones
+  and then insert the certificategenerationconfiguration. It is inserted as enabled, ready to be used.
+
+  It is safe to run this multiple times.
+*/
+DELETE FROM certificates_certificategenerationconfiguration;
+
+INSERT INTO certificates_certificategenerationconfiguration 
+(
+  change_date,
+  enabled
+) 
+VALUES
+(
+  NOW(),
+  1
+);
+
