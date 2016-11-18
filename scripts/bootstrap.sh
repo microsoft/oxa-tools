@@ -218,7 +218,6 @@ update_stamp_jb() {
   # oxa playbooks - mongo (enable when customized) and mysql
   #$ANSIBLE_PLAYBOOK -i ${CLUSTERNAME}mongo1, $OXA_SSH_ARGS -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mongo"
   #exit_on_error "Execution of OXA Mongo playbook failed"
-  $ANSIBLE_PLAYBOOK -i 10.0.0.16, $OXA_SSH_ARGS -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mysql"
   exit_on_error "Execution of OXA MySQL playbook failed"
 }
 
@@ -228,8 +227,8 @@ update_stamp_vmss() {
   exit_on_error "Execution of edX sandbox playbook failed"
   
   # oxa playbooks
-  #$ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "edxapp"
-  #exit_on_error "Execution of OXA edxapp playbook failed"
+  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "edxapp"
+  exit_on_error "Execution of OXA edxapp playbook failed"
 }
 
 update_scalable_mongo() {
