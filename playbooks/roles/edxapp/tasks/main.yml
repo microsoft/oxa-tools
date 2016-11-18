@@ -11,7 +11,7 @@
 
 - name: Configure Nginx SSL
   sudo: yes
-  shell: bash ./configure_ssl.sh {{ NGINX_ENABLE_SSL }} {{ EDXAPP_LMS_SSL_NGINX_PORT }} {{ EDXAPP_CMS_SSL_NGINX_PORT }}
+  shell: bash ./configure_ssl.sh {{ NGINX_ENABLE_SSL }} {{ EDXAPP_LMS_SSL_NGINX_PORT }} {{ EDXAPP_CMS_SSL_NGINX_FRONTEND_PORT }}
   args:
     chdir: "{{ edxapp_files_path }}/nginx"
   register: bash
@@ -22,3 +22,23 @@
 - name: Restart Nginx to use the new settings
   sudo: yes
   command: service nginx restart
+
+- name: Apply patch to authenticate user after their reset confirmation goes through
+  sudo: yes
+  shell: patch -p1 -d {{ edx_platform_path }} < {{ edxapp_files_path }}/patches/9b1f89d19ad26625859f887b12931f4d48dd3ff0_updated.patch
+  register: patch_result
+  ignore_errors: True
+
+# Print the results from patching.
+- debug: var="patch_result.stdout_lines + [ patch_result.stderr ]"
+
+# Patch fails on stamp - re-enable once fixed
+#- name: Recompile python files touched by patching
+#  sudo: yes
+#  shell: python -m py_compile {{ forms_py }} {{ test_password_policy_py }} {{ test_reset_password_py }} {{ views_py }} {{ password_policy_validators_py }} {{ test_password_history_py }}
+#  register: compile_result
+#  when: patch_result|success
+
+# Print the results from compiling.
+#- debug: var="compile_result.stdout_lines + [ compile_result.stderr ]"
+#  when: patch_result|success
