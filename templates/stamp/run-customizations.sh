@@ -117,7 +117,7 @@ log "${HOSTNAME} has been identified as a member of the '${MACHINE_ROLE}' role"
 # 1. Setup Tools
 install-git
 
-if [ "$MACHINE_ROLE" == "jumpbox" ] ;
+if [ "$MACHINE_ROLE" == "jumpbox" ] || [ "$MACHINE_ROLE" == "vmss" ];
 then
     install-mongodb-shell
     install-mysql-client

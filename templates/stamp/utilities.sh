@@ -7,6 +7,8 @@
 # TODO: move to common script
 ERROR_CRONTAB_FAILED=4101
 ERROR_GITINSTALL_FAILED=5101
+ERROR_MONGOCLIENTINSTALL_FAILED=5201
+ERROR_MYSQLCLIENTINSTALL_FAILED=5301
 
 #############################################################################
 # Log a message
@@ -143,6 +145,7 @@ install-mongodb-shell()
 
         log "Installing Mongo Shell"
         apt-get install -y -qq mongodb-org-shell
+        exit_on_error "Failed to install the Mongo client on ${HOSTNAME} !" $ERROR_MONGOCLIENTINSTALL_FAILED
     fi
 }
 
@@ -157,6 +160,7 @@ install-mysql-client()
     else
         log "Installing Mysql Client"
         apt-get install -y -qq mysql-client-core*
+        exit_on_error "Failed to install the Mysql client on ${HOSTNAME} !" $ERROR_MYSQLCLIENTINSTALL_FAILED
     fi
 }
 
