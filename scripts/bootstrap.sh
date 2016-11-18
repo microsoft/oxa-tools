@@ -123,7 +123,7 @@ get_bootstrap_status()
         PRESENCE=2
     else
         # check if there is an ongoing execution
-        if [ -e PROGRESS_FILE ];
+        if [ -e $PROGRESS_FILE ];
         then
             # execution is in progress
             PRESENCE=3
