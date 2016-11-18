@@ -9,9 +9,12 @@ EDX_ROLE=""
 DEPLOYMENT_ENV="dev"
 ACCESS_TOKEN=""
 OXA_TOOLS_CONFIG_VERSION="master"
+CRON_MODE=0
+TARGET_FILE=""
+PROGRESS_FILE=""
 
 display_usage() {
-  echo "Usage: $0 -a|--access_token {access token} -v|--version {oxa-tools-config version} [-r|--role {jb|vmss|mongo|mysql|edxapp|fullstack}] [-e|--environment {dev|bvt|int|prod}]"
+  echo "Usage: $0 -a|--access_token {access token} -v|--version {oxa-tools-config version} [-r|--role {jb|vmss|mongo|mysql|edxapp|fullstack}] [-e|--environment {dev|bvt|int|prod}] [--cron]"
   exit 1
 }
 
@@ -59,6 +62,10 @@ parse_args() {
           display_usage
         fi
         ;;
+      --cron)
+        CRON_MODE=1
+        shift # past argument
+        ;;
       -v|--version)
         OXA_TOOLS_CONFIG_VERSION="$2"
         shift # past argument
@@ -91,46 +98,100 @@ sync_repo() {
 }
 
 ##
+## Check if bootstrap needs to be run for the specified role
+##
+get_bootstrap_status()
+{
+    # Source the settings
+    source $OXA_ENV_FILE
+
+    # this determination is role-dependent
+    #TODO: setup a more elaborate crumb system
+
+    # we will perform a presence test for a /var/log/bootstrap-$EDX_ROLE.log
+    # the expectation is that when the bootstrap script completes successfully, this file will be created
+
+    # 0 - Proceed with setup
+    # 1 - Wait on backend
+    # 2 - Bootstrap done
+    # 3 - Bootstrap in progress
+
+    # by default we assume, bootstrap is needed
+    PRESENCE=0
+
+    # check if the bootstrap is finished
+    if [ -e $TARGET_FILE ];
+    then
+        # The crumb exists:: bootstrap is done
+        PRESENCE=2
+    else
+        # check if there is an ongoing execution
+        if [ -e $PROGRESS_FILE ];
+        then
+            # execution is in progress
+            PRESENCE=3
+        elif [ "$EDX_ROLE" == "vmss" ];
+        then
+            # The crumb doesn't exist:: we need to execute boostrap
+            # For VMSS role, we have to wait on the backend Mysql bootstrap operation
+            # The Mysql master is known. This is the one we really care about. If it is up, we will call backend bootstrap done
+            # It is expected that the client tools are already installed
+            #echo "Testing connection to edxapp database on '${MYSQL_MASTER_IP}'"
+            AUTH_USER_COUNT=`mysql -u $MYSQL_ADMIN_USER -p$MYSQL_ADMIN_PASSWORD -h $MYSQL_MASTER_IP -s -N -e "use edxapp; select count(*) from auth_user;"`
+            if [[ $? -ne 0 ]]; 
+            then
+                #echo "Connection test failed. Keeping holding pattern for VMSS bootstrap"
+                # The crumb doesn't exist:: we need to execute boostrap, but we have unmet dependency (wait)
+                PRESENCE=1
+            fi
+        fi
+    fi
+    echo $PRESENCE
+}
+
+##
 ## Role-independent OXA environment bootstrap
 ##
-setup() {  
-  apt-get -y update
-  apt-get -y install git
+setup() 
+{
+    apt-get -y update
+    apt-get -y install git
   
-  # sync the private repository
-  sync_repo $OXA_TOOLS_CONFIG_REPO $OXA_TOOLS_CONFIG_VERSION $OXA_TOOLS_CONFIG_PATH $ACCESS_TOKEN
+    # sync the private repository
+    sync_repo $OXA_TOOLS_CONFIG_REPO $OXA_TOOLS_CONFIG_VERSION $OXA_TOOLS_CONFIG_PATH $ACCESS_TOKEN
   
-  # populate the deployment environment
-  source $OXA_ENV_FILE
-  export $(sed -e 's/#.*$//' $OXA_ENV_FILE | cut -d= -f1)
+    # populate the deployment environment
+    source $OXA_ENV_FILE
+    export $(sed -e 's/#.*$//' $OXA_ENV_FILE | cut -d= -f1)
   
-  # deployment environment overrides for debugging
-  OXA_ENV_OVERRIDE_FILE="$BOOTSTRAP_HOME/overrides.sh"
-  if [[ -f $OXA_ENV_OVERRIDE_FILE ]]; then
-    source $OXA_ENV_OVERRIDE_FILE
-  fi
-  export $(sed -e 's/#.*$//' $OXA_ENV_OVERRIDE_FILE | cut -d= -f1)
-  export ANSIBLE_REPO=CONFIGURATION_REPO
-  export ANSIBLE_VERSION=CONFIGURATION_VERSION
+    # deployment environment overrides for debugging
+    OXA_ENV_OVERRIDE_FILE="$BOOTSTRAP_HOME/overrides.sh"
+    if [[ -f $OXA_ENV_OVERRIDE_FILE ]]; then
+        source $OXA_ENV_OVERRIDE_FILE
+    fi
+
+    export $(sed -e 's/#.*$//' $OXA_ENV_OVERRIDE_FILE | cut -d= -f1)
+    export ANSIBLE_REPO=CONFIGURATION_REPO
+    export ANSIBLE_VERSION=CONFIGURATION_VERSION
   
-  # sync public repositories
-  sync_repo $OXA_TOOLS_REPO $OXA_TOOLS_VERSION $OXA_TOOLS_PATH
-  sync_repo $CONFIGURATION_REPO $CONFIGURATION_VERSION $CONFIGURATION_PATH
+    # sync public repositories
+    sync_repo $OXA_TOOLS_REPO $OXA_TOOLS_VERSION $OXA_TOOLS_PATH
+    sync_repo $CONFIGURATION_REPO $CONFIGURATION_VERSION $CONFIGURATION_PATH
   
-  # run edx bootstrap and install requirements
-  cd $CONFIGURATION_PATH
-  bash util/install/ansible-bootstrap.sh
-  pip install -r requirements.txt
+    # run edx bootstrap and install requirements
+    cd $CONFIGURATION_PATH
+    bash util/install/ansible-bootstrap.sh
+    pip install -r requirements.txt
   
-  # fix OXA environment ownership
-  chown -R $ADMIN_USER:$ADMIN_USER $OXA_PATH
+    # fix OXA environment ownership
+    chown -R $ADMIN_USER:$ADMIN_USER $OXA_PATH
   
-  # aggregate edx configuration with deployment environment expansion
-  # warning: beware of yaml variable dependencies due to order of aggregation
-  echo "---" > $OXA_PLAYBOOK_CONFIG
-  for config in $OXA_TOOLS_PATH/config/$TEMPLATE_TYPE/*.yml $OXA_TOOLS_PATH/config/*.yml; do
-    sed -e "s/%%\([^%]*\)%%/$\{\\1\}/g" -e "s/^---.*$//g" $config | envsubst >> $OXA_PLAYBOOK_CONFIG
-  done
+    # aggregate edx configuration with deployment environment expansion
+    # warning: beware of yaml variable dependencies due to order of aggregation
+    echo "---" > $OXA_PLAYBOOK_CONFIG
+    for config in $OXA_TOOLS_PATH/config/$TEMPLATE_TYPE/*.yml $OXA_TOOLS_PATH/config/*.yml; do
+        sed -e "s/%%\([^%]*\)%%/$\{\\1\}/g" -e "s/^---.*$//g" $config | envsubst >> $OXA_PLAYBOOK_CONFIG
+    done
 }
 
 ##
@@ -141,6 +202,9 @@ exit_on_error() {
   if [[ $? -ne 0 ]]; then
     echo $1 && exit 1
   fi
+
+  # in case there is an error, remove the progress crumb
+  remove_progress_file
 }
 
 update_stamp_jb() {    
@@ -152,9 +216,8 @@ update_stamp_jb() {
   exit_on_error "Execution of edX MySQL migrations failed"
   
   # oxa playbooks - mongo (enable when customized) and mysql
-  #$ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mongo"
+  #$ANSIBLE_PLAYBOOK -i ${CLUSTERNAME}mongo1, $OXA_SSH_ARGS -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mongo"
   #exit_on_error "Execution of OXA Mongo playbook failed"
-  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mysql"
   exit_on_error "Execution of OXA MySQL playbook failed"
 }
 
@@ -201,6 +264,19 @@ update_fullstack() {
   exit_on_error "Execution of OXA playbook failed"
 }
 
+remove_progress_file()
+{
+    echo "Removing progress file at ${PROGRESS_FILE}"
+    if [ -e $PROGRESS_FILE ];
+    then
+        rm $PROGRESS_FILE
+    fi
+
+}
+###############################################
+# START CORE EXECUTION
+###############################################
+
 parse_args $@ # pass existing command line arguments
 
 ##
@@ -215,6 +291,46 @@ OXA_TOOLS_CONFIG_PATH=$OXA_PATH/oxa-tools-config
 CONFIGURATION_PATH=$OXA_PATH/configuration
 OXA_ENV_FILE=$OXA_TOOLS_CONFIG_PATH/env/$DEPLOYMENT_ENV/$DEPLOYMENT_ENV.sh
 OXA_PLAYBOOK_CONFIG=$OXA_PATH/oxa.yml
+
+
+##
+## CRON CheckPoint
+## We now have support for cron execution at x interval
+## Given the possible execution frequency, we want to do the bare minimum
+##
+
+# setup crumbs for tracking purposes
+TARGET_FILE=/var/log/bootstrap-$EDX_ROLE.log
+PROGRESS_FILE=/var/log/bootstrap-$EDX_ROLE.progress
+
+if [ "$CRON_MODE" == "1" ];
+then
+    echo "Cron execution for ${EDX_ROLE} on ${HOSTNAME} detected."
+
+    # check if we need to run the setup
+    RUN_BOOTSTRAP=$(get_bootstrap_status)
+
+    case "$RUN_BOOTSTRAP" in
+        "0")
+            echo "Bootstrap is not complete. Proceeding with setup..."
+            ;;
+        "1")
+            echo "Bootstrap is not complete. Waiting on backend bootstrap..."
+            exit
+            ;;
+        "2")
+            echo "Bootstrap is complete."
+            exit
+            ;;
+        "3")
+            echo "Bootstrap is in progress."
+            exit
+            ;;
+    esac
+
+    # setup the lock to indicate setup is in progress
+    touch $PROGRESS_FILE
+fi
 
 setup
 
@@ -258,4 +374,11 @@ case "$EDX_ROLE" in
     ;;
 esac
 
-echo "OXA bootstrap complete"
+# check for the progress files & clean it up
+remove_progress_file
+
+# log a closing message and leave expected bread crumb for status tracking
+TIMESTAMP=`date +"%D %T"`
+STATUS_MESSAGE="${TIMESTAMP} :: Completed bootstrap of ${EDX_ROLE} on ${HOSTNAME}"
+echo $STATUS_MESSAGE >> $TARGET_FILE
+echo $STATUS_MESSAGE

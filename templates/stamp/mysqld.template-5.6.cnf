@@ -95,6 +95,7 @@ server-id=
 #log_bin=
 #expire_logs_days=10
 #max_binlog_size=100M
+#binlog_format=row
 
 # In case we want to target the replication (not recommended)
 #binlog_do_db=include_database_name

@@ -3,6 +3,13 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
+# ERROR CODES: 
+# TODO: move to common script
+ERROR_CRONTAB_FAILED=4101
+ERROR_GITINSTALL_FAILED=5101
+ERROR_MONGOCLIENTINSTALL_FAILED=5201
+ERROR_MYSQLCLIENTINSTALL_FAILED=5301
+
 #############################################################################
 # Log a message
 #############################################################################
@@ -104,8 +111,11 @@ install-git()
         log "Git already installed"
     else
         log "Installing Git Client"
-        apt-get install -y -qq git
+        apt-get install -y git
+        exit_on_error "Failed to install the GIT clienton ${HOSTNAME} !" $ERROR_GITINSTALL_FAILED
     fi
+
+    log "Git client installed"
 }
 
 #############################################################################
@@ -136,8 +146,11 @@ install-mongodb-shell()
         apt-get update
 
         log "Installing Mongo Shell"
-        apt-get install -y -qq mongodb-org-shell
+        apt-get install -y mongodb-org-shell
+        exit_on_error "Failed to install the Mongo client on ${HOSTNAME} !" $ERROR_MONGOCLIENTINSTALL_FAILED
     fi
+
+    log "Mongo Shell installed"
 }
 
 #############################################################################
@@ -150,8 +163,11 @@ install-mysql-client()
         log "Mysql Client is already installed"
     else
         log "Installing Mysql Client"
-        apt-get install -y -qq mysql-client-core*
+        apt-get install -y mysql-client-core*
+        exit_on_error "Failed to install the Mysql client on ${HOSTNAME} !" $ERROR_MYSQLCLIENTINSTALL_FAILED
     fi
+
+    log "Mysql client installed"
 }
 
 #############################################################################
@@ -221,7 +237,7 @@ clone_repository()
     # clean up any residue of the repository
     clean_repository $REPO_PATH
 
-    log "Cloning the project with: https://${ACCESS_TOKEN_WITH_SEPARATOR}/${ACCOUNT_NAME}/${PROJECT_NAME}.git from the '$GITHUB_PROJECTBRANCH' branch and saved at ~/$GITHUB_PROJECTNAME"
+    log "Cloning the project with: https://${ACCESS_TOKEN_WITH_SEPARATOR}/${ACCOUNT_NAME}/${PROJECT_NAME}.git from the '$BRANCH' branch and saved at $REPO_PATH"
     git clone -b $BRANCH https://$ACCESS_TOKEN_WITH_SEPARATOR/$ACCOUNT_NAME/$PROJECT_NAME.git $REPO_PATH
 }
 
@@ -285,7 +301,8 @@ print_script_header()
 # TODO: reconcile duplication with clone_repository
 #############################################################################
 
-sync_repo() {
+sync_repo() 
+{
     REPO_URL=$1; REPO_VERSION=$2; REPO_PATH=$3
     REPO_TOKEN=$4 # optional
   
@@ -305,4 +322,37 @@ sync_repo() {
     fi
 
     pushd $REPO_PATH && sudo git checkout ${REPO_VERSION:-master} && popd
+}
+
+#############################################################################
+# Is Args Valid 
+#############################################################################
+
+is_valid_arg() 
+{
+    local list="$1"
+    local arg="$2"
+
+    if [[ $list =~ (^|[[:space:]])"$arg"($|[[:space:]]) ]] ; then
+        result=0
+    else
+        result=1
+    fi
+
+    return $result
+}
+
+#############################################################################
+# Exit on  Error
+#############################################################################
+exit_on_error()
+{
+    if [[ $? -ne 0 ]]; then
+        log $1 1
+        if [ ! -z $2 ]; then
+            exit 1
+        else
+            exit $2
+        fi
+    fi
 }

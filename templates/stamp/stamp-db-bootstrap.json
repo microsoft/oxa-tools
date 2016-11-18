@@ -493,7 +493,7 @@
         "azureSharedScriptUrl": "[concat('https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/shared_scripts/', variables('supportedOSName'), '/')]",
         "templateBaseUrl": "[concat('https://raw.githubusercontent.com/',parameters('githubAccountName'), '/', parameters('githubProjectName'), '/', parameters('githubBranch'), '/', parameters('armTemplateRelativePath'), '/')]",
         "clusterCustomInstallerScriptFullPath": "[concat( variables('templateBaseUrl'), parameters('customInstallerLaunchScript') )]",
-        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'), ' -a ', parameters('customInstallerGithubAccountName'),' -n ', parameters('customInstallerGithubProjectName'),' -b ', parameters('customInstallerGithubBranch'),' -i ', parameters('customInstallerMainScriptRelativePath'),' -p ', parameters('customInstallerGithubAccessToken'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'))]",
+        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'), ' -a ', parameters('customInstallerGithubAccountName'),' -n ', parameters('customInstallerGithubProjectName'),' -b ', parameters('customInstallerGithubBranch'),' -i ', parameters('customInstallerMainScriptRelativePath'),' -p ', parameters('customInstallerGithubAccessToken'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' -s 1')]",
 
         "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources.json')]",
         "jumpboxTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-jumpbox.json')]",
@@ -559,37 +559,9 @@
     },
     "resources": [
         {
-            "name": "shared-resources",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('apiVersion')]",
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('sharedTemplateUrl')]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "networkSettings": {
-                        "value": "[variables('networkSettings')]"
-                    },
-                    "apiSettings": {
-                        "value": "[variables('apiSettings')]"
-                    },
-                    "storageSettings": {
-                        "value": "[variables('storageSettings')]"
-                    }
-                }
-            }
-        },
-        {
             "name": "jumpbox",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[variables('apiVersion')]",
-            "dependsOn": [
-                "[concat('Microsoft.Resources/deployments/', 'shared-resources')]",
-                "mongoNodesLoop",
-                "mysqlMasterNodeLoop"
-            ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -613,132 +585,6 @@
                         "value": {
                             "vmScripts": "[variables('jumpBoxInstallerSettings').scriptsToDownload]",
                             "customInstallerCommandToExecute": "[variables('jumpBoxInstallerSettings').customInstallerCommand]"
-                        }
-                    }
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Resources/deployments",
-            "name": "[concat(variables('networkSettings').clusterMongoDataNodeName, copyindex(1))]",
-            "apiVersion": "[variables('apiVersion')]",
-            "dependsOn": [
-                "[concat('Microsoft.Resources/deployments/', 'shared-resources')]"
-            ],
-            "copy": {
-                "name": "mongoNodesLoop",
-                "count": "[int(variables('networkSettings').mongoDataNodeCount)]"
-            },
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('mongoNodeTemplateUrl')]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "networkSettings": {
-                        "value": "[variables('networkSettings')]"
-                    },
-                    "apiSettings": {
-                        "value": "[variables('apiSettings')]"
-                    },
-                    "machineSettings": {
-                        "value": "[variables('mongoMachineSettings')]"
-                    },
-                    "storageSettings": {
-                        "value": "[variables('storageSettings')]"
-                    },
-                    "customSettings": {
-                        "value": {
-                            "machineIndex": "[copyindex(1)]",
-                            "vmScripts": "[variables('mongoDBInstallerSettings').scriptsToDownload]",
-                            "adminUsername": "[variables('networkSettings').adminUsername]",
-                            "adminPassword": "[variables('networkSettings').mongoServerAdminPassword]",
-                            "machineNamePrefix": "[variables('networkSettings').clusterMongoDataNodeName]",
-                            "osImageReference": "[variables('mongoMachineSettings').osImageReference]",
-                            "vmSize": "[variables('mongoMachineSettings').vmSize]",
-                            "dataDiskSize": "[variables('mongoMachineSettings').dataDiskSize]",
-                            "commandToExecute": "[variables('mongoDBInstallerSettings').regularNodeInstallCommand]",
-                            "machineIpOffset": "[int(variables('networkSettings').mongoServerIpOffset)]"
-                        }
-                    }
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Resources/deployments",
-            "name": "[concat(variables('networkSettings').clusterMysqlDataNodeName, copyindex(1))]",
-            "apiVersion": "[variables('apiVersion')]",
-            "dependsOn": [
-                "[concat('Microsoft.Resources/deployments/', 'shared-resources')]"
-            ],
-            "copy": {
-                "name": "mysqlMasterNodeLoop",
-                "count": "[int(variables('networkSettings').mysqlDataNodeCount)]"
-            },
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('mysqlNodeTemplateUrl')]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "networkSettings": {
-                        "value": "[variables('networkSettings')]"
-                    },
-                    "apiSettings": {
-                        "value": "[variables('apiSettings')]"
-                    },
-                    "machineSettings": {
-                        "value": "[variables('mysqlMachineSettings')]"
-                    },
-                    "storageSettings": {
-                        "value": "[variables('storageSettings')]"
-                    },
-                    "customSettings": {
-                        "value": {
-                            "machineIndex": "[copyindex(1)]",
-                            "vmScripts": "[variables('mysqlDBInstallerSettings').scriptsToDownload]",
-                            "commandToExecute": "[concat(variables('mysqlDBInstallerSettings').regularNodeInstallCommand, ' -n ', copyindex(1))]",
-                            "machineIpOffset": "[int(variables('networkSettings').mysqlServerIpOffset)]"
-                        }
-                    }
-                }
-            }
-        },
-
-        {
-            "name": "vmss",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('apiVersion')]",
-            "dependsOn": [
-                "[concat('Microsoft.Resources/deployments/', 'shared-resources')]",
-                "jumpbox"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('vmssTemplateUrl')]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "networkSettings": {
-                        "value": "[variables('networkSettings')]"
-                    },
-                    "apiSettings": {
-                        "value": "[variables('apiSettings')]"
-                    },
-                    "machineSettings": {
-                        "value": "[variables('frontendMachineSettings')]"
-                    },
-                    "storageSettings": {
-                        "value": "[variables('storageSettings')]"
-                    },
-                    "customSettings": {
-                        "value": {
-                            "vmScripts": "[variables('vmssInstallerSettings').scriptsToDownload]",
-                            "commandToExecute": "[variables('vmssInstallerSettings').customInstallerCommand]",
-                            "linuxDiagnosticsSettings": "[variables('vmssLinuxDiagnosticsSettings')]"
                         }
                     }
                 }

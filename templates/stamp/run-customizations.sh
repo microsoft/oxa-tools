@@ -12,6 +12,7 @@ GITHUB_PROJECTBRANCH="master"
 OS_ADMIN_USERNAME=""
 CUSTOM_INSTALLER_RELATIVEPATH=""
 MONITORING_CLUSTER_NAME=""
+BOOTSTRAP_PHASE=0
 
 help()
 {
@@ -26,11 +27,26 @@ help()
     echo "        -i Custom script relative path"
     echo "        -u OS Admin User Name"
     echo "        -m Monitoring cluster name"
-
+    echo "        -s Bootstrap Phase (0=Servers, 1=OpenEdx App)"
 }
 
+# source our utilities for logging and other base functions (we need this staged with the installer script)
+# the file needs to be first downloaded from the public repository
+CURRENT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+UTILITIES_PATH=$CURRENT_PATH/utilities.sh
+
+# check if the utilities file exists. If not, bail out.
+if [[ ! -e $UTILITIES_PATH ]]; 
+then  
+    echo :"Utilities not present"
+    exit 3
+fi
+
+# source the utilities now
+source $UTILITIES_PATH
+
 # Parse script parameters
-while getopts :c:p:a:n:b:u:m:i:h optname; do
+while getopts :c:p:a:n:b:u:m:i:s:h optname; do
 
     # Log input parameters to facilitate troubleshooting
     if [ ! "$optname" == "p" ]; then
@@ -62,6 +78,15 @@ while getopts :c:p:a:n:b:u:m:i:h optname; do
     m) # Monitoring cluster name
         MONITORING_CLUSTER_NAME=${OPTARG}
         ;;
+    s) # Bootstrap Phase (0=Servers, 1=OpenEdx App)
+        if is_valid_arg "0 1" ${OPTARG}; then
+            BOOTSTRAP_PHASE=${OPTARG}
+        else
+            log "Invalid Bootstrap Phase specified - ${OPTARG}" $ERROR_MESSAGE
+            help
+            exit 2
+        fi
+        ;;
     h)  # Helpful hints
         help
         exit 2
@@ -73,21 +98,6 @@ while getopts :c:p:a:n:b:u:m:i:h optname; do
         ;;
   esac
 done
-
-# source our utilities for logging and other base functions (we need this staged with the installer script)
-# the file needs to be first downloaded from the public repository
-CURRENT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-UTILITIES_PATH=$CURRENT_PATH/utilities.sh
-
-# check if the utilities file exists. If not, bail out.
-if [[ ! -e $UTILITIES_PATH ]]; 
-then  
-    echo :"Utilities not present"
-    exit 3
-fi
-
-# source the utilities now
-source $UTILITIES_PATH
 
 # Script self-idenfitication
 print_script_header
@@ -107,7 +117,7 @@ log "${HOSTNAME} has been identified as a member of the '${MACHINE_ROLE}' role"
 # 1. Setup Tools
 install-git
 
-if [ "$MACHINE_ROLE" == "jumpbox" ] ;
+if [ "$MACHINE_ROLE" == "jumpbox" ] || [ "$MACHINE_ROLE" == "vmss" ];
 then
     install-mongodb-shell
     install-mysql-client
@@ -122,7 +132,7 @@ CUSTOM_INSTALLER_PATH=~/$GITHUB_PROJECTNAME/$CUSTOM_INSTALLER_RELATIVEPATH
 
 if [[ -e $CUSTOM_INSTALLER_PATH ]]; then  
     log "Launching the custom installer at '$CUSTOM_INSTALLER_PATH'"
-    bash $CUSTOM_INSTALLER_PATH --repo-path ~/$GITHUB_PROJECTNAME --cloud $CLOUDNAME --admin-user $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --access-token $GITHUB_PERSONAL_ACCESS_TOKEN --branch $GITHUB_PROJECTBRANCH 
+    bash $CUSTOM_INSTALLER_PATH --repo-path ~/$GITHUB_PROJECTNAME --cloud $CLOUDNAME --admin-user $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --access-token $GITHUB_PERSONAL_ACCESS_TOKEN --branch $GITHUB_PROJECTBRANCH --phase $BOOTSTRAP_PHASE 
 else
     log "$CUSTOM_INSTALLER_PATH does not exist"
 fi
