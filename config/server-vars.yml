@@ -11,7 +11,13 @@ EDXAPP_TIME_ZONE: "America/Los_Angeles"
 # see: https://github.com/MSOpenTech/edx-documentation/blob/master/en_us/install_operations/source/configuration/enable_sso.rst
 #EDXAPP_ENABLE_THIRD_PARY_AUTH: true
 #EDXAPP_ENABLE_OAUTH2_PROVIDER: true
- 
+
+
+
+# Adding Disclosure Notice to the marketing url link mapping
+EDXAPP_MKTG_URL_LINK_MAP:
+  DN: "dn"
+
 # Country made required field in registration.
 EDXAPP_REGISTRATION_EXTRA_FIELDS: 
   city: "hidden"
