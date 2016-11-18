@@ -61,7 +61,17 @@ EDXAPP_FEATURES:
   ALLOW_HIDING_DISCUSSION_TAB: true
   CERTIFICATES_ENABLED: true
   CERTIFICATES_HTML_VIEW: true
+  ENABLE_GRADE_DOWNLOADS: true
 
+# storage uploads
+EDXAPP_DEFAULT_FILE_STORAGE: "storages.backends.azure_storage.AzureStorage"
+AZURE_ACCOUNT_NAME: "%%AZURE_ACCOUNT_NAME%%"
+AZURE_ACCOUNT_KEY: "%%AZURE_ACCOUNT_KEY%%"
+AZURE_CONTAINER: "uploads"
+
+GRADES_DOWNLOAD:
+  STORAGE_TYPE: "azure"
+  CONTAINER: "reports"
 
 # Configure email addresses
 EDXAPP_BUGS_EMAIL: "bugs@openedx.microsoft.com"
