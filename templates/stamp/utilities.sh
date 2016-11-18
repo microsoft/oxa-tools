@@ -3,6 +3,11 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
+# ERROR CODES: 
+# TODO: move to common script
+ERROR_CRONTAB_FAILED=4101
+ERROR_GITINSTALL_FAILED=5101
+
 #############################################################################
 # Log a message
 #############################################################################
@@ -105,6 +110,7 @@ install-git()
     else
         log "Installing Git Client"
         apt-get install -y -qq git
+        exit_on_error "Failed to install the GIT clienton ${HOSTNAME} !" $ERROR_GITINSTALL_FAILED
     fi
 }
 
