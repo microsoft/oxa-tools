@@ -114,8 +114,6 @@ get_bootstrap_status()
     # 3 - Bootstrap in progress
 
     PRESENCE=0
-    TARGET_FILE=/var/log/bootstrap-$EDX_ROLE.log
-    PROGRESS_FILE=/var/log/bootstrap-$EDX_ROLE.progress
 
     if [ -e $TARGET_FILE ];
     then
@@ -283,6 +281,10 @@ parse_args $@ # pass existing command line arguments
 ## We now have support for cron execution at x interval
 ## Given the possible execution frequency, we want to do the bare minimum
 ##
+
+# setup crumbs for tracking purposes
+TARGET_FILE=/var/log/bootstrap-$EDX_ROLE.log
+PROGRESS_FILE=/var/log/bootstrap-$EDX_ROLE.progress
 
 if [ "$CRON_MODE" == "1" ];
 then
