@@ -211,10 +211,11 @@
                     {
                         "name": "[parameters('networkSettings').loadbalancerSettings.lbProbeLMSName]",
                         "properties": {
-                            "protocol": "tcp",
+                            "protocol": "http",
                             "port": 80,
+                            "requestPath": "/heartbeat",
                             "intervalInSeconds": "5",
-                            "numberOfProbes": "2"
+                            "numberOfProbes": "4"
                         }
                     },
                     {
@@ -223,16 +224,17 @@
                             "protocol": "tcp",
                             "port": 443,
                             "intervalInSeconds": "5",
-                            "numberOfProbes": "2"
+                            "numberOfProbes": "4"
                         }
                     },
                     {
                         "name": "[parameters('networkSettings').loadbalancerSettings.lbProbeCMSName]",
                         "properties": {
-                            "protocol": "tcp",
+                            "protocol": "http",
                             "port": 18010,
+                            "requestPath": "/heartbeat",
                             "intervalInSeconds": "5",
-                            "numberOfProbes": "2"
+                            "numberOfProbes": "4"
                         }
                     },
                     {
@@ -241,7 +243,7 @@
                             "protocol": "tcp",
                             "port": 48010,
                             "intervalInSeconds": "5",
-                            "numberOfProbes": "2"
+                            "numberOfProbes": "4"
                         }
                     }
                 ]
