@@ -116,8 +116,10 @@ get_bootstrap_status()
     # 2 - Bootstrap done
     # 3 - Bootstrap in progress
 
+    # by default we assume, bootstrap is needed
     PRESENCE=0
 
+    # check if the bootstrap is finished
     if [ -e $TARGET_FILE ];
     then
         # The crumb exists:: bootstrap is done
@@ -379,5 +381,5 @@ remove_progress_file
 # log a closing message and leave expected bread crumb for status tracking
 TIMESTAMP=`date +"%D %T"`
 STATUS_MESSAGE="${TIMESTAMP} :: Completed bootstrap of ${EDX_ROLE} on ${HOSTNAME}"
-echo $STATUS_MESSAGE >> /var/log/bootstrap-$EDX_ROLE.log
+echo $STATUS_MESSAGE >> $TARGET_FILE
 echo $STATUS_MESSAGE

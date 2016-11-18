@@ -111,9 +111,11 @@ install-git()
         log "Git already installed"
     else
         log "Installing Git Client"
-        apt-get install -y -qq git
+        apt-get install -y git
         exit_on_error "Failed to install the GIT clienton ${HOSTNAME} !" $ERROR_GITINSTALL_FAILED
     fi
+
+    log "Git client installed"
 }
 
 #############################################################################
@@ -144,9 +146,11 @@ install-mongodb-shell()
         apt-get update
 
         log "Installing Mongo Shell"
-        apt-get install -y -qq mongodb-org-shell
+        apt-get install -y mongodb-org-shell
         exit_on_error "Failed to install the Mongo client on ${HOSTNAME} !" $ERROR_MONGOCLIENTINSTALL_FAILED
     fi
+
+    log "Mongo Shell installed"
 }
 
 #############################################################################
@@ -159,9 +163,11 @@ install-mysql-client()
         log "Mysql Client is already installed"
     else
         log "Installing Mysql Client"
-        apt-get install -y -qq mysql-client-core*
+        apt-get install -y mysql-client-core*
         exit_on_error "Failed to install the Mysql client on ${HOSTNAME} !" $ERROR_MYSQLCLIENTINSTALL_FAILED
     fi
+
+    log "Mysql client installed"
 }
 
 #############################################################################
