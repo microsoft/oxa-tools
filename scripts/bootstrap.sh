@@ -102,6 +102,9 @@ sync_repo() {
 ##
 get_bootstrap_status()
 {
+    # Source the settings
+    source $OXA_ENV_FILE
+
     # this determination is role-dependent
     #TODO: setup a more elaborate crumb system
 
@@ -275,6 +278,19 @@ remove_progress_file()
 
 parse_args $@ # pass existing command line arguments
 
+##
+## Execute role-independent OXA environment bootstrap
+##
+BOOTSTRAP_HOME=$(readlink -f $(dirname $0))
+OXA_PATH=/oxa
+OXA_TOOLS_REPO="https://github.com/microsoft/oxa-tools.git"
+OXA_TOOLS_PATH=$OXA_PATH/oxa-tools
+OXA_TOOLS_CONFIG_REPO="https://github.com/microsoft/oxa-tools-config.git"
+OXA_TOOLS_CONFIG_PATH=$OXA_PATH/oxa-tools-config
+CONFIGURATION_PATH=$OXA_PATH/configuration
+OXA_ENV_FILE=$OXA_TOOLS_CONFIG_PATH/env/$DEPLOYMENT_ENV/$DEPLOYMENT_ENV.sh
+OXA_PLAYBOOK_CONFIG=$OXA_PATH/oxa.yml
+
 
 ##
 ## CRON CheckPoint
@@ -314,19 +330,6 @@ then
     # setup the lock to indicate setup is in progress
     touch $PROGRESS_FILE
 fi
-
-##
-## Execute role-independent OXA environment bootstrap
-##
-BOOTSTRAP_HOME=$(readlink -f $(dirname $0))
-OXA_PATH=/oxa
-OXA_TOOLS_REPO="https://github.com/microsoft/oxa-tools.git"
-OXA_TOOLS_PATH=$OXA_PATH/oxa-tools
-OXA_TOOLS_CONFIG_REPO="https://github.com/microsoft/oxa-tools-config.git"
-OXA_TOOLS_CONFIG_PATH=$OXA_PATH/oxa-tools-config
-CONFIGURATION_PATH=$OXA_PATH/configuration
-OXA_ENV_FILE=$OXA_TOOLS_CONFIG_PATH/env/$DEPLOYMENT_ENV/$DEPLOYMENT_ENV.sh
-OXA_PLAYBOOK_CONFIG=$OXA_PATH/oxa.yml
 
 setup
 
