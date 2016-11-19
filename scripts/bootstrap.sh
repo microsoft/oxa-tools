@@ -9,6 +9,7 @@ EDX_ROLE=""
 DEPLOYMENT_ENV="dev"
 ACCESS_TOKEN=""
 OXA_TOOLS_CONFIG_VERSION="master"
+OXA_TOOLS_VERSION_OVERRIDE="master"
 CRON_MODE=0
 TARGET_FILE=""
 PROGRESS_FILE=""
@@ -70,6 +71,10 @@ parse_args() {
         OXA_TOOLS_CONFIG_VERSION="$2"
         shift # past argument
         ;;
+      --tools-version-override)
+        OXA_TOOLS_VERSION_OVERRIDE="$2"
+        shift # past argument
+        ;;
       *)
         # Unknown option encountered
         display_usage
@@ -104,6 +109,7 @@ get_bootstrap_status()
 {
     # Source the settings
     source $OXA_ENV_FILE
+    setup_overrides
 
     # this determination is role-dependent
     #TODO: setup a more elaborate crumb system
@@ -149,6 +155,16 @@ get_bootstrap_status()
     echo $PRESENCE
 }
 
+setup_overrides()
+{
+    # apply input parameter-based overrides
+    if [ "$OXA_TOOLS_VERSION_OVERRIDE" != "$OXA_TOOLS_VERSION" ];
+    then
+        echo "Applying OXA Tools Version override: '$OXA_TOOLS_VERSION' to '$OXA_TOOLS_VERSION_OVERRIDE'"
+        OXA_TOOLS_VERSION=$OXA_TOOLS_VERSION_OVERRIDE
+    fi
+}
+
 ##
 ## Role-independent OXA environment bootstrap
 ##
@@ -162,12 +178,15 @@ setup()
   
     # populate the deployment environment
     source $OXA_ENV_FILE
+    setup_overrides
+
     export $(sed -e 's/#.*$//' $OXA_ENV_FILE | cut -d= -f1)
   
     # deployment environment overrides for debugging
     OXA_ENV_OVERRIDE_FILE="$BOOTSTRAP_HOME/overrides.sh"
     if [[ -f $OXA_ENV_OVERRIDE_FILE ]]; then
         source $OXA_ENV_OVERRIDE_FILE
+        setup_overrides
     fi
 
     export $(sed -e 's/#.*$//' $OXA_ENV_OVERRIDE_FILE | cut -d= -f1)
@@ -309,21 +328,22 @@ then
 
     # check if we need to run the setup
     RUN_BOOTSTRAP=$(get_bootstrap_status)
+    TIMESTAMP=`date +"%D %T"`
 
     case "$RUN_BOOTSTRAP" in
         "0")
-            echo "Bootstrap is not complete. Proceeding with setup..."
+            echo "${TIMESTAMP} : Bootstrap is not complete. Proceeding with setup..."
             ;;
         "1")
-            echo "Bootstrap is not complete. Waiting on backend bootstrap..."
+            echo "${TIMESTAMP} : Bootstrap is not complete. Waiting on backend bootstrap..."
             exit
             ;;
         "2")
-            echo "Bootstrap is complete."
+            echo "${TIMESTAMP} : Bootstrap is complete."
             exit
             ;;
         "3")
-            echo "Bootstrap is in progress."
+            echo "${TIMESTAMP} : Bootstrap is in progress."
             exit
             ;;
     esac
