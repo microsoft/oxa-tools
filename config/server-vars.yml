@@ -12,7 +12,16 @@ EDXAPP_TIME_ZONE: "America/Los_Angeles"
 #EDXAPP_ENABLE_THIRD_PARY_AUTH: true
 #EDXAPP_ENABLE_OAUTH2_PROVIDER: true
 
+# Password Policy Configuration
+# AT least 8 characters. Must contain at least one lowercase, one uppercase and one symbol.
+EDXAPP_PASSWORD_MIN_LENGTH: 8 
+EDXAPP_PASSWORD_MAX_LENGTH: 75
+EDXAPP_PASSWORD_COMPLEXITY: 
+  UPPER: 1
+  LOWER: 1
+  PUNCTUATION: 1
 
+EDXAPP_ENFORCE_PASSWORD_POLICY: true
 
 # Adding Disclosure Notice to the marketing url link mapping
 EDXAPP_MKTG_URL_LINK_MAP:
