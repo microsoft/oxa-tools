@@ -400,5 +400,8 @@ remove_progress_file
 # log a closing message and leave expected bread crumb for status tracking
 TIMESTAMP=`date +"%D %T"`
 STATUS_MESSAGE="${TIMESTAMP} :: Completed bootstrap of ${EDX_ROLE} on ${HOSTNAME}"
-echo $STATUS_MESSAGE >> $TARGET_FILE
+
+echo "Creating Phase 1 Crumb at '$TARGET_FILE''"
+touch $TARGET_FILE
+
 echo $STATUS_MESSAGE

@@ -111,6 +111,10 @@ install-git()
         log "Git already installed"
     else
         log "Installing Git Client"
+
+        log "Updating Repository"
+        apt-get update
+
         apt-get install -y git
         exit_on_error "Failed to install the GIT clienton ${HOSTNAME} !" $ERROR_GITINSTALL_FAILED
     fi
@@ -162,6 +166,9 @@ install-mysql-client()
     if type mysql >/dev/null 2>&1; then
         log "Mysql Client is already installed"
     else
+        log "Updating Repository"
+        apt-get update
+
         log "Installing Mysql Client"
         apt-get install -y mysql-client-core*
         exit_on_error "Failed to install the Mysql client on ${HOSTNAME} !" $ERROR_MYSQLCLIENTINSTALL_FAILED
