@@ -109,7 +109,7 @@ get_bootstrap_status()
 {
     # Source the settings
     source $OXA_ENV_FILE
-    setup_overrides
+    setup_overrides 1
 
     # this determination is role-dependent
     #TODO: setup a more elaborate crumb system
@@ -157,10 +157,16 @@ get_bootstrap_status()
 
 setup_overrides()
 {
+    QUIETMODE=$1
+
     # apply input parameter-based overrides
     if [ "$OXA_TOOLS_VERSION_OVERRIDE" != "$OXA_TOOLS_VERSION" ];
     then
-        echo "Applying OXA Tools Version override: '$OXA_TOOLS_VERSION' to '$OXA_TOOLS_VERSION_OVERRIDE'"
+        if [ "$QUIETMODE" -eq "1" ];
+        then
+            echo "Applying OXA Tools Version override: '$OXA_TOOLS_VERSION' to '$OXA_TOOLS_VERSION_OVERRIDE'"
+        fi
+
         OXA_TOOLS_VERSION=$OXA_TOOLS_VERSION_OVERRIDE
     fi
 }
@@ -217,19 +223,24 @@ setup()
 ## Role-based ansible command lines
 ##
 
-exit_on_error() {
-  if [[ $? -ne 0 ]]; then
-    echo $1 && exit 1
-  fi
+exit_on_error()
+{
+    if [[ "$?" -ne "0" ]];
+    then
+        echo $1
 
-  # in case there is an error, remove the progress crumb
-  remove_progress_file
+        # in case there is an error, remove the progress crumb
+        remove_progress_file
+
+        exit 1
+    fi
 }
 
 update_stamp_jb() {    
   # edx playbooks - mysql and memcached
   $ANSIBLE_PLAYBOOK -i 10.0.0.16, $OXA_SSH_ARGS -e@$OXA_PLAYBOOK_CONFIG edx_mysql.yml
-  exit_on_error "Execution of edX MySQL playbook failed"  
+  exit_on_error "Execution of edX MySQL playbook failed"
+
   # minimize tags? "install:base,install:system-requirements,install:configuration,install:app-requirements,install:code"
   $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_sandbox.yml -e "migrate_db=yes" --tags "edxapp-sandbox,install,migrate"
   exit_on_error "Execution of edX MySQL migrations failed"
@@ -352,6 +363,11 @@ then
     touch $PROGRESS_FILE
 fi
 
+# Note when we started
+TIMESTAMP=`date +"%D %T"`
+STATUS_MESSAGE="${TIMESTAMP} :: Starting bootstrap of ${EDX_ROLE} on ${HOSTNAME}"
+echo $STATUS_MESSAGE
+
 setup
 
 ##
@@ -397,6 +413,7 @@ esac
 # check for the progress files & clean it up
 remove_progress_file
 
+# Note when we ended
 # log a closing message and leave expected bread crumb for status tracking
 TIMESTAMP=`date +"%D %T"`
 STATUS_MESSAGE="${TIMESTAMP} :: Completed bootstrap of ${EDX_ROLE} on ${HOSTNAME}"
