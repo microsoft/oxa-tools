@@ -162,7 +162,7 @@ setup_overrides()
     # apply input parameter-based overrides
     if [ "$OXA_TOOLS_VERSION_OVERRIDE" != "$OXA_TOOLS_VERSION" ];
     then
-        if [ "$QUIETMODE" -eq "1" ];
+        if [ "$QUIETMODE" != "1" ];
         then
             echo "Applying OXA Tools Version override: '$OXA_TOOLS_VERSION' to '$OXA_TOOLS_VERSION_OVERRIDE'"
         fi
@@ -248,7 +248,7 @@ update_stamp_jb() {
   # oxa playbooks - mongo (enable when customized) and mysql
   #$ANSIBLE_PLAYBOOK -i ${CLUSTERNAME}mongo1, $OXA_SSH_ARGS -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mongo"
   #exit_on_error "Execution of OXA Mongo playbook failed"
-  exit_on_error "Execution of OXA MySQL playbook failed"
+  #exit_on_error "Execution of OXA MySQL playbook failed"
 }
 
 update_stamp_vmss() {
