@@ -9,6 +9,7 @@ EDX_ROLE=""
 DEPLOYMENT_ENV="dev"
 ACCESS_TOKEN=""
 OXA_TOOLS_CONFIG_VERSION="master"
+OXA_TOOLS_VERSION_OVERRIDE="master"
 CRON_MODE=0
 TARGET_FILE=""
 PROGRESS_FILE=""
@@ -70,6 +71,10 @@ parse_args() {
         OXA_TOOLS_CONFIG_VERSION="$2"
         shift # past argument
         ;;
+      --tools-version-override)
+        OXA_TOOLS_VERSION_OVERRIDE="$2"
+        shift # past argument
+        ;;
       *)
         # Unknown option encountered
         display_usage
@@ -102,9 +107,6 @@ sync_repo() {
 ##
 get_bootstrap_status()
 {
-    # Source the settings
-    source $OXA_ENV_FILE
-
     # this determination is role-dependent
     #TODO: setup a more elaborate crumb system
 
@@ -132,6 +134,11 @@ get_bootstrap_status()
             PRESENCE=3
         elif [ "$EDX_ROLE" == "vmss" ];
         then
+            # Source the settings
+            # Moving source here reduces the noise in the logs
+            source $OXA_ENV_FILE
+            setup_overrides 1
+
             # The crumb doesn't exist:: we need to execute boostrap
             # For VMSS role, we have to wait on the backend Mysql bootstrap operation
             # The Mysql master is known. This is the one we really care about. If it is up, we will call backend bootstrap done
@@ -149,6 +156,22 @@ get_bootstrap_status()
     echo $PRESENCE
 }
 
+setup_overrides()
+{
+    QUIETMODE=$1
+
+    # apply input parameter-based overrides
+    if [ "$OXA_TOOLS_VERSION_OVERRIDE" != "$OXA_TOOLS_VERSION" ];
+    then
+        if [ "$QUIETMODE" != "1" ];
+        then
+            echo "Applying OXA Tools Version override: '$OXA_TOOLS_VERSION' to '$OXA_TOOLS_VERSION_OVERRIDE'"
+        fi
+
+        OXA_TOOLS_VERSION=$OXA_TOOLS_VERSION_OVERRIDE
+    fi
+}
+
 ##
 ## Role-independent OXA environment bootstrap
 ##
@@ -162,12 +185,15 @@ setup()
   
     # populate the deployment environment
     source $OXA_ENV_FILE
+    setup_overrides
+
     export $(sed -e 's/#.*$//' $OXA_ENV_FILE | cut -d= -f1)
   
     # deployment environment overrides for debugging
     OXA_ENV_OVERRIDE_FILE="$BOOTSTRAP_HOME/overrides.sh"
     if [[ -f $OXA_ENV_OVERRIDE_FILE ]]; then
         source $OXA_ENV_OVERRIDE_FILE
+        setup_overrides
     fi
 
     export $(sed -e 's/#.*$//' $OXA_ENV_OVERRIDE_FILE | cut -d= -f1)
@@ -198,19 +224,24 @@ setup()
 ## Role-based ansible command lines
 ##
 
-exit_on_error() {
-  if [[ $? -ne 0 ]]; then
-    echo $1 && exit 1
-  fi
+exit_on_error()
+{
+    if [[ "$?" -ne "0" ]];
+    then
+        echo $1
 
-  # in case there is an error, remove the progress crumb
-  remove_progress_file
+        # in case there is an error, remove the progress crumb
+        remove_progress_file
+
+        exit 1
+    fi
 }
 
 update_stamp_jb() {    
   # edx playbooks - mysql and memcached
   $ANSIBLE_PLAYBOOK -i 10.0.0.16, $OXA_SSH_ARGS -e@$OXA_PLAYBOOK_CONFIG edx_mysql.yml
-  exit_on_error "Execution of edX MySQL playbook failed"  
+  exit_on_error "Execution of edX MySQL playbook failed"
+
   # minimize tags? "install:base,install:system-requirements,install:configuration,install:app-requirements,install:code"
   $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_sandbox.yml -e "migrate_db=yes" --tags "edxapp-sandbox,install,migrate"
   exit_on_error "Execution of edX MySQL migrations failed"
@@ -218,7 +249,7 @@ update_stamp_jb() {
   # oxa playbooks - mongo (enable when customized) and mysql
   #$ANSIBLE_PLAYBOOK -i ${CLUSTERNAME}mongo1, $OXA_SSH_ARGS -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mongo"
   #exit_on_error "Execution of OXA Mongo playbook failed"
-  exit_on_error "Execution of OXA MySQL playbook failed"
+  #exit_on_error "Execution of OXA MySQL playbook failed"
 }
 
 update_stamp_vmss() {
@@ -309,21 +340,22 @@ then
 
     # check if we need to run the setup
     RUN_BOOTSTRAP=$(get_bootstrap_status)
+    TIMESTAMP=`date +"%D %T"`
 
     case "$RUN_BOOTSTRAP" in
         "0")
-            echo "Bootstrap is not complete. Proceeding with setup..."
+            echo "${TIMESTAMP} : Bootstrap is not complete. Proceeding with setup..."
             ;;
         "1")
-            echo "Bootstrap is not complete. Waiting on backend bootstrap..."
+            echo "${TIMESTAMP} : Bootstrap is not complete. Waiting on backend bootstrap..."
             exit
             ;;
         "2")
-            echo "Bootstrap is complete."
+            echo "${TIMESTAMP} : Bootstrap is complete."
             exit
             ;;
         "3")
-            echo "Bootstrap is in progress."
+            echo "${TIMESTAMP} : Bootstrap is in progress."
             exit
             ;;
     esac
@@ -331,6 +363,11 @@ then
     # setup the lock to indicate setup is in progress
     touch $PROGRESS_FILE
 fi
+
+# Note when we started
+TIMESTAMP=`date +"%D %T"`
+STATUS_MESSAGE="${TIMESTAMP} :: Starting bootstrap of ${EDX_ROLE} on ${HOSTNAME}"
+echo $STATUS_MESSAGE
 
 setup
 
@@ -377,8 +414,12 @@ esac
 # check for the progress files & clean it up
 remove_progress_file
 
+# Note when we ended
 # log a closing message and leave expected bread crumb for status tracking
 TIMESTAMP=`date +"%D %T"`
 STATUS_MESSAGE="${TIMESTAMP} :: Completed bootstrap of ${EDX_ROLE} on ${HOSTNAME}"
-echo $STATUS_MESSAGE >> $TARGET_FILE
+
+echo "Creating Phase 1 Crumb at '$TARGET_FILE''"
+touch $TARGET_FILE
+
 echo $STATUS_MESSAGE

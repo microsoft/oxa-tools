@@ -23,14 +23,14 @@
   sudo: yes
   command: service nginx restart
 
-- name: Apply patch to authenticate user after their reset confirmation goes through
-  sudo: yes
-  shell: patch -p1 -d {{ edx_platform_path }} < {{ edxapp_files_path }}/patches/9b1f89d19ad26625859f887b12931f4d48dd3ff0_updated.patch
-  register: patch_result
-  ignore_errors: True
+#- name: Apply patch to authenticate user after their reset confirmation goes through
+#  sudo: yes
+#  shell: patch -p1 -d {{ edx_platform_path }} < {{ edxapp_files_path }}/patches/9b1f89d19ad26625859f887b12931f4d48dd3ff0_updated.patch
+#  register: patch_result
+#  ignore_errors: True
 
 # Print the results from patching.
-- debug: var="patch_result.stdout_lines + [ patch_result.stderr ]"
+#- debug: var="patch_result.stdout_lines + [ patch_result.stderr ]"
 
 # Patch fails on stamp - re-enable once fixed
 #- name: Recompile python files touched by patching
