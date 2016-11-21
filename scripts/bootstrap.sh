@@ -98,6 +98,8 @@ sync_repo() {
   if [[ ! -d $REPO_PATH ]]; then
     mkdir -p $REPO_PATH
     git clone ${REPO_URL/github/$REPO_TOKEN@github} $REPO_PATH
+
+    exit_on_error "Failed syncing repository $REPO_URL | $REPO_VERSION"
   fi
   pushd $REPO_PATH && git checkout ${REPO_VERSION:-master} && popd
 }
@@ -206,8 +208,13 @@ setup()
   
     # run edx bootstrap and install requirements
     cd $CONFIGURATION_PATH
-    bash util/install/ansible-bootstrap.sh
+    ANSIBLE_BOOTSTRAP_SCRIPT=util/install/ansible-bootstrap.sh
+
+    bash $ANSIBLE_BOOTSTRAP_SCRIPT
+    exit_on_error "Failed executing $ANSIBLE_BOOTSTRAP_SCRIPT"
+
     pip install -r requirements.txt
+    exit_on_error "Failed pip-installing EdX requirements"
   
     # fix OXA environment ownership
     chown -R $ADMIN_USER:$ADMIN_USER $OXA_PATH
