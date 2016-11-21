@@ -35,8 +35,8 @@
     },
 
     "variables": {
-        "cmsIpName": "[concat('loadBalancerCms', parameters('networkSettings').publicIPAddressNameSuffix)]",
-        "lmsIpName": "[concat('loadBalancerLms', parameters('networkSettings').publicIPAddressNameSuffix)]",
+        "cmsIpName": "[concat('lbCms', parameters('networkSettings').publicIPAddressNameSuffix, '-', parameters('networkSettings').loadbalancerSettings.deploymentSlot)]",
+        "lmsIpName": "[concat('lbLms', parameters('networkSettings').publicIPAddressNameSuffix, '-', parameters('networkSettings').loadbalancerSettings.deploymentSlot)]",
         "cmsIPNamePrefix": "-cms",
         "lmsIPNamePrefix": "-lms",
         "loadBalancerLMSIpName": "[concat(parameters('networkSettings').loadbalancerSettings.loadBalancerName, variables('cmsIPNamePrefix'), parameters('networkSettings').publicIPAddressNameSuffix)]",
@@ -369,7 +369,7 @@
         },
         {
             "type": "Microsoft.Insights/autoscaleSettings",
-            "name": "[concat(parameters('networkSettings').clusterName, parameters('networkSettings').loadbalancerSettings.vmssAutoscaleSettingNameSuffix)]",
+            "name": "[concat(parameters('networkSettings').clusterName, parameters('networkSettings').clusterVirtualMachineScaleSetSettingsName)]",
             "apiVersion": "[parameters('apiSettings').insightsApiVersion]",
             "location": "[resourceGroup().location]",
             "dependsOn": [
