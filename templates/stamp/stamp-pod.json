@@ -132,7 +132,7 @@
             "type": "string",
             "defaultValue": "staging",
             "allowedValues": [
-                "production",
+                "prod",
                 "staging"
             ],
             "metadata": {
