@@ -107,10 +107,6 @@ sync_repo() {
 ##
 get_bootstrap_status()
 {
-    # Source the settings
-    source $OXA_ENV_FILE
-    setup_overrides 1
-
     # this determination is role-dependent
     #TODO: setup a more elaborate crumb system
 
@@ -138,6 +134,11 @@ get_bootstrap_status()
             PRESENCE=3
         elif [ "$EDX_ROLE" == "vmss" ];
         then
+            # Source the settings
+            # Moving source here reduces the noise in the logs
+            source $OXA_ENV_FILE
+            setup_overrides 1
+
             # The crumb doesn't exist:: we need to execute boostrap
             # For VMSS role, we have to wait on the backend Mysql bootstrap operation
             # The Mysql master is known. This is the one we really care about. If it is up, we will call backend bootstrap done
