@@ -376,7 +376,7 @@
                 "[parameters('networkSettings').clusterVirtualMachineScaleSetName]"
             ],
             "properties": {
-                "name": "[concat(parameters('networkSettings').clusterName, parameters('networkSettings').loadbalancerSettings.vmssAutoscaleSettingNameSuffix)]",
+                "name": "[concat(parameters('networkSettings').clusterName, parameters('networkSettings').vmssAutoScaleSettingsName)]",
                 "targetResourceUri": "[concat('/subscriptions/',subscription().subscriptionId, '/resourceGroups/',  resourceGroup().name, '/providers/Microsoft.Compute/virtualMachineScaleSets/', parameters('networkSettings').clusterVirtualMachineScaleSetName)]",
                 "enabled": "[parameters('networkSettings').loadbalancerSettings.AutoscaleEnabled]",
                 "profiles": [
