@@ -95,8 +95,9 @@ configure_datadisks()
     # installation cannot be made silent using the techniques that keep the
     # mdadm installation quiet: a) -y AND b) DEBIAN_FRONTEND=noninteractive.
     # Therefore, we'll install postfix early with the "No configuration" option.
-    echo "postfix postfix/main_mailer_type select No configuration" | sudo debconf-set-selections
-    sudo apt-get install -y postfix
+    echo "postfix postfix/main_mailer_type select No configuration" | debconf-set-selections
+    log "installing postfix..." 
+    apt-get install -y -qq postfix
 
     bash ./vm-disk-utils-0.1.sh -b $DATA_DISKS -s
 }
@@ -113,7 +114,7 @@ install-git()
         log "Installing Git Client"
 
         log "Updating Repository"
-        apt-get update
+        apt-get -y -qq update
 
         apt-get install -y git
         exit_on_error "Failed to install the GIT clienton ${HOSTNAME} !" $ERROR_GITINSTALL_FAILED
@@ -147,7 +148,7 @@ install-mongodb-shell()
         fi
 
         log "Updating Repository"
-        apt-get update
+        apt-get -y -qq update
 
         log "Installing Mongo Shell"
         apt-get install -y mongodb-org-shell
@@ -167,7 +168,7 @@ install-mysql-client()
         log "Mysql Client is already installed"
     else
         log "Updating Repository"
-        apt-get update
+        apt-get -y -qq update
 
         log "Installing Mysql Client"
         apt-get install -y mysql-client-core*

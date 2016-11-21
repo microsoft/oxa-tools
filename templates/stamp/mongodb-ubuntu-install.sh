@@ -149,6 +149,7 @@ install_mongodb()
     fi
 
     # Install updates
+    log "Updating Repository"
     apt-get -y -qq update
 
     # Remove any previously created configuration file to avoid a prompt

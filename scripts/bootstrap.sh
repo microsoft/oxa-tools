@@ -177,7 +177,9 @@ setup_overrides()
 ##
 setup() 
 {
-    apt-get -y update
+    log "Updating Repository"
+    apt-get -y -qq update
+
     apt-get -y install git
   
     # sync the private repository
@@ -250,6 +252,15 @@ update_stamp_jb() {
   #$ANSIBLE_PLAYBOOK -i ${CLUSTERNAME}mongo1, $OXA_SSH_ARGS -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mongo"
   #exit_on_error "Execution of OXA Mongo playbook failed"
   #exit_on_error "Execution of OXA MySQL playbook failed"
+}
+
+install_azure_cli_jb() {
+  log "Updating Repository"
+  apt-get -y -qq update
+
+  log "Installing nodejs-legacy, npm, and azure cli"
+  apt-get install -y -qq nodejs-legacy npm
+  npm install -g azure-cli
 }
 
 update_stamp_vmss() {
@@ -389,6 +400,8 @@ cd $CONFIGURATION_PATH/playbooks
 case "$EDX_ROLE" in
   jb)
     update_stamp_jb
+    install_azure_cli_jb
+    #todo: recurring_db_backup_jb
     ;;
   vmss)
     update_stamp_vmss

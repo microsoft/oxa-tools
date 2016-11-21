@@ -1,0 +1,14 @@
+#fyi: this first commit is an unmodified fork from rex pilot.
+
+#todo: fix below and add mongo
+
+- hosts: mysql-server
+  vars:
+    mysql_root_password: 'R3x0p3n3dx!'
+  tasks:
+  - name: Remove a cron job for mysql-backup
+    sudo: yes
+    cron: name="Remove MySQL backup job" cron_file=rex_mysql_backup state=absent
+  - name: Schedule MySQL backups
+    sudo: yes
+    cron: name="Create MySQL backup job" user="openedxuser" cron_file=rex_mysql_backup minute=59 hour=7 job="/tmp/transfer/backup/rex_mysql_db_backup.sh"

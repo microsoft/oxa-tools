@@ -160,8 +160,8 @@ install_mysql_server()
 
     package=$MYSQL_SERVER_PACKAGE_NAME
 
-    # todo: another conditional is required for sql5.6 on ubuntu16. 
-    if (( $(echo "$OS_VER < 16" |bc -l) )) && [ $mysqlServerPackageVersion == "5.7" ]
+    # todo: another conditional is required for sql5.6 on ubuntu16.
+    if (( $(echo "$OS_VER < 16" |bc -l) )) && [ $PACKAGE_VERSION == "5.7" ]
     then
         # Allow sql 5.7 on ubuntu 14 and below.
         package=${PACKAGE_NAME}
@@ -173,6 +173,7 @@ install_mysql_server()
         rm $debFileName*
     fi
 
+    log "Updating Repository"
     apt-get -y -qq update
 
     echo $package mysql-server/root_password password $MYSQL_ADMIN_PASSWORD | debconf-set-selections
