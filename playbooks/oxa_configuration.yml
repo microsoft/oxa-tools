@@ -6,6 +6,7 @@
     roles_path: "{{ oxa_tools_path }}/playbooks/roles"
     edxapp_files_path: "{{ roles_path }}/edxapp/files"
     mysql_files_path: "{{ roles_path }}/mysql/files"
+    jumpbox_files_path: "{{ roles_path }}/jumpbox/files"
   sudo: True
   gather_facts: True
   roles:
