@@ -212,9 +212,11 @@ setup()
 
     # in order to support retries, we need to clean the temporary folder where the ansible bootstrap script clones the repository
     TEMP_CONFIGURATION_PATH=/tmp/configuration
-    if [[ -f $TEMP_CONFIGURATION_PATH ]]; then
+    if [[ -d $TEMP_CONFIGURATION_PATH ]]; then
         echo "Removing the temporary configuration path at $TEMP_CONFIGURATION_PATH"
         rm -rf $TEMP_CONFIGURATION_PATH
+    else
+        echo "Skipping clean up of $TEMP_CONFIGURATION_PATH"
     fi
 
     bash $ANSIBLE_BOOTSTRAP_SCRIPT
