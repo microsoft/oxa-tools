@@ -210,6 +210,13 @@ setup()
     cd $CONFIGURATION_PATH
     ANSIBLE_BOOTSTRAP_SCRIPT=util/install/ansible-bootstrap.sh
 
+    # in order to support retries, we need to clean the temporary folder where the ansible bootstrap script clones the repository
+    TEMP_CONFIGURATION_PATH=/tmp/configuration
+    if [[ -f $TEMP_CONFIGURATION_PATH ]]; then
+        echo "Removing the temporary configuration path at $TEMP_CONFIGURATION_PATH"
+        rm -rf $TEMP_CONFIGURATION_PATH
+    fi
+
     bash $ANSIBLE_BOOTSTRAP_SCRIPT
     exit_on_error "Failed executing $ANSIBLE_BOOTSTRAP_SCRIPT"
 
