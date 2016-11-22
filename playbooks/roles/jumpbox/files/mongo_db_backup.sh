@@ -1,4 +1,4 @@
-#fyi: this is an unmodified fork from rex pilot.
+#fyi: this is a modified fork from rex pilot.
 
 #todo: fix below
 
@@ -14,6 +14,45 @@ export container_name=mongobackup
 export mongo_backup="mongobackup_$NOW"
 export blob_name="mongobackup_$NOW.tar.gz"
 mongo_admin_pwd="R3x0p3n3dx!"
+
+help()
+{
+    echo "This script will backup the mongo database"
+    echo "Options:"
+    echo "        --environment-file    Path to settings that are enviornment-specific"
+}
+
+# Parse script parameters
+parse_args()
+{
+    while [[ "$#" -gt 0 ]]
+        do
+
+         # Log input parameters to facilitate troubleshooting
+        echo "Option $1 set with value $2"
+
+        case "$1" in
+            -e|--environment-file)
+                OS_ADMIN_USERNAME=$2
+                shift # past argument
+                ;;
+            -h|--help)  # Helpful hints
+                help
+                exit 2
+                ;;
+            *) # unknown option
+                echo "Option -${BOLD}$2${NORM} not allowed."
+                help
+                exit 2
+                ;;
+        esac
+
+        shift # past argument or value
+    done
+}
+
+# parse script arguments
+parse_args $@
 
 cd $(dirname ${BASH_SOURCE[0]})
 

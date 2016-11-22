@@ -1,4 +1,4 @@
-#fyi: this is an unmodified fork from rex pilot.
+#fyi: this is a modified fork from rex pilot.
 
 #todo: fix below
 
@@ -13,7 +13,46 @@ export AZURE_STORAGE_ACCOUNT=$StorageAccountName
 export AZURE_STORAGE_ACCESS_KEY=$StorageAccountKey1
 export container_name=mysqlbackup
 export blob_name="mysqlbackup_$NOW.tar.gz"
-export destination_folder=/home/openedxuser
+export destination_folder=/home/lexoxaadmin #todo: provide this secret dynamically
+
+help()
+{
+    echo "This script will backup the mysql database"
+    echo "Options:"
+    echo "        --environment-file    Path to settings that are enviornment-specific"
+}
+
+# Parse script parameters
+parse_args()
+{
+    while [[ "$#" -gt 0 ]]
+        do
+
+         # Log input parameters to facilitate troubleshooting
+        echo "Option $1 set with value $2"
+
+        case "$1" in
+            -e|--environment-file)
+                OS_ADMIN_USERNAME=$2
+                shift # past argument
+                ;;
+            -h|--help)  # Helpful hints
+                help
+                exit 2
+                ;;
+            *) # unknown option
+                echo "Option -${BOLD}$2${NORM} not allowed."
+                help
+                exit 2
+                ;;
+        esac
+
+        shift # past argument or value
+    done
+}
+
+# parse script arguments
+parse_args $@
 
 cd $(dirname ${BASH_SOURCE[0]})
 

@@ -1,8 +1,7 @@
 ---
 #fyi: sh will run from jumpbox so we'll need:
-  #todo1: to source secrets in order to have a) db connection string, b) db credentials and c) azure storage secrets. This also means...
-    #todo2: we'll need to provide the env type to this yml and plumb it through (so it knows which "Secrets file" to source)
-  #todo3: to use azure cli to WRITE db to azure storage
+  #todo1: to source secrets in order to have a) db connection string, b) db credentials and c) azure storage secrets.
+  #todo2: to use azure cli to WRITE db to azure storage
 
 # MySQL #
 
@@ -20,10 +19,10 @@
   sudo: yes
   cron:
     name="Create MySQL backup job"
-    user="openedxuser" #todo: provide this secret dynamically
+    user="{{ os_admin_username }}"
     cron_file=mysql_backup
     minute=5 #todo: hour=23
-    job="{{ jumpbox_files_path }}/mysql_db_backup.sh"
+    job="{{ jumpbox_files_path }}/mysql_db_backup.sh --environment-file {{ env_file }}"
 
 # Print the shell tasks's stdout and stderr.
 - debug: var="bash_theme.stdout_lines + [ bash_theme.stderr ]"
@@ -44,10 +43,10 @@
   sudo: yes
   cron:
     name="Create Mongo backup job"
-    user="openedxuser" #todo: provide this secret dynamically
+    user="{{ os_admin_username }}"
     cron_file=mongo_backup
     minute=5 #todo: hour=23
-    job="{{ jumpbox_files_path }}/mongo_db_backup.sh"
+    job="{{ jumpbox_files_path }}/mongo_db_backup.sh --environment-file {{ env_file }}""
 
 # Print the shell tasks's stdout and stderr.
 - debug: var="bash_theme.stdout_lines + [ bash_theme.stderr ]"
