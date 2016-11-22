@@ -11,7 +11,22 @@ EDXAPP_TIME_ZONE: "America/Los_Angeles"
 # see: https://github.com/MSOpenTech/edx-documentation/blob/master/en_us/install_operations/source/configuration/enable_sso.rst
 #EDXAPP_ENABLE_THIRD_PARY_AUTH: true
 #EDXAPP_ENABLE_OAUTH2_PROVIDER: true
- 
+
+# Password Policy Configuration
+# AT least 8 characters. Must contain at least one lowercase, one uppercase and one symbol.
+EDXAPP_PASSWORD_MIN_LENGTH: 8 
+EDXAPP_PASSWORD_MAX_LENGTH: 75
+EDXAPP_PASSWORD_COMPLEXITY: 
+  UPPER: 1
+  LOWER: 1
+  PUNCTUATION: 1
+
+EDXAPP_ENFORCE_PASSWORD_POLICY: true
+
+# Adding Disclosure Notice to the marketing url link mapping
+EDXAPP_MKTG_URL_LINK_MAP:
+  DN: "dn"
+
 # Country made required field in registration.
 EDXAPP_REGISTRATION_EXTRA_FIELDS: 
   city: "hidden"
@@ -55,19 +70,29 @@ EDXAPP_FEATURES:
   ALLOW_HIDING_DISCUSSION_TAB: true
   CERTIFICATES_ENABLED: true
   CERTIFICATES_HTML_VIEW: true
+  ENABLE_GRADE_DOWNLOADS: true
 
+# storage uploads
+EDXAPP_DEFAULT_FILE_STORAGE: "storages.backends.azure_storage.AzureStorage"
+EDXAPP_AZURE_ACCOUNT_NAME: "%%AZURE_ACCOUNT_NAME%%"
+EDXAPP_AZURE_ACCOUNT_KEY: "%%AZURE_ACCOUNT_KEY%%"
+EDXAPP_AZURE_CONTAINER: "uploads"
+EDXAPP_GRADE_STORAGE_TYPE: "azure"
+EDXAPP_GRADE_STORAGE_CLASS: "openedx.core.storage.AzureStorageExtended"
+EDXAPP_GRADE_STORAGE_KWARGS:
+  container: "reports"
 
 # Configure email addresses
-EDXAPP_BUGS_EMAIL: "bugs@openedx.microsoft.com"
-EDXAPP_BULK_EMAIL_DEFAULT_FROM_EMAIL: "no-reply@openedx.microsoft.com"
-EDXAPP_CONTACT_EMAIL: "info@openedx.microsoft.com"
-EDXAPP_DEFAULT_FEEDBACK_EMAIL: "feedback@openedx.microsoft.com"
-EDXAPP_DEFAULT_FROM_EMAIL: "registration@openedx.microsoft.com"
-EDXAPP_PAYMENT_SUPPORT_EMAIL: "billing@openedx.microsoft.com"
-EDXAPP_PRESS_EMAIL: "press@openedx.microsoft.com"
+EDXAPP_BUGS_EMAIL: "microsoftlearning-bugs@microsoft.com"
+EDXAPP_BULK_EMAIL_DEFAULT_FROM_EMAIL: "microsoftlearning-noreply@microsoft.com"
+EDXAPP_CONTACT_EMAIL: "microsoftlearning-info@microsoft.com"
+EDXAPP_DEFAULT_FEEDBACK_EMAIL: "microsoftlearning-feedback@microsoft.com"
+EDXAPP_DEFAULT_FROM_EMAIL: "microsoftlearning-registration@microsoft.com"
+EDXAPP_PAYMENT_SUPPORT_EMAIL: "microsoftlearning-billing@microsoft.com"
+EDXAPP_PRESS_EMAIL: "microsoftlearning-press@microsoft.com"
 EDXAPP_DEFAULT_SERVER_EMAIL: "%%PLATFORM_EMAIL%%"
-EDXAPP_TECH_SUPPORT_EMAIL: "technical@openedx.microsoft.com"
-EDXAPP_UNIVERSITY_EMAIL: "university@openedx.microsoft.com"
+EDXAPP_TECH_SUPPORT_EMAIL: "microsoftlearning-technical@microsoft.com"
+EDXAPP_UNIVERSITY_EMAIL: "microsoftlearning-university@microsoft.com"
 
 EDXAPP_LTI_USER_EMAIL_DOMAIN: "lti.openedx.microsoft.com"
 
