@@ -369,14 +369,14 @@
         },
         {
             "type": "Microsoft.Insights/autoscaleSettings",
-            "name": "[concat(parameters('networkSettings').clusterName, parameters('networkSettings').clusterVirtualMachineScaleSetSettingsName)]",
+            "name": "[parameters('networkSettings').clusterVirtualMachineScaleSetSettingsName]",
             "apiVersion": "[parameters('apiSettings').insightsApiVersion]",
             "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[parameters('networkSettings').clusterVirtualMachineScaleSetName]"
             ],
             "properties": {
-                "name": "[concat(parameters('networkSettings').clusterName, parameters('networkSettings').vmssAutoScaleSettingsName)]",
+                "name": "[parameters('networkSettings').clusterVirtualMachineScaleSetSettingsName]",
                 "targetResourceUri": "[concat('/subscriptions/',subscription().subscriptionId, '/resourceGroups/',  resourceGroup().name, '/providers/Microsoft.Compute/virtualMachineScaleSets/', parameters('networkSettings').clusterVirtualMachineScaleSetName)]",
                 "enabled": "[parameters('networkSettings').loadbalancerSettings.AutoscaleEnabled]",
                 "profiles": [
