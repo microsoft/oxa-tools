@@ -255,7 +255,8 @@
             "apiVersion": "[parameters('apiSettings').computeApiVersion]",
             "location": "[resourceGroup().location]",
             "dependsOn": [
-                "storageLoop"
+                "storageLoop",
+                "[parameters('networkSettings').loadbalancerSettings.loadBalancerName]"
             ],
             "sku": {
                 "name": "[parameters('machineSettings').vmSize]",
