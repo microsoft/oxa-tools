@@ -11,6 +11,7 @@ CONTAINER_NAME=
 TIME_STAMPED=
 COMPRESSED_FILE=
 BACKUP_FILE=
+DESTINATION_FOLDER="/var/tmp"
 
 source_utilities_functions()
 {
@@ -124,4 +125,32 @@ source_env_values()
         #MONGO_REPLICASET_NAME
 
     fi
+}
+
+create_compressed_db_dump()
+{
+    pushd $DESTINATION_FOLDER
+
+    if [ "$DB_TYPE" == "mysql" ]
+    then
+        mysqldump -u $MYSQL_ADMIN -p$MYSQL_PASS -h $MYSQL_ADDRESS --all-databases --single-transaction > $BACKUP_FILE
+
+    elif [ "$DB_TYPE" == "mongo" ]
+        mongodump -u $MONGO_ADMIN -p$MONGO_PASS --host $MONGO_ADDRESS -o $BACKUP_FILE
+
+    then
+
+    tar -zcvf $COMPRESSED_FILE $BACKUP_FILE
+
+    popd
+}
+
+cleanup_local()
+{
+    pushd $DESTINATION_FOLDER
+
+    rm -f $COMPRESSED_FILE
+    rm -f $BACKUP_FILE
+
+    popd
 }

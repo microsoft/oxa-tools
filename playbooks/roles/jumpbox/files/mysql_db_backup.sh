@@ -25,13 +25,6 @@ source_shared_functions()
     source_utilities_functions
 }
 
-create_compressed_db_dump()
-{
-    #todo: use /var/tmp called destination_folder, remote, combine+conditional
-    mysqldump -u $MYSQL_ADMIN -p$MYSQL_PASS --all-databases --single-transaction > $BACKUP_FILE
-    tar -zcvf $COMPRESSED_FILE $BACKUP_FILE
-}
-
 source_shared_functions
 
 # Script self-idenfitication
@@ -46,7 +39,9 @@ parse_args $@
 
 source_env_values mysql
 
-#todo: grab db dump, compress, copy, cleanup
+create_compressed_db_dump mysql
+
+#todo: copy
 
 sc=$(azure storage container show $CONTAINER_NAME --json)
 if [[ -z $sc ]]; then
@@ -62,7 +57,6 @@ else
     echo "Upload blob file failed"   
 fi
 
-rm -f $COMPRESSED_FILE
-rm -f $BACKUP_FILE
+cleanup_local
 
 #todo: look at utilities, db installers, bootstrap for other helpful funcitons

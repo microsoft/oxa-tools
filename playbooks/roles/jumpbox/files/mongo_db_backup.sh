@@ -25,13 +25,6 @@ source_shared_functions()
     source_utilities_functions
 }
 
-create_compressed_db_dump()
-{
-    #todo: use /var/tmp called destination_folder, remote, combine+conditional
-    mongodump -u $MONGO_ADMIN -p$MONGO_PASS -o $BACKUP_FILE
-    tar -zcvf $COMPRESSED_FILE $BACKUP_FILE
-}
-
 source_shared_functions
 
 # Script self-idenfitication
@@ -46,7 +39,9 @@ parse_args $@
 
 source_env_values mongo
 
-#todo: grab db dump, compress, copy, cleanup
+create_compressed_db_dump mongo
+
+#todo: copy
 
 echo "Upload the backup file to azure blob storage"
 
@@ -63,7 +58,4 @@ else
     echo "Upload blob file failed"
 fi
 
-rm -f $COMPRESSED_FILE
-rm -r $BACKUP_FILE
-
-#todo: look at utilities, db installers, bootstrap for other helpful funcitons
+cleanup_local
