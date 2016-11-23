@@ -1,10 +1,12 @@
-#fyi: this is a modified fork from rex pilot.
-
-#todo: fix below
-
 #!/bin/bash
+
+# Copyright (c) Microsoft Corporation. All Rights Reserved.
+# Licensed under the MIT license. See LICENSE file on the project webpage for details.
+
 echo "mysql backup using mysqldump"
 source /tmp/transfer/backup/storage_keys.sh
+
+# General Variables
 root_password="R3x0p3n3dx!"
 NOW=$(date +"%m-%d-%Y-%H%M%S")
 export file_to_upload="mysqlbackup_$NOW.tar.gz"
@@ -51,6 +53,15 @@ parse_args()
     done
 }
 
+source_env_values()
+{
+    # populate the deployment environment
+    source $OXA_ENV_FILE
+
+    #todo:is this needed?
+    #export $(sed -e 's/#.*$//' $OXA_ENV_FILE | cut -d= -f1)
+}
+
 # parse script arguments
 parse_args $@
 
@@ -68,9 +79,9 @@ fi
 echo "Uploading the backup file..."
 res=$(azure storage blob upload $file_to_upload $container_name $blob_name --json | jq '.blob')
 if [ "$res"!="" ]; then
-   echo "$res blob file uploaded successfully"
+    echo "$res blob file uploaded successfully"
 else
-	echo "Upload blob file failed"   
+    echo "Upload blob file failed"   
 fi
 
 rm -f $file_to_upload

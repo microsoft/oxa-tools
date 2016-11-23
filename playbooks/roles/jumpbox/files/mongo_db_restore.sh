@@ -3,7 +3,7 @@
 #todo: fix below
 
 #!/bin/bash
-clear
+
 echo " Mongo DB Restore using mongorestore
        USAGE: ./rex_mongo_db_restore.sh [password] [tar_gz_blobName] "
 
@@ -17,17 +17,17 @@ mongo_admin_pwd=""
 echo $restore_dir
 if [ ! -z "$1" ]
 then
-	mongo_admin_pwd=$1
+    mongo_admin_pwd=$1
 fi
 
 if [ -z "$2" ]
 then
     files=$(azure storage blob list $container_name --json | jq '.[] .name')
-	if [ -z "$files"]
-	then 
-		echo "There is no backup file avaialable"
-		exit 0
-	fi
+    if [ -z "$files"]
+    then 
+        echo "There is no backup file avaialable"
+        exit 0
+    fi
     arr=$(echo $files | tr " " "\n")
     i=1
     for x in $arr

@@ -42,7 +42,7 @@ help()
     echo "        -a (arbiter indicator)"    
     echo "        -l (last member indicator)"    
     echo "        -o (IP Address Offset)"    
-	echo "        -Z (Debug Mode)"    
+    echo "        -Z (Debug Mode)"    
 }
 
 # source our utilities for logging and other base functions

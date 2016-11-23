@@ -9,6 +9,8 @@ ERROR_CRONTAB_FAILED=4101
 ERROR_GITINSTALL_FAILED=5101
 ERROR_MONGOCLIENTINSTALL_FAILED=5201
 ERROR_MYSQLCLIENTINSTALL_FAILED=5301
+ERROR_NODEINSTALL_FAILED=6101
+ERROR_AZURECLI_FAILED=6201
 
 #############################################################################
 # Log a message
@@ -176,6 +178,28 @@ install-mysql-client()
     fi
 
     log "Mysql client installed"
+}
+
+#############################################################################
+# Install Azure CLI
+#############################################################################
+
+install_azure_cli()
+{
+    if type azure >/dev/null 2>&1; then
+        log "Azure CLI is already installed"
+    else
+        log "Updating Repository"
+        apt-get -y -qq update
+
+        log "Installing nodejs-legacy, npm, and azure cli"
+        apt-get install -y nodejs-legacy npm
+        exit_on_error "Failed to install nodejs-legacy and/or npm on ${HOSTNAME} !" $ERROR_NODEINSTALL_FAILED
+        npm install -g azure-cli
+        exit_on_error "Failed to install azure cli on ${HOSTNAME} !" $ERROR_AZURECLI_FAILED
+    fi
+
+    log "Azure CLI installed"
 }
 
 #############################################################################

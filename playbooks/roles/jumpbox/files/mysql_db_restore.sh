@@ -3,7 +3,7 @@
 #todo: fix below
 
 #!/bin/bash
-clear
+
 echo " Restore MySQL databases from backup file
        USAGE: ./rex_mysql_db_restore.sh [password] [tar_gz_blobName] "
 
@@ -19,18 +19,18 @@ echo $restore_dir
 
 if [ ! -z "$1" ]
 then
-	mysql_root_pwd=$1
+    mysql_root_pwd=$1
 fi
 
 if [ -z "$2" ]
 then
     files=$(azure storage blob list $container_name --json | jq '.[] .name')
-	if [ -z "$files"]
-	then 
-		echo "There is no backup file avaialable"
-		exit 0
-	fi
-	
+    if [ -z "$files"]
+    then 
+        echo "There is no backup file avaialable"
+        exit 0
+    fi
+    
     arr=$(echo $files | tr " " "\n")
     i=1
     for x in $arr
@@ -62,9 +62,9 @@ tar xzf $restore_dir/$blobfile -C $restore_dir/
 echo "Restoring mysql database.."
 if [ -z "$mysql_root_pwd" ]
 then
-	mysql -u root < $restore_dir/$backup_filename
+    mysql -u root < $restore_dir/$backup_filename
 else
-	mysql -u root -p$mysql_root_pwd < $restore_dir/$backup_filename
+    mysql -u root -p$mysql_root_pwd < $restore_dir/$backup_filename
 fi
 
 read -r -p "You want to delete the backup directory? [Y/n]" response
