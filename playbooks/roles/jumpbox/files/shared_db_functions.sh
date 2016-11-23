@@ -3,8 +3,14 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
-# General Variables
+# General Variables (common to both db backup scripts)
 ENV_FILE=
+AZURE_STORAGE_ACCOUNT=
+AZURE_STORAGE_ACCESS_KEY=
+CONTAINER_NAME=
+TIME_STAMPED=
+COMPRESSED_FILE=
+BACKUP_FILE=
 
 source_utilities_functions()
 {
@@ -63,6 +69,8 @@ parse_args()
 
 source_env_values()
 {
+    DB_TYPE=$1 #mongo|mysql
+
     # populate the environment variables
     source $ENV_FILE
     if [ -f $ENV_FILE ];
@@ -75,6 +83,45 @@ source_env_values()
         exit 1
     fi
 
-    #todo: these variable aren't currently available outside of this scope function
-    #       we'll therefore need to assign them to General variables
+    # These variable aren't currently available outside of this scope.
+    # We therefore assign them to General Variables.
+
+    AZURE_STORAGE_ACCOUNT=$AZURE_ACCOUNT_NAME
+    AZURE_STORAGE_ACCESS_KEY=$AZURE_ACCOUNT_KEY
+
+    CONTAINER_NAME="${DB_TYPE}Backup"
+    TIME_STAMPED=$CONTAINER_NAME$(date +"%Y-%m-%d-%H%M%S")
+    COMPRESSED_FILE="$TIME_STAMPED.tar.gz"
+
+    if [ "$DB_TYPE" == "mysql" ]
+    then
+        BACKUP_FILE="$TIME_STAMPED.sql"
+
+        # Mysql Credentials
+        MYSQL_ADMIN=$MYSQL_ADMIN_USER
+        MYSQL_PASS=$MYSQL_ADMIN_PASSWORD
+
+        #todo: or do we want these instead?
+        # App and Replication accounts
+        # MYSQL_ADMIN=$MYSQL_USER
+        # MYSQL_PASS=$MYSQL_PASSWORD
+
+        # Mysql Installer Configurations
+        MYSQL_REPL_USER=lexoxamysqlrepl
+        MYSQL_REPL_USER_PASSWORD=1ezP@55w0rd
+
+    elif [ "$DB_TYPE" == "mongo" ]
+    then
+        BACKUP_FILE="$TIME_STAMPED"
+
+        # Mongo Credentials
+        MONGO_ADMIN=$MONGO_USER
+        MONGO_PASS=$MONGO_PASSWORD
+
+        #todo: do need these as weel?
+        # Mongo Replicaset Credentials
+        #MONGO_REPLICASET_KEY
+        #MONGO_REPLICASET_NAME
+
+    fi
 }

@@ -3,17 +3,10 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
-#todo:
 # General Variables
-NOW=$(date +"%Y-%m-%d-%H%M%S")
-root_password="R3x0p3n3dx!"
-export file_to_upload="mysqlbackup_$NOW.tar.gz"
-export backup_filename="mysqlbackup_$NOW.sql"
-export AZURE_STORAGE_ACCOUNT=$StorageAccountName
-export AZURE_STORAGE_ACCESS_KEY=$StorageAccountKey1
-export container_name=mysqlbackup
-export blob_name="mysqlbackup_$NOW.tar.gz"
-export destination_folder=/home/lexoxaadmin #todo: provide this secret dynamically
+MYSQL_ADDRESS="10.0.0.17"
+MYSQL_ADMIN=
+MYSQL_PASS=
 
 source_shared_functions()
 {
@@ -32,6 +25,13 @@ source_shared_functions()
     source_utilities_functions
 }
 
+create_compressed_db_dump()
+{
+    #todo: use /var/tmp called destination_folder, remote, combine+conditional
+    mysqldump -u $MYSQL_ADMIN -p$MYSQL_PASS --all-databases --single-transaction > $BACKUP_FILE
+    tar -zcvf $COMPRESSED_FILE $BACKUP_FILE
+}
+
 source_shared_functions
 
 # Script self-idenfitication
@@ -44,30 +44,25 @@ exit_if_limited_user
 # parse script arguments
 parse_args $@
 
-source_env_values
+source_env_values mysql
 
 #todo: grab db dump, compress, copy, cleanup
 
-cd $(dirname ${BASH_SOURCE[0]})
-
-mysqldump -u root -p$root_password --all-databases --single-transaction > $backup_filename
-tar -czf $file_to_upload $backup_filename
-
-sc=$(azure storage container show $container_name --json)
+sc=$(azure storage container show $CONTAINER_NAME --json)
 if [[ -z $sc ]]; then
-    echo "Creating the container..." + $container_name
-    azure storage container create $container_name
+    echo "Creating the container..." + $CONTAINER_NAME
+    azure storage container create $CONTAINER_NAME
 fi
 
 echo "Uploading the backup file..."
-res=$(azure storage blob upload $file_to_upload $container_name $blob_name --json | jq '.blob')
+res=$(azure storage blob upload $COMPRESSED_FILE $CONTAINER_NAME $COMPRESSED_FILE --json | jq '.blob')
 if [ "$res"!="" ]; then
     echo "$res blob file uploaded successfully"
 else
     echo "Upload blob file failed"   
 fi
 
-rm -f $file_to_upload
-rm -f $backup_filename
+rm -f $COMPRESSED_FILE
+rm -f $BACKUP_FILE
 
 #todo: look at utilities, db installers, bootstrap for other helpful funcitons
