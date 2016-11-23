@@ -276,7 +276,7 @@ get_machine_role()
         MACHINE_ROLE="mongodb"
     elif [[ $HOSTNAME =~ ^(.*)mysql[0-3]{1}$ ]]; then
         MACHINE_ROLE="mysql"
-    elif [[ $HOSTNAME =~ ^(.*)vmss[0-9]+$ ]]; then
+    elif [[ $HOSTNAME =~ ^(.*)vmss(.*)$ ]]; then
         MACHINE_ROLE="vmss"
     else
         #log "Could not determine the role of the '${HOSTNAME}'. Defaulting to 'unknown' role"
