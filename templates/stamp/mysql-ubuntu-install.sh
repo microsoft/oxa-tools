@@ -47,13 +47,7 @@ print_script_header
 
 log "Begin execution of Mysql installation script extension on ${HOSTNAME}"
 
-if [ "${UID}" -ne 0 ];
-then
-    log "Script executed without root permissions"
-    echo "You must be root to run this program." >&2
-    exit 3
-fi
-
+exit_if_limited_user
 
 # Parse script parameters
 while getopts :n:m:v:k:r:u:p:h optname; do

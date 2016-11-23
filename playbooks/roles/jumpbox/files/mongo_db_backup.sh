@@ -3,72 +3,50 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
-echo "mongodb backup using mongodump"
-source /tmp/transfer/backup/storage_keys.sh
-
+#todo:
 # General Variables
-NOW=$(date +"%m-%d-%Y-%H%M%S")
+NOW=$(date +"%Y-%m-%d-%H%M%S")
 export file_to_upload="mongobackup_$NOW.tar.gz"
 export AZURE_STORAGE_ACCOUNT=$StorageAccountName
 export AZURE_STORAGE_ACCESS_KEY=$StorageAccountKey1
 export container_name=mongobackup
 export mongo_backup="mongobackup_$NOW"
 export blob_name="mongobackup_$NOW.tar.gz"
+
 mongo_admin_pwd="R3x0p3n3dx!"
 
 source_shared_functions()
 {
-    UTILITIES_PATH=templates/stamp/utilities.sh
-    if [ -f $UTILITIES_PATH ]; then
-        # source our utilities for logging, error reporting, and other base functions
-        source $UTILITIES_PATH
-    #todo:exit on failure
+    CURRENT_SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+    SHARED_FUNCTIONS_FILE=$CURRENT_SCRIPT_PATH/shared_db_functions.sh
+    if [ -f $SHARED_FUNCTIONS_FILE ];
+    then
+        # source shared functions both backup scripts use.
+        source $SHARED_FUNCTIONS_FILE
+    else
+        echo "Cannot find shared functions file at $SHARED_FUNCTIONS_FILE"
+        echo "exiting script"
+        exit 1
     fi
- 
-    CURRENT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-    #todo:check for 
+
+    source_utilities_functions
 }
 
-#todo: ensure elevation.
+source_shared_functions
 
-help()
-{
-    echo "This script will backup the mongo database"
-    echo "Options:"
-    echo "        --environment-file    Path to settings that are enviornment-specific"
-}
+# Script self-idenfitication
+print_script_header
 
-# Parse script parameters
-parse_args()
-{
-    while [[ "$#" -gt 0 ]]
-        do
+log "Begin execution of Mongo backup script using mongodump"
 
-         # Log input parameters to facilitate troubleshooting
-        echo "Option $1 set with value $2"
-
-        case "$1" in
-            -e|--environment-file)
-                OS_ADMIN_USERNAME=$2
-                shift # past argument
-                ;;
-            -h|--help)  # Helpful hints
-                help
-                exit 2
-                ;;
-            *) # unknown option
-                echo "Option -${BOLD}$2${NORM} not allowed."
-                help
-                exit 2
-                ;;
-        esac
-
-        shift # past argument or value
-    done
-}
+exit_if_limited_user
 
 # parse script arguments
 parse_args $@
+
+source_env_values
+
+#todo: grab db dump, compress, copy, cleanup
 
 cd $(dirname ${BASH_SOURCE[0]})
 
@@ -92,3 +70,5 @@ fi
 
 rm -f $file_to_upload
 rm -r $mongo_backup
+
+#todo: look at utilities, db installers, bootstrap for other helpful funcitons

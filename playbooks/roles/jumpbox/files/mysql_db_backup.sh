@@ -3,12 +3,10 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
-echo "mysql backup using mysqldump"
-source /tmp/transfer/backup/storage_keys.sh
-
+#todo:
 # General Variables
+NOW=$(date +"%Y-%m-%d-%H%M%S")
 root_password="R3x0p3n3dx!"
-NOW=$(date +"%m-%d-%Y-%H%M%S")
 export file_to_upload="mysqlbackup_$NOW.tar.gz"
 export backup_filename="mysqlbackup_$NOW.sql"
 export AZURE_STORAGE_ACCOUNT=$StorageAccountName
@@ -17,53 +15,38 @@ export container_name=mysqlbackup
 export blob_name="mysqlbackup_$NOW.tar.gz"
 export destination_folder=/home/lexoxaadmin #todo: provide this secret dynamically
 
-help()
+source_shared_functions()
 {
-    echo "This script will backup the mysql database"
-    echo "Options:"
-    echo "        --environment-file    Path to settings that are enviornment-specific"
+    CURRENT_SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+    SHARED_FUNCTIONS_FILE=$CURRENT_SCRIPT_PATH/shared_db_functions.sh
+    if [ -f $SHARED_FUNCTIONS_FILE ];
+    then
+        # source shared functions both backup scripts use.
+        source $SHARED_FUNCTIONS_FILE
+    else
+        echo "Cannot find shared functions file at $SHARED_FUNCTIONS_FILE"
+        echo "exiting script"
+        exit 1
+    fi
+
+    source_utilities_functions
 }
 
-# Parse script parameters
-parse_args()
-{
-    while [[ "$#" -gt 0 ]]
-        do
+source_shared_functions
 
-         # Log input parameters to facilitate troubleshooting
-        echo "Option $1 set with value $2"
+# Script self-idenfitication
+print_script_header
 
-        case "$1" in
-            -e|--environment-file)
-                OS_ADMIN_USERNAME=$2
-                shift # past argument
-                ;;
-            -h|--help)  # Helpful hints
-                help
-                exit 2
-                ;;
-            *) # unknown option
-                echo "Option -${BOLD}$2${NORM} not allowed."
-                help
-                exit 2
-                ;;
-        esac
+log "Begin execution of MySql backup script using mysqldump"
 
-        shift # past argument or value
-    done
-}
-
-source_env_values()
-{
-    # populate the deployment environment
-    source $OXA_ENV_FILE
-
-    #todo:is this needed?
-    #export $(sed -e 's/#.*$//' $OXA_ENV_FILE | cut -d= -f1)
-}
+exit_if_limited_user
 
 # parse script arguments
 parse_args $@
+
+source_env_values
+
+#todo: grab db dump, compress, copy, cleanup
 
 cd $(dirname ${BASH_SOURCE[0]})
 
@@ -86,3 +69,5 @@ fi
 
 rm -f $file_to_upload
 rm -f $backup_filename
+
+#todo: look at utilities, db installers, bootstrap for other helpful funcitons

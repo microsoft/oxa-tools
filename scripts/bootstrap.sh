@@ -330,7 +330,6 @@ CONFIGURATION_PATH=$OXA_PATH/configuration
 OXA_ENV_FILE=$OXA_TOOLS_CONFIG_PATH/env/$DEPLOYMENT_ENV/$DEPLOYMENT_ENV.sh
 OXA_PLAYBOOK_CONFIG=$OXA_PATH/oxa.yml
 
-
 ##
 ## CRON CheckPoint
 ## We now have support for cron execution at x interval
