@@ -16,5 +16,6 @@ sudo /edx/bin/supervisorctl restart edxapp:
 # Compile LMS assets and then restart the services so that changes take effect.
 # We do the same operation twice here since mostly it doesnot work in the first run. This is a workaround.
 sudo su edxapp -s /bin/bash -c "source /edx/app/edxapp/edxapp_env;cd /edx/app/edxapp/edx-platform/;paver update_assets lms --settings aws"
+sudo su edxapp -s /bin/bash -c "cp /edx/app/edxapp/themes/default/static/images/*.png /edx/var/edxapp/staticfiles/images/"
 sudo /edx/bin/supervisorctl restart edxapp:
 
