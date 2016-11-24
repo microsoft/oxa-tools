@@ -3,10 +3,11 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
-# General Variables (common to both db backup scripts)
+# General Variables (common to both db backup and todo:restore scripts)
 ENV_FILE=
 AZURE_STORAGE_ACCOUNT=
 AZURE_STORAGE_ACCESS_KEY=
+#todo: should we set and export this one too? AZURE_STORAGE_CONNECTION_STRING=
 CONTAINER_NAME=
 TIME_STAMPED=
 COMPRESSED_FILE=
@@ -17,9 +18,9 @@ source_utilities_functions()
 {
     # Working directory should be oxa-tools repo root.
     UTILITIES_FILE=templates/stamp/utilities.sh
-    if [ -f $UTILITIES_FILE ];
+    if [ -f $UTILITIES_FILE ]
     then
-        # source our utilities for logging, error reporting, and other base functions
+        # source our utilities for logging and other base functions
         source $UTILITIES_FILE
     else
         echo "Cannot find common utilities file at $UTILITIES_FILE"
@@ -27,7 +28,7 @@ source_utilities_functions()
         exit 1
     fi
 
-    log "Sourced functions successfully imported."
+    log "Common utility functions successfully imported."
 }
 
 help()
@@ -74,21 +75,23 @@ source_env_values()
 
     # populate the environment variables
     source $ENV_FILE
-    if [ -f $ENV_FILE ];
+    if [ -f $ENV_FILE ]
     then
         # source environment variables.
         source $ENV_FILE
+        log "Successfully sourced environment-specific settings"
     else
-        echo "Cannot find environment variables file at $ENV_FILE"
-        echo "exiting script"
+        log "Cannot find environment settings file at $ENV_FILE"
+        log "exiting script"
         exit 1
     fi
 
     # These variable aren't currently available outside of this scope.
-    # We therefore assign them to General Variables.
+    # We therefore assign them to General Variables at a broader scope.
 
-    AZURE_STORAGE_ACCOUNT=$AZURE_ACCOUNT_NAME
-    AZURE_STORAGE_ACCESS_KEY=$AZURE_ACCOUNT_KEY
+    # Exporting for Azure CLI
+    export AZURE_STORAGE_ACCOUNT=$AZURE_ACCOUNT_NAME
+    export AZURE_STORAGE_ACCESS_KEY=$AZURE_ACCOUNT_KEY
 
     CONTAINER_NAME="${DB_TYPE}Backup"
     TIME_STAMPED=$CONTAINER_NAME$(date +"%Y-%m-%d-%H%M%S")
@@ -107,9 +110,10 @@ source_env_values()
         # MYSQL_ADMIN=$MYSQL_USER
         # MYSQL_PASS=$MYSQL_PASSWORD
 
+        #todo: or do we want these instead?
         # Mysql Installer Configurations
-        MYSQL_REPL_USER=lexoxamysqlrepl
-        MYSQL_REPL_USER_PASSWORD=1ezP@55w0rd
+        # MYSQL_ADMIN=$MYSQL_REPL_USER
+        # MYSQL_PASS=$MYSQL_REPL_USER_PASSWORD
 
     elif [ "$DB_TYPE" == "mongo" ]
     then
@@ -129,26 +133,56 @@ source_env_values()
 
 create_compressed_db_dump()
 {
+    DB_TYPE=$1 #mongo|mysql
+
     pushd $DESTINATION_FOLDER
 
+    log "Copying entire $DB_TYPE database to local file system"
     if [ "$DB_TYPE" == "mysql" ]
     then
         mysqldump -u $MYSQL_ADMIN -p$MYSQL_PASS -h $MYSQL_ADDRESS --all-databases --single-transaction > $BACKUP_FILE
 
     elif [ "$DB_TYPE" == "mongo" ]
+    then
         mongodump -u $MONGO_ADMIN -p$MONGO_PASS --host $MONGO_ADDRESS -o $BACKUP_FILE
 
-    then
+    fi
 
+    log "Compressing entire $DB_TYPE database"
     tar -zcvf $COMPRESSED_FILE $BACKUP_FILE
 
     popd
 }
 
+copy_db_to_azure_storage()
+{
+    DB_TYPE=$1 #mongo|mysql
+
+    log "Upload the backup $DB_TYPE file to azure blob storage"
+
+    # AZURE_STORAGE_ACCOUNT and AZURE_STORAGE_ACCESS_KEY are already exported for azure cli's use.
+
+    sc=$(azure storage container show $CONTAINER_NAME --json)
+    if [[ -z $sc ]]; then
+        log "Creating the container... $CONTAINER_NAME"
+        azure storage container create $CONTAINER_NAME
+    fi
+
+    RESULT=$(azure storage blob upload $COMPRESSED_FILE $CONTAINER_NAME $COMPRESSED_FILE --json | jq '.blob')
+    if [ "$RESULT"!="" ]; then
+        echo "$RESULT blob file uploaded successfully"
+    else
+        echo "Upload blob file failed"
+    fi
+}
+
 cleanup_local()
 {
+    DB_TYPE=$1 #mongo|mysql
+
     pushd $DESTINATION_FOLDER
 
+    log "Deleting local copies of $DB_TYPE database"
     rm -f $COMPRESSED_FILE
     rm -f $BACKUP_FILE
 

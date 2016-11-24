@@ -3,7 +3,7 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
-# General Variables
+# General Variables (mysql)
 MYSQL_ADDRESS="10.0.0.17"
 MYSQL_ADMIN=
 MYSQL_PASS=
@@ -12,7 +12,7 @@ source_shared_functions()
 {
     CURRENT_SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
     SHARED_FUNCTIONS_FILE=$CURRENT_SCRIPT_PATH/shared_db_functions.sh
-    if [ -f $SHARED_FUNCTIONS_FILE ];
+    if [ -f $SHARED_FUNCTIONS_FILE ]
     then
         # source shared functions both backup scripts use.
         source $SHARED_FUNCTIONS_FILE
@@ -41,22 +41,6 @@ source_env_values mysql
 
 create_compressed_db_dump mysql
 
-#todo: copy
+copy_db_to_azure_storage mysql
 
-sc=$(azure storage container show $CONTAINER_NAME --json)
-if [[ -z $sc ]]; then
-    echo "Creating the container..." + $CONTAINER_NAME
-    azure storage container create $CONTAINER_NAME
-fi
-
-echo "Uploading the backup file..."
-res=$(azure storage blob upload $COMPRESSED_FILE $CONTAINER_NAME $COMPRESSED_FILE --json | jq '.blob')
-if [ "$res"!="" ]; then
-    echo "$res blob file uploaded successfully"
-else
-    echo "Upload blob file failed"   
-fi
-
-cleanup_local
-
-#todo: look at utilities, db installers, bootstrap for other helpful funcitons
+cleanup_local mysql
