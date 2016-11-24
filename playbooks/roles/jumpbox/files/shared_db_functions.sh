@@ -59,7 +59,7 @@ parse_args()
                 exit 2
                 ;;
             *) # unknown option
-                echo "Option -${BOLD}$2${NORM} not allowed."
+                log "Option -${BOLD}$2${NORM} not allowed."
                 help
                 exit 2
                 ;;
@@ -105,16 +105,6 @@ source_env_values()
         MYSQL_ADMIN=$MYSQL_ADMIN_USER
         MYSQL_PASS=$MYSQL_ADMIN_PASSWORD
 
-        #todo: or do we want these instead?
-        # App and Replication accounts
-        # MYSQL_ADMIN=$MYSQL_USER
-        # MYSQL_PASS=$MYSQL_PASSWORD
-
-        #todo: or do we want these instead?
-        # Mysql Installer Configurations
-        # MYSQL_ADMIN=$MYSQL_REPL_USER
-        # MYSQL_PASS=$MYSQL_REPL_USER_PASSWORD
-
     elif [ "$DB_TYPE" == "mongo" ]
     then
         BACKUP_FILE="$TIME_STAMPED"
@@ -122,11 +112,6 @@ source_env_values()
         # Mongo Credentials
         MONGO_ADMIN=$MONGO_USER
         MONGO_PASS=$MONGO_PASSWORD
-
-        #todo: do need these as weel?
-        # Mongo Replicaset Credentials
-        #MONGO_REPLICASET_KEY
-        #MONGO_REPLICASET_NAME
 
     fi
 }
@@ -170,9 +155,9 @@ copy_db_to_azure_storage()
 
     RESULT=$(azure storage blob upload $COMPRESSED_FILE $CONTAINER_NAME $COMPRESSED_FILE --json | jq '.blob')
     if [ "$RESULT"!="" ]; then
-        echo "$RESULT blob file uploaded successfully"
+        log "$RESULT blob file uploaded successfully"
     else
-        echo "Upload blob file failed"
+        log "Upload blob file failed"
     fi
 }
 

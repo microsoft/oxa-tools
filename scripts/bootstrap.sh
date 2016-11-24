@@ -256,7 +256,10 @@ update_stamp_jb() {
 
 recurring_db_backup_jb() {
   install_azure_cli
-  # todo: invoke playbook for recurring backup. 
+
+  #todo: i need help to get this part right.
+  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags ""
+  exit_on_error "Execution of recurring database failed"
 }
 
 update_stamp_vmss() {

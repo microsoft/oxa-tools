@@ -1,9 +1,8 @@
 ---
-#fyi: sh will run from jumpbox so we'll need:
-  #todo1: to source secrets in order to have a) db connection string, b) db credentials and c) azure storage secrets.
-  #todo2: to use azure cli to WRITE db to azure storage
 
-# MySQL #
+##########################
+# MYSQL
+##########################
 
 - name: Remove a cron job for mysql-backup
   sudo: yes
@@ -28,7 +27,9 @@
 # Print the shell tasks's stdout and stderr.
 - debug: var="bash_theme.stdout_lines + [ bash_theme.stderr ]"
 
-# Mongo #
+##########################
+# MONGO
+##########################
 
 - name: Remove a cron job for mongo-backup
   sudo: yes
