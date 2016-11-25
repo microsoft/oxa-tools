@@ -343,7 +343,7 @@
         "loadBalancerName": "[concat(parameters('clusterName'), '-lb-', parameters('deploymentSlot'))]",
         "virtualNetworkName": "[concat(parameters('clusterName'), '-vnet')]",
         "subnetName": "[concat(parameters('clusterName'), '-subnet')]",
-        "bePoolName": "[concat(parameters('clusterName'), '-bepool-', parameters('deploymentVersionId'))]",
+        "bePoolName": "[concat(parameters('clusterName'), '-bepool-', parameters('deploymentSlot'))]",
         "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
         "lbID": "[resourceId('Microsoft.Network/loadBalancers',variables('loadBalancerName'))]",
 
