@@ -262,6 +262,7 @@ create_config_file()
     #sed -i "s/^bind-address=.*/bind-address=${NODE_ADDRESS}/I" $TEMP_MYCNF_PATH
     sed -i "s/^server-id=.*/server-id=${MYSQL_REPLICATION_NODEID}/I" $TEMP_MYCNF_PATH
     sed -i "s/^#log_bin=.*/log_bin=\/var\/log\/mysql\/mysql-bin-${HOSTNAME}.log/I" $TEMP_MYCNF_PATH
+    sed -i "s/^#binlog_format=.*/binlog_format=${REPL_BINLOG_FORMAT}/I" $TEMP_MYCNF_PATH
 
     # 1. perform necessary settings replacements
     if [ ${MYSQL_REPLICATION_NODEID} -eq 1 ];
@@ -269,7 +270,6 @@ create_config_file()
         log "Mysql Replication Master Node detected. Creating cnf for the MasterNode on ${HOSTNAME}"
         sed -i "s/^#expire_logs_days=.*/expire_logs_days=${REPL_EXPIRE_LOG_DAYS}/I" $TEMP_MYCNF_PATH
         sed -i "s/^#max_binlog_size=.*/max_binlog_size=${REPL_MAX_BINLOG_SIZE}/I" $TEMP_MYCNF_PATH
-        sed -i "s/^#binlog_format=.*/binlog_format=${REPL_BINLOG_FORMAT}/I" $TEMP_MYCNF_PATH
     else
         log "Mysql Replication Slave Node detected. Creating *.cnf for the SlaveNode on ${HOSTNAME}"
 
@@ -347,6 +347,7 @@ EOF
 
     #execute the queries
     mysql -u root -p$MYSQL_ADMIN_PASSWORD < ./$TMP_QUERY_FILE
+    exit_on_error "Mysql configuration failed on '$HOST'"
 
     # remove the temp file (security reasons)
     #rm ./$TMP_QUERY_FILE
