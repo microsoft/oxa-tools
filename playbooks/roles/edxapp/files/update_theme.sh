@@ -19,3 +19,5 @@ sudo su edxapp -s /bin/bash -c "source /edx/app/edxapp/edxapp_env;cd /edx/app/ed
 sudo su edxapp -s /bin/bash -c "cp /edx/app/edxapp/themes/default/static/images/*.png /edx/var/edxapp/staticfiles/images/"
 sudo /edx/bin/supervisorctl restart edxapp:
 
+# Restart the NGINX web server so that picks up the latest static content
+sudo service nginx restart
