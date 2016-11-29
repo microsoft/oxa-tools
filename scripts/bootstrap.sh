@@ -255,7 +255,10 @@ update_stamp_jb() {
 }
 
 recurring_db_backup_jb() {
+  exit_if_limited_user
   install_azure_cli
+  install-mongodb-shell
+  install-mysql-client
 
   #todo: i need help to get this part right.
   #$ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags ""

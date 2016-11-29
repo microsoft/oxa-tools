@@ -6,6 +6,6 @@
 
 source ./utilities.sh
 
-#install_azure_cli
-#install-mongodb-shell #doesn't install mongodump
-install-mysql-client #mysqldump?
+install_azure_cli
+install-mongodb-shell
+install-mysql-client

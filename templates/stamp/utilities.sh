@@ -126,13 +126,13 @@ install-git()
 }
 
 #############################################################################
-# Install Mongo Shell
+# Install Mongo Shell and Tools
 #############################################################################
 
 install-mongodb-shell()
 {
-    if type mongo >/dev/null 2>&1; then
-        log "MongoDB Shell is already installed"
+    if (type mongo >/dev/null 2>&1) && (type mongodump >/dev/null 2>&1) && (type mongorestore >/dev/null 2>&1); then
+        log "MongoDB Shell, mongodump, and mongorestore are already installed"
     else
         log "Installing MongoDB Shell"
         
@@ -155,19 +155,23 @@ install-mongodb-shell()
         log "Installing Mongo Shell"
         apt-get install -y mongodb-org-shell
         exit_on_error "Failed to install the Mongo client on ${HOSTNAME} !" $ERROR_MONGOCLIENTINSTALL_FAILED
+
+        log "Installing Mongo Tools"
+        apt-get install -y mongodb-org-tools
+        exit_on_error "Failed to install the Mongo dump/restore on ${HOSTNAME} !" $ERROR_MONGOCLIENTINSTALL_FAILED
     fi
 
     log "Mongo Shell installed"
 }
 
 #############################################################################
-# Install Mysql Client
+# Install Mysql Client and mysqldump
 #############################################################################
 
 install-mysql-client()
 {
-    if type mysql >/dev/null 2>&1; then
-        log "Mysql Client is already installed"
+    if (type mysql >/dev/null 2>&1) && (type mysqldump >/dev/null 2>&1); then
+        log "Mysql Client and mysqldump are already installed"
     else
         log "Updating Repository"
         apt-get -y -qq update
@@ -175,6 +179,10 @@ install-mysql-client()
         log "Installing Mysql Client"
         apt-get install -y mysql-client-core*
         exit_on_error "Failed to install the Mysql client on ${HOSTNAME} !" $ERROR_MYSQLCLIENTINSTALL_FAILED
+
+        log "Installing mysqldump"
+        apt-get install -y mysql-client
+        exit_on_error "Failed to install the Mysql Dump on ${HOSTNAME} !" $ERROR_MYSQLCLIENTINSTALL_FAILED
     fi
 
     log "Mysql client installed"
