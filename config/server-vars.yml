@@ -71,6 +71,7 @@ EDXAPP_FEATURES:
   CERTIFICATES_ENABLED: true
   CERTIFICATES_HTML_VIEW: true
   ENABLE_GRADE_DOWNLOADS: true
+  ENABLE_VIDEO_UPLOAD_PIPELINE: true
 
 # storage uploads
 EDXAPP_DEFAULT_FILE_STORAGE: "storages.backends.azure_storage.AzureStorage"
