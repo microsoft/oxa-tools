@@ -14,3 +14,4 @@
     - { role: edxapp, tags: [ 'edxapp' ] }
     - { role: mongo, tags: [ 'mongo' ] }
     - { role: mysql, tags: [ 'mysql' ] }
+    - { role: jumpbox, tags: [ 'jumpbox' ] }

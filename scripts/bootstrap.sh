@@ -260,9 +260,8 @@ recurring_db_backup_jb() {
   install-mongodb-shell
   install-mysql-client
 
-  #todo: i need help to get this part right.
-  #$ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags ""
-  #exit_on_error "Execution of recurring database failed"
+  $ANSIBLE_PLAYBOOK -i localhost, -c local $OXA_PLAYBOOK_ARGS -e $OXA_PLAYBOOK --tags "jumpbox"
+  exit_on_error "Execution of recurring database backup failed"
 }
 
 update_stamp_vmss() {
