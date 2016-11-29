@@ -258,8 +258,8 @@ recurring_db_backup_jb() {
   install_azure_cli
 
   #todo: i need help to get this part right.
-  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags ""
-  exit_on_error "Execution of recurring database failed"
+  #$ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags ""
+  #exit_on_error "Execution of recurring database failed"
 }
 
 update_stamp_vmss() {
@@ -343,28 +343,30 @@ OXA_PLAYBOOK_CONFIG=$OXA_PATH/oxa.yml
 TARGET_FILE=/var/log/bootstrap-$EDX_ROLE.log
 PROGRESS_FILE=/var/log/bootstrap-$EDX_ROLE.progress
 
+# For log() and azure cli installation
+source $OXA_TOOLS_PATH/templates/stamp/utilities.sh
+
 if [ "$CRON_MODE" == "1" ];
 then
     echo "Cron execution for ${EDX_ROLE} on ${HOSTNAME} detected."
 
     # check if we need to run the setup
     RUN_BOOTSTRAP=$(get_bootstrap_status)
-    TIMESTAMP=`date +"%D %T"`
 
     case "$RUN_BOOTSTRAP" in
         "0")
-            echo "${TIMESTAMP} : Bootstrap is not complete. Proceeding with setup..."
+            log "Bootstrap is not complete. Proceeding with setup..."
             ;;
         "1")
-            echo "${TIMESTAMP} : Bootstrap is not complete. Waiting on backend bootstrap..."
+            log "Bootstrap is not complete. Waiting on backend bootstrap..."
             exit
             ;;
         "2")
-            echo "${TIMESTAMP} : Bootstrap is complete."
+            log "Bootstrap is complete."
             exit
             ;;
         "3")
-            echo "${TIMESTAMP} : Bootstrap is in progress."
+            log "Bootstrap is in progress."
             exit
             ;;
     esac
@@ -374,9 +376,7 @@ then
 fi
 
 # Note when we started
-TIMESTAMP=`date +"%D %T"`
-STATUS_MESSAGE="${TIMESTAMP} :: Starting bootstrap of ${EDX_ROLE} on ${HOSTNAME}"
-echo $STATUS_MESSAGE
+log "Starting bootstrap of ${EDX_ROLE} on ${HOSTNAME}"
 
 setup
 
@@ -426,10 +426,8 @@ remove_progress_file
 
 # Note when we ended
 # log a closing message and leave expected bread crumb for status tracking
-TIMESTAMP=`date +"%D %T"`
-STATUS_MESSAGE="${TIMESTAMP} :: Completed bootstrap of ${EDX_ROLE} on ${HOSTNAME}"
 
 echo "Creating Phase 1 Crumb at '$TARGET_FILE''"
 touch $TARGET_FILE
 
-echo $STATUS_MESSAGE
+log "Completed bootstrap of ${EDX_ROLE} on ${HOSTNAME}"

@@ -154,7 +154,6 @@ install_mysql_server()
 
     package=$MYSQL_SERVER_PACKAGE_NAME
 
-    # todo: another conditional is required for sql5.6 on ubuntu16.
     if (( $(echo "$OS_VER < 16" |bc -l) )) && [ $PACKAGE_VERSION == "5.7" ]
     then
         # Allow sql 5.7 on ubuntu 14 and below.
@@ -165,7 +164,7 @@ install_mysql_server()
         echo mysql-apt-config mysql-apt-config/select-product select Ok | debconf-set-selections
         dpkg -i $debFileName.deb
         rm $debFileName*
-    elif (( $(echo "$OS_VER > 16" |bc -l) )) && [ $PACKAGE_VERSION < "5.7" ]
+    elif (( $(echo "$OS_VER > 16" |bc -l) )) && (( $(echo "$PACKAGE_VERSION < 5.7" |bc -l) ))
     then
         # Allows sql 5.6 on ubuntu 16
         add-apt-repository 'deb http://archive.ubuntu.com/ubuntu trusty universe'
