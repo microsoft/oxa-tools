@@ -165,6 +165,10 @@ install_mysql_server()
         echo mysql-apt-config mysql-apt-config/select-product select Ok | debconf-set-selections
         dpkg -i $debFileName.deb
         rm $debFileName*
+    elif (( $(echo "$OS_VER > 16" |bc -l) )) && [ $PACKAGE_VERSION < "5.7" ]
+    then
+        # Allows sql 5.6 on ubuntu 16
+        add-apt-repository 'deb http://archive.ubuntu.com/ubuntu trusty universe'
     fi
 
     log "Updating Repository"
@@ -172,7 +176,8 @@ install_mysql_server()
 
     echo $package mysql-server/root_password password $MYSQL_ADMIN_PASSWORD | debconf-set-selections
     echo $package mysql-server/root_password_again password $MYSQL_ADMIN_PASSWORD | debconf-set-selections
-    apt-get install -y -qq $package 
+    apt-get install -y -qq $package
+    exit_on_error "Failed to install Mysql"
 
     # Install additional dependencies
     log "Installing additional dependencies: Python-Pip, Python-Dev, MysqlClient Dev Lib"

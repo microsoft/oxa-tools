@@ -155,6 +155,7 @@ install_mongodb()
     #Install Mongo DB
     log "Installing MongoDB package $PACKAGE_NAME"
     apt-get -y -qq install $PACKAGE_NAME
+    exit_on_error "Failed to install Mongo"
     
     # Stop Mongod as it may be auto-started during the above step (which is not desirable)
     stop_mongodb

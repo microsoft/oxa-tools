@@ -1,6 +1,4 @@
-#fyi: this is an unmodified fork from rex pilot.
-
-#todo: fix below
+#fyi: this is an unmodified fork from rex pilot. #todo: fix this
 
 #!/bin/bash
 
