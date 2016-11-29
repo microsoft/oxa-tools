@@ -176,6 +176,9 @@ install-mysql-client()
         log "Updating Repository"
         apt-get -y -qq update
 
+        # todo: this doesn't work on ubuntu14. the fix to:
+        # a) grab the deb file (like in mysql-ubuntu-install) AND
+        # b) specify the version instead of the wildcard. For example, mysql-client-core-5.6
         log "Installing Mysql Client"
         apt-get install -y mysql-client-core*
         exit_on_error "Failed to install the Mysql client on ${HOSTNAME} !" $ERROR_MYSQLCLIENTINSTALL_FAILED
