@@ -4,9 +4,10 @@
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
 # General Variables (mongo)
-MONGO_ADDRESS="$MONGO_REPLICASET_NAME/10.0.0.11,10.0.0.12,10.0.0.13"
 MONGO_ADMIN=
 MONGO_PASS=
+# This is the suffix. The replicaset will be prepended.
+MONGO_ADDRESS="/10.0.0.11,10.0.0.12,10.0.0.13"
 
 source_shared_functions()
 {

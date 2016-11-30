@@ -111,6 +111,9 @@ source_env_values()
         MONGO_ADMIN=$MONGO_USER
         MONGO_PASS=$MONGO_PASSWORD
 
+        # Prepend replicaset name.
+        MONGO_ADDRESS=$MONGO_REPLICASET_NAME$MONGO_ADDRESS
+
     fi
 }
 
