@@ -195,7 +195,7 @@ install-mysql-client()
 # Install Azure CLI
 #############################################################################
 
-install_azure_cli()
+install-azure-cli()
 {
     if type azure >/dev/null 2>&1; then
         log "Azure CLI is already installed"
@@ -211,6 +211,26 @@ install_azure_cli()
     fi
 
     log "Azure CLI installed"
+}
+
+#############################################################################
+# Install jq - Command-line JSON processor
+#############################################################################
+
+install-json-processor()
+{
+    if type jq >/dev/null 2>&1; then
+        log "JSON Processor is already installed"
+    else
+        log "Updating Repository"
+        apt-get -y -qq update
+
+        log "Installing jq - Command-line JSON processor"
+        apt-get install -y jq
+        exit_on_error "Failed to install jq"
+    fi
+
+    log "JSON Processor installed"
 }
 
 #############################################################################

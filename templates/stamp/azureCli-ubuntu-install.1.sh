@@ -6,6 +6,9 @@
 
 source ./utilities.sh
 
-install_azure_cli
-install-mongodb-shell
-install-mysql-client
+  exit_if_limited_user
+
+  install-azure-cli
+  install-mongodb-shell
+  install-mysql-client
+  install-json-processor

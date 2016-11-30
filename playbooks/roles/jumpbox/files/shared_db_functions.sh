@@ -23,7 +23,7 @@ source_utilities_functions()
         source $UTILITIES_FILE
     else
         echo "Cannot find common utilities file at $UTILITIES_FILE"
-        echo "exiting script"
+        echo "Ensure working directory is Working oxa-tools repo root prior to running script."
         exit 1
     fi
 
@@ -35,8 +35,7 @@ help()
     SCRIPT_NAME=`basename "$0"`
 
     log "This script $SCRIPT_NAME will backup the database"
-    log "Options:"
-    log "        --environment-file    Path to settings that are enviornment-specific"
+    log "Options:"log "     -e|--environment-file    Path to settings that are enviornment-specific"
 }
 
 # Parse script parameters
@@ -58,7 +57,7 @@ parse_args()
                 exit 2
                 ;;
             *) # unknown option
-                log "Option -${BOLD}$2${NORM} not allowed."
+                log "ERROR. Option -${BOLD}$2${NORM} not allowed."
                 help
                 exit 2
                 ;;
@@ -73,7 +72,6 @@ source_env_values()
     DB_TYPE=$1 #mongo|mysql
 
     # populate the environment variables
-    source $ENV_FILE
     if [ -f $ENV_FILE ]
     then
         # source environment variables.
@@ -92,8 +90,9 @@ source_env_values()
     export AZURE_STORAGE_ACCOUNT=$AZURE_ACCOUNT_NAME
     export AZURE_STORAGE_ACCESS_KEY=$AZURE_ACCOUNT_KEY
 
-    CONTAINER_NAME="${DB_TYPE}Backup"
-    TIME_STAMPED=$CONTAINER_NAME$(date +"%Y-%m-%d-%H%M%S")
+    # Container names cannot contain underscores or uppercase characters
+    CONTAINER_NAME="${DB_TYPE}-backup"
+    TIME_STAMPED=${CONTAINER_NAME}_$(date +"%Y-%m-%d_%Hh-%Mm-%Ss")
     COMPRESSED_FILE="$TIME_STAMPED.tar.gz"
 
     if [ "$DB_TYPE" == "mysql" ]
@@ -153,12 +152,16 @@ copy_db_to_azure_storage()
         azure storage container create $CONTAINER_NAME
     fi
 
+    pushd DESTINATION_FOLDER
+
     RESULT=$(azure storage blob upload $COMPRESSED_FILE $CONTAINER_NAME $COMPRESSED_FILE --json | jq '.blob')
     if [ "$RESULT"!="" ]; then
         log "$RESULT blob file uploaded successfully"
     else
         log "Upload blob file failed"
     fi
+
+    popd
 }
 
 cleanup_local()

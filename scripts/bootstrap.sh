@@ -256,9 +256,11 @@ update_stamp_jb() {
 
 recurring_db_backup_jb() {
   exit_if_limited_user
-  install_azure_cli
+
+  install-azure-cli
   install-mongodb-shell
   install-mysql-client
+  install-json-processor
 
   $ANSIBLE_PLAYBOOK -i localhost, -c local $OXA_PLAYBOOK_ARGS -e $OXA_PLAYBOOK --tags "jumpbox"
   exit_on_error "Execution of recurring database backup failed"
