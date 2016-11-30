@@ -262,7 +262,7 @@ recurring_db_backup_jb() {
   install-mysql-client
   install-json-processor
 
-  $ANSIBLE_PLAYBOOK -i localhost, -c local $OXA_PLAYBOOK_ARGS -e $OXA_PLAYBOOK --tags "jumpbox"
+  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "jumpbox"
   exit_on_error "Execution of recurring database backup failed"
 }
 
