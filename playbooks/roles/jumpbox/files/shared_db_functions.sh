@@ -159,9 +159,11 @@ copy_db_to_azure_storage()
 
     pushd $DESTINATION_FOLDER
 
-    RESULT=$(azure storage blob upload $COMPRESSED_FILE $CONTAINER_NAME $COMPRESSED_FILE --json | jq '.blob')
-    if [ "$RESULT"!="" ]; then
-        log "$RESULT blob file uploaded successfully"
+    RESULT=$(azure storage blob upload $COMPRESSED_FILE $CONTAINER_NAME $COMPRESSED_FILE --json)
+    fileName=$(echo $RESULT | jq '.name')
+    fileSize=$(echo $RESULT | jq '.transferSummary.totalSize')    
+    if [ "$RESULT"!="" && "$fileName"!="" && "$fileName"!="null" ]; then
+        log "$fileName blob file uploaded successfully. Size: $fileSize"
     else
         log "Upload blob file failed"
     fi
