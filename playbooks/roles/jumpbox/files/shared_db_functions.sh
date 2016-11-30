@@ -7,7 +7,6 @@
 ENV_FILE=
 AZURE_STORAGE_ACCOUNT=
 AZURE_STORAGE_ACCESS_KEY=
-#todo: should we set and export this one too? AZURE_STORAGE_CONNECTION_STRING=
 CONTAINER_NAME=
 TIME_STAMPED=
 COMPRESSED_FILE=
@@ -146,6 +145,7 @@ copy_db_to_azure_storage()
     log "Upload the backup $DB_TYPE file to azure blob storage"
 
     # AZURE_STORAGE_ACCOUNT and AZURE_STORAGE_ACCESS_KEY are already exported for azure cli's use.
+    # FYI, we could use AZURE_STORAGE_CONNECTION_STRING instead.
 
     sc=$(azure storage container show $CONTAINER_NAME --json)
     if [[ -z $sc ]]; then
