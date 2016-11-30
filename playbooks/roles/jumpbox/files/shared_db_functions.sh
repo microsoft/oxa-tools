@@ -131,6 +131,8 @@ create_compressed_db_dump()
 
     fi
 
+    exit_on_error "Failed to connect to database OR failed to create backup file."
+
     log "Compressing entire $DB_TYPE database"
     tar -zcvf $COMPRESSED_FILE $BACKUP_FILE
 
@@ -152,7 +154,7 @@ copy_db_to_azure_storage()
         azure storage container create $CONTAINER_NAME
     fi
 
-    pushd DESTINATION_FOLDER
+    pushd $DESTINATION_FOLDER
 
     RESULT=$(azure storage blob upload $COMPRESSED_FILE $CONTAINER_NAME $COMPRESSED_FILE --json | jq '.blob')
     if [ "$RESULT"!="" ]; then

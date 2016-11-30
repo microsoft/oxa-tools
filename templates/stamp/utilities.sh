@@ -203,6 +203,7 @@ install-azure-cli()
         log "Updating Repository"
         apt-get -y -qq update
 
+        # Note: nodejs-legacy isn't available nor required on Ubuntu12.
         log "Installing nodejs-legacy, npm, and azure cli"
         apt-get install -y nodejs-legacy npm
         exit_on_error "Failed to install nodejs-legacy and/or npm on ${HOSTNAME} !" $ERROR_NODEINSTALL_FAILED
