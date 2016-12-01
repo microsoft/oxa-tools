@@ -44,4 +44,4 @@ create_compressed_db_dump mongo
 
 copy_db_to_azure_storage mongo
 
-cleanup_local mongo
+cleanup_local_copies mongo

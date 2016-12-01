@@ -43,4 +43,4 @@ create_compressed_db_dump mysql
 
 copy_db_to_azure_storage mysql
 
-cleanup_local mysql
+cleanup_local_copies mysql

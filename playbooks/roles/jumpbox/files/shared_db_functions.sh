@@ -175,7 +175,7 @@ copy_db_to_azure_storage()
     popd
 }
 
-cleanup_local()
+cleanup_local_copies()
 {
     DB_TYPE=$1 #mongo|mysql
 
