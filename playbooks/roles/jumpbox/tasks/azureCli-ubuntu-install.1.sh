@@ -4,16 +4,6 @@
 
 #todo:temp file for validation
 
-source ./utilities.sh
-
-  exit_if_limited_user
-
-  install-azure-cli
-  install-mongodb-shell
-  install-mysql-client
-  install-json-processor
-
-
 OXA_PATH=/oxa
 DEPLOYMENT_ENV=bvt
 TEMPLATE_TYPE=stamp

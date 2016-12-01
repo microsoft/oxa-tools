@@ -20,7 +20,7 @@
     name="Create MySQL backup job"
     user="{{ os_admin_username }}"
     cron_file=mysql_backup
-    minute=5
+    minute=1
     job="cd {{ oxa_tools_path }} && {{ jumpbox_files_path }}/mysql_db_backup.sh --environment-file {{ env_file }}"
 
 # Print the shell tasks's stdout and stderr.
@@ -46,7 +46,7 @@
     name="Create Mongo backup job"
     user="{{ os_admin_username }}"
     cron_file=mongo_backup
-    minute=5
+    minute=1
     job="cd {{ oxa_tools_path }} && {{ jumpbox_files_path }}/mongo_db_backup.sh --environment-file {{ env_file }}"
 
 # Print the shell tasks's stdout and stderr.
