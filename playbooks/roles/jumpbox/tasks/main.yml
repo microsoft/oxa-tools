@@ -20,8 +20,7 @@
     name="Create MySQL backup job"
     user="{{ os_admin_username }}"
     cron_file=mysql_backup
-    minute=5 #TODO hour=23
-    #TODO verify working dirrection is correct and bash/sudo aren't needed.
+    minute=5
     job="cd {{ oxa_tools_path }} && {{ jumpbox_files_path }}/mysql_db_backup.sh --environment-file {{ env_file }}"
 
 # Print the shell tasks's stdout and stderr.
@@ -47,9 +46,8 @@
     name="Create Mongo backup job"
     user="{{ os_admin_username }}"
     cron_file=mongo_backup
-    minute=5 #TODO hour=23
-    #TODO verify working dirrection is correct and bash/sudo aren't needed.
-    job="cd {{ oxa_tools_path }} && {{ jumpbox_files_path }}/mongo_db_backup.sh --environment-file {{ env_file }}""
+    minute=5
+    job="cd {{ oxa_tools_path }} && {{ jumpbox_files_path }}/mongo_db_backup.sh --environment-file {{ env_file }}"
 
 # Print the shell tasks's stdout and stderr.
 - debug: var="bash_theme.stdout_lines + [ bash_theme.stderr ]"
