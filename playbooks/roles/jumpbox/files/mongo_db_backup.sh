@@ -11,7 +11,7 @@ MONGO_ADDRESS="10.0.0.12"
 source_shared_functions()
 {
     CURRENT_SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-    SHARED_FUNCTIONS_FILE=$CURRENT_SCRIPT_PATH/shared_db_functions.sh
+    SHARED_FUNCTIONS_FILE=$CURRENT_SCRIPT_PATH/db_backup.sh
     if [ -f $SHARED_FUNCTIONS_FILE ]
     then
         # source shared functions both backup scripts use.
