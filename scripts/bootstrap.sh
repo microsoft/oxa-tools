@@ -347,7 +347,7 @@ OXA_PLAYBOOK_CONFIG=$OXA_PATH/oxa.yml
 TARGET_FILE=/var/log/bootstrap-$EDX_ROLE.log
 PROGRESS_FILE=/var/log/bootstrap-$EDX_ROLE.progress
 
-# For log() and azure cli installation
+# For log, package installers, etc.
 source $OXA_TOOLS_PATH/templates/stamp/utilities.sh
 
 if [ "$CRON_MODE" == "1" ];
