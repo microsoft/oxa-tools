@@ -10,7 +10,7 @@ AZURE_STORAGE_ACCESS_KEY=
 CONTAINER_NAME=
 TIME_STAMPED=
 COMPRESSED_FILE=
-BACKUP_FILE=
+BACKUP_PATH=
 DESTINATION_FOLDER="/var/tmp"
 
 source_utilities_functions()
@@ -97,7 +97,7 @@ source_env_values()
 
     if [ "$DB_TYPE" == "mysql" ]
     then
-        BACKUP_FILE="$TIME_STAMPED.sql"
+        BACKUP_PATH="$TIME_STAMPED.sql"
 
         # Mysql Credentials
         MYSQL_ADMIN=$MYSQL_ADMIN_USER
@@ -105,14 +105,11 @@ source_env_values()
 
     elif [ "$DB_TYPE" == "mongo" ]
     then
-        BACKUP_FILE="$TIME_STAMPED"
+        BACKUP_PATH="$TIME_STAMPED"
 
         # Mongo Credentials
         MONGO_ADMIN=$MONGO_USER
         MONGO_PASS=$MONGO_PASSWORD
-
-        # Prepend replicaset name.
-        MONGO_ADDRESS=$MONGO_REPLICASET_NAME$MONGO_ADDRESS
 
     fi
 }
@@ -126,18 +123,18 @@ create_compressed_db_dump()
     log "Copying entire $DB_TYPE database to local file system"
     if [ "$DB_TYPE" == "mysql" ]
     then
-        mysqldump -u $MYSQL_ADMIN -p$MYSQL_PASS -h $MYSQL_ADDRESS --all-databases --single-transaction > $BACKUP_FILE
+        mysqldump -u $MYSQL_ADMIN -p$MYSQL_PASS -h $MYSQL_ADDRESS --all-databases --single-transaction > $BACKUP_PATH
 
     elif [ "$DB_TYPE" == "mongo" ]
     then
-        mongodump -u $MONGO_ADMIN -p$MONGO_PASS --host $MONGO_ADDRESS -o $BACKUP_FILE
+        mongodump -u $MONGO_ADMIN -p $MONGO_PASS --host $MONGO_ADDRESS --db edxapp --authenticationDatabase master -o $BACKUP_PATH
 
     fi
 
     exit_on_error "Failed to connect to database OR failed to create backup file."
 
     log "Compressing entire $DB_TYPE database"
-    tar -zcvf $COMPRESSED_FILE $BACKUP_FILE
+    tar -zcvf $COMPRESSED_FILE $BACKUP_PATH
 
     popd
 }
@@ -183,7 +180,7 @@ cleanup_local_copies()
 
     log "Deleting local copies of $DB_TYPE database"
     rm -f $COMPRESSED_FILE
-    rm -f $BACKUP_FILE
+    rm -f $BACKUP_PATH
 
     popd
 }

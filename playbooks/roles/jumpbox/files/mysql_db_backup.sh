@@ -4,9 +4,9 @@
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
 # General Variables (mysql)
-MYSQL_ADDRESS="10.0.0.17"
 MYSQL_ADMIN=
 MYSQL_PASS=
+MYSQL_ADDRESS="10.0.0.17"
 
 source_shared_functions()
 {

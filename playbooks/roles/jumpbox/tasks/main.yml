@@ -18,7 +18,7 @@
     user="{{ os_admin_username }}"
     cron_file=mysql_backup
     special_time=daily
-    job="cd {{ oxa_tools_path }} && sudo {{ jumpbox_files_path }}/mysql_db_backup.sh --environment-file {{ env_file }} > ~/latest_sql_backup.log 2>&1"
+    job="cd {{ oxa_tools_path }} && sudo bash {{ jumpbox_files_path }}/mysql_db_backup.sh --environment-file {{ env_file }} > ~/latest_sql_backup.log 2>&1"
 
 ##########################
 # MONGO
@@ -38,4 +38,4 @@
     user="{{ os_admin_username }}"
     cron_file=mongo_backup
     special_time=daily
-    job="cd {{ oxa_tools_path }} && sudo {{ jumpbox_files_path }}/mongo_db_backup.sh --environment-file {{ env_file }} > ~/latest_sql_backup.log 2>&1"
+    job="cd {{ oxa_tools_path }} && sudo bash {{ jumpbox_files_path }}/mongo_db_backup.sh --environment-file {{ env_file }} > ~/latest_sql_backup.log 2>&1"

@@ -1,9 +1,11 @@
-#fyi: this is an unmodified fork from rex pilot. #todo: fix this
+#fyi: this is an unmodified fork from rex pilot. #todo: this isn't functional yet. fix this
 
 #!/bin/bash
 
 echo " Mongo DB Restore using mongorestore
        USAGE: ./rex_mongo_db_restore.sh [password] [tar_gz_blobName] "
+
+exit
 
 source /tmp/transfer/backup/storage_keys.sh
 export container_name=mongobackup

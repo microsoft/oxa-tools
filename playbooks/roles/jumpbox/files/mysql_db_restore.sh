@@ -1,9 +1,11 @@
-#fyi: this is an unmodified fork from rex pilot. #todo: fix this
+#fyi: this is an unmodified fork from rex pilot. #todo: this isn't functional yet. fix this
 
 #!/bin/bash
 
 echo " Restore MySQL databases from backup file
        USAGE: ./rex_mysql_db_restore.sh [password] [tar_gz_blobName] "
+
+exit
 
 source /tmp/transfer/backup/storage_keys.sh
 export container_name=mysqlbackup
