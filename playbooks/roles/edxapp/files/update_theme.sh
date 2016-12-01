@@ -18,3 +18,12 @@ sudo /edx/bin/supervisorctl restart edxapp:
 sudo su edxapp -s /bin/bash -c "source /edx/app/edxapp/edxapp_env;cd /edx/app/edxapp/edx-platform/;paver update_assets lms --settings aws"
 sudo /edx/bin/supervisorctl restart edxapp:
 
+# Compile CMS assets and restart all services.
+sudo su edxapp -s /bin/bash -c "source /edx/app/edxapp/edxapp_env;cd /edx/app/edxapp/edx-platform/;paver update_assets cms --settings aws"
+sudo /edx/bin/supervisorctl restart edxapp:
+
+# Copy the static images 
+sudo su edxapp -s /bin/bash -c "cp /edx/app/edxapp/themes/default/static/images/*.png /edx/var/edxapp/staticfiles/images/"
+sudo /edx/bin/supervisorctl restart all
+
+
