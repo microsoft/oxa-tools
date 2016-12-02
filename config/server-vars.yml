@@ -64,7 +64,7 @@ EDXAPP_FEATURES:
   ENABLE_INSTRUCTOR_EMAIL: true
   REQUIRE_COURSE_EMAIL_AUTH: false
   # PREVIEW_LMS_BASE must be localhost for course discovery to work with dns (openedx.slack - 9/14/16 @3:08pm)
-  PREVIEW_LMS_BASE: "localhost"
+  PREVIEW_LMS_BASE: "{{ EDXAPP_PREVIEW_SITE_NAME }}"
   DISABLE_COURSE_CREATION: true
   ALLOW_ALL_ADVANCED_COMPONENTS: true
   ALLOW_HIDING_DISCUSSION_TAB: true
@@ -100,3 +100,6 @@ EDXAPP_LTI_USER_EMAIL_DOMAIN: "lti.openedx.microsoft.com"
 
 # Default log levels: DEBUG, INFO, WARNING, ERROR, CRITICAL
 #EDXAPP_LOG_LEVEL: 'INFO'
+
+# Add lms-preview to list sites to configure
+nginx_sites: [certs, cms, lms, lms-preview, forum, xqueue]
