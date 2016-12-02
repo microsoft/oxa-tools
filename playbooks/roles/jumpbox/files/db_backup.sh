@@ -3,27 +3,43 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
-# General Variables (common to both db backup and todo:restore scripts)
+# Script arguments
 ENV_FILE=
-AZURE_STORAGE_ACCOUNT=
-AZURE_STORAGE_ACCESS_KEY=
+DB_TYPE=  #mongo|mysql
+
+# Derived from DB_TYPE
 CONTAINER_NAME=
-TIME_STAMPED=
 COMPRESSED_FILE=
 BACKUP_PATH=
+
+# From ENV_FILE
+AZURE_STORAGE_ACCOUNT=
+AZURE_STORAGE_ACCESS_KEY=
+#todo: consolidate
+# mongo
+MONGO_ADMIN=
+MONGO_PASS=
+MONGO_ADDRESS="10.0.0.12"
+# mysql
+MYSQL_ADMIN=
+MYSQL_PASS=
+MYSQL_ADDRESS="10.0.0.17"
+
+# Temporary directory
 DESTINATION_FOLDER="/var/tmp"
 
 source_utilities_functions()
 {
-    # Working directory should be oxa-tools repo root.
-    UTILITIES_FILE=templates/stamp/utilities.sh
+    CURRENT_SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+    OXA_TOOLS_PATH=$CURRENT_SCRIPT_PATH/../../../..
+    UTILITIES_FILE=$OXA_TOOLS_PATH/templates/stamp/utilities.sh
+
     if [ -f $UTILITIES_FILE ]
     then
         # source our utilities for logging and other base functions
         source $UTILITIES_FILE
     else
         echo "Cannot find common utilities file at $UTILITIES_FILE"
-        echo "Ensure working directory is Working oxa-tools repo root prior to running script."
         exit 1
     fi
 
@@ -35,7 +51,8 @@ help()
     SCRIPT_NAME=`basename "$0"`
 
     log "This script $SCRIPT_NAME will backup the database"
-    log "Options:"log "     -e|--environment-file    Path to settings that are enviornment-specific"
+    log "Options:     -e|--environment-file    Path to settings that are enviornment-specific"
+    log "Options:     -d|--database-type       mongo or mysql"
 }
 
 # Parse script parameters
@@ -50,6 +67,10 @@ parse_args()
         case "$1" in
             -e|--environment-file)
                 ENV_FILE=$2
+                shift # past argument
+                ;;
+            -d|--database-type)
+                DB_TYPE=$2
                 shift # past argument
                 ;;
             -h|--help) # Helpful hints
@@ -67,10 +88,22 @@ parse_args()
     done
 }
 
+validate_db_type()
+{
+    # validate argument
+    if [ "$DB_TYPE" != "mongo" ] && [ "$DB_TYPE" != "mysql" ];
+    then
+        log "BAD ARGUMENT. Databse type must be mongo or mysql"
+        help
+        log "exiting script"
+        exit 3
+    fi
+
+    log "Begin execution of $DB_TYPE backup script using ${DB_TYPE}dump"
+}
+
 source_env_values()
 {
-    DB_TYPE=$1 #mongo|mysql
-
     # populate the environment variables
     if [ -f $ENV_FILE ]
     then
@@ -78,7 +111,8 @@ source_env_values()
         source $ENV_FILE
         log "Successfully sourced environment-specific settings"
     else
-        log "Cannot find environment settings file at $ENV_FILE"
+        log "BAD ARGUMENT. Cannot find environment settings file at $ENV_FILE"
+        help
         log "exiting script"
         exit 1
     fi
@@ -116,8 +150,6 @@ source_env_values()
 
 create_compressed_db_dump()
 {
-    DB_TYPE=$1 #mongo|mysql
-
     pushd $DESTINATION_FOLDER
 
     log "Copying entire $DB_TYPE database to local file system"
@@ -141,8 +173,6 @@ create_compressed_db_dump()
 
 copy_db_to_azure_storage()
 {
-    DB_TYPE=$1 #mongo|mysql
-
     log "Upload the backup $DB_TYPE file to azure blob storage"
 
     # AZURE_STORAGE_ACCOUNT and AZURE_STORAGE_ACCESS_KEY are already exported for azure cli's use.
@@ -174,8 +204,6 @@ copy_db_to_azure_storage()
 
 cleanup_local_copies()
 {
-    DB_TYPE=$1 #mongo|mysql
-
     pushd $DESTINATION_FOLDER
 
     log "Deleting local copies of $DB_TYPE database"
@@ -184,3 +212,25 @@ cleanup_local_copies()
 
     popd
 }
+
+source_utilities_functions
+
+# Script self-idenfitication
+print_script_header
+
+exit_if_limited_user
+
+# parse script arguments
+parse_args $@
+
+validate_db_type
+
+#todo:change caller and delete files
+
+source_env_values
+
+create_compressed_db_dump
+
+copy_db_to_azure_storage
+
+cleanup_local_copies
