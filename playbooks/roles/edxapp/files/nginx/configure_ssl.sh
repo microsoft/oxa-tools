@@ -42,21 +42,24 @@ update_nginx_site_configs() {
   local sites_available_path="/edx/app/nginx/sites-available"
   local lms_file_path="$sites_available_path/lms"
   local cms_file_path="$sites_available_path/cms"
-
+  local preview_file_path="$sites_available_path/lms-preview"
 
   if [[ $1 -eq True ]]; then
     # SSL is enabled
-    echo "Update LMS/CMS url rewrites to include SSL port number"
+    echo "Update LMS/CMS/Preview url rewrites to include SSL port number"
     add_port_to_url_rewrite $lms_file_path $2
     add_port_to_url_rewrite $cms_file_path $3
+    add_port_to_url_rewrite $preview_file_path $4
 
-    echo "Harden LMS/CMS SSL configurations"
+    echo "Harden LMS/CMS/Preview SSL configurations"
     harden_ssl_config $lms_file_path
     harden_ssl_config $cms_file_path
+    harden_ssl_config $preview_file_path
 
-    echo "Update LMS/CMS to allow the heartbeat to remain accessible via http"
+    echo "Update LMS/CMS/Preview to allow the heartbeat to remain accessible via http"
     support_http_heartbeat $lms_file_path $2
     support_http_heartbeat $cms_file_path $3
+    support_http_heartbeat $preview_file_path $4
   fi
 }
 
