@@ -4,8 +4,8 @@
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
 # Script arguments
-ENV_FILE=
-DB_TYPE=  #mongo|mysql
+ENV_FILE= # <env>.sh
+DB_TYPE=  # mongo|mysql
 
 # Derived from DB_TYPE
 CONTAINER_NAME=
@@ -15,14 +15,11 @@ BACKUP_PATH=
 # From ENV_FILE
 AZURE_STORAGE_ACCOUNT=
 AZURE_STORAGE_ACCESS_KEY=
-#todo: consolidate
-# mongo
-MONGO_ADMIN=
-MONGO_PASS=
+DB_USER=
+DB_PASSWORD=
+
+# todo: get IPs from <env>.sh
 MONGO_ADDRESS="10.0.0.12"
-# mysql
-MYSQL_ADMIN=
-MYSQL_PASS=
 MYSQL_ADDRESS="10.0.0.17"
 
 # Temporary directory
@@ -134,16 +131,16 @@ source_env_values()
         BACKUP_PATH="$TIME_STAMPED.sql"
 
         # Mysql Credentials
-        MYSQL_ADMIN=$MYSQL_ADMIN_USER
-        MYSQL_PASS=$MYSQL_ADMIN_PASSWORD
+        DB_USER=$MYSQL_ADMIN_USER
+        DB_PASSWORD=$MYSQL_ADMIN_PASSWORD
 
     elif [ "$DB_TYPE" == "mongo" ]
     then
         BACKUP_PATH="$TIME_STAMPED"
 
         # Mongo Credentials
-        MONGO_ADMIN=$MONGO_USER
-        MONGO_PASS=$MONGO_PASSWORD
+        DB_USER=$MONGO_USER
+        DB_PASSWORD=$MONGO_PASSWORD
 
     fi
 }
@@ -155,11 +152,11 @@ create_compressed_db_dump()
     log "Copying entire $DB_TYPE database to local file system"
     if [ "$DB_TYPE" == "mysql" ]
     then
-        mysqldump -u $MYSQL_ADMIN -p$MYSQL_PASS -h $MYSQL_ADDRESS --all-databases --single-transaction > $BACKUP_PATH
+        mysqldump -u $DB_USER -p$DB_PASSWORD -h $MYSQL_ADDRESS --all-databases --single-transaction > $BACKUP_PATH
 
     elif [ "$DB_TYPE" == "mongo" ]
     then
-        mongodump -u $MONGO_ADMIN -p $MONGO_PASS --host $MONGO_ADDRESS --db edxapp --authenticationDatabase master -o $BACKUP_PATH
+        mongodump -u $DB_USER -p $DB_PASSWORD --host $MONGO_ADDRESS --db edxapp --authenticationDatabase master -o $BACKUP_PATH
 
     fi
 
