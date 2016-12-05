@@ -12,6 +12,15 @@ EDXAPP_TIME_ZONE: "America/Los_Angeles"
 #EDXAPP_ENABLE_THIRD_PARY_AUTH: true
 #EDXAPP_ENABLE_OAUTH2_PROVIDER: true
 
+# By defining COURSE_VISIBILITY keys we are allowing making course visible/invisible on course advanced settings the key
+# 'Course Visibility In Catalog' 
+# Defines the access permissions for showing the course in the course catalog. This can be set to one of three values: 
+# 'both' (show in catalog and allow access to about page), 
+# 'about' (only allow access to about page), 
+# 'none' (do not show in catalog and do not allow access to an about page).
+EDXAPP_COURSE_CATALOG_VISIBILITY_PERMISSION: "see_in_catalog"
+EDXAPP_COURSE_ABOUT_VISIBILITY_PERMISSION: "see_about_page"
+
 # Password Policy Configuration
 # AT least 8 characters. Must contain at least one lowercase, one uppercase and one symbol.
 EDXAPP_PASSWORD_MIN_LENGTH: 8 
