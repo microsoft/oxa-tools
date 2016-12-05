@@ -99,24 +99,8 @@ validate_db_type()
     log "Begin execution of $DB_TYPE backup script using ${DB_TYPE}dump"
 }
 
-source_env_values()
+use_env_values()
 {
-    # populate the environment variables
-    if [ -f $ENV_FILE ]
-    then
-        # source environment variables.
-        source $ENV_FILE
-        log "Successfully sourced environment-specific settings"
-    else
-        log "BAD ARGUMENT. Cannot find environment settings file at $ENV_FILE"
-        help
-        log "exiting script"
-        exit 1
-    fi
-
-    # These variable aren't currently available outside of this scope.
-    # We therefore assign them to General Variables at a broader scope.
-
     # Exporting for Azure CLI
     export AZURE_STORAGE_ACCOUNT=$AZURE_ACCOUNT_NAME
     export AZURE_STORAGE_ACCESS_KEY=$AZURE_ACCOUNT_KEY
@@ -222,9 +206,9 @@ parse_args $@
 
 validate_db_type
 
-#todo:change caller and delete files
+source_environment_values $ENV_FILE
 
-source_env_values
+use_env_values
 
 create_compressed_db_dump
 

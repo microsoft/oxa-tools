@@ -406,6 +406,31 @@ is_valid_arg()
     return $result
 }
 
+
+#############################################################################
+# Source Environment Variables
+# TODO: USE source_environment_values everywhere we source env-specific vars
+#############################################################################
+
+source_environment_values() 
+{
+    ENV_FILE="$1"
+
+    if [ -f $ENV_FILE ]
+    then
+        # populate the environment variables
+        source $ENV_FILE
+        log "Successfully sourced environment-specific settings"
+    else
+        log "BAD ARGUMENT. Cannot find environment settings file at $ENV_FILE"
+        log "exiting script"
+        exit 1
+    fi
+
+    # todo: apply overrides if additional param is provided
+    # if [ ! -z $todo ], etc.
+}
+
 #############################################################################
 # Exit if not root user
 #############################################################################
