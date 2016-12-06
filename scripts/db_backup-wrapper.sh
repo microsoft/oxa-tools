@@ -26,10 +26,6 @@ OXA_TOOLS_CONFIG_PATH=$OXA_PATH/oxa-tools-config
 OXA_ENV_FILE=$OXA_TOOLS_CONFIG_PATH/env/$DEPLOYMENT_ENV/$DEPLOYMENT_ENV.sh
 OXA_PLAYBOOK_ARGS="-e oxa_tools_path=$OXA_TOOLS_PATH -e oxa_env_file=$OXA_ENV_FILE -e admin_user=$ADMIN_USER"
 
-# Try unsupoorted db type "improperDbType"
-log "$OXA_TOOLS_PATH/playbooks/roles/jumpbox/files/db_backup.sh --environment-file $OXA_ENV_FILE --database-type improperDbType"
-bash $OXA_TOOLS_PATH/playbooks/roles/jumpbox/files/db_backup.sh --environment-file $OXA_ENV_FILE --database-type improperDbType
-
 # Run MySql Backup
 log "$OXA_TOOLS_PATH/playbooks/roles/jumpbox/files/db_backup.sh --environment-file $OXA_ENV_FILE --database-type mysql" 
 bash $OXA_TOOLS_PATH/playbooks/roles/jumpbox/files/db_backup.sh --environment-file $OXA_ENV_FILE --database-type mysql

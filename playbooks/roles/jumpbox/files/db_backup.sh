@@ -133,6 +133,7 @@ use_env_values()
 
 add_temp_mysql_user()
 {
+    log "Adding ${MYSQL_TEMP_USER} to db"
     touch $TMP_QUERY_ADD
     chmod 700 $TMP_QUERY_ADD
 
@@ -149,6 +150,8 @@ EOF
 
 remove_temp_mysql_user()
 {
+    log "Removing ${MYSQL_TEMP_USER} from db"
+
     touch $TMP_QUERY_REMOVE
     chmod 700 $TMP_QUERY_REMOVE
 
@@ -226,8 +229,8 @@ cleanup_local_copies()
     rm -f $COMPRESSED_FILE
     rm -f $BACKUP_PATH
 
-    #rm -f $TMP_QUERY_ADD
-    #rm -f $TMP_QUERY_REMOVE
+    rm -f $TMP_QUERY_ADD
+    rm -f $TMP_QUERY_REMOVE
 
     popd
 }
