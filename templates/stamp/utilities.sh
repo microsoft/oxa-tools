@@ -235,6 +235,42 @@ install-json-processor()
 }
 
 #############################################################################
+# Install Ansible
+#############################################################################
+
+install-ansible()
+{
+    if type ansible-playbook >/dev/null 2>&1; then
+        log "Ansible is already installed"
+        #todo: add conditional on ansible-playbook --version to ensure the string contains edx.
+        # if it doesn't then, we should consider uninstalling/reinstalling
+    else
+        SHORT_RELEASE_NUMBER=`lsb_release -sr`
+        if [ ! -z $1 ] && (( $(echo "$SHORT_RELEASE_NUMBER < 15" |bc -l) ))
+        then
+            #edx-configuratoin repo
+            CONFIGURATION_PATH=$1
+            pushd $CONFIGURATION_PATH
+            bash util/install/ansible-bootstrap.sh
+            popd
+        else
+            log "Add relevant repositories"
+            apt-get install -y software-properties-common
+            apt-add-repository -y ppa:ansible/ansible
+
+            log "Updating Repository"
+            apt-get -y -qq update
+
+            log "Installing Ansible"
+            apt-get install -y ansible
+            exit_on_error "Failed to install ansible"
+        fi
+    fi
+
+    log "Ansible installed"
+}
+
+#############################################################################
 # Setup SSH
 #############################################################################
 

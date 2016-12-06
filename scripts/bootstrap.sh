@@ -177,10 +177,7 @@ setup_overrides()
 ##
 setup() 
 {
-    log "Updating Repository"
-    apt-get -y -qq update
-
-    apt-get -y install git
+    install-git
   
     # sync the private repository
     sync_repo $OXA_TOOLS_CONFIG_REPO $OXA_TOOLS_CONFIG_VERSION $OXA_TOOLS_CONFIG_PATH $ACCESS_TOKEN
@@ -207,10 +204,12 @@ setup()
     sync_repo $CONFIGURATION_REPO $CONFIGURATION_VERSION $CONFIGURATION_PATH
   
     # run edx bootstrap and install requirements
-    cd $CONFIGURATION_PATH
-    bash util/install/ansible-bootstrap.sh
+    install-ansible $CONFIGURATION_PATH
+
+    pushd $CONFIGURATION_PATH
     pip install -r requirements.txt
-  
+    popd
+
     # fix OXA environment ownership
     chown -R $ADMIN_USER:$ADMIN_USER $OXA_PATH
   
@@ -261,6 +260,7 @@ recurring_db_backup_jb() {
   install-mongodb-shell
   install-mysql-client
   install-json-processor
+  install-ansible
 
   $ANSIBLE_PLAYBOOK -i localhost, -c local $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "jumpbox"
   exit_on_error "Execution of recurring database backup failed"
@@ -402,7 +402,7 @@ cd $CONFIGURATION_PATH/playbooks
 case "$EDX_ROLE" in
   jb)
     update_stamp_jb
-    recurring_db_backup_jb
+    #recurring_db_backup_jb #todo:create secure storage during deployment bootstrap
     ;;
   vmss)
     update_stamp_vmss

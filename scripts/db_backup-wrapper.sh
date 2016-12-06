@@ -15,6 +15,7 @@ install-azure-cli
 install-mongodb-shell
 install-mysql-client
 install-json-processor
+install-ansible
 
 DEPLOYMENT_ENV=bvt
 TEMPLATE_TYPE=stamp
