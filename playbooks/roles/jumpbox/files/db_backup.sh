@@ -22,8 +22,10 @@ DB_PASSWORD=
 MONGO_ADDRESS="10.0.0.12"
 MYSQL_ADDRESS="10.0.0.17"
 
-# Temporary directory
+# Temporary
 DESTINATION_FOLDER="/var/tmp"
+TMP_QUERY_ADD="query.add.sql"
+TMP_QUERY_REMOVE="query.remove.sql"
 
 source_utilities_functions()
 {
@@ -129,6 +131,37 @@ use_env_values()
     fi
 }
 
+add_temp_mysql_user()
+{
+    touch $TMP_QUERY_ADD
+    chmod 700 $TMP_QUERY_ADD
+
+    tee ./$TMP_QUERY_ADD > /dev/null <<EOF
+GRANT ALL PRIVILEGES ON *.* TO '{MYSQL_TEMP_USER}'@'%' IDENTIFIED BY '{MYSQL_TEMP_PASSWORD}' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+EOF
+
+    sed -i "s/{MYSQL_TEMP_USER}/${MYSQL_TEMP_USER}/I" $TMP_QUERY_ADD
+    sed -i "s/{MYSQL_TEMP_PASSWORD}/${MYSQL_TEMP_PASSWORD}/I" $TMP_QUERY_ADD
+
+    mysql -u $DB_USER -p$DB_PASSWORD -h $MYSQL_ADDRESS < $TMP_QUERY_ADD
+}
+
+remove_temp_mysql_user()
+{
+    touch $TMP_QUERY_REMOVE
+    chmod 700 $TMP_QUERY_REMOVE
+
+    tee ./$TMP_QUERY_REMOVE > /dev/null <<EOF
+DELETE FROM mysql.user WHERE User='{MYSQL_TEMP_USER}';
+FLUSH PRIVILEGES;
+EOF
+
+    sed -i "s/{MYSQL_TEMP_USER}/${MYSQL_TEMP_USER}/I" $TMP_QUERY_REMOVE
+
+    mysql -u $DB_USER -p$DB_PASSWORD -h $MYSQL_ADDRESS < $TMP_QUERY_REMOVE
+}
+
 create_compressed_db_dump()
 {
     pushd $DESTINATION_FOLDER
@@ -136,7 +169,9 @@ create_compressed_db_dump()
     log "Copying entire $DB_TYPE database to local file system"
     if [ "$DB_TYPE" == "mysql" ]
     then
+        add_temp_mysql_user
         mysqldump -u $DB_USER -p$DB_PASSWORD -h $MYSQL_ADDRESS --all-databases --single-transaction > $BACKUP_PATH
+        remove_temp_mysql_user
 
     elif [ "$DB_TYPE" == "mongo" ]
     then
@@ -190,6 +225,9 @@ cleanup_local_copies()
     log "Deleting local copies of $DB_TYPE database"
     rm -f $COMPRESSED_FILE
     rm -f $BACKUP_PATH
+
+    #rm -f $TMP_QUERY_ADD
+    #rm -f $TMP_QUERY_REMOVE
 
     popd
 }

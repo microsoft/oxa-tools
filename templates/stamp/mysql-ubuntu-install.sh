@@ -304,11 +304,9 @@ configure_mysql_replication()
     touch $TMP_QUERY_FILE
     chmod 700 $TMP_QUERY_FILE
 
-
     if [ ${MYSQL_REPLICATION_NODEID} -eq 1 ];
     then
         log "Mysql Replication Master Node detected. Setting up Master Replication on ${HOSTNAME}"
- 
 
         tee ./$TMP_QUERY_FILE > /dev/null <<EOF
 -- CREATE USER IF NOT EXISTS '{MYSQL_ADMIN_USER}'@'%' IDENTIFIED BY '{MYSQL_ADMIN_PASSWORD}';
@@ -322,7 +320,6 @@ EOF
 
     else
         log "Mysql Replication Slave Node detected. Setting up Slave Replication on ${HOSTNAME} with master at ${MASTER_NODE_IPADDRESS}"
-
 
         tee ./$TMP_QUERY_FILE > /dev/null <<EOF
 -- CREATE USER IF NOT EXISTS '{MYSQL_ADMIN_USER}'@'%' IDENTIFIED BY '{MYSQL_ADMIN_PASSWORD}';
