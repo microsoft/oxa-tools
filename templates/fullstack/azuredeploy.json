@@ -269,7 +269,7 @@
         "autoUpgradeMinorVersion": false,
         "settings": {
           "fileUris": [
-            "[concat(variables('scriptDownloadUri'), 'scripts', variables('installScript'))]",
+            "[concat(variables('scriptDownloadUri'), 'scripts/', variables('installScript'))]",
             "[concat(variables('scriptDownloadUri'), 'config/server-vars.yml')]"
           ],
           "commandToExecute": "[variables('installCommand')]"
