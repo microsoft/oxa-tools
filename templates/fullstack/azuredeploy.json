@@ -61,9 +61,9 @@
     "apiVersion": "2015-06-15",
     "openedxVersion": "named-release/dogwood.rc",
     "personalAccessToken": "",
-    "scriptDownloadUri": "https://raw.githubusercontent.com/Microsoft/oxa-tools/btelnes/scripts/",
-    "installScript": "bootstrap.sh -r fullstack -e dev -a",
-    "installCommand": "[concat('bash -c ''nohup ./', variables('installScript'), ' ', variables('personalAccessToken'), ' </dev/null &>/var/log/azure/openedx-install.log &''')]",
+    "scriptDownloadUri": "https://raw.githubusercontent.com/Microsoft/oxa-tools/btelnes/",
+    "installScript": "bootstrap.sh",
+    "installCommand": "[concat('bash -c ''nohup ./', variables('installScript'), '  -r fullstack -e dev -a ', variables('personalAccessToken'), ' </dev/null &>/var/log/azure/openedx-install.log &''')]",
     "vmName": "jumpbox2",
     "osImagePublisher": "Canonical",
     "osImageOffer": "UbuntuServer",
@@ -269,7 +269,7 @@
         "autoUpgradeMinorVersion": false,
         "settings": {
           "fileUris": [
-            "[concat(variables('scriptDownloadUri'), "scripts', variables('installScript'))]",
+            "[concat(variables('scriptDownloadUri'), 'scripts', variables('installScript'))]",
             "[concat(variables('scriptDownloadUri'), 'config/server-vars.yml')]"
           ],
           "commandToExecute": "[variables('installCommand')]"
