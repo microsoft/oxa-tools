@@ -1,0 +1,10 @@
+THIS IS A BRANDED TEXT TEMPLATE. {course_title}
+
+{{message_body}}
+----
+Copyright 2016 Microsoft.
+----
+This email was automatically sent from {platform_name}.
+You are receiving this email at address {email} because you are enrolled in {course_title}
+(URL: {course_url} ).
+To stop receiving email like this, update your course email settings at {email_settings_url}.
