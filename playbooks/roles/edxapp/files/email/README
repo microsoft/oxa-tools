@@ -1,0 +1,19 @@
+# Huseyin Koyun
+# I am putting these instructions here for record until we automate this in oxa-tools deployment automation.
+
+You will use these files to update/insert into COURSE_EMAIL_TEMPLATES through the Django LMS admin panel.
+This must be done only once when a new platform is created. So that bulk email has the correct template. Instructor's email text message is embedded into this template.
+
+From Django LMS /admin panel
+
+Home -> Bulk_Email -> "Course email templates"
+
+There must be two records in this table.
+1) Name			: branded.template
+   Html template	: Insert the content of branded.template.html
+   Plain template	: Insert the content of branded.template.plain
+
+2) Name                 : 
+   Html template        : Insert the content of noname.template.html
+   Plain template       : Insert the content of noname.template.plain
+
