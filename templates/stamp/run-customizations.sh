@@ -103,7 +103,7 @@ done
 print_script_header
 
 # Validate parameters
-if [ "GITHUB_PERSONAL_ACCESS_TOKEN" == "" ] || [ "GITHUB_ACCOUNTNAME" == "" ] || [ "GITHUB_PROJECTNAME" == "" ] || [ "GITHUB_PROJECTBRANCH" == "" ] || [ "CLOUDNAME" == "" ] ;
+if [ "$GITHUB_PERSONAL_ACCESS_TOKEN" == "" ] || [ "$GITHUB_ACCOUNTNAME" == "" ] || [ "$GITHUB_PROJECTNAME" == "" ] || [ "$GITHUB_PROJECTBRANCH" == "" ] || [ "$CLOUDNAME" == "" ] ;
 then
     log "Incomplete Github configuration: Github Personal Access Token, Account Name,  Project Name & Branch Name are required." $ERROR_MESSAGE
     exit 3

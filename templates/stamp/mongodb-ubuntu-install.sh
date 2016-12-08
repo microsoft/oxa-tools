@@ -186,7 +186,7 @@ configure_replicaset()
     start_mongodb
     
     # Initiate a replica set (only run this section on the very last node)
-    if [ "$IS_LAST_MEMBER" = true ]; then
+    if [ $IS_LAST_MEMBER == true ]; then
         # Log a message to facilitate troubleshooting
         log "Initiating a replica set $REPLICA_SET_NAME with $INSTANCE_COUNT members"
     
@@ -208,7 +208,7 @@ configure_replicaset()
     fi
     
     # Register an arbiter node with the replica set
-    if [ "$IS_ARBITER" = true ]; then
+    if [ $IS_ARBITER == true ]; then
     
         # Work out the IP address of the last member node where we initiated a replica set
         let "PRIMARY_MEMBER_INDEX=$INSTANCE_COUNT-1"

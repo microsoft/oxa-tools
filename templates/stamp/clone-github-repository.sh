@@ -76,7 +76,7 @@ while getopts :i:p:a:n:b:c:m:u:h optname; do
 done
 
 # Validate parameters
-if [ "GITHUB_PERSONAL_ACCESS_TOKEN" == "" ] || [ "GITHUB_ACCOUNTNAME" == "" ] || [ "GITHUB_PROJECTNAME" == "" ] || [ "GITHUB_PROJECTBRANCH" == "" ] || [ "CLOUD_NAME" == "" ] ;
+if [ "$GITHUB_PERSONAL_ACCESS_TOKEN" == "" ] || [ "$GITHUB_ACCOUNTNAME" == "" ] || [ "$GITHUB_PROJECTNAME" == "" ] || [ "$GITHUB_PROJECTBRANCH" == "" ] || [ "$CLOUD_NAME" == "" ] ;
 then
     log "Incomplete Github configuration: Github Personal Access Token, Account Name,  Project Name & Branch Name are required." $ERROR_MESSAGE
     exit 3
