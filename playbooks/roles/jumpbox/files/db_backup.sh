@@ -226,11 +226,11 @@ cleanup_local_copies()
     pushd $DESTINATION_FOLDER
 
     log "Deleting local copies of $DB_TYPE database"
-    rm -f $COMPRESSED_FILE
-    rm -f $BACKUP_PATH
+    rm -rf $COMPRESSED_FILE
+    rm -rf $BACKUP_PATH
 
-    rm -f $TMP_QUERY_ADD
-    rm -f $TMP_QUERY_REMOVE
+    rm -rf $TMP_QUERY_ADD
+    rm -rf $TMP_QUERY_REMOVE
 
     popd
 }
