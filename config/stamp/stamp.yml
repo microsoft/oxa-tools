@@ -30,9 +30,12 @@ MONGO_REPLICASET_NAME: '%%MONGO_REPLICASET_NAME%%'
 # Configure mongo database
 EDXAPP_MONGO_USER: '%%MONGO_USER%%'
 EDXAPP_MONGO_PASSWORD: '%%MONGO_PASSWORD%%'
+
+# Configure forum user, password and connection string
 FORUM_MONGO_USER: '%%MONGO_USER%%'
 FORUM_MONGO_PASSWORD: '%%MONGO_PASSWORD%%'
 FORUM_MONGO_URL: "mongodb://{{ FORUM_MONGO_USER }}:{{ FORUM_MONGO_PASSWORD }}@{%- for host in FORUM_MONGO_HOSTS -%}{{ host }}:{{ FORUM_MONGO_PORT }}{%- if not loop.last -%},{%- endif -%}{%- endfor -%}/{{ FORUM_MONGO_DATABASE }}?replicaSet={{ MONGO_REPLICASET_NAME }}{%- if FORUM_MONGO_TAGS -%}&tags={{ FORUM_MONGO_TAGS }}{%- endif -%}"
+
 # Configure mysql database
 EDXAPP_MYSQL_USER_ADMIN: '%%MYSQL_ADMIN_USER%%'
 EDXAPP_MYSQL_PASSWORD_ADMIN: '%%MYSQL_ADMIN_PASSWORD%%'
