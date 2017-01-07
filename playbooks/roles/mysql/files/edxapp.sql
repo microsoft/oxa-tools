@@ -178,7 +178,7 @@ END$$
 DELIMITER ;
 
 /*
- Whenever a a course is deleted from SYSADMIN menu it is deleted from course_overviews_courseoverview table as well. 
+ Whenever a course is deleted from SYSADMIN menu it is deleted from course_overviews_courseoverview table as well. 
  We are defining this trigger so that course_mode for honor is deleted automatically which is not needed anymore.
 */
 DROP TRIGGER IF EXISTS course_overviews_courseoverview_after_delete;
