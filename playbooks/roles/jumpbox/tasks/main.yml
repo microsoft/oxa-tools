@@ -1,0 +1,41 @@
+---
+
+##########################
+# MYSQL
+##########################
+
+- name: Remove a cron job for mysql-backup
+  sudo: yes
+  cron:
+    name="Remove MySQL backup job"
+    cron_file=mysql_backup
+    state=absent
+
+- name: Schedule MySQL backups
+  sudo: yes
+  cron:
+    name="Create MySQL backup job"
+    user="{{ os_admin_username }}"
+    cron_file=mysql_backup
+    special_time=daily
+    job="sudo bash {{ jumpbox_files_path }}/db_backup.sh --environment-file {{ env_file }} --database-type mysql > ~/latest_sql_backup.log 2>&1"
+
+##########################
+# MONGO
+##########################
+
+- name: Remove a cron job for mongo-backup
+  sudo: yes
+  cron:
+    name="Remove Mongo backup job"
+    cron_file=mongo_backup
+    state=absent
+
+- name: Schedule Mongo backups
+  sudo: yes
+  cron:
+    name="Create Mongo backup job"
+    user="{{ os_admin_username }}"
+    cron_file=mongo_backup
+    special_time=daily
+    job="sudo bash {{ jumpbox_files_path }}/db_backup.sh --environment-file {{ env_file }} --database-type mongo > ~/latest_sql_backup.log 2>&1"

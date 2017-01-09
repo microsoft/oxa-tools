@@ -9,6 +9,8 @@ ERROR_CRONTAB_FAILED=4101
 ERROR_GITINSTALL_FAILED=5101
 ERROR_MONGOCLIENTINSTALL_FAILED=5201
 ERROR_MYSQLCLIENTINSTALL_FAILED=5301
+ERROR_NODEINSTALL_FAILED=6101
+ERROR_AZURECLI_FAILED=6201
 
 #############################################################################
 # Log a message
@@ -36,7 +38,7 @@ log()
     fi
     
     # send the message to syslog
-    logger $1
+    logger "$1"
 }
 
 #############################################################################
@@ -95,8 +97,9 @@ configure_datadisks()
     # installation cannot be made silent using the techniques that keep the
     # mdadm installation quiet: a) -y AND b) DEBIAN_FRONTEND=noninteractive.
     # Therefore, we'll install postfix early with the "No configuration" option.
-    echo "postfix postfix/main_mailer_type select No configuration" | sudo debconf-set-selections
-    sudo apt-get install -y postfix
+    echo "postfix postfix/main_mailer_type select No configuration" | debconf-set-selections
+    log "installing postfix..." 
+    apt-get install -y -qq postfix
 
     bash ./vm-disk-utils-0.1.sh -b $DATA_DISKS -s
 }
@@ -113,7 +116,7 @@ install-git()
         log "Installing Git Client"
 
         log "Updating Repository"
-        apt-get update
+        apt-get -y -qq update
 
         apt-get install -y git
         exit_on_error "Failed to install the GIT clienton ${HOSTNAME} !" $ERROR_GITINSTALL_FAILED
@@ -123,13 +126,13 @@ install-git()
 }
 
 #############################################################################
-# Install Mongo Shell
+# Install Mongo Shell and Tools
 #############################################################################
 
 install-mongodb-shell()
 {
-    if type mongo >/dev/null 2>&1; then
-        log "MongoDB Shell is already installed"
+    if (type mongo >/dev/null 2>&1) && (type mongodump >/dev/null 2>&1) && (type mongorestore >/dev/null 2>&1); then
+        log "MongoDB Shell, mongodump, and mongorestore are already installed"
     else
         log "Installing MongoDB Shell"
         
@@ -147,34 +150,124 @@ install-mongodb-shell()
         fi
 
         log "Updating Repository"
-        apt-get update
+        apt-get -y -qq update
 
         log "Installing Mongo Shell"
         apt-get install -y mongodb-org-shell
         exit_on_error "Failed to install the Mongo client on ${HOSTNAME} !" $ERROR_MONGOCLIENTINSTALL_FAILED
+
+        log "Installing Mongo Tools"
+        apt-get install -y mongodb-org-tools
+        exit_on_error "Failed to install the Mongo dump/restore on ${HOSTNAME} !" $ERROR_MONGOCLIENTINSTALL_FAILED
     fi
 
     log "Mongo Shell installed"
 }
 
 #############################################################################
-# Install Mysql Client
+# Install Mysql Client and mysqldump
 #############################################################################
 
 install-mysql-client()
 {
-    if type mysql >/dev/null 2>&1; then
-        log "Mysql Client is already installed"
+    if (type mysql >/dev/null 2>&1) && (type mysqldump >/dev/null 2>&1); then
+        log "Mysql Client and mysqldump are already installed"
     else
         log "Updating Repository"
-        apt-get update
+        apt-get -y -qq update
 
+        # Note: this doesn't work on ubuntu14. the fix to:
+        # a) grab the deb file (like in mysql-ubuntu-install.sh) AND
+        # b) specify the version instead of the wildcard. For example, mysql-client-core-5.6
         log "Installing Mysql Client"
         apt-get install -y mysql-client-core*
         exit_on_error "Failed to install the Mysql client on ${HOSTNAME} !" $ERROR_MYSQLCLIENTINSTALL_FAILED
+
+        log "Installing mysqldump"
+        apt-get install -y mysql-client
+        exit_on_error "Failed to install the Mysql Dump on ${HOSTNAME} !" $ERROR_MYSQLCLIENTINSTALL_FAILED
     fi
 
     log "Mysql client installed"
+}
+
+#############################################################################
+# Install Azure CLI
+#############################################################################
+
+install-azure-cli()
+{
+    if type azure >/dev/null 2>&1; then
+        log "Azure CLI is already installed"
+    else
+        log "Updating Repository"
+        apt-get -y -qq update
+
+        # Note: nodejs-legacy isn't available nor required on Ubuntu12.
+        log "Installing nodejs-legacy, npm, and azure cli"
+        apt-get install -y nodejs-legacy npm
+        exit_on_error "Failed to install nodejs-legacy and/or npm on ${HOSTNAME} !" $ERROR_NODEINSTALL_FAILED
+        npm install -g azure-cli
+        exit_on_error "Failed to install azure cli on ${HOSTNAME} !" $ERROR_AZURECLI_FAILED
+    fi
+
+    log "Azure CLI installed"
+}
+
+#############################################################################
+# Install jq - Command-line JSON processor
+#############################################################################
+
+install-json-processor()
+{
+    if type jq >/dev/null 2>&1; then
+        log "JSON Processor is already installed"
+    else
+        log "Updating Repository"
+        apt-get -y -qq update
+
+        log "Installing jq - Command-line JSON processor"
+        apt-get install -y jq
+        exit_on_error "Failed to install jq"
+    fi
+
+    log "JSON Processor installed"
+}
+
+#############################################################################
+# Install Ansible
+#############################################################################
+
+install-ansible()
+{
+    if type ansible-playbook >/dev/null 2>&1; then
+        log "Ansible is already installed"
+        #todo: add conditional on ansible-playbook --version to ensure the string contains edx.
+        # if it doesn't then, we should consider uninstalling/reinstalling
+    else
+        SHORT_RELEASE_NUMBER=`lsb_release -sr`
+        if [ ! -z $1 ] && (( $(echo "$SHORT_RELEASE_NUMBER < 15" |bc -l) ))
+        then
+            #edx-configuratoin repo
+            CONFIGURATION_PATH=$1
+            pushd $CONFIGURATION_PATH
+            bash util/install/ansible-bootstrap.sh
+            popd
+        else
+            log "Add relevant repositories"
+            apt-get install -y software-properties-common
+            apt-add-repository -y ppa:ansible/ansible
+
+            log "Updating Repository"
+            apt-get -y -qq update
+
+            log "Installing Ansible"
+            apt-get install -y ansible
+            exit_on_error "Failed to install ansible"
+        fi
+    fi
+
+    log "Ansible installed"
 }
 
 #############################################################################
@@ -347,6 +440,45 @@ is_valid_arg()
     fi
 
     return $result
+}
+
+
+#############################################################################
+# Source Environment Variables
+# TODO: USE source_environment_values everywhere we source env-specific vars
+#############################################################################
+
+source_environment_values() 
+{
+    ENV_FILE="$1"
+
+    if [ -f $ENV_FILE ]
+    then
+        # populate the environment variables
+        source $ENV_FILE
+        log "Successfully sourced environment-specific settings"
+    else
+        log "BAD ARGUMENT. Cannot find environment settings file at $ENV_FILE"
+        log "exiting script"
+        exit 1
+    fi
+
+    # todo: apply overrides if additional param is provided
+    # if [ ! -z $todo ], etc.
+}
+
+#############################################################################
+# Exit if not root user
+#############################################################################
+
+exit_if_limited_user() 
+{
+    if [ "${UID}" -ne 0 ];
+    then
+        log "Script executed without root permissions"
+        echo "You must be root to run this program." >&2
+        exit 3
+    fi
 }
 
 #############################################################################

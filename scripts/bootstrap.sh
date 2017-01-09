@@ -177,8 +177,7 @@ setup_overrides()
 ##
 setup() 
 {
-    apt-get -y update
-    apt-get -y install git
+    install-git
   
     # sync the private repository
     sync_repo $OXA_TOOLS_CONFIG_REPO $OXA_TOOLS_CONFIG_VERSION $OXA_TOOLS_CONFIG_PATH $ACCESS_TOKEN
@@ -205,10 +204,12 @@ setup()
     sync_repo $CONFIGURATION_REPO $CONFIGURATION_VERSION $CONFIGURATION_PATH
   
     # run edx bootstrap and install requirements
-    cd $CONFIGURATION_PATH
-    bash util/install/ansible-bootstrap.sh
+    install-ansible $CONFIGURATION_PATH
+
+    pushd $CONFIGURATION_PATH
     pip install -r requirements.txt
-  
+    popd
+
     # fix OXA environment ownership
     chown -R $ADMIN_USER:$ADMIN_USER $OXA_PATH
   
@@ -250,6 +251,19 @@ update_stamp_jb() {
   #$ANSIBLE_PLAYBOOK -i ${CLUSTERNAME}mongo1, $OXA_SSH_ARGS -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mongo"
   #exit_on_error "Execution of OXA Mongo playbook failed"
   #exit_on_error "Execution of OXA MySQL playbook failed"
+}
+
+recurring_db_backup_jb() {
+  exit_if_limited_user
+
+  install-azure-cli
+  install-mongodb-shell
+  install-mysql-client
+  install-json-processor
+  install-ansible $CONFIGURATION_PATH
+
+  $ANSIBLE_PLAYBOOK -i localhost, -c local $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "jumpbox"
+  exit_on_error "Execution of recurring database backup failed"
 }
 
 update_stamp_vmss() {
@@ -323,7 +337,6 @@ CONFIGURATION_PATH=$OXA_PATH/configuration
 OXA_ENV_FILE=$OXA_TOOLS_CONFIG_PATH/env/$DEPLOYMENT_ENV/$DEPLOYMENT_ENV.sh
 OXA_PLAYBOOK_CONFIG=$OXA_PATH/oxa.yml
 
-
 ##
 ## CRON CheckPoint
 ## We now have support for cron execution at x interval
@@ -334,28 +347,30 @@ OXA_PLAYBOOK_CONFIG=$OXA_PATH/oxa.yml
 TARGET_FILE=/var/log/bootstrap-$EDX_ROLE.log
 PROGRESS_FILE=/var/log/bootstrap-$EDX_ROLE.progress
 
+# For log, package installers, etc.
+source $OXA_TOOLS_PATH/templates/stamp/utilities.sh
+
 if [ "$CRON_MODE" == "1" ];
 then
     echo "Cron execution for ${EDX_ROLE} on ${HOSTNAME} detected."
 
     # check if we need to run the setup
     RUN_BOOTSTRAP=$(get_bootstrap_status)
-    TIMESTAMP=`date +"%D %T"`
 
     case "$RUN_BOOTSTRAP" in
         "0")
-            echo "${TIMESTAMP} : Bootstrap is not complete. Proceeding with setup..."
+            log "Bootstrap is not complete. Proceeding with setup..."
             ;;
         "1")
-            echo "${TIMESTAMP} : Bootstrap is not complete. Waiting on backend bootstrap..."
+            log "Bootstrap is not complete. Waiting on backend bootstrap..."
             exit
             ;;
         "2")
-            echo "${TIMESTAMP} : Bootstrap is complete."
+            log "Bootstrap is complete."
             exit
             ;;
         "3")
-            echo "${TIMESTAMP} : Bootstrap is in progress."
+            log "Bootstrap is in progress."
             exit
             ;;
     esac
@@ -365,9 +380,7 @@ then
 fi
 
 # Note when we started
-TIMESTAMP=`date +"%D %T"`
-STATUS_MESSAGE="${TIMESTAMP} :: Starting bootstrap of ${EDX_ROLE} on ${HOSTNAME}"
-echo $STATUS_MESSAGE
+log "Starting bootstrap of ${EDX_ROLE} on ${HOSTNAME}"
 
 setup
 
@@ -378,7 +391,7 @@ setup
 PATH=$PATH:/edx/bin
 ANSIBLE_PLAYBOOK=ansible-playbook
 OXA_PLAYBOOK=$OXA_TOOLS_PATH/playbooks/oxa_configuration.yml
-OXA_PLAYBOOK_ARGS="-e oxa_tools_path=$OXA_TOOLS_PATH -e oxa_tools_config_path=$OXA_TOOLS_CONFIG_PATH"
+OXA_PLAYBOOK_ARGS="-e oxa_tools_path=$OXA_TOOLS_PATH -e oxa_env_file=$OXA_ENV_FILE -e admin_user=$ADMIN_USER"
 OXA_SSH_ARGS="-u $ADMIN_USER --private-key=/home/$ADMIN_USER/.ssh/id_rsa"
 
 # Fixes error: RPC failed; result=56, HTTP code = 0'
@@ -389,6 +402,7 @@ cd $CONFIGURATION_PATH/playbooks
 case "$EDX_ROLE" in
   jb)
     update_stamp_jb
+    #recurring_db_backup_jb #todo:create secure storage during deployment bootstrap
     ;;
   vmss)
     update_stamp_vmss
@@ -416,10 +430,8 @@ remove_progress_file
 
 # Note when we ended
 # log a closing message and leave expected bread crumb for status tracking
-TIMESTAMP=`date +"%D %T"`
-STATUS_MESSAGE="${TIMESTAMP} :: Completed bootstrap of ${EDX_ROLE} on ${HOSTNAME}"
 
 echo "Creating Phase 1 Crumb at '$TARGET_FILE''"
 touch $TARGET_FILE
 
-echo $STATUS_MESSAGE
+log "Completed bootstrap of ${EDX_ROLE} on ${HOSTNAME}"

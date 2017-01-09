@@ -47,13 +47,7 @@ print_script_header
 
 log "Begin execution of Mysql installation script extension on ${HOSTNAME}"
 
-if [ "${UID}" -ne 0 ];
-then
-    log "Script executed without root permissions"
-    echo "You must be root to run this program." >&2
-    exit 3
-fi
-
+exit_if_limited_user
 
 # Parse script parameters
 while getopts :n:m:v:k:r:u:p:h optname; do
@@ -160,8 +154,7 @@ install_mysql_server()
 
     package=$MYSQL_SERVER_PACKAGE_NAME
 
-    # todo: another conditional is required for sql5.6 on ubuntu16. 
-    if (( $(echo "$OS_VER < 16" |bc -l) )) && [ $mysqlServerPackageVersion == "5.7" ]
+    if (( $(echo "$OS_VER < 16" |bc -l) )) && [ $PACKAGE_VERSION == "5.7" ]
     then
         # Allow sql 5.7 on ubuntu 14 and below.
         package=${PACKAGE_NAME}
@@ -171,13 +164,19 @@ install_mysql_server()
         echo mysql-apt-config mysql-apt-config/select-product select Ok | debconf-set-selections
         dpkg -i $debFileName.deb
         rm $debFileName*
+    elif (( $(echo "$OS_VER > 16" |bc -l) )) && (( $(echo "$PACKAGE_VERSION < 5.7" |bc -l) ))
+    then
+        # Allows sql 5.6 on ubuntu 16
+        add-apt-repository 'deb http://archive.ubuntu.com/ubuntu trusty universe'
     fi
 
+    log "Updating Repository"
     apt-get -y -qq update
 
     echo $package mysql-server/root_password password $MYSQL_ADMIN_PASSWORD | debconf-set-selections
     echo $package mysql-server/root_password_again password $MYSQL_ADMIN_PASSWORD | debconf-set-selections
-    apt-get install -y -qq $package 
+    apt-get install -y -qq $package
+    exit_on_error "Failed to install Mysql"
 
     # Install additional dependencies
     log "Installing additional dependencies: Python-Pip, Python-Dev, MysqlClient Dev Lib"
@@ -305,11 +304,9 @@ configure_mysql_replication()
     touch $TMP_QUERY_FILE
     chmod 700 $TMP_QUERY_FILE
 
-
     if [ ${MYSQL_REPLICATION_NODEID} -eq 1 ];
     then
         log "Mysql Replication Master Node detected. Setting up Master Replication on ${HOSTNAME}"
- 
 
         tee ./$TMP_QUERY_FILE > /dev/null <<EOF
 -- CREATE USER IF NOT EXISTS '{MYSQL_ADMIN_USER}'@'%' IDENTIFIED BY '{MYSQL_ADMIN_PASSWORD}';
@@ -323,7 +320,6 @@ EOF
 
     else
         log "Mysql Replication Slave Node detected. Setting up Slave Replication on ${HOSTNAME} with master at ${MASTER_NODE_IPADDRESS}"
-
 
         tee ./$TMP_QUERY_FILE > /dev/null <<EOF
 -- CREATE USER IF NOT EXISTS '{MYSQL_ADMIN_USER}'@'%' IDENTIFIED BY '{MYSQL_ADMIN_PASSWORD}';

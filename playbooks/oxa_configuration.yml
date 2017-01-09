@@ -2,13 +2,16 @@
 - name: Configure OXA
   hosts: all
   vars:
-    secrets_path: "{{ oxa-tools_config_path }}"
+    os_admin_username: "{{ admin_user }}"
+    env_file: "{{ oxa_env_file }}"
     roles_path: "{{ oxa_tools_path }}/playbooks/roles"
     edxapp_files_path: "{{ roles_path }}/edxapp/files"
     mysql_files_path: "{{ roles_path }}/mysql/files"
+    jumpbox_files_path: "{{ roles_path }}/jumpbox/files"
   sudo: True
   gather_facts: True
   roles:
     - { role: edxapp, tags: [ 'edxapp' ] }
     - { role: mongo, tags: [ 'mongo' ] }
     - { role: mysql, tags: [ 'mysql' ] }
+    - { role: jumpbox, tags: [ 'jumpbox' ] }
