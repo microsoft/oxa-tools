@@ -35,8 +35,8 @@
     },
 
     "variables": {
-        "cmsIpName": "[concat('loadBalancerCms', parameters('networkSettings').publicIPAddressNameSuffix)]",
-        "lmsIpName": "[concat('loadBalancerLms', parameters('networkSettings').publicIPAddressNameSuffix)]",
+        "cmsIpName": "[concat('lbCms', parameters('networkSettings').publicIPAddressNameSuffix, '-', parameters('networkSettings').loadbalancerSettings.deploymentSlot)]",
+        "lmsIpName": "[concat('lbLms', parameters('networkSettings').publicIPAddressNameSuffix, '-', parameters('networkSettings').loadbalancerSettings.deploymentSlot)]",
         "cmsIPNamePrefix": "-cms",
         "lmsIPNamePrefix": "-lms",
         "loadBalancerLMSIpName": "[concat(parameters('networkSettings').loadbalancerSettings.loadBalancerName, variables('cmsIPNamePrefix'), parameters('networkSettings').publicIPAddressNameSuffix)]",
@@ -255,7 +255,8 @@
             "apiVersion": "[parameters('apiSettings').computeApiVersion]",
             "location": "[resourceGroup().location]",
             "dependsOn": [
-                "storageLoop"
+                "storageLoop",
+                "[parameters('networkSettings').loadbalancerSettings.loadBalancerName]"
             ],
             "sku": {
                 "name": "[parameters('machineSettings').vmSize]",
@@ -369,14 +370,14 @@
         },
         {
             "type": "Microsoft.Insights/autoscaleSettings",
-            "name": "[concat(parameters('networkSettings').clusterName, parameters('networkSettings').loadbalancerSettings.vmssAutoscaleSettingNameSuffix)]",
+            "name": "[parameters('networkSettings').clusterVirtualMachineScaleSetSettingsName]",
             "apiVersion": "[parameters('apiSettings').insightsApiVersion]",
             "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[parameters('networkSettings').clusterVirtualMachineScaleSetName]"
             ],
             "properties": {
-                "name": "[concat(parameters('networkSettings').clusterName, parameters('networkSettings').loadbalancerSettings.vmssAutoscaleSettingNameSuffix)]",
+                "name": "[parameters('networkSettings').clusterVirtualMachineScaleSetSettingsName]",
                 "targetResourceUri": "[concat('/subscriptions/',subscription().subscriptionId, '/resourceGroups/',  resourceGroup().name, '/providers/Microsoft.Compute/virtualMachineScaleSets/', parameters('networkSettings').clusterVirtualMachineScaleSetName)]",
                 "enabled": "[parameters('networkSettings').loadbalancerSettings.AutoscaleEnabled]",
                 "profiles": [

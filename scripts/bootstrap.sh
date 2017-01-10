@@ -98,6 +98,8 @@ sync_repo() {
   if [[ ! -d $REPO_PATH ]]; then
     mkdir -p $REPO_PATH
     git clone ${REPO_URL/github/$REPO_TOKEN@github} $REPO_PATH
+
+    exit_on_error "Failed syncing repository $REPO_URL | $REPO_VERSION"
   fi
   pushd $REPO_PATH && git checkout ${REPO_VERSION:-master} && popd
 }
@@ -197,8 +199,8 @@ setup()
     fi
 
     export $(sed -e 's/#.*$//' $OXA_ENV_OVERRIDE_FILE | cut -d= -f1)
-    export ANSIBLE_REPO=CONFIGURATION_REPO
-    export ANSIBLE_VERSION=CONFIGURATION_VERSION
+    export ANSIBLE_REPO=$CONFIGURATION_REPO
+    export ANSIBLE_VERSION=$CONFIGURATION_VERSION
   
     # sync public repositories
     sync_repo $OXA_TOOLS_REPO $OXA_TOOLS_VERSION $OXA_TOOLS_PATH
@@ -206,8 +208,22 @@ setup()
   
     # run edx bootstrap and install requirements
     cd $CONFIGURATION_PATH
-    bash util/install/ansible-bootstrap.sh
+    ANSIBLE_BOOTSTRAP_SCRIPT=util/install/ansible-bootstrap.sh
+
+    # in order to support retries, we need to clean the temporary folder where the ansible bootstrap script clones the repository
+    TEMP_CONFIGURATION_PATH=/tmp/configuration
+    if [[ -d $TEMP_CONFIGURATION_PATH ]]; then
+        echo "Removing the temporary configuration path at $TEMP_CONFIGURATION_PATH"
+        rm -rf $TEMP_CONFIGURATION_PATH
+    else
+        echo "Skipping clean up of $TEMP_CONFIGURATION_PATH"
+    fi
+
+    bash $ANSIBLE_BOOTSTRAP_SCRIPT
+    exit_on_error "Failed executing $ANSIBLE_BOOTSTRAP_SCRIPT"
+
     pip install -r requirements.txt
+    exit_on_error "Failed pip-installing EdX requirements"
   
     # fix OXA environment ownership
     chown -R $ADMIN_USER:$ADMIN_USER $OXA_PATH
@@ -249,7 +265,9 @@ update_stamp_jb() {
   # oxa playbooks - mongo (enable when customized) and mysql
   #$ANSIBLE_PLAYBOOK -i ${CLUSTERNAME}mongo1, $OXA_SSH_ARGS -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mongo"
   #exit_on_error "Execution of OXA Mongo playbook failed"
-  #exit_on_error "Execution of OXA MySQL playbook failed"
+
+  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mysql"
+  exit_on_error "Execution of OXA MySQL playbook failed"
 }
 
 update_stamp_vmss() {

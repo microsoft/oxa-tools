@@ -132,7 +132,7 @@
             "type": "string",
             "defaultValue": "staging",
             "allowedValues": [
-                "production",
+                "prod",
                 "staging"
             ],
             "metadata": {
@@ -314,6 +314,13 @@
             "metadata": {
                 "description": "The target cloud/environment"
             }
+        },
+        "deploymentVersionId": {
+            "type": "string",
+            "defaultValue": "201611211241",
+            "metadata": {
+                "description": "The identifier for versioning bits deployed to VMSS"
+            }
         }
     },
     "variables": {
@@ -333,15 +340,16 @@
         "storageAccountType": "Standard_LRS",
         "storageContainer": "[concat('https://', variables('storageAccountName'),'.blob.core.windows.net/vhds/')]",
 
-        "loadBalancerName": "[concat(parameters('clusterName'), '-lb')]",
+        "loadBalancerName": "[concat(parameters('clusterName'), '-lb-', parameters('deploymentSlot'))]",
         "virtualNetworkName": "[concat(parameters('clusterName'), '-vnet')]",
         "subnetName": "[concat(parameters('clusterName'), '-subnet')]",
-        "bePoolName": "[concat(parameters('clusterName'), '-bepool')]",
+        "bePoolName": "[concat(parameters('clusterName'), '-bepool-', parameters('deploymentSlot'))]",
         "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
         "lbID": "[resourceId('Microsoft.Network/loadBalancers',variables('loadBalancerName'))]",
 
         "vmssAutoscaleSettingNameSuffix": "-autoscale",
-        "vmssName": "[concat(parameters('clusterName'), '-vmss')]",
+        "vmssName": "[concat(parameters('clusterName'), '-vmss-', parameters('deploymentVersionId'))]",
+        "vmssAutoScaleSettingsName": "[concat(parameters('clusterName'), '-autoscale-', parameters('deploymentVersionId'))]",
 
         "cmsPublicAddressName": "cmsPublicAddress",
         "lmsPublicAddressName": "lmsPublicAddress",
@@ -381,6 +389,7 @@
             "clusterMysqlDataNodeDomainName": "[concat(parameters('clusterName'), 'mysql')]",
             "clusterVirtualMachineScaleSetName": "[variables('vmssName')]",
             "clusterVirtualMachineScaleSetDomainName": "[concat(parameters('clusterName'), 'vmss')]",
+            "clusterVirtualMachineScaleSetSettingsName": "[variables('vmssAutoScaleSettingsName')]",
             "jumpBoxAvailabilitySetFaultDomainCount": "1",
             "jumpBoxNodeCount": "1",
             "mongoDataNodesAvailabilitySetFaultDomainCount": "3",
@@ -389,6 +398,7 @@
             "mysqlDataNodeCount": 3,
 
             "loadbalancerSettings": {
+                "deploymentSlot": "[parameters('deploymentSlot')]",
                 "loadBalancerName": "[variables('loadBalancerName')]",
                 "cmsLoadBalancerDomainName": "[concat('cms-', parameters('clusterNameDomainName'), '-', parameters('deploymentSlot'))]",
                 "lmsLoadBalancerDomainName": "[concat('lms-', parameters('clusterNameDomainName'), '-', parameters('deploymentSlot'))]",
@@ -420,8 +430,7 @@
                 "AutoscaleEnabled": "[parameters('autoScaleEnabled')]",
                 "AutoscaleCapacityDefault": "[parameters('autoScaleCapacityDefault')]",
                 "AutoscaleCapacityMaximum": "[parameters('autoScaleCapacityMaximum')]",
-                "AutoscaleCapacityMinimum": "[parameters('autoScaleCapacityMinimum')]",
-                "vmssAutoscaleSettingNameSuffix": "[variables('vmssAutoscaleSettingNameSuffix')]"
+                "AutoscaleCapacityMinimum": "[parameters('autoScaleCapacityMinimum')]"
             }
         },
 
