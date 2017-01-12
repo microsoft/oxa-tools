@@ -37,11 +37,14 @@
     "variables": {
         "cmsIpName": "[concat('lbCms', parameters('networkSettings').publicIPAddressNameSuffix, '-', parameters('networkSettings').loadbalancerSettings.deploymentSlot)]",
         "lmsIpName": "[concat('lbLms', parameters('networkSettings').publicIPAddressNameSuffix, '-', parameters('networkSettings').loadbalancerSettings.deploymentSlot)]",
+		"previewIpName": "[concat('lbPreview', parameters('networkSettings').publicIPAddressNameSuffix, '-', parameters('networkSettings').loadbalancerSettings.deploymentSlot)]",
         "cmsIPNamePrefix": "-cms",
         "lmsIPNamePrefix": "-lms",
+		"previewIPNamePrefix": "-preview",
         "loadBalancerLMSIpName": "[concat(parameters('networkSettings').loadbalancerSettings.loadBalancerName, variables('cmsIPNamePrefix'), parameters('networkSettings').publicIPAddressNameSuffix)]",
         "loadBalancerCMSIpName": "[concat(parameters('networkSettings').loadbalancerSettings.loadBalancerName, variables('lmsIPNamePrefix'), parameters('networkSettings').publicIPAddressNameSuffix)]",
-        "newStorageAccountSuffix": "[toLower(concat(parameters('networkSettings').clusterName, 'vmsssa'))]",
+        "loadBalancerPreviewIpName": "[concat(parameters('networkSettings').loadbalancerSettings.loadBalancerName, variables('previewIPNamePrefix'), parameters('networkSettings').publicIPAddressNameSuffix)]",
+		"newStorageAccountSuffix": "[toLower(concat(parameters('networkSettings').clusterName, 'vmsssa'))]",
         "uniqueStringArray": [
             "[concat(variables('newStorageAccountSuffix'), '0')]",
             "[concat(variables('newStorageAccountSuffix'), '1')]",
@@ -66,7 +69,6 @@
                 "accountType": "[parameters('storageSettings').storageAccountType]"
             }
         },
-
         {
             "name": "[variables('cmsIpName')]",
             "type": "Microsoft.Network/publicIPAddresses",
@@ -91,7 +93,18 @@
                 }
             }
         },
-
+        {
+            "name": "[variables('previewIpName')]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "[parameters('apiSettings').networkApiVersion]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publicIPAllocationMethod": "[parameters('networkSettings').publicIPAddressType]",
+                "dnsSettings": {
+                    "domainNameLabel": "[toLower(parameters('networkSettings').loadbalancerSettings.previewLoadBalancerDomainName)]"
+                }
+            }
+        },
         {
             "name": "[parameters('networkSettings').loadbalancerSettings.loadBalancerName]",
             "type": "Microsoft.Network/loadBalancers",
@@ -99,7 +112,8 @@
             "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[variables('lmsIpName')]",
-                "[variables('cmsIpName')]"
+                "[variables('cmsIpName')]",
+				"[variables('previewIpName')]"
             ],
             "properties": {
                 "frontendIPConfigurations": [
@@ -116,6 +130,14 @@
                         "properties": {
                             "publicIpAddress": {
                                 "id": "[resourceId(resourceGroup().name,'Microsoft.Network/publicIpAddresses', variables('lmsIpName'))]"
+                            }
+                        }
+                    },
+                    {
+                        "name": "previewPublicAddress",
+                        "properties": {
+                            "publicIpAddress": {
+                                "id": "[resourceId(resourceGroup().name,'Microsoft.Network/publicIpAddresses', variables('previewIpName'))]"
                             }
                         }
                     }
@@ -205,6 +227,46 @@
                                 "id": "[parameters('networkSettings').loadbalancerSettings.lbProbeCMSID]"
                             }
                         }
+                    },
+                    {
+                        "name": "LBRulePreview_SSL",
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[parameters('networkSettings').loadbalancerSettings.previewIPConfigID]"
+                            },
+                            "backendAddressPool": {
+                                "id": "[parameters('networkSettings').loadbalancerSettings.lbPoolID]"
+                            },
+                            "protocol": "tcp",
+                            "frontendPort": 443,
+                            "backendPort": 48020,
+                            "enableFloatingIP": false,
+                            "idleTimeoutInMinutes": 5,
+                            "loadDistribution": "SourceIP",
+                            "probe": {
+                                "id": "[parameters('networkSettings').loadbalancerSettings.lbProbePreviewSSLID]"
+                            }
+                        }
+                    },
+					{
+                        "name": "LBRulePreview",
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[parameters('networkSettings').loadbalancerSettings.previewIPConfigID]"
+                            },
+                            "backendAddressPool": {
+                                "id": "[parameters('networkSettings').loadbalancerSettings.lbPoolID]"
+                            },
+                            "protocol": "tcp",
+                            "frontendPort": 80,
+                            "backendPort": 18020,
+                            "enableFloatingIP": false,
+                            "idleTimeoutInMinutes": 5,
+                            "loadDistribution": "SourceIP",
+                            "probe": {
+                                "id": "[parameters('networkSettings').loadbalancerSettings.lbProbePreviewID]"
+                            }
+                        }
                     }
                 ],
                 "probes": [
@@ -215,7 +277,7 @@
                             "port": 80,
                             "requestPath": "/heartbeat",
                             "intervalInSeconds": "5",
-                            "numberOfProbes": "4"
+                            "numberOfProbes": "6"
                         }
                     },
                     {
@@ -224,7 +286,7 @@
                             "protocol": "tcp",
                             "port": 443,
                             "intervalInSeconds": "5",
-                            "numberOfProbes": "4"
+                            "numberOfProbes": "6"
                         }
                     },
                     {
@@ -234,7 +296,7 @@
                             "port": 18010,
                             "requestPath": "/heartbeat",
                             "intervalInSeconds": "5",
-                            "numberOfProbes": "4"
+                            "numberOfProbes": "6"
                         }
                     },
                     {
@@ -243,7 +305,26 @@
                             "protocol": "tcp",
                             "port": 48010,
                             "intervalInSeconds": "5",
-                            "numberOfProbes": "4"
+                            "numberOfProbes": "6"
+                        }
+                    },
+                    {
+                        "name": "[parameters('networkSettings').loadbalancerSettings.lbProbePreviewName]",
+                        "properties": {
+                            "protocol": "http",
+                            "port": 18020,
+                            "requestPath": "/heartbeat",
+                            "intervalInSeconds": "5",
+                            "numberOfProbes": "6"
+                        }
+                    },
+                    {
+                        "name": "[parameters('networkSettings').loadbalancerSettings.lbProbePreviewSSLName]",
+                        "properties": {
+                            "protocol": "tcp",
+                            "port": 48020,
+                            "intervalInSeconds": "5",
+                            "numberOfProbes": "6"
                         }
                     }
                 ]
