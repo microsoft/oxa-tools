@@ -147,8 +147,8 @@ SELECT
 /*
  Whenever a new course is created from CMS a row is inserted into course_overviews_courseoverview table.
  We are defining this trigger so that course_mode for honor is inserted automatically which is required for certification.
-*/
-DROP TRIGGER IF EXISTS course_overviews_coursesoverview_after_insert;
+
+ DROP TRIGGER IF EXISTS course_overviews_coursesoverview_after_insert;
 DELIMITER $$
 CREATE TRIGGER course_overviews_coursesoverview_after_insert
 AFTER INSERT ON 
@@ -177,10 +177,10 @@ NULL,
 END$$
 DELIMITER ;
 
-/*
+
  Whenever a course is deleted from SYSADMIN menu it is deleted from course_overviews_courseoverview table as well. 
  We are defining this trigger so that course_mode for honor is deleted automatically which is not needed anymore.
-*/
+
 DROP TRIGGER IF EXISTS course_overviews_courseoverview_after_delete;
 DELIMITER $$
 CREATE TRIGGER course_overviews_courseoverview_after_delete 
@@ -192,3 +192,4 @@ BEGIN
 	WHERE course_modes_coursemode.course_id = old.id;
 END$$
 DELIMITER  ;
+ */
