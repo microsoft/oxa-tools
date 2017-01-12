@@ -117,7 +117,7 @@ SELECT
     SELECT * FROM auth_user WHERE username='oxamaster'
   ) LIMIT 1
 );
-
+commit;
 INSERT INTO auth_userprofile
 (
   name,
