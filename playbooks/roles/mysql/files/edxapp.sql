@@ -88,6 +88,7 @@ VALUES
   We will set is_active = False. So we must use reset password inorder to set password and to activate the account.
 */
 
+DELETE FROM auth_userprofile where name='oxamaster';
 INSERT into auth_user
 (
   password,
@@ -137,11 +138,6 @@ SELECT
   '',
   1,
   (select id FROM auth_user WHERE username='oxamaster')
-
-  FROM auth_userprofile
-  WHERE NOT EXISTS (
-    select * FROM auth_userprofile WHERE user_id=(select id FROM auth_user WHERE username='oxamaster')
-  ) LIMIT 1
 );
 
 /*
@@ -193,3 +189,4 @@ BEGIN
 END$$
 DELIMITER  ;
  */
+commit;
