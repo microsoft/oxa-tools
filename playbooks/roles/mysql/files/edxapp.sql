@@ -79,71 +79,6 @@ VALUES
   1
 );
 
-
-/*
-  Create the super user that will be used for DRI. We will use oxamaster@microsoft.com for this account.
-  We must have auth_user and auth_userprofile entries for oxamaster. This code inserts if it doesn't exist in the table. If it already exists doesn't do anything. 
-  So this code is rerunnable. 
-  
-  We will set is_active = False. So we must use reset password inorder to set password and to activate the account.
-*/
-
-INSERT into auth_user
-(
-  password,
-  is_superuser,
-  username,
-  first_name,
-  last_name,
-  email,
-  is_staff,
-  is_active,
-  date_joined
-)
-(
-SELECT
-  SHA1('edx'),
-  1,
-  'oxamaster',
-  '',
-  '',
-  'oxamaster@microsoft.com',
-  1,
-  0,
-  NOW()
-  
-  FROM auth_user
-  WHERE NOT EXISTS (
-    SELECT * FROM auth_user WHERE username='oxamaster'
-  ) LIMIT 1
-);
-commit;
-INSERT INTO auth_userprofile
-(
-  name,
-  meta,
-  courseware,
-  language,
-  location,
-  allow_certificate,
-  user_id
-)
-(
-SELECT
-  'oxamaster',
-  '',
-  'course.xml',
-  '',
-  '',
-  1,
-  (select id FROM auth_user WHERE username='oxamaster')
-
-  FROM auth_userprofile
-  WHERE NOT EXISTS (
-    select * FROM auth_userprofile WHERE user_id=(select id FROM auth_user WHERE username='oxamaster')
-  ) LIMIT 1
-);
-
 /*
  Whenever a new course is created from CMS a row is inserted into course_overviews_courseoverview table.
  We are defining this trigger so that course_mode for honor is inserted automatically which is required for certification.
@@ -193,3 +128,4 @@ BEGIN
 END$$
 DELIMITER  ;
  */
+commit;
