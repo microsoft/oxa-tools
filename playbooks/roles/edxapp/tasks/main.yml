@@ -9,6 +9,16 @@
 # Print the shell tasks's stdout and stderr.
 - debug: var="bash_theme.stdout_lines + [ bash_theme.stderr ]"
 
+- name: Create the super user
+  sudo: yes
+  shell: bash ./create_superuser.sh "{{ EDXAPP_SU_PASSWORD }}" "{{ EDXAPP_SU_EMAIL }}" "{{ EDXAPP_SU_USERNAME }}"
+  args:
+    chdir: "{{ edxapp_files_path }}"
+  register: bash_superuser
+
+# Print the shell tasks's stdout and stderr.
+- debug: var="bash_superuser.stdout_lines + [ bash_superuser.stderr ]"
+
 - name: Configure Nginx SSL
   sudo: yes
   shell: bash ./configure_ssl.sh {{ NGINX_ENABLE_SSL }} {{ EDXAPP_LMS_SSL_NGINX_PORT }} {{ EDXAPP_CMS_SSL_NGINX_FRONTEND_PORT }} {{ EDXAPP_LMS_PREVIEW_SSL_NGINX_FRONTEND_PORT }}
