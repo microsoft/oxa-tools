@@ -6,6 +6,11 @@ EDXAPP_PLATFORM_NAME: "%%PLATFORM_NAME%%"
 
 EDXAPP_TIME_ZONE: "America/Los_Angeles"
 
+# Superuser information
+EDXAPP_SU_PASSWORD: "%%EDXAPP_SU_PASSWORD%%" 
+EDXAPP_SU_EMAIL: "%%EDXAPP_SU_EMAIL%%"
+EDXAPP_SU_USERNAME: "%%EDXAPP_SU_USERNAME%%"
+
 # Configure third-party auth
 # see: http://edx.readthedocs.org/projects/edx-installing-configuring-and-running/en/latest/configuration/tpa/
 # see: https://github.com/MSOpenTech/edx-documentation/blob/master/en_us/install_operations/source/configuration/enable_sso.rst
