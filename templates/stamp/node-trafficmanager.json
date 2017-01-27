@@ -40,8 +40,8 @@
                         "type": "Microsoft.Network/TrafficManagerProfiles/ExternalEndpoints",
                         "properties": {
                             "target": "[parameters('customSettings').endpoint1.target]",
-                            "endpointStatus": "[parameters('customSettings').endpoint1.Status]",
-                            "endpointLocation": "[parameters('customSettings').endpoint1.Location]",
+                            "endpointStatus": "[parameters('customSettings').endpoint1.status]",
+                            "endpointLocation": "[parameters('customSettings').endpoint1.location]",
                             "priority": "[parameters('customSettings').endpoint1.priority]"
                         }
                     },
