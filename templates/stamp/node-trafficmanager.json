@@ -39,20 +39,20 @@
                         "name": "endpoint1",
                         "type": "Microsoft.Network/TrafficManagerProfiles/ExternalEndpoints",
                         "properties": {
-                            "target": "[parameters('customSettings').endpoint1.Target]",
+                            "target": "[parameters('customSettings').endpoint1.target]",
                             "endpointStatus": "[parameters('customSettings').endpoint1.Status]",
                             "endpointLocation": "[parameters('customSettings').endpoint1.Location]",
-                            "priority": "[parameters('customSettings').endpoint1.Priority]"
+                            "priority": "[parameters('customSettings').endpoint1.priority]"
                         }
                     },
                     {
                         "name": "endpoint2",
                         "type": "Microsoft.Network/TrafficManagerProfiles/ExternalEndpoints",
                         "properties": {
-                            "target": "[parameters('customSettings').endpoint2.Target]",
-                            "endpointStatus": "[parameters('customSettings').endpoint2.Status]",
-                            "endpointLocation": "[parameters('customSettings').endpoint2.Location]",
-                            "priority": "[parameters('customSettings').endpoint2.Priority]"
+                            "target": "[parameters('customSettings').endpoint2.target]",
+                            "endpointStatus": "[parameters('customSettings').endpoint2.status]",
+                            "endpointLocation": "[parameters('customSettings').endpoint2.location]",
+                            "priority": "[parameters('customSettings').endpoint2.priority]"
                         }
                     }
                 ]
