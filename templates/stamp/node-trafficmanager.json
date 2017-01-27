@@ -27,12 +27,12 @@
                 "trafficRoutingMethod": "Priority",
                 "dnsConfig": {
                     "relativeName": "[parameters('customSettings').relativeDnsName]",
-                    "ttl": "[parameters('customSettings').dnsTtl"
+                    "ttl": "[parameters('customSettings').dnsTtl]"
                 },
                 "monitorConfig": {
-                    "protocol": "[parameters('customSettings').monitorConfigProtocol",
-                    "port": "[parameters('customSettings').monitorConfigPort",
-                    "path": "[parameters('customSettings').monitorConfigPath"
+                    "protocol": "[parameters('customSettings').monitorConfigProtocol]",
+                    "port": "[parameters('customSettings').monitorConfigPort]",
+                    "path": "[parameters('customSettings').monitorConfigPath]"
                 },
                 "endpoints": [
                     {
