@@ -1,0 +1,62 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "apiSettings": {
+            "type": "object",
+            "metadata": {
+                "Description": "API version of the resource type"
+            }
+        },
+        "customSettings": {
+            "type": "object",
+            "metadata": {
+                "Description": "Key Vault settings object"
+            }
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Network/trafficManagerProfiles",
+            "name": "[parameters('customSettings').trafficManagerName]",
+            "apiVersion": "[parameters('apiSettings').trafficManagerApiversion]",
+            "location": "global",
+
+            "properties": {
+                "profileStatus": "Enabled",
+                "trafficRoutingMethod": "Priority",
+                "dnsConfig": {
+                    "relativeName": "[parameters('customSettings').relativeDnsName]",
+                    "ttl": "[parameters('customSettings').dnsTtl"
+                },
+                "monitorConfig": {
+                    "protocol": "[parameters('customSettings').monitorConfigProtocol",
+                    "port": "[parameters('customSettings').monitorConfigPort",
+                    "path": "[parameters('customSettings').monitorConfigPath"
+                },
+                "endpoints": [
+                    {
+                        "name": "endpoint1",
+                        "type": "Microsoft.Network/TrafficManagerProfiles/ExternalEndpoints",
+                        "properties": {
+                            "target": "[parameters('customSettings').endpoint1.Target]",
+                            "endpointStatus": "[parameters('customSettings').endpoint1.Status]",
+                            "endpointLocation": "[parameters('customSettings').endpoint1.Location]",
+                            "priority": "[parameters('customSettings').endpoint1.Priority]"
+                        }
+                    },
+                    {
+                        "name": "endpoint2",
+                        "type": "Microsoft.Network/TrafficManagerProfiles/ExternalEndpoints",
+                        "properties": {
+                            "target": "[parameters('customSettings').endpoint2.Target]",
+                            "endpointStatus": "[parameters('customSettings').endpoint2.Status]",
+                            "endpointLocation": "[parameters('customSettings').endpoint2.Location]",
+                            "priority": "[parameters('customSettings').endpoint2.Priority]"
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}
