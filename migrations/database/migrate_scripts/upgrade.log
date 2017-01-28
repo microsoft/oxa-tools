@@ -1,0 +1,304 @@
+***************sample log file********************************
++ cd ../../..
++ echo 'Migrate to fix oauth2_provider'
+Migrate to fix oauth2_provider
++ /edx/bin/edxapp-migrate-lms --fake oauth2_provider zero
+2017-01-23 22:43:30,554 INFO 45562 [dd.dogapi] dog_stats_api.py:66 - Initializing dog api to use statsd: localhost, 8125
+Operations to perform:
+  Unapply all migrations: oauth2_provider
+Running migrations:
+  Rendering model states... DONE
+  Unapplying oauth2_provider.0001_initial... FAKED
+2017-01-23 22:43:46,748 INFO 45631 [dd.dogapi] dog_stats_api.py:66 - Initializing dog api to use statsd: localhost, 8125
+Operations to perform:
+  Unapply all migrations: oauth2_provider
+Running migrations:
+  No migrations to apply.
++ /edx/bin/edxapp-migrate-lms --fake-initial
+2017-01-23 22:43:53,016 INFO 45675 [dd.dogapi] dog_stats_api.py:66 - Initializing dog api to use statsd: localhost, 8125
+Operations to perform:
+  Synchronize unmigrated apps: eventtracking_django, links, djcelery, discussion_api, learner_dashboard, edxnotes, django_sites_extensions, auth_exchange, service_status, gating, sekizai, rest_framework, edxmako, openassessment, datadog, staticbook, common_views, course_wiki, support, course_structure_api, django_countries, humanize, course_blocks, provider, notification_prefs, thumbnail, xblock, mptt, staticfiles, markdownedx, fileupload, edx_sga, edx_jsme, monitoring, instructor, static_template_view, corsheaders, statici18n, pipeline, simple_history, enrollment, messages, config_models, notifier_api, dashboard, django_nose, debug, mailing
+  Apply all migrations: wiki, verified_track_content, dark_lang, branding, user_api, django_comment_common, redirects, course_overviews, sites, rss_proxy, bookmarks, mobile_api, badges, course_groups, site_configuration, course_modes, sessions, shoppingcart, workflow, external_auth, default, contenttypes, splash, certificates, static_replace, third_party_auth, assessment, submissions, status, oauth2_provider, instructor_task, organizations, edx_oauth2_provider, microsite_configuration, django_notify, api_admin, auth, coursetalk, util, verify_student, lms_xblock, oauth2, track, student, credentials, email_marketing, contentserver, xblock_django, embargo, commerce, milestones, course_action_state, edx_proctoring, admin, oauth_provider, courseware, programs, edxval, teams, credit, django_openid_auth, bulk_email, survey, course_structures, theming, cors_csrf, coursewarehistoryextended, notes, self_paced
+Synchronizing apps without migrations:
+  Creating tables...
+    Running deferred SQL...
+  Installing custom SQL...
+Running migrations:
+  Rendering model states... DONE
+  Applying api_admin.0001_initial... OK
+  Applying api_admin.0002_auto_20160325_1604... OK
+  Applying api_admin.0003_auto_20160404_1618... OK
+  Applying api_admin.0004_auto_20160412_1506... OK
+  Applying api_admin.0005_auto_20160414_1232... OK
+  Applying api_admin.0006_catalog... OK
+  Applying assessment.0002_staffworkflow... OK
+  Applying certificates.0006_certificatetemplateasset_asset_slug... OK
+  Applying certificates.0007_certificateinvalidation... OK
+  Applying badges.0001_initial... OK
+  Applying badges.0002_data__migrate_assertions... OK
+  Applying badges.0003_schema__add_event_configuration... OK
+  Applying bookmarks.0001_initial... OK
+  Applying bulk_email.0003_config_model_feature_flag... OK
+  Applying bulk_email.0004_add_email_targets... OK
+  Applying bulk_email.0005_move_target_data... OK
+  Applying certificates.0008_schema__remove_badges... OK
+  Applying commerce.0002_commerceconfiguration... OK
+  Applying commerce.0003_auto_20160329_0709... OK
+  Applying commerce.0004_auto_20160531_0950... OK
+  Applying contentserver.0001_initial... OK
+  Applying contentserver.0002_cdnuseragentsconfig... OK
+  Applying course_modes.0005_auto_20151217_0958... OK
+  Applying course_modes.0006_auto_20160208_1407... OK
+  Applying course_modes.0007_coursemode_bulk_sku... OK
+  Applying course_overviews.0006_courseoverviewimageset... OK
+  Applying course_overviews.0007_courseoverviewimageconfig... OK
+  Applying course_overviews.0008_remove_courseoverview_facebook_url... OK
+  Applying course_overviews.0009_readd_facebook_url... OK
+  Applying course_overviews.0010_auto_20160329_2317... OK
+  Applying coursetalk.0001_initial... OK
+  Applying coursetalk.0002_auto_20160325_0631... OK
+  Applying coursewarehistoryextended.0001_initial... OK
+  Applying coursewarehistoryextended.0002_force_studentmodule_index... OK
+  Applying credentials.0001_initial... OK
+  Applying credentials.0002_auto_20160325_0631... OK
+  Applying credit.0002_creditconfig... OK
+  Applying credit.0003_auto_20160511_2227... OK
+  Applying django_comment_common.0002_forumsconfig... OK
+  Applying edx_oauth2_provider.0001_initial... FAKED
+  Applying edx_proctoring.0002_proctoredexamstudentattempt_is_status_acknowledged... OK
+  Applying edx_proctoring.0003_auto_20160101_0525... OK
+  Applying edx_proctoring.0004_auto_20160201_0523... OK
+  Applying edx_proctoring.0005_proctoredexam_hide_after_due... OK
+  Applying email_marketing.0001_initial... OK
+  Applying email_marketing.0002_auto_20160623_1656... OK
+  Applying microsite_configuration.0001_initial... OK
+  Applying microsite_configuration.0002_auto_20160202_0228... OK
+  Applying milestones.0003_coursecontentmilestone_requirements... OK
+  Applying milestones.0004_auto_20151221_1445... OK
+  Applying mobile_api.0002_auto_20160406_0904... OK
+  Applying oauth2.0002_auto_20160404_0813... OK
+  Applying oauth2.0003_client_logout_uri... OK
+  Applying oauth2_provider.0001_initial... OK
+  Applying oauth2_provider.0002_08_updates... OK
+  Applying programs.0004_programsapiconfig_enable_certification... OK
+  Applying programs.0005_programsapiconfig_max_retries... OK
+  Applying programs.0006_programsapiconfig_xseries_ad_enabled... OK
+  Applying programs.0007_programsapiconfig_program_listing_enabled... OK
+  Applying programs.0008_programsapiconfig_program_details_enabled... OK
+  Applying redirects.0001_initial... OK
+  Applying rss_proxy.0001_initial... OK
+  Applying shoppingcart.0003_auto_20151217_0958... OK
+  Applying site_configuration.0001_initial... OK
+  Applying site_configuration.0002_auto_20160720_0231... OK
+  Applying static_replace.0001_initial... OK
+  Applying static_replace.0002_assetexcludedextensionsconfig... OK
+  Applying student.0003_auto_20160516_0938... OK
+  Applying student.0004_auto_20160531_1422... OK
+  Applying student.0005_auto_20160531_1653... OK
+  Applying student.0006_logoutviewconfiguration... OK
+  Applying submissions.0003_submission_status... OK
+  Applying theming.0001_initial... OK
+  Applying third_party_auth.0002_schema__provider_icon_image... OK
+  Applying verified_track_content.0001_initial... OK
+  Applying verified_track_content.0002_verifiedtrackcohortedcourse_verified_cohort_name... OK
+  Applying wiki.0003_ip_address_conv... OK
+  Applying xblock_django.0002_auto_20160204_0809... OK
+  Applying xblock_django.0003_add_new_config_models... OK
+2017-01-23 22:49:14,762 INFO 48418 [dd.dogapi] dog_stats_api.py:66 - Initializing dog api to use statsd: localhost, 8125
+Operations to perform:
+  Synchronize unmigrated apps: eventtracking_django, links, djcelery, discussion_api, learner_dashboard, edxnotes, django_sites_extensions, auth_exchange, service_status, gating, sekizai, rest_framework, edxmako, openassessment, datadog, staticbook, common_views, course_wiki, support, course_structure_api, django_countries, humanize, course_blocks, provider, notification_prefs, thumbnail, xblock, mptt, staticfiles, markdownedx, fileupload, edx_sga, edx_jsme, monitoring, instructor, static_template_view, corsheaders, statici18n, pipeline, simple_history, enrollment, messages, config_models, notifier_api, dashboard, django_nose, debug, mailing
+  Apply all migrations: wiki, verified_track_content, dark_lang, branding, user_api, django_comment_common, redirects, course_overviews, sites, rss_proxy, bookmarks, mobile_api, badges, course_groups, site_configuration, course_modes, sessions, shoppingcart, workflow, external_auth, default, contenttypes, splash, certificates, static_replace, third_party_auth, assessment, submissions, status, oauth2_provider, instructor_task, organizations, edx_oauth2_provider, microsite_configuration, django_notify, api_admin, auth, coursetalk, util, verify_student, lms_xblock, oauth2, track, student, credentials, email_marketing, contentserver, xblock_django, embargo, commerce, milestones, course_action_state, edx_proctoring, admin, oauth_provider, courseware, programs, edxval, teams, credit, django_openid_auth, bulk_email, survey, course_structures, theming, cors_csrf, coursewarehistoryextended, notes, self_paced
+Synchronizing apps without migrations:
+  Creating tables...
+    Running deferred SQL...
+  Installing custom SQL...
+Running migrations:
+  Rendering model states... DONE
+  Applying contenttypes.0001_initial... OK
+  Applying auth.0001_initial... OK
+  Applying admin.0001_initial... OK
+  Applying sites.0001_initial... OK
+  Applying contenttypes.0002_remove_content_type_name... OK
+  Applying api_admin.0001_initial... OK
+  Applying api_admin.0002_auto_20160325_1604... OK
+  Applying api_admin.0003_auto_20160404_1618... OK
+  Applying api_admin.0004_auto_20160412_1506... OK
+  Applying api_admin.0005_auto_20160414_1232... OK
+  Applying api_admin.0006_catalog... OK
+  Applying assessment.0001_initial... OK
+  Applying assessment.0002_staffworkflow... OK
+  Applying auth.0002_alter_permission_name_max_length... OK
+  Applying auth.0003_alter_user_email_max_length... OK
+  Applying auth.0004_alter_user_username_opts... OK
+  Applying auth.0005_alter_user_last_login_null... OK
+  Applying auth.0006_require_contenttypes_0002... OK
+  Applying instructor_task.0001_initial... OK
+  Applying certificates.0001_initial... OK
+  Applying certificates.0002_data__certificatehtmlviewconfiguration_data... OK
+  Applying certificates.0003_data__default_modes... OK
+  Applying certificates.0004_certificategenerationhistory... OK
+  Applying certificates.0005_auto_20151208_0801... OK
+  Applying certificates.0006_certificatetemplateasset_asset_slug... OK
+  Applying certificates.0007_certificateinvalidation... OK
+  Applying badges.0001_initial... OK
+  Applying badges.0002_data__migrate_assertions... OK
+  Applying badges.0003_schema__add_event_configuration... OK
+  Applying bookmarks.0001_initial... OK
+  Applying branding.0001_initial... OK
+  Applying course_groups.0001_initial... OK
+  Applying bulk_email.0001_initial... OK
+  Applying bulk_email.0002_data__load_course_email_template... OK
+  Applying bulk_email.0003_config_model_feature_flag... OK
+  Applying bulk_email.0004_add_email_targets... OK
+  Applying bulk_email.0005_move_target_data... OK
+  Applying certificates.0008_schema__remove_badges... OK
+  Applying commerce.0001_data__add_ecommerce_service_user... OK
+  Applying commerce.0002_commerceconfiguration... OK
+  Applying commerce.0003_auto_20160329_0709... OK
+  Applying commerce.0004_auto_20160531_0950... OK
+  Applying contentserver.0001_initial... OK
+  Applying contentserver.0002_cdnuseragentsconfig... OK
+  Applying cors_csrf.0001_initial... OK
+  Applying course_action_state.0001_initial... OK
+  Applying course_modes.0001_initial... OK
+  Applying course_modes.0002_coursemode_expiration_datetime_is_explicit... OK
+  Applying course_modes.0003_auto_20151113_1443... OK
+  Applying course_modes.0004_auto_20151113_1457... OK
+  Applying course_modes.0005_auto_20151217_0958... OK
+  Applying course_modes.0006_auto_20160208_1407... OK
+  Applying course_modes.0007_coursemode_bulk_sku... OK
+  Applying course_overviews.0001_initial... OK
+  Applying course_overviews.0002_add_course_catalog_fields... OK
+  Applying course_overviews.0003_courseoverviewgeneratedhistory... OK
+  Applying course_overviews.0004_courseoverview_org... OK
+  Applying course_overviews.0005_delete_courseoverviewgeneratedhistory... OK
+  Applying course_overviews.0006_courseoverviewimageset... OK
+  Applying course_overviews.0007_courseoverviewimageconfig... OK
+  Applying course_overviews.0008_remove_courseoverview_facebook_url... OK
+  Applying course_overviews.0009_readd_facebook_url... OK
+  Applying course_overviews.0010_auto_20160329_2317... OK
+  Applying course_structures.0001_initial... OK
+  Applying coursetalk.0001_initial... OK
+  Applying coursetalk.0002_auto_20160325_0631... OK
+  Applying courseware.0001_initial... OK
+  Applying coursewarehistoryextended.0001_initial... OK
+  Applying coursewarehistoryextended.0002_force_studentmodule_index... OK
+  Applying credentials.0001_initial... OK
+  Applying credentials.0002_auto_20160325_0631... OK
+  Applying credit.0001_initial... OK
+  Applying credit.0002_creditconfig... OK
+  Applying credit.0003_auto_20160511_2227... OK
+  Applying dark_lang.0001_initial... OK
+  Applying dark_lang.0002_data__enable_on_install... OK
+  Applying default.0001_initial... OK
+  Applying default.0002_add_related_name... OK
+  Applying default.0003_alter_email_max_length... OK
+  Applying django_comment_common.0001_initial... OK
+  Applying django_comment_common.0002_forumsconfig... OK
+  Applying django_notify.0001_initial... OK
+  Applying django_openid_auth.0001_initial... OK
+  Applying oauth2.0001_initial... OK
+  Applying edx_oauth2_provider.0001_initial... OK
+  Applying edx_proctoring.0001_initial... OK
+  Applying edx_proctoring.0002_proctoredexamstudentattempt_is_status_acknowledged... OK
+  Applying edx_proctoring.0003_auto_20160101_0525... OK
+  Applying edx_proctoring.0004_auto_20160201_0523... OK
+  Applying edx_proctoring.0005_proctoredexam_hide_after_due... OK
+  Applying edxval.0001_initial... OK
+  Applying edxval.0002_data__default_profiles... OK
+  Applying email_marketing.0001_initial... OK
+  Applying email_marketing.0002_auto_20160623_1656... OK
+  Applying embargo.0001_initial... OK
+  Applying embargo.0002_data__add_countries... OK
+  Applying external_auth.0001_initial... OK
+  Applying lms_xblock.0001_initial... OK
+  Applying microsite_configuration.0001_initial... OK
+  Applying microsite_configuration.0002_auto_20160202_0228... OK
+  Applying milestones.0001_initial... OK
+  Applying milestones.0002_data__seed_relationship_types... OK
+  Applying milestones.0003_coursecontentmilestone_requirements... OK
+  Applying milestones.0004_auto_20151221_1445... OK
+  Applying mobile_api.0001_initial... OK
+  Applying mobile_api.0002_auto_20160406_0904... OK
+  Applying notes.0001_initial... OK
+  Applying oauth2.0002_auto_20160404_0813... OK
+  Applying oauth2.0003_client_logout_uri... OK
+  Applying oauth2_provider.0001_initial... OK
+  Applying oauth2_provider.0002_08_updates... OK
+  Applying oauth_provider.0001_initial... OK
+  Applying organizations.0001_initial... OK
+  Applying programs.0001_initial... OK
+  Applying programs.0002_programsapiconfig_cache_ttl... OK
+  Applying programs.0003_auto_20151120_1613... OK
+  Applying programs.0004_programsapiconfig_enable_certification... OK
+  Applying programs.0005_programsapiconfig_max_retries... OK
+  Applying programs.0006_programsapiconfig_xseries_ad_enabled... OK
+  Applying programs.0007_programsapiconfig_program_listing_enabled... OK
+  Applying programs.0008_programsapiconfig_program_details_enabled... OK
+  Applying redirects.0001_initial... OK
+  Applying rss_proxy.0001_initial... OK
+  Applying self_paced.0001_initial... OK
+  Applying sessions.0001_initial... OK
+  Applying student.0001_initial... OK
+  Applying shoppingcart.0001_initial... OK
+  Applying shoppingcart.0002_auto_20151208_1034... OK
+  Applying shoppingcart.0003_auto_20151217_0958... OK
+  Applying site_configuration.0001_initial... OK
+  Applying site_configuration.0002_auto_20160720_0231... OK
+  Applying splash.0001_initial... OK
+  Applying static_replace.0001_initial... OK
+  Applying static_replace.0002_assetexcludedextensionsconfig... OK
+  Applying status.0001_initial... OK
+  Applying student.0002_auto_20151208_1034... OK
+  Applying student.0003_auto_20160516_0938... OK
+  Applying student.0004_auto_20160531_1422... OK
+  Applying student.0005_auto_20160531_1653... OK
+  Applying student.0006_logoutviewconfiguration... OK
+  Applying submissions.0001_initial... OK
+  Applying submissions.0002_auto_20151119_0913... OK
+  Applying submissions.0003_submission_status... OK
+  Applying survey.0001_initial... OK
+  Applying teams.0001_initial... OK
+  Applying theming.0001_initial... OK
+  Applying third_party_auth.0001_initial... OK
+  Applying third_party_auth.0002_schema__provider_icon_image... OK
+  Applying track.0001_initial... OK
+  Applying user_api.0001_initial... OK
+  Applying util.0001_initial... OK
+  Applying util.0002_data__default_rate_limit_config... OK
+  Applying verified_track_content.0001_initial... OK
+  Applying verified_track_content.0002_verifiedtrackcohortedcourse_verified_cohort_name... OK
+  Applying verify_student.0001_initial... OK
+  Applying verify_student.0002_auto_20151124_1024... OK
+  Applying verify_student.0003_auto_20151113_1443... OK
+  Applying wiki.0001_initial... OK
+  Applying wiki.0002_remove_article_subscription... OK
+  Applying wiki.0003_ip_address_conv... OK
+  Applying workflow.0001_initial... OK
+  Applying xblock_django.0001_initial... OK
+  Applying xblock_django.0002_auto_20160204_0809... OK
+  Applying xblock_django.0003_add_new_config_models... OK
++ echo 'Clean up forums Ruby detritus'
+Clean up forums Ruby detritus
++ sudo rm -rf /edx/app/forum/.rbenv /edx/app/forum/.gem
++ echo 'Updating to final version of code'
+Updating to final version of code
++ cd configuration/playbooks
++ echo 'edx_platform_version: open-release/eucalyptus.1'
++ echo 'certs_version: open-release/eucalyptus.1'
++ echo 'forum_version: open-release/eucalyptus.1'
++ echo 'xqueue_version: open-release/eucalyptus.1'
++ echo 'demo_version: open-release/eucalyptus.1'
++ echo 'NOTIFIER_VERSION: open-release/eucalyptus.1'
++ echo 'ECOMMERCE_VERSION: open-release/eucalyptus.1'
++ echo 'ECOMMERCE_WORKER_VERSION: open-release/eucalyptus.1'
++ echo 'PROGRAMS_VERSION: open-release/eucalyptus.1'
++ sudo stdbuf -oL ansible-playbook --inventory-file=localhost, --connection=local --extra-vars=@vars.yml '--extra-vars="@/edx/app/edx_ansible/server-vars.yml"' vagrant-fullstack.yml
+
+PLAY [Configure instance(s)] **************************************************
+
+GATHERING FACTS ***************************************************************
+ok: [localhost]
+
+TASK: [server_utils | Install ubuntu system packages] *************************
+ok: [localhost] => (item=ack-grep,mosh,curl,tree,screen,tmux,curl,vim-tiny,dnsutils,
