@@ -214,7 +214,7 @@ COMMIT;
 BEGIN;
 /*ALTER TABLE `course_overviews_courseoverview` DROP COLUMN `facebook_url` CASCADE;*/
 ALTER TABLE `course_overviews_courseoverview` ADD COLUMN `self_paced` bool DEFAULT 0 NOT NULL;
-ALTER TABLE `course_overviews_courseoverview` ALTER COLUMN `self_paced` DROP DEFAULT;
+/*ALTER TABLE `course_overviews_courseoverview` ALTER COLUMN `self_paced` DROP DEFAULT;*/
 
 COMMIT;
 /*============coursetalk	0001=============================*/
