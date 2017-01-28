@@ -441,7 +441,7 @@
                                     },
                                     "protectedSettings": {
                                         "storageAccountName": "[parameters('customSettings').linuxDiagnosticsSettings.diagnosticsStorageAccountName]",
-                                        "storageAccountKey": "[listkeys(parameters('customSettings').linuxDiagnosticsSettings.diagnosticsStorageAccountId , parameters('apiSettings').storageApiVersion).key1]",
+                                        "storageAccountKey": "[listkeys(parameters('customSettings').linuxDiagnosticsSettings.diagnosticsStorageAccountId , parameters('apiSettings').storageApiVersion).keys[0]]",
                                         "storageAccountEndPoint": "https://core.windows.net"
                                     }
                                 }
