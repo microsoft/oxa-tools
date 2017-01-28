@@ -204,13 +204,15 @@ ALTER TABLE `course_overviews_courseoverviewimageconfig` ADD CONSTRAINT `course_
 COMMIT;
 /*============course_overviews	0008=============================*/
 /*============course_overviews	0009=============================*/
+/*
 BEGIN;
 ALTER TABLE `course_overviews_courseoverview` ADD COLUMN `facebook_url` longtext NULL;
 
 COMMIT;
+*/
 /*============course_overviews	0010=============================*/
 BEGIN;
-ALTER TABLE `course_overviews_courseoverview` DROP COLUMN `facebook_url` CASCADE;
+/*ALTER TABLE `course_overviews_courseoverview` DROP COLUMN `facebook_url` CASCADE;*/
 ALTER TABLE `course_overviews_courseoverview` ADD COLUMN `self_paced` bool DEFAULT 0 NOT NULL;
 ALTER TABLE `course_overviews_courseoverview` ALTER COLUMN `self_paced` DROP DEFAULT;
 
