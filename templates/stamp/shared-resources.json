@@ -65,6 +65,58 @@
             }
         },
         {
+            "comments": "This is the secure storage account used for backups and other admin functions",
+
+            "name": "[parameters('storageSettings').secureGenericStorageAccountName]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "[parameters('apiSettings').storageApiVersion]",
+            "location": "[resourceGroup().location]",
+
+            "sku": {
+                "name": "[parameters('storageSettings').storageAccountType]",
+                "tier": "Standard"
+            },
+            "kind": "Storage",
+            "properties": {
+                "encryption": {
+                    "keySource": "Microsoft.Storage",
+                    "services": {
+                        "blob": {
+                            "enabled": true
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "comments": "This is the storage account used for video uploads",
+
+            "name": "[parameters('storageSettings').videoUploadsStorageAccountName]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "[parameters('apiSettings').storageApiVersion]",
+            "location": "[resourceGroup().location]",
+
+            "sku": {
+                "name": "[parameters('storageSettings').storageAccountType]",
+                "tier": "Standard"
+            },
+            "kind": "Storage"
+        },
+        {
+            "comments": "This is the storage account used for WAMS",
+
+            "name": "[parameters('storageSettings').wamsStorageAccountName]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "[parameters('apiSettings').storageApiVersion]",
+            "location": "[resourceGroup().location]",
+
+            "sku": {
+                "name": "[parameters('storageSettings').storageAccountType]",
+                "tier": "Standard"
+            },
+            "kind": "Storage"
+        },
+        {
             "type": "Microsoft.Compute/availabilitySets",
             "name": "[concat(parameters('networkSettings').clusterMongoDataNodeName, parameters('networkSettings').availabilitySetNameSuffix)]",
             "apiVersion": "[parameters('apiSettings').availabilitySetApiVersion]",
@@ -155,6 +207,24 @@
                     }
                 ]
             }
+        },
+        {
+            "comments": "Windows Media service",
+            "type": "Microsoft.Media/mediaservices",
+            "name": "[parameters('storageSettings').mediaServicesAccountName]",
+            "apiVersion": "[parameters('apiSettings').mediaServicesApiVersion]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "storageAccounts": [
+                    {
+                        "id": "[resourceId('Microsoft.Storage/storageAccounts', parameters('networkSettings').wamsStorageAccountName)]",
+                        "isPrimary": true
+                    }
+                ]
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('networkSettings').wamsStorageAccountName)]"
+            ]
         }
     ]
 }

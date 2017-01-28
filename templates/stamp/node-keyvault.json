@@ -17,7 +17,7 @@
         "keyVaultSettings": {
             "type": "object",
             "metadata": {
-                "Description": "Network settings object"
+                "Description": "Key Vault settings object"
             }
         }
     },
@@ -33,7 +33,7 @@
             "properties": {
                 "enabledForDeployment": "[parameters('keyVaultSettings').enabledForDeployment]",
                 "enabledForTemplateDeployment": "[parameters('keyVaultSettings').enabledForTemplateDeployment]",
-                "enabledForVolumeEncryption": "[parameters('keyVaultSettings').enableVaultForVolumeEncryption]",
+                "enabledForVolumeEncryption": "[parameters('keyVaultSettings').enableForVolumeEncryption]",
                 "tenantId": "[parameters('keyVaultSettings').tenantId]",
                 "accessPolicies": [
                     {
