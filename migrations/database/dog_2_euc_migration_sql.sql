@@ -274,23 +274,16 @@ COMMIT;
 BEGIN;
 ALTER TABLE `email_marketing_emailmarketingconfiguration` ADD COLUMN `sailthru_abandoned_cart_delay` integer DEFAULT 60 NOT NULL;
 ALTER TABLE `email_marketing_emailmarketingconfiguration` ALTER COLUMN `sailthru_abandoned_cart_delay` DROP DEFAULT;
-ALTER TABLE `email_marketing_emailmarketingconfiguration` ADD COLUMN `sailthru_abandoned_cart_template` varchar(20) DEFAULT  NOT NULL;
-ALTER TABLE `email_marketing_emailmarketingconfiguration` ALTER COLUMN `sailthru_abandoned_cart_template` DROP DEFAULT;
+ALTER TABLE `email_marketing_emailmarketingconfiguration` ADD COLUMN `sailthru_abandoned_cart_template` varchar(20) NOT NULL;
 ALTER TABLE `email_marketing_emailmarketingconfiguration` ADD COLUMN `sailthru_content_cache_age` integer DEFAULT 3600 NOT NULL;
 ALTER TABLE `email_marketing_emailmarketingconfiguration` ALTER COLUMN `sailthru_content_cache_age` DROP DEFAULT;
 ALTER TABLE `email_marketing_emailmarketingconfiguration` ADD COLUMN `sailthru_enroll_cost` integer DEFAULT 100 NOT NULL;
 ALTER TABLE `email_marketing_emailmarketingconfiguration` ALTER COLUMN `sailthru_enroll_cost` DROP DEFAULT;
-ALTER TABLE `email_marketing_emailmarketingconfiguration` ADD COLUMN `sailthru_enroll_template` varchar(20) DEFAULT  NOT NULL;
-ALTER TABLE `email_marketing_emailmarketingconfiguration` ALTER COLUMN `sailthru_enroll_template` DROP DEFAULT;
+ALTER TABLE `email_marketing_emailmarketingconfiguration` ADD COLUMN `sailthru_enroll_template` varchar(20) NOT NULL;
 ALTER TABLE `email_marketing_emailmarketingconfiguration` ADD COLUMN `sailthru_get_tags_from_sailthru` bool DEFAULT 1 NOT NULL;
 ALTER TABLE `email_marketing_emailmarketingconfiguration` ALTER COLUMN `sailthru_get_tags_from_sailthru` DROP DEFAULT;
-ALTER TABLE `email_marketing_emailmarketingconfiguration` ADD COLUMN `sailthru_purchase_template` varchar(20) DEFAULT  NOT NULL;
-ALTER TABLE `email_marketing_emailmarketingconfiguration` ALTER COLUMN `sailthru_purchase_template` DROP DEFAULT;
-ALTER TABLE `email_marketing_emailmarketingconfiguration` ADD COLUMN `sailthru_upgrade_template` varchar(20) DEFAULT  NOT NULL;
-ALTER TABLE `email_marketing_emailmarketingconfiguration` ALTER COLUMN `sailthru_upgrade_template` DROP DEFAULT;
-ALTER TABLE `email_marketing_emailmarketingconfiguration` ALTER COLUMN `sailthru_activation_template` SET DEFAULT ;
-ALTER TABLE `email_marketing_emailmarketingconfiguration` ALTER COLUMN `sailthru_activation_template` DROP DEFAULT;
-
+ALTER TABLE `email_marketing_emailmarketingconfiguration` ADD COLUMN `sailthru_purchase_template` varchar(20) NOT NULL;
+ALTER TABLE `email_marketing_emailmarketingconfiguration` ADD COLUMN `sailthru_upgrade_template` varchar(20) NOT NULL;
 COMMIT;
 /*============microsite_configuration	0001=============================*/
 BEGIN;
