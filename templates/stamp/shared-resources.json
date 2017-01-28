@@ -51,18 +51,22 @@
             "type": "Microsoft.Storage/storageAccounts",
             "apiVersion": "[parameters('apiSettings').storageApiVersion]",
             "location": "[resourceGroup().location]",
-            "properties": {
-                "accountType": "[parameters('storageSettings').storageAccountType]"
-            }
+            "sku": {
+                "name": "[parameters('storageSettings').storageAccountType]",
+                "tier": "Standard"
+            },
+            "kind": "Storage"
         },
         {
             "name": "[parameters('storageSettings').diagnosticStorageAccountName]",
             "type": "Microsoft.Storage/storageAccounts",
             "apiVersion": "[parameters('apiSettings').storageApiVersion]",
             "location": "[resourceGroup().location]",
-            "properties": {
-                "accountType": "[parameters('storageSettings').storageAccountType]"
-            }
+            "sku": {
+                "name": "[parameters('storageSettings').storageAccountType]",
+                "tier": "Standard"
+            },
+            "kind": "Storage"
         },
         {
             "comments": "This is the secure storage account used for backups and other admin functions",
