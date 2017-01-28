@@ -217,13 +217,13 @@
             "properties": {
                 "storageAccounts": [
                     {
-                        "id": "[resourceId('Microsoft.Storage/storageAccounts', parameters('networkSettings').wamsStorageAccountName)]",
+                        "id": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageSettings').wamsStorageAccountName)]",
                         "isPrimary": true
                     }
                 ]
             },
             "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('networkSettings').wamsStorageAccountName)]"
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageSettings').wamsStorageAccountName)]"
             ]
         }
     ]
