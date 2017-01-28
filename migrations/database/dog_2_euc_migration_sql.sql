@@ -497,13 +497,9 @@ ALTER TABLE `theming_sitetheme` ADD CONSTRAINT `theming_sitetheme_site_id_4fccda
 COMMIT;
 /*============third_party_auth	0002=============================*/
 BEGIN;
-ALTER TABLE `third_party_auth_ltiproviderconfig` ADD COLUMN `icon_image` varchar(100) DEFAULT  NOT NULL;
-ALTER TABLE `third_party_auth_ltiproviderconfig` ALTER COLUMN `icon_image` DROP DEFAULT;
-ALTER TABLE `third_party_auth_oauth2providerconfig` ADD COLUMN `icon_image` varchar(100) DEFAULT  NOT NULL;
-ALTER TABLE `third_party_auth_oauth2providerconfig` ALTER COLUMN `icon_image` DROP DEFAULT;
-ALTER TABLE `third_party_auth_samlproviderconfig` ADD COLUMN `icon_image` varchar(100) DEFAULT  NOT NULL;
-ALTER TABLE `third_party_auth_samlproviderconfig` ALTER COLUMN `icon_image` DROP DEFAULT;
-
+ALTER TABLE `third_party_auth_ltiproviderconfig` ADD COLUMN `icon_image` varchar(100) NOT NULL;
+ALTER TABLE `third_party_auth_oauth2providerconfig` ADD COLUMN `icon_image` varchar(100) NOT NULL;
+ALTER TABLE `third_party_auth_samlproviderconfig` ADD COLUMN `icon_image` varchar(100) NOT NULL;
 COMMIT;
 /*============verified_track_content	0001=============================*/
 BEGIN;
