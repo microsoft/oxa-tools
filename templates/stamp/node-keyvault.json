@@ -33,7 +33,7 @@
             "properties": {
                 "enabledForDeployment": "[parameters('keyVaultSettings').enabledForDeployment]",
                 "enabledForTemplateDeployment": "[parameters('keyVaultSettings').enabledForTemplateDeployment]",
-                "enabledForVolumeEncryption": "[parameters('keyVaultSettings').enableForVolumeEncryption]",
+                "enabledForVolumeEncryption": "[parameters('keyVaultSettings').enabledForVolumeEncryption]",
                 "tenantId": "[parameters('keyVaultSettings').tenantId]",
                 "accessPolicies": [
                     {
