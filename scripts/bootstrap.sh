@@ -195,6 +195,12 @@ setup()
     apt-get -y update
     apt-get -y install git
 
+    # Ensure that gettext (which includes envsubst) is installed
+    if [ $(dpkg-query -W -f='${Status}' gettext 2>/dev/null | grep -c "ok installed") -eq 0 ];
+    then
+      sudo apt-get install -y gettext;
+    fi
+
     # sync the private repository
     sync_repo $OXA_TOOLS_CONFIG_REPO $OXA_TOOLS_CONFIG_VERSION $OXA_TOOLS_CONFIG_PATH $ACCESS_TOKEN
 
@@ -327,15 +333,38 @@ update_fullstack() {
 }
 
 update_devstack() {
-  # create required vagrant user account to avoid fatal error
-  sudo adduser -m -p $VAGRANT_USER_PASSWORD vagrant
+  if ! id -u vagrant > /dev/null 2>&1; then
+    # create required vagrant user account to avoid fatal error
+    sudo adduser --disabled-password --gecos "" vagrant
 
-  # create some required directories to avoid fatal error
-  sudo mkdir -p /edx/app/ecomworker
-  sudo mkdir -p /home/vagrant/share_x11
+    # set the vagrant password
+    sudo usermod --password $(echo $VAGRANT_USER_PASSWORD | openssl passwd -1 -stdin) vagrant
+  fi
 
-  # create empty .bashrc file to avoid fatal error
-  sudo touch /home/vagrant/.bashrc
+  # create some required directories to avoid fatal errors
+  if [ ! -d /edx/app/ecomworker ]; then
+    sudo mkdir -p /edx/app/ecomworker
+  fi
+
+  if [ ! -d /home/vagrant/share_x11 ]; then
+    sudo mkdir -p /home/vagrant/share_x11
+  fi
+
+  if [ ! -d /edx/app/ecommerce ]; then
+    sudo mkdir -p /edx/app/ecommerce
+  fi
+
+  if [ ! -f /home/vagrant/.bashrc ]; then
+    # create empty .bashrc file to avoid fatal error
+    sudo touch /home/vagrant/.bashrc
+  fi
+
+  if $(stat -c "%U" /home/vagrant) != "vagrant"; then
+    # Change the owner of the /home/vagrant folder and its subdirectories to the vagrant user account
+    # to avoid an error in TASK: [local_dev | login share X11 auth to app users] related to file
+    # "/home/vagrant/share_x11/share_x11.j2" msg: chown failed: failed to look up user vagrant
+    sudo chown -hR vagrant /home/vagrant
+  fi
 
   # edx playbooks - devstack (single VM)
   # Skip ecommerce for now since it isn't used and requires debugging
@@ -430,7 +459,7 @@ setup
 PATH=$PATH:/edx/bin
 ANSIBLE_PLAYBOOK=ansible-playbook
 OXA_PLAYBOOK=$OXA_TOOLS_PATH/playbooks/oxa_configuration.yml
-OXA_PLAYBOOK_ARGS="-e oxa_tools_path=$OXA_TOOLS_PATH -e oxa_tools_config_path=$OXA_TOOLS_CONFIG_PATH"
+OXA_PLAYBOOK_ARGS="-e oxa_tools_path=$OXA_TOOLS_PATH -e oxa_tools_config_path=$OXA_TOOLS_CONFIG_PATH -e template_type=$TEMPLATE_TYPE"
 OXA_SSH_ARGS="-u $ADMIN_USER --private-key=/home/$ADMIN_USER/.ssh/id_rsa"
 
 # Fixes error: RPC failed; result=56, HTTP code = 0'
