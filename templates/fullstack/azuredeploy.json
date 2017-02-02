@@ -59,7 +59,7 @@
   },
   "variables": {
     "apiVersion": "2015-06-15",
-    "openedxVersion": "named-release/dogwood.rc",
+    "openedxVersion": "open-release/eucalyptus.3",
     "personalAccessToken": "",
     "scriptDownloadUri": "https://raw.githubusercontent.com/Microsoft/oxa-tools/btelnes/",
     "installScript": "bootstrap.sh",
