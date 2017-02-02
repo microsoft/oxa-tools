@@ -7,6 +7,3 @@ certs_version: "%%EDX_VERSION%%"
 forum_version: "%%FORUM_VERSION%%"
 xqueue_version: "%%EDX_VERSION%%"
 
-edxapp_theme_source_repo: "%%THEME_REPO%%"
-edxapp_theme_version: "%%THEME_VERSION%%"
-edxapp_theme_name: "default"
