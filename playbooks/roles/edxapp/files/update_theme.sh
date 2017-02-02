@@ -4,26 +4,26 @@
 
 set -x
 
-# Delete the folder /tmp/sass-cache if exists. This is the temp folder for compiled assets
-if [[ -d /tmp/sass-cache ]]; then
-  sudo rm -fr /tmp/sass-cache
+# Remove if themes folder exists
+if [[ -d /edx/app/edxapp/themes ]]; then
+  sudo rm -fr /edx/app/edxapp/themes
 fi
+
+# Create themes folder
+sudo mkdir /edx/app/edxapp/themes
+cd /edx/app/edxapp/themes
+
+# Download comprehensive theming from github to folder /edx/app/edxapp/themes/comprehensive 
+sudo git clone https://github.com/microsoft/edx-theme.git comprehensive
+cd comprehensive
+sudo git checkout oxa/master.euc
+
+sudo chown -R edxapp:edxapp /edx/app/edxapp/themes
 
 # Compile LMS assets and then restart the services so that changes take effect
 sudo su edxapp -s /bin/bash -c "source /edx/app/edxapp/edxapp_env;cd /edx/app/edxapp/edx-platform/;paver update_assets lms --settings aws"
 sudo /edx/bin/supervisorctl restart edxapp:
 
-# Compile LMS assets and then restart the services so that changes take effect.
-# We do the same operation twice here since mostly it doesnot work in the first run. This is a workaround.
-sudo su edxapp -s /bin/bash -c "source /edx/app/edxapp/edxapp_env;cd /edx/app/edxapp/edx-platform/;paver update_assets lms --settings aws"
-sudo /edx/bin/supervisorctl restart edxapp:
 
-# Compile CMS assets and restart all services.
-sudo su edxapp -s /bin/bash -c "source /edx/app/edxapp/edxapp_env;cd /edx/app/edxapp/edx-platform/;paver update_assets cms --settings aws"
-sudo /edx/bin/supervisorctl restart edxapp:
-
-# Copy the static images 
-sudo su edxapp -s /bin/bash -c "cp /edx/app/edxapp/themes/default/static/images/*.png /edx/var/edxapp/staticfiles/images/"
-sudo /edx/bin/supervisorctl restart all
 
 
