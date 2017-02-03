@@ -268,11 +268,11 @@ exit_on_error()
 
 update_stamp_jb() {
   # edx playbooks - mysql and memcached
-  $ANSIBLE_PLAYBOOK -i 10.0.0.16, $OXA_SSH_ARGS -e@$OXA_PLAYBOOK_CONFIG edx_mysql.yml
-  exit_on_error "Execution of edX MySQL playbook failed"
+  #$ANSIBLE_PLAYBOOK -i 10.0.0.16, $OXA_SSH_ARGS -e@$OXA_PLAYBOOK_CONFIG edx_mysql.yml
+  #exit_on_error "Execution of edX MySQL playbook failed"
 
   # minimize tags? "install:base,install:system-requirements,install:configuration,install:app-requirements,install:code"
-  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_sandbox.yml -e "migrate_db=yes" --tags "edxapp-sandbox,install,migrate"
+  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_sandbox.yml -e "migrate_db=yes" --tags "edxapp-sandbox,install,migrate":q
   exit_on_error "Execution of edX MySQL migrations failed"
 
   # oxa playbooks - mongo (enable when customized) and mysql
