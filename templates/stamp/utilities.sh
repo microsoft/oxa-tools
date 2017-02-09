@@ -9,6 +9,10 @@ ERROR_CRONTAB_FAILED=4101
 ERROR_GITINSTALL_FAILED=5101
 ERROR_MONGOCLIENTINSTALL_FAILED=5201
 ERROR_MYSQLCLIENTINSTALL_FAILED=5301
+ERROR_POWERSHELLINSTALL_FAILED=5401
+ERROR_HYDRATECONFIG_FAILED=5410
+ERROR_NODEINSTALL_FAILED=6101
+ERROR_AZURECLI_FAILED=6201
 
 #############################################################################
 # Log a message
@@ -170,7 +174,16 @@ install-mysql-client()
         apt-get update
 
         log "Installing Mysql Client"
-        apt-get install -y mysql-client-core*
+        RELEASE_DESCRIPTION=`lsb_release -sd`
+
+        if [[ $RELEASE_DESCRIPTION =~ "14.04.5" ]]; then
+          log "Installing Mysql Client 5.5 for '$RELEASE_DESCRIPTION'"
+          apt-get install -y mysql-client-core-5.5
+        else
+          log "Installing Mysql Client Core * for '$RELEASE_DESCRIPTION'"
+          apt-get install -y mysql-client-core*
+        fi
+
         exit_on_error "Failed to install the Mysql client on ${HOSTNAME} !" $ERROR_MYSQLCLIENTINSTALL_FAILED
     fi
 
@@ -362,4 +375,112 @@ exit_on_error()
             exit $2
         fi
     fi
+}
+
+#############################################################################
+# Install Powershell
+#############################################################################
+
+install-powershell()
+{
+    log "Installing Powershell"
+
+    wget https://raw.githubusercontent.com/PowerShell/PowerShell/v6.0.0-alpha.15/tools/download.sh > ~/powershell_installer.sh
+
+    # the installer script requires a prompt/confirmation to install the powershell package.
+    # this needs to be disabled for automation purposes
+    sed -i "s/sudo apt-get install -f.*/sudo apt-get install -y -f/I" ~/powershell_installer.sh
+
+    # execute the installer
+    bash ~/powershell_installer.sh
+
+    # validate powershell is installed
+    if [ -f /usr/bin/powershell ]; then
+        exit_on_error "Powershell installation failed ${HOSTNAME} !" $ERROR_POWERSHELLINSTALL_FAILED
+    fi
+}
+
+install-azurepowershellcmdlets()
+{
+    log "Installing Azure Powershell Cmdlets"
+
+    # set the PSGallery as a trusted
+    log "Trusting PSGallery"
+    Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+
+    log "Installing Azure RM cmdlets"
+    Install-Module AzureRM
+
+    log "Installing Azure cmdlets"
+    Install-Module Azure
+}
+
+#############################################################################
+# Install Powershell
+#############################################################################
+
+hydrate-configurations()
+{
+    # get a reference to the oxa-tools repository root
+    OXA_TOOLS_REPO_PATH=$1;
+    if [[ ! -d OXA_TOOLS_REPO_PATH ]]; then
+        exit_on_error "OXA Tools repository path specified at '${OXA_TOOLS_REPO_PATH}' doesn't exist!" $ERROR_HYDRATECONFIG_FAILED
+    fi
+
+    # now check for the powershell script itself
+    HYDRATION_SCRIPT="${HYDRATION_SCRIPT}/scripts/Process-OxaToolsKeyVaultConfiguration.ps1"
+
+    if [ -f "${HYDRATION_SCRIPT}" ]; then
+        exit_on_error "Keyvault Hydration script was not found at ${HYDRATION_SCRIPT}!" $ERROR_HYDRATECONFIG_FAILED
+    fi
+
+    # call the powershell keyvault configuration script in hydration mode
+    /usr/bin/powershell $HYDRATION_SCRIPT -
+}
+
+
+#############################################################################
+# Install Azure CLI
+#############################################################################
+
+install-azure-cli()
+{
+    if type azure >/dev/null 2>&1; then
+        log "Azure CLI is already installed"
+    else
+        log "Updating Repository"
+        apt-get -y -qq update
+
+        # Note: nodejs-legacy isn't available nor required on Ubuntu12.
+        log "Installing nodejs-legacy, npm, and azure cli"
+        apt-get install -y nodejs-legacy npm
+        exit_on_error "Failed to install nodejs-legacy and/or npm on ${HOSTNAME} !" $ERROR_NODEINSTALL_FAILED
+        npm install -g azure-cli
+        exit_on_error "Failed to install azure cli on ${HOSTNAME} !" $ERROR_AZURECLI_FAILED
+
+        log "Suppressing telemetry collection"
+        azure telemetry --disable
+    fi
+
+    log "Azure CLI installed"
+}
+
+#############################################################################
+# Install jq - Command-line JSON processor
+#############################################################################
+
+install-json-processor()
+{
+    if type jq >/dev/null 2>&1; then
+        log "JSON Processor is already installed"
+    else
+        log "Updating Repository"
+        apt-get -y -qq update
+
+        log "Installing jq - Command-line JSON processor"
+        apt-get install -y jq
+        exit_on_error "Failed to install jq"
+    fi
+
+    log "JSON Processor installed"
 }

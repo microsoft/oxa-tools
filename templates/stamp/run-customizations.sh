@@ -121,6 +121,10 @@ if [ "$MACHINE_ROLE" == "jumpbox" ] || [ "$MACHINE_ROLE" == "vmss" ];
 then
     install-mongodb-shell
     install-mysql-client
+
+    install-powershell
+    install-json-processor
+    install-azure-cli
 fi
 
 # 2. Clone the GitHub repository & setup the utilities
