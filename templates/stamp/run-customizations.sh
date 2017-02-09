@@ -123,7 +123,6 @@ then
     install-mysql-client
 
     install-powershell
-    install-json-processor
     install-azure-cli
 fi
 
