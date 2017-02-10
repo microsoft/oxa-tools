@@ -114,7 +114,7 @@ sync_repo() {
 
     exit_on_error "Failed syncing repository $REPO_URL | $REPO_VERSION"
   fi
-  pushd $REPO_PATH && git checkout ${REPO_VERSION:-oxa/master.euc} && popd
+  pushd $REPO_PATH && git checkout ${REPO_VERSION:-master} && popd
 }
 
 ##
