@@ -218,8 +218,8 @@ setup()
     fi
 
     export $(sed -e 's/#.*$//' $OXA_ENV_OVERRIDE_FILE | cut -d= -f1)
-    export ANSIBLE_REPO=$CONFIGURATION_REPO
-    export ANSIBLE_VERSION=$CONFIGURATION_VERSION
+    export ANSIBLE_REPO="https://github.com/edx/ansible.git"
+    export ANSIBLE_VERSION="master"
 
     # sync public repositories
     sync_repo $OXA_TOOLS_REPO $OXA_TOOLS_VERSION $OXA_TOOLS_PATH
