@@ -28,7 +28,127 @@ help()
     echo "        -u OS Admin User Name"
     echo "        -m Monitoring cluster name"
     echo "        -s Bootstrap Phase (0=Servers, 1=OpenEdx App)"
+    echo "        --keyvault-name Name of the key vault"
+    echo "        --aad-webclient-id Id of AAD web client (service principal)"
+    echo "        --aad-webclient-appkey Application key for the AAD web client"
+    echo "        --aad-tenant-id AAD Tenant Id"
 }
+
+# Parse script parameters
+parse_args()
+{
+    while [[ "$#" -gt 0 ]]
+        do
+
+         # Log input parameters to facilitate troubleshooting
+        echo "Option $1 set with value $2"
+
+        case "$1" in
+            -c) # Cloud Name
+                CLOUDNAME=${OPTARG}
+                ;;
+            -p) # GitHub Personal Access Token
+                GITHUB_PERSONAL_ACCESS_TOKEN=${OPTARG}
+                ;;
+            -a) # GitHub Account Name
+                GITHUB_ACCOUNTNAME=${OPTARG}
+                ;;
+            -n) # GitHub Project Name
+                GITHUB_PROJECTNAME=${OPTARG}
+                ;;
+            -b) # GitHub Project Branch
+                GITHUB_PROJECTBRANCH=${OPTARG}
+                ;;
+            -u) # OS Admin User Name
+                OS_ADMIN_USERNAME=${OPTARG}
+                ;;
+            -i) # Custom script relative path
+                CUSTOM_INSTALLER_RELATIVEPATH=${OPTARG}
+                ;;
+            -m) # Monitoring cluster name
+                MONITORING_CLUSTER_NAME=${OPTARG}
+                ;;
+            -s) # Bootstrap Phase (0=Servers, 1=OpenEdx App)
+                if is_valid_arg "0 1" ${OPTARG}; then
+                    BOOTSTRAP_PHASE=${OPTARG}
+                else
+                    log "Invalid Bootstrap Phase specified - ${OPTARG}" $ERROR_MESSAGE
+                    help
+                    exit 2
+                fi
+                ;;
+            --repo-path)
+                REPO_ROOT_PATH=$2
+                shift # past argument
+                ;;
+            --cloud)
+                CLOUD_NAME=$2
+                shift # past argument
+                ;;
+            -u|--admin-user)
+                OS_ADMIN_USERNAME=$2
+                shift # past argument
+                ;;
+            --monitoring-cluster)
+                MONITORING_CLUSTER_NAME=$2
+                shift # past argument
+                ;;
+            --access-token)
+                GITHUB_PERSONAL_ACCESS_TOKEN=$2
+                shift # past argument
+                ;;
+            --branch)
+                GITHUB_PROJECTBRANCH=$2
+                shift # past argument
+                ;;
+            --phase)
+                if is_valid_arg "0 1" $2; then
+                    BOOTSTRAP_PHASE=$2
+                else
+                    log "Invalid Bootstrap Phase specified - $2" $ERROR_MESSAGE
+                    help
+                    exit 2
+                fi
+                shift # past argument
+                ;;
+            --crontab-interval)
+                CRONTAB_INTERVAL_MINUTES=$2
+                shift # past argument
+                ;;
+            --keyvault-name)
+                KEYVAULT_NAME="$2"
+                shift # past argument
+                ;;
+              --aad-webclient-id)
+                AAD_WEBCLIENT_ID="$2"
+                shift # past argument
+                ;;
+              --aad-webclient-appkey)
+                AAD_WEBCLIENT_APPKEY="$2"
+                shift # past argument
+                ;;
+              --aad-tenant-id)
+                AAD_TENANT_ID="$2"
+                shift # past argument
+                ;;
+            -h|--help)  # Helpful hints
+                help
+                exit 2
+                ;;
+            *) # unknown option
+                echo "Option -${BOLD}$2${NORM} not allowed."
+                help
+                exit 2
+                ;;
+        esac
+
+        shift # past argument or value
+    done
+}
+
+###############################################
+# Start Execution
+###############################################
 
 # source our utilities for logging and other base functions (we need this staged with the installer script)
 # the file needs to be first downloaded from the public repository
@@ -45,62 +165,10 @@ fi
 # source the utilities now
 source $UTILITIES_PATH
 
-# Parse script parameters
-while getopts :c:p:a:n:b:u:m:i:s:h optname; do
-
-    # Log input parameters to facilitate troubleshooting
-    if [ ! "$optname" == "p" ]; then
-        echo "Option $optname set with value ${OPTARG}"
-    fi
-    
-    case $optname in
-    c) # Cloud Name
-        CLOUDNAME=${OPTARG}
-        ;;
-    p) # GitHub Personal Access Token
-        GITHUB_PERSONAL_ACCESS_TOKEN=${OPTARG}
-        ;;
-    a) # GitHub Account Name
-        GITHUB_ACCOUNTNAME=${OPTARG}
-        ;;
-    n) # GitHub Project Name
-        GITHUB_PROJECTNAME=${OPTARG}
-        ;;
-    b) # GitHub Project Branch
-        GITHUB_PROJECTBRANCH=${OPTARG}
-        ;;
-    u) # OS Admin User Name
-        OS_ADMIN_USERNAME=${OPTARG}
-        ;;
-    i) # Custom script relative path
-        CUSTOM_INSTALLER_RELATIVEPATH=${OPTARG}
-        ;;
-    m) # Monitoring cluster name
-        MONITORING_CLUSTER_NAME=${OPTARG}
-        ;;
-    s) # Bootstrap Phase (0=Servers, 1=OpenEdx App)
-        if is_valid_arg "0 1" ${OPTARG}; then
-            BOOTSTRAP_PHASE=${OPTARG}
-        else
-            log "Invalid Bootstrap Phase specified - ${OPTARG}" $ERROR_MESSAGE
-            help
-            exit 2
-        fi
-        ;;
-    h)  # Helpful hints
-        help
-        exit 2
-        ;;
-    \?) # Unrecognized option - show help
-        echo "Option -${BOLD}$OPTARG${NORM} not allowed."
-        help
-        exit 2
-        ;;
-  esac
-done
-
 # Script self-idenfitication
 print_script_header
+
+parse_args $@ # pass existing command line arguments
 
 # Validate parameters
 if [ "$GITHUB_PERSONAL_ACCESS_TOKEN" == "" ] || [ "$GITHUB_ACCOUNTNAME" == "" ] || [ "$GITHUB_PROJECTNAME" == "" ] || [ "$GITHUB_PROJECTBRANCH" == "" ] || [ "$CLOUDNAME" == "" ] ;
@@ -126,7 +194,21 @@ then
     install-azure-cli
 fi
 
+# 2. Install & Configure the infrastructure & EdX applications
+INSTALLER_BASEPATH="$( cd "$( dirname "${BASH_SOURCE[0]}../../scripts/." )" && pwd )"
+INSTALLER_PATH=$CURRENT_PATH/install.sh
+
+if [[ -e $INSTALLER_PATH ]]; then  
+    log "Launching the custom installer at '$CUSTOM_INSTALLER_PATH'"
+    bash $INSTALLER_PATH --repo-path ~/$GITHUB_PROJECTNAME --cloud $CLOUDNAME --admin-user $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --access-token $GITHUB_PERSONAL_ACCESS_TOKEN --branch $GITHUB_PROJECTBRANCH --phase $BOOTSTRAP_PHASE --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID
+else
+    log "$INSTALLER_PATH does not exist"
+fi
+
+
 # 2. Clone the GitHub repository & setup the utilities
+# All configuration will be transitioned to Azure KeyVault
+# If a customer still choses to use a private repository, we still support it
 clone_repository $GITHUB_ACCOUNTNAME $GITHUB_PROJECTNAME $GITHUB_PROJECTBRANCH $GITHUB_PERSONAL_ACCESS_TOKEN ~/$GITHUB_PROJECTNAME
 cp $UTILITIES_PATH ~/$GITHUB_PROJECTNAME/scripts/
 
