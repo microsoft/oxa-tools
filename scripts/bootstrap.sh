@@ -8,8 +8,8 @@ set -x
 EDX_ROLE=""
 DEPLOYMENT_ENV="dev"
 ACCESS_TOKEN=""
-OXA_TOOLS_CONFIG_VERSION="master"
-OXA_TOOLS_VERSION_OVERRIDE="master"
+OXA_TOOLS_CONFIG_VERSION="oxa/master.euc"
+OXA_TOOLS_VERSION_OVERRIDE="oxa/master.euc"
 CRON_MODE=0
 TARGET_FILE=""
 PROGRESS_FILE=""
@@ -114,7 +114,7 @@ sync_repo() {
 
     exit_on_error "Failed syncing repository $REPO_URL | $REPO_VERSION"
   fi
-  pushd $REPO_PATH && git checkout ${REPO_VERSION:-master} && popd
+  pushd $REPO_PATH && git checkout ${REPO_VERSION:-oxa/master.euc} && popd
 }
 
 ##
