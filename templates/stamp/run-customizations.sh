@@ -45,34 +45,34 @@ parse_args()
 
         case "$1" in
             -c) # Cloud Name
-                CLOUDNAME=${OPTARG}
+                CLOUDNAME=$2
                 ;;
             -p) # GitHub Personal Access Token
-                GITHUB_PERSONAL_ACCESS_TOKEN=${OPTARG}
+                GITHUB_PERSONAL_ACCESS_TOKEN=$2
                 ;;
             -a) # GitHub Account Name
-                GITHUB_ACCOUNTNAME=${OPTARG}
+                GITHUB_ACCOUNTNAME=$2
                 ;;
             -n) # GitHub Project Name
-                GITHUB_PROJECTNAME=${OPTARG}
+                GITHUB_PROJECTNAME=$2
                 ;;
             -b) # GitHub Project Branch
-                GITHUB_PROJECTBRANCH=${OPTARG}
+                GITHUB_PROJECTBRANCH=$2
                 ;;
             -u) # OS Admin User Name
-                OS_ADMIN_USERNAME=${OPTARG}
+                OS_ADMIN_USERNAME=$2
                 ;;
             -i) # Custom script relative path
-                CUSTOM_INSTALLER_RELATIVEPATH=${OPTARG}
+                CUSTOM_INSTALLER_RELATIVEPATH=$2
                 ;;
             -m) # Monitoring cluster name
-                MONITORING_CLUSTER_NAME=${OPTARG}
+                MONITORING_CLUSTER_NAME=$2
                 ;;
             -s) # Bootstrap Phase (0=Servers, 1=OpenEdx App)
-                if is_valid_arg "0 1" ${OPTARG}; then
-                    BOOTSTRAP_PHASE=${OPTARG}
+                if is_valid_arg "0 1" $2; then
+                    BOOTSTRAP_PHASE=$2
                 else
-                    log "Invalid Bootstrap Phase specified - ${OPTARG}" $ERROR_MESSAGE
+                    log "Invalid Bootstrap Phase specified - $2" $ERROR_MESSAGE
                     help
                     exit 2
                 fi
