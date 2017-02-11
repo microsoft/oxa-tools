@@ -13,6 +13,10 @@ OS_ADMIN_USERNAME=""
 CUSTOM_INSTALLER_RELATIVEPATH=""
 MONITORING_CLUSTER_NAME=""
 BOOTSTRAP_PHASE=0
+REPO_ROOT="/oxa" 
+PUBLIC_GITHUB_PROJECTNAME="oxa-tools"
+PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
+PUBLIC_GITHUB_PROJECTBRANCH="master"
 
 help()
 {
@@ -32,6 +36,9 @@ help()
     echo "        --aad-webclient-id Id of AAD web client (service principal)"
     echo "        --aad-webclient-appkey Application key for the AAD web client"
     echo "        --aad-tenant-id AAD Tenant Id"
+    echo "        --public-github-accountname Name of the GitHub account that owns the public OXA repository"
+    echo "        --public-github-projectname Name of the public GitHub repository for OXA"
+    echo "        --public-github-projectbranch Branch of the public GitHub repository for OXA to use"
 }
 
 # Parse script parameters
@@ -119,6 +126,15 @@ parse_args()
               --aad-tenant-id)
                 AAD_TENANT_ID="$2"
                 ;;
+              --public-github-accountname)
+                PUBLIC_GITHUB_ACCOUNTNAME="$2"
+                ;;
+              --public-github-projectname)
+                PUBLIC_GITHUB_PROJECTNAME="$2"
+                ;;
+              --public-github-projectbranch)
+                PUBLIC_GITHUB_PROJECTBRANCH="$2"
+                ;;
             -h|--help)  # Helpful hints
                 help
                 exit 2
@@ -184,8 +200,9 @@ then
 fi
 
 # 2. Install & Configure the infrastructure & EdX applications
-INSTALLER_BASEPATH="$( cd "$( dirname "${BASH_SOURCE[0]}../../scripts/." )" && pwd )"
-INSTALLER_PATH=$CURRENT_PATH/install.sh
+clone_repository $PUBLIC_GITHUB_ACCOUNTNAME $PUBLIC_GITHUB_PROJECTNAME $PUBLIC_GITHUB_PROJECTBRANCH ''  "${$REPO_ROOT}/${$PUBLIC_GITHUB_PROJECTNAME}"
+INSTALLER_BASEPATH="${$REPO_ROOT}/${$PUBLIC_GITHUB_PROJECTNAME}/scripts"
+INSTALLER_PATH="${INSTALLER_BASEPATH}/install.sh"
 
 if [[ -e $INSTALLER_PATH ]]; then  
     log "Launching the custom installer at '$CUSTOM_INSTALLER_PATH'"
