@@ -90,9 +90,6 @@ parse_args() {
       --aad-tenant-id)
         AAD_TENANT_ID="$2"
         ;;
-      --azure-subscription-name)
-        AAD_TENANT_ID="$2"
-        ;;
       *) # Unknown option encountered
         display_usage
         ;;
