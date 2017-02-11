@@ -201,31 +201,34 @@ fi
 
 # 2. Install & Configure the infrastructure & EdX applications
 clone_repository $PUBLIC_GITHUB_ACCOUNTNAME $PUBLIC_GITHUB_PROJECTNAME $PUBLIC_GITHUB_PROJECTBRANCH ''  "${REPO_ROOT}/${PUBLIC_GITHUB_PROJECTNAME}"
+
+# setup the installer path
 INSTALLER_BASEPATH="${REPO_ROOT}/${PUBLIC_GITHUB_PROJECTNAME}/scripts"
 INSTALLER_PATH="${INSTALLER_BASEPATH}/install.sh"
 
-if [[ -e $INSTALLER_PATH ]]; then  
-    log "Launching the custom installer at '$INSTALLER_PATH'"
-    bash $INSTALLER_PATH --repo-path ~/$GITHUB_PROJECTNAME --cloud $CLOUDNAME --admin-user $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --access-token $GITHUB_PERSONAL_ACCESS_TOKEN --branch $GITHUB_PROJECTBRANCH --phase $BOOTSTRAP_PHASE --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID
-else
-    log "$INSTALLER_PATH does not exist"
-fi
+# copy utilities to the installer path
+cp $UTILITIES_PATH "${INSTALLER_BASEPATH}"
 
-# 2. Clone the GitHub repository & setup the utilities
+# execute the installer if present
+log "Launching the installer at '$INSTALLER_PATH'"
+bash $INSTALLER_PATH --repo-path ~/$GITHUB_PROJECTNAME --cloud $CLOUDNAME --admin-user $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --access-token $GITHUB_PERSONAL_ACCESS_TOKEN --branch $GITHUB_PROJECTBRANCH --phase $BOOTSTRAP_PHASE --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID
+
+
+# 3. Clone the GitHub repository & setup the utilities
 # All configuration will be transitioned to Azure KeyVault
 # If a customer still choses to use a private repository, we still support it
-clone_repository $GITHUB_ACCOUNTNAME $GITHUB_PROJECTNAME $GITHUB_PROJECTBRANCH $GITHUB_PERSONAL_ACCESS_TOKEN ~/$GITHUB_PROJECTNAME
-cp $UTILITIES_PATH ~/$GITHUB_PROJECTNAME/scripts/
+#clone_repository $GITHUB_ACCOUNTNAME $GITHUB_PROJECTNAME $GITHUB_PROJECTBRANCH $GITHUB_PERSONAL_ACCESS_TOKEN ~/$GITHUB_PROJECTNAME
+#cp $UTILITIES_PATH ~/$GITHUB_PROJECTNAME/scripts/
 
 # 3. Launch custom installer
-CUSTOM_INSTALLER_PATH=~/$GITHUB_PROJECTNAME/$CUSTOM_INSTALLER_RELATIVEPATH
+#CUSTOM_INSTALLER_PATH=~/$GITHUB_PROJECTNAME/$CUSTOM_INSTALLER_RELATIVEPATH
 
-if [[ -e $CUSTOM_INSTALLER_PATH ]]; then  
-    log "Launching the custom installer at '$CUSTOM_INSTALLER_PATH'"
-    bash $CUSTOM_INSTALLER_PATH --repo-path ~/$GITHUB_PROJECTNAME --cloud $CLOUDNAME --admin-user $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --access-token $GITHUB_PERSONAL_ACCESS_TOKEN --branch $GITHUB_PROJECTBRANCH --phase $BOOTSTRAP_PHASE 
-else
-    log "$CUSTOM_INSTALLER_PATH does not exist"
-fi
+#if [[ -e $CUSTOM_INSTALLER_PATH ]]; then  
+#    log "Launching the custom installer at '$CUSTOM_INSTALLER_PATH'"
+#    bash $CUSTOM_INSTALLER_PATH --repo-path ~/$GITHUB_PROJECTNAME --cloud $CLOUDNAME --admin-user $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --access-token $GITHUB_PERSONAL_ACCESS_TOKEN --branch $GITHUB_PROJECTBRANCH --phase $BOOTSTRAP_PHASE 
+#else
+#    log "$CUSTOM_INSTALLER_PATH does not exist"
+#fi
 
 # Exit (proudly)
 log "Completed execution of OXA stamp customization Exiting cleanly."

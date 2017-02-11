@@ -2,7 +2,7 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
-set -x
+#set -x
 
 # argument defaults
 #EDX_ROLE=""
@@ -43,6 +43,10 @@ is_valid_arg() {
 parse_args() {
   while [[ "$#" -gt 0 ]]
   do
+    
+    # Log input parameters to facilitate troubleshooting
+    echo "Option $1 set with value $2"
+
     case "$1" in
       -e|--environment)
         DEPLOYMENT_ENV="${2,,}" # convert to lowercase
