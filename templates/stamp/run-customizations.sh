@@ -48,7 +48,7 @@ parse_args()
         do
 
          # Log input parameters to facilitate troubleshooting
-        echo "Option $1 set with value $2"
+        echo "Option '$1' set with value '$2'"
 
         case "$1" in
             -c) # Cloud Name
