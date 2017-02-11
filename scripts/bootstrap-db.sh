@@ -46,18 +46,14 @@ parse_args() {
     case "$1" in
       -e|--environment)
         DEPLOYMENT_ENV="${2,,}" # convert to lowercase
-        if is_valid_arg "dev bvt int prod" $DEPLOYMENT_ENV; then
-          shift # past argument
-        else
+        if ! [ is_valid_arg "dev bvt int prod" $DEPLOYMENT_ENV ] ; then
           echo "Invalid environment specified\n"
           display_usage
         fi
         ;;
       -a|--access_token)
         ACCESS_TOKEN="$2"
-        if [[ ${#ACCESS_TOKEN} -eq 40 ]]; then
-          shift # past argument
-        else
+        if ! [[ ${#ACCESS_TOKEN} -eq 40 ]]; then
           echo "Invalid access token specified\n"
           display_usage
         fi
@@ -65,7 +61,6 @@ parse_args() {
         --phase)
             if is_valid_arg "0 1" $2; then
                 BOOTSTRAP_PHASE=$2
-                shift # past argument
             else
                 log "Invalid Bootstrap Phase specified - $2" $ERROR_MESSAGE
                 help
@@ -74,37 +69,31 @@ parse_args() {
         ;;
       -v|--tools-config-version)
         OXA_TOOLS_CONFIG_VERSION="$2"
-        shift # past argument
         ;;
       --tools-version-override)
         OXA_TOOLS_VERSION_OVERRIDE="$2"
-        shift # past argument
         ;;
       --keyvault-name)
         KEYVAULT_NAME="$2"
-        shift # past argument
         ;;
       --aad-webclient-id)
         AAD_WEBCLIENT_ID="$2"
-        shift # past argument
         ;;
       --aad-webclient-appkey)
         AAD_WEBCLIENT_APPKEY="$2"
-        shift # past argument
         ;;
       --aad-tenant-id)
         AAD_TENANT_ID="$2"
-        shift # past argument
         ;;
       --azure-subscription-name)
         AAD_TENANT_ID="$2"
-        shift # past argument
         ;;
       *) # Unknown option encountered
         display_usage
         ;;
     esac
 
+    shift # past argument or value
     shift # past argument or value
   done
 }

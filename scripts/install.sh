@@ -56,27 +56,21 @@ parse_args()
         case "$1" in
             --repo-path)
                 REPO_ROOT_PATH=$2
-                shift # past argument
                 ;;
             --cloud)
                 CLOUD_NAME=$2
-                shift # past argument
                 ;;
             -u|--admin-user)
                 OS_ADMIN_USERNAME=$2
-                shift # past argument
                 ;;
             --monitoring-cluster)
                 MONITORING_CLUSTER_NAME=$2
-                shift # past argument
                 ;;
             --access-token)
                 GITHUB_PERSONAL_ACCESS_TOKEN=$2
-                shift # past argument
                 ;;
             --branch)
                 GITHUB_PROJECTBRANCH=$2
-                shift # past argument
                 ;;
             --phase)
                 if is_valid_arg "0 1" $2; then
@@ -86,27 +80,21 @@ parse_args()
                     help
                     exit 2
                 fi
-                shift # past argument
                 ;;
             --crontab-interval)
                 CRONTAB_INTERVAL_MINUTES=$2
-                shift # past argument
                 ;;
             --keyvault-name)
                 KEYVAULT_NAME="$2"
-                shift # past argument
                 ;;
               --aad-webclient-id)
                 AAD_WEBCLIENT_ID="$2"
-                shift # past argument
                 ;;
               --aad-webclient-appkey)
                 AAD_WEBCLIENT_APPKEY="$2"
-                shift # past argument
                 ;;
               --aad-tenant-id)
                 AAD_TENANT_ID="$2"
-                shift # past argument
                 ;;
             -h|--help)  # Helpful hints
                 help
@@ -119,6 +107,7 @@ parse_args()
                 ;;
         esac
 
+        shift # past argument or value
         shift # past argument or value
     done
 }
