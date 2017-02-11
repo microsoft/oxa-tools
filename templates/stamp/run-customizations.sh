@@ -200,17 +200,16 @@ then
 fi
 
 # 2. Install & Configure the infrastructure & EdX applications
-clone_repository $PUBLIC_GITHUB_ACCOUNTNAME $PUBLIC_GITHUB_PROJECTNAME $PUBLIC_GITHUB_PROJECTBRANCH ''  "${$REPO_ROOT}/${$PUBLIC_GITHUB_PROJECTNAME}"
-INSTALLER_BASEPATH="${$REPO_ROOT}/${$PUBLIC_GITHUB_PROJECTNAME}/scripts"
+clone_repository $PUBLIC_GITHUB_ACCOUNTNAME $PUBLIC_GITHUB_PROJECTNAME $PUBLIC_GITHUB_PROJECTBRANCH ''  "${REPO_ROOT}/${PUBLIC_GITHUB_PROJECTNAME}"
+INSTALLER_BASEPATH="${REPO_ROOT}/${PUBLIC_GITHUB_PROJECTNAME}/scripts"
 INSTALLER_PATH="${INSTALLER_BASEPATH}/install.sh"
 
 if [[ -e $INSTALLER_PATH ]]; then  
-    log "Launching the custom installer at '$CUSTOM_INSTALLER_PATH'"
+    log "Launching the custom installer at '$INSTALLER_PATH'"
     bash $INSTALLER_PATH --repo-path ~/$GITHUB_PROJECTNAME --cloud $CLOUDNAME --admin-user $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --access-token $GITHUB_PERSONAL_ACCESS_TOKEN --branch $GITHUB_PROJECTBRANCH --phase $BOOTSTRAP_PHASE --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID
 else
     log "$INSTALLER_PATH does not exist"
 fi
-
 
 # 2. Clone the GitHub repository & setup the utilities
 # All configuration will be transitioned to Azure KeyVault
