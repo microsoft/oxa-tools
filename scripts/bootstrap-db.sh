@@ -179,9 +179,6 @@ setup()
     # sync the private repository
     # instead of the repo sync, let's pull the configs from keyvault since that is what was needed
     ## sync_repo $OXA_TOOLS_CONFIG_REPO $OXA_TOOLS_CONFIG_VERSION $OXA_TOOLS_CONFIG_PATH $ACCESS_TOKEN
-    log "Download configurations from keyvault"
-    powershell -file $CURRENT_PATH/Process-OxaToolsKeyVaultConfiguration.ps1 -Operation Download -VaultName $KEYVAULT_NAME -AadWebClientId $AAD_WEBCLIENT_ID -AadWebClientAppKey $AAD_WEBCLIENT_APPKEY -AadTenantId $AAD_TENANT_ID -TargetPath $OXA_ENV_PATH -AzureSubscriptionId $AZURE_SUBSCRIPTION_ID
-    exit_on_error "Failed downloading configurations from keyvault"
 
     # populate the deployment environment
     source $OXA_ENV_FILE

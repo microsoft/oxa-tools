@@ -204,11 +204,19 @@ then
 fi
 
 # 2. Install & Configure the infrastructure & EdX applications
+log "Cloning the public OXA Repository"
 clone_repository $PUBLIC_GITHUB_ACCOUNTNAME $PUBLIC_GITHUB_PROJECTNAME $PUBLIC_GITHUB_PROJECTBRANCH ''  "${REPO_ROOT}/${PUBLIC_GITHUB_PROJECTNAME}"
 
-# setup the installer path
+# setup the installer path & key variables
 INSTALLER_BASEPATH="${REPO_ROOT}/${PUBLIC_GITHUB_PROJECTNAME}/scripts"
 INSTALLER_PATH="${INSTALLER_BASEPATH}/install.sh"
+DEPLOYMENT_ENV="${CLOUDNAME,,}" 
+OXA_ENV_PATH=/$REPO_ROOT/oxa-tools-config/env/$DEPLOYMENT_ENV
+
+# drop the environment configurations
+log "Download configurations from keyvault"
+powershell -file $INSTALLER_BASEPATH/Process-OxaToolsKeyVaultConfiguration.ps1 -Operation Download -VaultName $KEYVAULT_NAME -AadWebClientId $AAD_WEBCLIENT_ID -AadWebClientAppKey $AAD_WEBCLIENT_APPKEY -AadTenantId $AAD_TENANT_ID -TargetPath $OXA_ENV_PATH -AzureSubscriptionId $AZURE_SUBSCRIPTION_ID
+exit_on_error "Failed downloading configurations from keyvault"
 
 # copy utilities to the installer path
 cp $UTILITIES_PATH "${INSTALLER_BASEPATH}"
@@ -217,22 +225,6 @@ cp $UTILITIES_PATH "${INSTALLER_BASEPATH}"
 log "Launching the installer at '$INSTALLER_PATH'"
 bash $INSTALLER_PATH --repo-path /$REPO_ROOT/$GITHUB_PROJECTNAME --cloud $CLOUDNAME --admin-user $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --access-token $GITHUB_PERSONAL_ACCESS_TOKEN --branch $GITHUB_PROJECTBRANCH --phase $BOOTSTRAP_PHASE --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID
 exit_on_error "OXA stamp customization failed"
-
-# 3. Clone the GitHub repository & setup the utilities
-# All configuration will be transitioned to Azure KeyVault
-# If a customer still choses to use a private repository, we still support it
-#clone_repository $GITHUB_ACCOUNTNAME $GITHUB_PROJECTNAME $GITHUB_PROJECTBRANCH $GITHUB_PERSONAL_ACCESS_TOKEN ~/$GITHUB_PROJECTNAME
-#cp $UTILITIES_PATH ~/$GITHUB_PROJECTNAME/scripts/
-
-# 3. Launch custom installer
-#CUSTOM_INSTALLER_PATH=~/$GITHUB_PROJECTNAME/$CUSTOM_INSTALLER_RELATIVEPATH
-
-#if [[ -e $CUSTOM_INSTALLER_PATH ]]; then  
-#    log "Launching the custom installer at '$CUSTOM_INSTALLER_PATH'"
-#    bash $CUSTOM_INSTALLER_PATH --repo-path ~/$GITHUB_PROJECTNAME --cloud $CLOUDNAME --admin-user $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --access-token $GITHUB_PERSONAL_ACCESS_TOKEN --branch $GITHUB_PROJECTBRANCH --phase $BOOTSTRAP_PHASE 
-#else
-#    log "$CUSTOM_INSTALLER_PATH does not exist"
-#fi
 
 # Exit (proudly)
 log "Completed execution of OXA stamp customization Exiting cleanly."
