@@ -208,6 +208,8 @@ setup-ssh()
     # this sets up the ROOT user
     log "Setting up SSH for 'ROOT'"
     cp $CERTS_PATH/id_rsa* ~/.ssh
+    exit_on_error "Setting up SSH for 'ROOT' Failed on $HOST"
+
     chmod 600 ~/.ssh/id_rsa
     chmod 644 ~/.ssh/id_rsa.pub
 
@@ -215,6 +217,8 @@ setup-ssh()
     if [[ -e /home/$ADMIN_USER ]]; then  
         log "Setting up SSH for '${ADMIN_USER}'"
         cp $CERTS_PATH/id_rsa* /home/$ADMIN_USER/.ssh
+        exit_on_error "Setting up SSH for '{ADMIN_USER}' Failed on $HOST"
+
         chmod 600 /home/$ADMIN_USER/.ssh/id_rsa
         chmod 644 /home/$ADMIN_USER/.ssh/id_rsa.pub
         chown $ADMIN_USER:$ADMIN_USER /home/$ADMIN_USER/.ssh/id_rsa*
