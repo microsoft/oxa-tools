@@ -470,8 +470,7 @@ if ($Operation -ieq "Download")
         $fileName = Process-SecretName -SecretName $secretName -Prefix $ConfigurationPrefix -Operation Decode
 
         # resolve the base path
-        [string]$settingFilePath =  Resolve-Path "$($TargetPath)$($directorySeparator)"
-        $settingFilePath += $fileName
+        [string]$settingFilePath = "$($TargetPath)$($directorySeparator)$($fileName)"
 
         # make sure the file doesn't currently exist
         if ((Test-Path $settingFilePath) -eq $true)
