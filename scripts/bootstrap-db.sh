@@ -151,7 +151,7 @@ exec_mysql() {
     NODE_ID=$2
 
     # Setup Monitoring
-    setup_monitoring $HOST
+    #setup_monitoring $HOST
 
     # Setup Mysql
     scp -o "StrictHostKeyChecking=no" -r $OXA_TOOLS_PATH/templates/stamp $ADMIN_USER@$HOST:~
