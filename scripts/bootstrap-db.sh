@@ -128,7 +128,7 @@ exec_mongo() {
     EXTRA_ARGS=$3
 
     # Setup Monitoring
-    setup_monitoring $HOST
+    # setup_monitoring $HOST
 
     # Setup Mongo
     scp -o "StrictHostKeyChecking=no" -r $OXA_TOOLS_PATH/templates/stamp $ADMIN_USER@$HOST:~
