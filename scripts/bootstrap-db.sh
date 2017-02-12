@@ -19,11 +19,11 @@ KEYVAULT_NAME=""
 AAD_WEBCLIENT_ID=""
 AAD_WEBCLIENT_APPKEY=""
 AAD_TENANT_ID=""
-AZURE_SUBSCRIPTION_NAME=""
+AZURE_SUBSCRIPTION_ID=""
 
 
 display_usage() {
-    echo "Usage: $0 -a|--access_token {access token} -v|--version {oxa-tools-config version} [-e|--environment {dev|bvt|int|prod}] [--phase {0 1}]"
+    echo "Usage: $0 -a|--access_token {access token} -v|--version {oxa-tools-config version} [-e|--environment {dev|bvt|int|prod}] [--phase {0 1}] --keyvault-name {azure keyvault name} --aad-webclient-id {AAD web application client id} --aad-webclient-appkey {AAD web application client key} --aad-tenant-id {AAD Tenant to authenticate against} --azure-subscription-id {Azure subscription Id}"
     exit 1
 }
 
@@ -89,6 +89,9 @@ parse_args() {
         ;;
       --aad-tenant-id)
         AAD_TENANT_ID="$2"
+        ;;
+      --azure-subscription-id)
+        AZURE_SUBSCRIPTION_ID="$2"
         ;;
       *) # Unknown option encountered
         display_usage
@@ -177,7 +180,7 @@ setup()
     # instead of the repo sync, let's pull the configs from keyvault since that is what was needed
     ## sync_repo $OXA_TOOLS_CONFIG_REPO $OXA_TOOLS_CONFIG_VERSION $OXA_TOOLS_CONFIG_PATH $ACCESS_TOKEN
     log "Download configurations from keyvault"
-    powershell -file $CURRENT_PATH/Process-OxaToolsKeyVaultConfiguration.ps1 -Operation Download -VaultName $KEYVAULT_NAME -AadWebClientId $AAD_WEBCLIENT_ID -AadWebClientAppKey $AAD_WEBCLIENT_APPKEY -AadTenantId $AAD_TENANT_ID -TargetPath $OXA_ENV_PATH
+    powershell -file $CURRENT_PATH/Process-OxaToolsKeyVaultConfiguration.ps1 -Operation Download -VaultName $KEYVAULT_NAME -AadWebClientId $AAD_WEBCLIENT_ID -AadWebClientAppKey $AAD_WEBCLIENT_APPKEY -AadTenantId $AAD_TENANT_ID -TargetPath $OXA_ENV_PATH -AzureSubscriptionId $AZURE_SUBSCRIPTION_ID
 
     # populate the deployment environment
     source $OXA_ENV_FILE

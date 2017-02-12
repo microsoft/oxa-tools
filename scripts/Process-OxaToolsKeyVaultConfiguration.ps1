@@ -38,7 +38,7 @@ None
 
 .EXAMPLE
 To download all existing key vault secrets related to Oxa Tools configuration
-.\Process-OxaToolsKeyVaultConfiguration.ps1 -Operation Download -TargetPath c:\bvt -VaultName MyVault -AadWebClientId 121 -AadWebClientAppKey key -AadTenantId 345
+.\Process-OxaToolsKeyVaultConfiguration.ps1 -Operation Download -TargetPath c:\bvt -VaultName MyVault -AadWebClientId 121 -AadWebClientAppKey key -AadTenantId 345 -AzureSubscriptionId 438484
 
 #>
 Param( 
@@ -48,7 +48,8 @@ Param(
         [Parameter(Mandatory=$false)][string]$ConfigurationPrefix = "OxaToolsConfigxxx",
         [Parameter(Mandatory=$true)][string]$AadWebClientId,
         [Parameter(Mandatory=$true)][string]$AadWebClientAppKey,
-        [Parameter(Mandatory=$true)][string]$AadTenantId
+        [Parameter(Mandatory=$true)][string]$AadTenantId,
+        [Parameter(Mandatory=$true)][string]$AzureSubscriptionId
      )
 
 
@@ -201,6 +202,33 @@ function Process-SecretName
     return $secretName;
 }
 
+## Function: Set-AzureSubscriptionContext
+##
+## Purpose: 
+##   Set the cli context to the appropriate azure subscription after login
+##
+## Input: 
+##   $AzureSubscriptionId     the azure subscription id to set as current
+##
+## Output:
+##   nothing
+##
+function Set-AzureSubscriptionContext
+{
+    param(
+            [Parameter(Mandatory=$true)][string]$AzureSubscriptionId
+         )
+
+    Log-Message "Setting execution context to the '$($AzureSubscriptionId)' azure subscription"
+
+    $results = azure account set  $AzureSubscriptionId  -vv --json | Out-String
+
+    if (!$results.Contains("account set command OK"))
+    {
+        throw "Could not set execution context to the '$($AzureSubscriptionId)' azure subscription"
+    }
+}
+
 ## Function: Authenticate-AzureRmUser
 ##
 ## Purpose: 
@@ -346,8 +374,9 @@ trap [Exception]
 #
 #########################
 
-# Login First
+# Login First & set context
 Authenticate-AzureRmUser -AadWebClientId $AadWebClientId -AadWebClientAppKey $AadWebClientAppKey -AadTenantId $AadTenantId;
+Set-AzureSubscriptionContext -AzureSubscriptionId $AzureSubscriptionId
 
 # Get the directory separator
 $directorySeparator = Get-DirectorySeparator;

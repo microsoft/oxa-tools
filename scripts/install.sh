@@ -17,6 +17,7 @@ MONITORING_CLUSTER_NAME=""
 OS_ADMIN_USERNAME=""
 REPO_ROOT_PATH=""
 BOOTSTRAP_PHASE=0
+AZURE_SUBSCRIPTION_ID=""
 
 #TODO: complete plumbing this variable as a user input
 CRONTAB_INTERVAL_MINUTES=5
@@ -42,6 +43,7 @@ help()
     echo "        --aad-webclient-id         Id of AAD web client (service principal)"
     echo "        --aad-webclient-appkey     Application key for the AAD web client"
     echo "        --aad-tenant-id            AAD Tenant Id"
+    echo "        --azure-subscription-id    Azure subscription id"
 }
 
 # Parse script parameters
@@ -95,6 +97,9 @@ parse_args()
                 ;;
               --aad-tenant-id)
                 AAD_TENANT_ID="$2"
+                ;;
+              --azure-subscription-id)
+                AZURE_SUBSCRIPTION_ID="$2"
                 ;;
             -h|--help)  # Helpful hints
                 help
@@ -166,7 +171,7 @@ fi
 # This execution is now generic and will account for machine roles
 # TODO: break out shared functionalities to utilities so that they can be called independently
 # TODO: provide option to target different version of repositories
-bash $CURRENT_PATH/bootstrap-db.sh -e $CLOUD_NAME -a $GITHUB_PERSONAL_ACCESS_TOKEN --tools-config-version $GITHUB_PROJECTBRANCH --phase $BOOTSTRAP_PHASE --tools-version-override $GITHUB_PROJECTBRANCH --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID
+bash $CURRENT_PATH/bootstrap-db.sh -e $CLOUD_NAME -a $GITHUB_PERSONAL_ACCESS_TOKEN --tools-config-version $GITHUB_PROJECTBRANCH --phase $BOOTSTRAP_PHASE --tools-version-override $GITHUB_PROJECTBRANCH --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID
 exit_on_error "Phase 0 Bootstrap for Mongo & Mysql failed for $HOST"
 
 # OpenEdX Bootstrap (EdX Database - Mysql & EdX App - VMSS)
