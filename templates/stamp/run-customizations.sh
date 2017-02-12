@@ -215,6 +215,7 @@ OXA_ENV_PATH=/$REPO_ROOT/oxa-tools-config/env/$DEPLOYMENT_ENV
 
 # drop the environment configurations
 log "Download configurations from keyvault"
+export HOME=$(dirname ~/.)
 powershell -file $INSTALLER_BASEPATH/Process-OxaToolsKeyVaultConfiguration.ps1 -Operation Download -VaultName $KEYVAULT_NAME -AadWebClientId $AAD_WEBCLIENT_ID -AadWebClientAppKey $AAD_WEBCLIENT_APPKEY -AadTenantId $AAD_TENANT_ID -TargetPath $OXA_ENV_PATH -AzureSubscriptionId $AZURE_SUBSCRIPTION_ID
 exit_on_error "Failed downloading configurations from keyvault"
 
