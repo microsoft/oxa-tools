@@ -485,7 +485,7 @@ if ($Operation -ieq "Download")
         
         # download
         Log-Message -Message "Downloading secret: '$secretName' to '$settingFilePath'"
-        azure keyvault secret get -u $VaultName -s  $secretName --file $settingFilePath | Out-Null
+        azure keyvault secret get -u $VaultName -s $secretName --file $settingFilePath | Out-Null
 
         # decode
         $content = gc $settingFilePath -Encoding UTF8 -Raw
