@@ -216,5 +216,6 @@ else
 fi
 
 # Exit (proudly)
+exit_on_error "OXA Installation failed"
 log "Completed custom bootstrap for the OXA Stamp. Exiting cleanly."
 exit 0
