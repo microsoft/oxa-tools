@@ -6,6 +6,9 @@ EDXAPP_PLATFORM_NAME: "%%PLATFORM_NAME%%"
 
 EDXAPP_TIME_ZONE: "America/Los_Angeles"
 
+edxapp_microsite_theme_source_repo : 'https://github.com/ms-manikarthik/edx-microsite.git'
+edxapp_microsite_theme_version : 'master'
+
 # Superuser information
 EDXAPP_SU_PASSWORD: "%%EDXAPP_SU_PASSWORD%%" 
 EDXAPP_SU_EMAIL: "%%EDXAPP_SU_EMAIL%%"
