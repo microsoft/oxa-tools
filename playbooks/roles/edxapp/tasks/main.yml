@@ -11,13 +11,13 @@
 
 - name: Download microsite overriding assets 
   sudo: yes
-  shell: bash ./microsite-theming.sh
+  shell: bash ./microsite_theming.sh
   args:
     chdir: "{{ edxapp_files_path }}"
   register: bash_microsite-theming
 
 # Print the shell tasks's stdout and stderr.
-- debug: var="bash_microsite-theming.stdout_lines + [ bash_microsite-theming.stderr ]"
+- debug: var="bash_microsite_theming.stdout_lines + [ bash_microsite_theming.stderr ]"
 
 
 
