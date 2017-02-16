@@ -14,7 +14,8 @@ GITHUB_PROJECTBRANCH="master"
 CLOUD_NAME=""
 MONITORING_CLUSTER_NAME=""
 OS_ADMIN_USERNAME=""
-REPO_ROOT_PATH=""
+REPO_ROOT="/oxa" 
+CONFIG_PATH=""
 BOOTSTRAP_PHASE=0
 AZURE_SUBSCRIPTION_ID=""
 
@@ -38,7 +39,8 @@ help()
 {
     echo "This script sets up SSH, installs MDSD and runs the DB bootstrap"
     echo "Options:"
-    echo "        --repo-path                Repository root path"
+    echo "        --repo-root                Root path for the oxa tools & configuration"
+    echo "        --config-path              oxa configuration path"
     echo "        --cloud                    Cloud Name"
     echo "        --admin-user               OS Admin User Name"
     echo "        --monitoring-cluster       Monitoring Cluster Name"
@@ -67,8 +69,11 @@ parse_args()
         echo "Option '$1' set with value '$2'"
 
         case "$1" in
-            --repo-path)
-                REPO_ROOT_PATH=$2
+            --repo-root)
+                REPO_ROOT=$2
+                ;;
+            --config-path)
+                CONFIG_PATH=$2
                 ;;
             --cloud)
                 CLOUD_NAME=$2
@@ -184,7 +189,7 @@ log "${HOSTNAME} has been identified as a member of the '${MACHINE_ROLE}' role"
 # 1. Setup SSH (this presumes the requisite files have already been staged) -[Jumpbox Only for Phase 0]
 if [ "$MACHINE_ROLE" == "jumpbox" ] && [ "$BOOTSTRAP_PHASE" == "0" ] ;
 then
-    setup-ssh $REPO_ROOT_PATH $CLOUD_NAME $OS_ADMIN_USERNAME
+    setup-ssh $CONFIG_PATH $CLOUD_NAME $OS_ADMIN_USERNAME
 else
     log "Skipping SSH Setup"
 fi
@@ -227,9 +232,10 @@ then
     log "Starting $TASK"
 
     # setup the temporary cron installer script
-    CRON_INSTALLER_SCRIPT="$CURRENT_PATH\background-installer.sh"
-    INSTALL_COMMAND="sudo flock -n /var/log/bootstrap.lock bash ${REPO_ROOT_PATH}/scripts/bootstrap.sh -e ${CLOUD_NAME} -r $SHORT_ROLE_NAME --oxatools_public-github-accountname ${OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME} --oxatools_public-github-projectname ${OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME} --oxatools_public-github-projectbranch $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH --oxatools_public-github-projectbranch $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH  --oxatools_public-github-accountname $OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME --edxconfiguration_public-github-projectname $EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME --edxconfiguration_public-github-projectbranch $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH --edxconfiguration_public-github-projectbranch $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH --cron >> /var/log/bootstrap.log 2>&1"
-    cat $INSTALL_COMMAND > $CRON_INSTALLER_SCRIPT
+    CRON_INSTALLER_SCRIPT="$CURRENT_PATH/background-installer.sh"
+
+    INSTALL_COMMAND="sudo flock -n /var/log/bootstrap.lock bash $REPO_ROOT/$OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME/scripts/bootstrap.sh -e $CLOUD_NAME --role $SHORT_ROLE_NAME --oxatools_public-github-accountname $OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME --oxatools_public-github-projectname $OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME --oxatools_public-github-projectbranch $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH --oxatools_public-github-projectbranch $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH --oxatools_public-github-accountname $OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME --edxconfiguration_public-github-projectname $EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME --edxconfiguration_public-github-projectbranch $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH --edxconfiguration_public-github-projectbranch $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH --cron >> /var/log/bootstrap.log 2>&1"
+    echo $INSTALL_COMMAND > $CRON_INSTALLER_SCRIPT
 
     # Remove the task if it is already setup
     log "Uninstalling background installer cron job"

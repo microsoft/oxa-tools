@@ -7,8 +7,6 @@ This script provides options for uploading new or updating existing OXA tools co
 existing Azure KeyVault instance. It also provides options for listing, downloading and saving to file 
 (Hydrate from Keyvault) as well as deleting all secrets.
 
-This script assumes you have already have an AzureRM authenticated session
-
 .PARAMETER Operation
 Operation mode: Download, Upload, Purge or List Keyvault Secrets
 
@@ -428,7 +426,7 @@ if ($Operation -ieq "Upload")
 # Download & Re-consistitute
 if ($Operation -ieq "Download")
 {
-    Log-Message "Downloading secrets" -Context "Secrets $($Operation)"
+    Log-Message "Downloading secrets from '$($VaultName)'" -Context "Secrets $($Operation)"
 
     # check for target path
     if ($TargetPath.Trim().Length -eq 0)
