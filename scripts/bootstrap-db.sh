@@ -7,8 +7,6 @@
 # argument defaults
 #EDX_ROLE=""
 DEPLOYMENT_ENV="dev"
-ACCESS_TOKEN=""
-OXA_TOOLS_CONFIG_VERSION="master"
 OXA_TOOLS_VERSION_OVERRIDE="master"
 MACHINE_ROLE=""
 BOOTSTRAP_PHASE=0
@@ -20,7 +18,6 @@ AAD_WEBCLIENT_ID=""
 AAD_WEBCLIENT_APPKEY=""
 AAD_TENANT_ID=""
 AZURE_SUBSCRIPTION_ID=""
-
 
 display_usage() {
     echo "Usage: $0 -a|--access_token {access token} -v|--version {oxa-tools-config version} [-e|--environment {dev|bvt|int|prod}] [--phase {0 1}] --keyvault-name {azure keyvault name} --aad-webclient-id {AAD web application client id} --aad-webclient-appkey {AAD web application client key} --aad-tenant-id {AAD Tenant to authenticate against} --azure-subscription-id {Azure subscription Id}"
@@ -56,13 +53,6 @@ parse_args() {
           display_usage
         fi
         ;;
-      -a|--access_token)
-        ACCESS_TOKEN="$2"
-        if ! [[ ${#ACCESS_TOKEN} -eq 40 ]]; then
-          echo "Invalid access token specified\n"
-          display_usage
-        fi
-        ;;
         --phase)
             if is_valid_arg "0 1" $2; then
                 BOOTSTRAP_PHASE=$2
@@ -71,9 +61,6 @@ parse_args() {
                 help
                 exit 2
             fi
-        ;;
-      -v|--tools-config-version)
-        OXA_TOOLS_CONFIG_VERSION="$2"
         ;;
       --tools-version-override)
         OXA_TOOLS_VERSION_OVERRIDE="$2"
@@ -101,25 +88,6 @@ parse_args() {
     shift # past argument or value
     shift # past argument or value
   done
-}
-
-setup_monitoring()
-{
-    HOST=$1
-
-    # TODO: interim fix for installing monitoring on the backend
-    echo "Setup monitoring on ${HOST}"
-
-    # execute the pre-requisites: install git, clone repositories and stage utilities
-    ssh -o "StrictHostKeyChecking=no" $ADMIN_USER@$HOST "sudo rm -rf ${OXA_PATH} && sudo apt-get install -y git && sudo mkdir ${OXA_PATH}  && sudo git clone -b ${OXA_TOOLS_CONFIG_VERSION}  https://${ACCESS_TOKEN}@github.com/Microsoft/oxa-tools-config.git ${OXA_TOOLS_CONFIG_PATH} && sudo git clone -b ${OXA_TOOLS_VERSION}  https://github.com/Microsoft/oxa-tools.git ${OXA_TOOLS_PATH} && sudo cp ${OXA_TOOLS_PATH}/templates/stamp/utilities.sh  ${OXA_TOOLS_CONFIG_PATH}/scripts/"
-    exit_on_error "Monitoring setup failed installation of pre-requisites on $HOST"
-
-    # install monitoring
-    ssh -o "StrictHostKeyChecking=no" $ADMIN_USER@$HOST "sudo bash ${OXA_TOOLS_CONFIG_PATH}/scripts/install-mdsd.sh -c ${ENVIRONMENT} -r ${OXA_TOOLS_CONFIG_PATH} -m ${CLUSTERNAME}"
-    exit_on_error "Monitoring setup failed installation of monitoring solution on $HOST"
-
-    # clean up
-    ssh -o "StrictHostKeyChecking=no" $ADMIN_USER@$HOST "sudo rm -rf ${OXA_PATH}"
 }
 
 exec_mongo() {
@@ -170,16 +138,6 @@ exec_mysql() {
 ##
 setup() 
 {
-    #echo "executing apt-get update..."
-    #sudo apt-get -y -qq update
-    
-    # git client is already installed
-    # sudo apt-get -y install git
-  
-    # sync the private repository
-    # instead of the repo sync, let's pull the configs from keyvault since that is what was needed
-    ## sync_repo $OXA_TOOLS_CONFIG_REPO $OXA_TOOLS_CONFIG_VERSION $OXA_TOOLS_CONFIG_PATH $ACCESS_TOKEN
-
     # populate the deployment environment
     source $OXA_ENV_FILE
     setup_overrides

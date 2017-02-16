@@ -5,28 +5,28 @@
 
 ERROR_MESSAGE=1
 CLOUDNAME=""
-GITHUB_PROJECTNAME=""
-GITHUB_ACCOUNTNAME=""
-GITHUB_PERSONAL_ACCESS_TOKEN=""
-GITHUB_PROJECTBRANCH="master"
 OS_ADMIN_USERNAME=""
 CUSTOM_INSTALLER_RELATIVEPATH=""
 MONITORING_CLUSTER_NAME=""
 BOOTSTRAP_PHASE=0
 REPO_ROOT="/oxa" 
-PUBLIC_GITHUB_PROJECTNAME="oxa-tools"
-PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
-PUBLIC_GITHUB_PROJECTBRANCH="master"
+
+# Oxa Tools Github configs
+OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME="oxa-tools"
+OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
+OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH="master"
+
+# Edx Configuration Github configs
+EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME="edx-configuration"
+EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
+EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master"
+
 
 help()
 {
     echo "This script bootstraps the OXA Stamp"
     echo "Options:"
     echo "        -c Cloud name"
-    echo "        -p GitHub Personal Access Token"
-    echo "        -a GitHub Account Name"
-    echo "        -n GitHub Project Name"
-    echo "        -b GitHub Project Branch"
     echo "        -u OS Admin User Name"
     echo "        -i Custom script relative path"
     echo "        -u OS Admin User Name"
@@ -36,9 +36,12 @@ help()
     echo "        --aad-webclient-id Id of AAD web client (service principal)"
     echo "        --aad-webclient-appkey Application key for the AAD web client"
     echo "        --aad-tenant-id AAD Tenant Id"
-    echo "        --public-github-accountname Name of the GitHub account that owns the public OXA repository"
-    echo "        --public-github-projectname Name of the public GitHub repository for OXA"
-    echo "        --public-github-projectbranch Branch of the public GitHub repository for OXA to use"
+    echo "        --oxatools-public-github-accountname Name of the account that owns the oxa-tools GitHub repository"
+    echo "        --oxatools-public-github-projectname Name of the oxa-tools GitHub repository"
+    echo "        --oxatools-public-github-projectbranch Branch of the oxa-tools GitHub repository"
+    echo "        --edxconfiguration-public-github-accountname Name of the account that owns the edx configuration repository"
+    echo "        --edxconfiguration-public-github-projectname Name of the edx configuration GitHub repository"
+    echo "        --edxconfiguration-public-github-projectbranch Branch of edx configuration GitHub repository"
     echo "        --azure-subscription-id  Azure subscription id"
 }
 
@@ -54,18 +57,6 @@ parse_args()
         case "$1" in
             -c) # Cloud Name
                 CLOUDNAME=$2
-                ;;
-            -p) # GitHub Personal Access Token
-                GITHUB_PERSONAL_ACCESS_TOKEN=$2
-                ;;
-            -a) # GitHub Account Name
-                GITHUB_ACCOUNTNAME=$2
-                ;;
-            -n) # GitHub Project Name
-                GITHUB_PROJECTNAME=$2
-                ;;
-            -b) # GitHub Project Branch
-                GITHUB_PROJECTBRANCH=$2
                 ;;
             -u) # OS Admin User Name
                 OS_ADMIN_USERNAME=$2
@@ -85,9 +76,6 @@ parse_args()
                     exit 2
                 fi
                 ;;
-            --repo-path)
-                REPO_ROOT_PATH=$2
-                ;;
             --cloud)
                 CLOUD_NAME=$2
                 ;;
@@ -96,12 +84,6 @@ parse_args()
                 ;;
             --monitoring-cluster)
                 MONITORING_CLUSTER_NAME=$2
-                ;;
-            --access-token)
-                GITHUB_PERSONAL_ACCESS_TOKEN=$2
-                ;;
-            --branch)
-                GITHUB_PROJECTBRANCH=$2
                 ;;
             --phase)
                 if is_valid_arg "0 1" $2; then
@@ -127,14 +109,23 @@ parse_args()
               --aad-tenant-id)
                 AAD_TENANT_ID="$2"
                 ;;
-              --public-github-accountname)
-                PUBLIC_GITHUB_ACCOUNTNAME="$2"
+              --oxatools-public-github-accountname)
+                OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME="$2"
                 ;;
-              --public-github-projectname)
-                PUBLIC_GITHUB_PROJECTNAME="$2"
+              --oxatools-public-github-projectname)
+                OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME="$2"
                 ;;
-              --public-github-projectbranch)
-                PUBLIC_GITHUB_PROJECTBRANCH="$2"
+              --oxatools-public-github-projectbranch)
+                OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+                ;;
+              --edxconfiguration-public-github-accountname)
+                EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME="$2"
+                ;;
+              --edxconfiguration-public-github-projectname)
+                EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME="$2"
+                ;;
+              --edxconfiguration-public-github-projectbranch)
+                EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="$2"
                 ;;
               --azure-subscription-id)
                 AZURE_SUBSCRIPTION_ID="$2"
@@ -180,9 +171,15 @@ print_script_header
 parse_args $@ # pass existing command line arguments
 
 # Validate parameters
-if [ "$GITHUB_PERSONAL_ACCESS_TOKEN" == "" ] || [ "$GITHUB_ACCOUNTNAME" == "" ] || [ "$GITHUB_PROJECTNAME" == "" ] || [ "$GITHUB_PROJECTBRANCH" == "" ] || [ "$CLOUDNAME" == "" ] ;
+if [ "$OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME" == "" ] || [ "$OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME" == "" ] || [ "$OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH" == "" ] || [ "$CLOUDNAME" == "" ] ;
 then
-    log "Incomplete Github configuration: Github Personal Access Token, Account Name,  Project Name & Branch Name are required." $ERROR_MESSAGE
+    log "Incomplete OXA Tools Github repository configuration: Github Personal Access Token, Account Name,  Project Name & Branch Name are required." $ERROR_MESSAGE
+    exit 3
+fi
+
+if [ "$EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME" == "" ] || [ "$EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME" == "" ] || [ "$EDX_CONFIGURATION_PUBLIC_GITHUb_PROJECTBRANCH" == "" ] ;
+then
+    log "Incomplete EDX Configuration Github repository configuration: Github Personal Access Token, Account Name,  Project Name & Branch Name are required." $ERROR_MESSAGE
     exit 3
 fi
 
@@ -204,14 +201,14 @@ then
 fi
 
 # 2. Install & Configure the infrastructure & EdX applications
-log "Cloning the public OXA Repository"
-clone_repository $PUBLIC_GITHUB_ACCOUNTNAME $PUBLIC_GITHUB_PROJECTNAME $PUBLIC_GITHUB_PROJECTBRANCH ''  "${REPO_ROOT}/${PUBLIC_GITHUB_PROJECTNAME}"
+log "Cloning the public OXA Tools Repository"
+clone_repository $OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME $OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH ''  "${REPO_ROOT}/${OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME}"
 
 # setup the installer path & key variables
-INSTALLER_BASEPATH="${REPO_ROOT}/${PUBLIC_GITHUB_PROJECTNAME}/scripts"
+INSTALLER_BASEPATH="${REPO_ROOT}/${OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME}/scripts"
 INSTALLER_PATH="${INSTALLER_BASEPATH}/install.sh"
 DEPLOYMENT_ENV="${CLOUDNAME,,}" 
-OXA_ENV_PATH=/$REPO_ROOT/oxa-tools-config/env/$DEPLOYMENT_ENV
+OXA_ENV_PATH="${REPO_ROOT}/oxa-tools-config/env/${DEPLOYMENT_ENV}"
 
 # drop the environment configurations
 log "Download configurations from keyvault"
@@ -224,9 +221,10 @@ cp $UTILITIES_PATH "${INSTALLER_BASEPATH}"
 
 # execute the installer if present
 log "Launching the installer at '$INSTALLER_PATH'"
-bash $INSTALLER_PATH --repo-path /$REPO_ROOT/$GITHUB_PROJECTNAME --cloud $CLOUDNAME --admin-user $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --access-token $GITHUB_PERSONAL_ACCESS_TOKEN --branch $GITHUB_PROJECTBRANCH --phase $BOOTSTRAP_PHASE --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID
+bash $INSTALLER_PATH --repo-path "${REPO_ROOT}/oxa-tools-config" --cloud $CLOUDNAME --admin-user $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --branch $GITHUB_PROJECTBRANCH --phase $BOOTSTRAP_PHASE --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID --edxconfiguration-public-github-accountname $EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME --edxconfiguration-public-github-projectname $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME --edxconfiguration-public-github-projectbranch $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH
 exit_on_error "OXA stamp customization failed"
 
 # Exit (proudly)
 log "Completed execution of OXA stamp customization Exiting cleanly."
-exit 0
+exit 
+0

@@ -10,7 +10,6 @@
 # 3. Run Bootstrap for Mongo & MySql
 
 ERROR_MESSAGE=1
-GITHUB_PERSONAL_ACCESS_TOKEN=""
 GITHUB_PROJECTBRANCH="master"
 CLOUD_NAME=""
 MONITORING_CLUSTER_NAME=""
@@ -18,6 +17,14 @@ OS_ADMIN_USERNAME=""
 REPO_ROOT_PATH=""
 BOOTSTRAP_PHASE=0
 AZURE_SUBSCRIPTION_ID=""
+
+# Git Hub Configurations
+OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME=""
+OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME=""
+OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH=""
+EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME=""
+EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME=""
+EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH=""
 
 #TODO: complete plumbing this variable as a user input
 CRONTAB_INTERVAL_MINUTES=5
@@ -35,14 +42,18 @@ help()
     echo "        --cloud                    Cloud Name"
     echo "        --admin-user               OS Admin User Name"
     echo "        --monitoring-cluster       Monitoring Cluster Name"
-    echo "        --access-token             GitHub Personal Access Token"
-    echo "        --branch                   GitHub Project Name"
     echo "        --phase                    Bootstrap Phase (0=Servers, 1=OpenEdx App)"
     echo "        --crontab-interval         Crontab Interval minutes"
     echo "        --keyvault-name            Name of the key vault"
     echo "        --aad-webclient-id         Id of AAD web client (service principal)"
     echo "        --aad-webclient-appkey     Application key for the AAD web client"
     echo "        --aad-tenant-id            AAD Tenant Id"
+    echo "        --oxatools-public-github-accountname Name of the account that owns the oxa-tools GitHub repository"
+    echo "        --oxatools-public-github-projectname Name of the oxa-tools GitHub repository"
+    echo "        --oxatools-public-github-projectbranch Branch of the oxa-tools GitHub repository"
+    echo "        --edxconfiguration-public-github-accountname Name of the account that owns the edx configuration repository"
+    echo "        --edxconfiguration-public-github-projectname Name of the edx configuration GitHub repository"
+    echo "        --edxconfiguration-public-github-projectbranch Branch of edx configuration GitHub repository"
     echo "        --azure-subscription-id    Azure subscription id"
 }
 
@@ -67,12 +78,6 @@ parse_args()
                 ;;
             --monitoring-cluster)
                 MONITORING_CLUSTER_NAME=$2
-                ;;
-            --access-token)
-                GITHUB_PERSONAL_ACCESS_TOKEN=$2
-                ;;
-            --branch)
-                GITHUB_PROJECTBRANCH=$2
                 ;;
             --phase)
                 if is_valid_arg "0 1" $2; then
@@ -100,6 +105,24 @@ parse_args()
                 ;;
               --azure-subscription-id)
                 AZURE_SUBSCRIPTION_ID="$2"
+                ;;
+              --oxatools-public-github-accountname)
+                OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME="$2"
+                ;;
+              --oxatools-public-github-projectname)
+                OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME="$2"
+                ;;
+              --oxatools-public-github-projectbranch)
+                OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+                ;;
+              --edxconfiguration-public-github-accountname)
+                EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME="$2"
+                ;;
+              --edxconfiguration-public-github-projectname)
+                EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME="$2"
+                ;;
+              --edxconfiguration-public-github-projectbranch)
+                EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="$2"
                 ;;
             -h|--help)  # Helpful hints
                 help
@@ -143,7 +166,7 @@ parse_args $@
 print_script_header
 
 # validate key arguments
-if [ "$GITHUB_PERSONAL_ACCESS_TOKEN" == "" ] || [ "$GITHUB_PROJECTBRANCH" == "" ] || [ "$CLOUD_NAME" == "" ] ;
+if [ "$GITHUB_PROJECTBRANCH" == "" ] || [ "$CLOUD_NAME" == "" ] ;
 then
     log "Incomplete Github configuration: Github Personal Access Token, Account Name,  Project Name & Branch Name are required." $ERROR_MESSAGE
     exit 3
@@ -171,7 +194,7 @@ fi
 # This execution is now generic and will account for machine roles
 # TODO: break out shared functionalities to utilities so that they can be called independently
 # TODO: provide option to target different version of repositories
-bash $CURRENT_PATH/bootstrap-db.sh -e $CLOUD_NAME -a $GITHUB_PERSONAL_ACCESS_TOKEN --tools-config-version $GITHUB_PROJECTBRANCH --phase $BOOTSTRAP_PHASE --tools-version-override $GITHUB_PROJECTBRANCH --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID
+bash $CURRENT_PATH/bootstrap-db.sh -e $CLOUD_NAME --tools-config-version $GITHUB_PROJECTBRANCH --phase $BOOTSTRAP_PHASE --tools-version-override $GITHUB_PROJECTBRANCH --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID
 exit_on_error "Phase 0 Bootstrap for Mongo & Mysql failed for $HOST"
 
 # OpenEdX Bootstrap (EdX Database - Mysql & EdX App - VMSS)
@@ -184,17 +207,8 @@ if [ "$MACHINE_ROLE" == "jumpbox" ];
 then
     # 1. EDXDB Bootstrap - Deploy OpenEdx Schema to MySql
     # there is an implicit assumption that /oxa/oxa-tools has already been cloned
-    # TODO: we need a better way of passing around the 'GITHUB_PERSONAL_ACCESS_TOKEN'
-
-    log "Setting up Phase 1 (EDXDB) Bootstrap on ${HOSTNAME} for execution via cron @ ${CRONTAB_INTERVAL_MINUTES} minute interval"
-    #TODO: setup smarter uninstaller
-    crontab -r
-    crontab -l | { cat; echo "*/${CRONTAB_INTERVAL_MINUTES} * * * *  sudo flock -n /var/log/bootstrap.lock bash /oxa/oxa-tools/scripts/bootstrap.sh -e ${CLOUD_NAME} -a ${GITHUB_PERSONAL_ACCESS_TOKEN} -v ${GITHUB_PROJECTBRANCH} --tools-version-override ${GITHUB_PROJECTBRANCH} -r jb --cron >> /var/log/bootstrap.log 2>&1"; } | crontab -
-
-    exit_on_error "Crontab setup for executing Phase 1 bootstrap on ${HOSTNAME} failed!" $ERROR_CRONTAB_FAILED
-    log "Crontab setup is done"
-else
-    log "Skipping the Application-Tier Bootstrap"
+    SHORT_ROLE_NAME="jb"
+    TASK="Phase 1 (EDXDB) Bootstrap on ${HOSTNAME} for execution via cron @ ${CRONTAB_INTERVAL_MINUTES} minute interval"
 fi
 
 # 2. OpenEdX Application-Tier Bootstrap - Deploy OpenEdx FrontEnds to VMSS
@@ -203,19 +217,35 @@ then
     # 2. EDXAPP Bootstrap - Deploy OpenEdx Application to VMSS instance
     # there is an implicit assumption that /oxa/oxa-tools has already been cloned
     # TODO: we need a better way of passing around the 'ITHUB_PERSONAL_ACCESS_TOKEN'
-
-    log "Setting up VMSS Bootstrap on ${HOSTNAME} for execution via cron @ ${CRONTAB_INTERVAL_MINUTES} minute interval"
-    #TODO: setup smarter uninstaller
-    crontab -r
-    crontab -l | { cat; echo "*/${CRONTAB_INTERVAL_MINUTES} * * * *  sudo flock -n /var/log/bootstrap.lock bash /oxa/oxa-tools/scripts/bootstrap.sh -e ${CLOUD_NAME} -a ${GITHUB_PERSONAL_ACCESS_TOKEN} -v ${GITHUB_PROJECTBRANCH} --tools-version-override ${GITHUB_PROJECTBRANCH} -r vmss --cron >> /var/log/bootstrap.log 2>&1"; } | crontab -
-
-    exit_on_error "Crontab setup for executing VMSS bootstrap on ${HOSTNAME} failed!" $ERROR_CRONTAB_FAILED
-    log "Crontab setup is done"
-else
-    log "Skipping the VMSS Bootstrap"
+    SHORT_ROLE_NAME="vmss"
+    TASK="VMSS Bootstrap on ${HOSTNAME} for execution via cron @ ${CRONTAB_INTERVAL_MINUTES} minute interval"
 fi
 
-# Exit (proudly)
+# PROCESS the bootstrap work load for Jumpbox or Vmss
+if [ "$MACHINE_ROLE" == "jumpbox" ] || [ "$MACHINE_ROLE" == "vmss" ];
+then
+    log "Starting $TASK"
+
+    # setup the temporary cron installer script
+    CRON_INSTALLER_SCRIPT="$CURRENT_PATH\background-installer.sh"
+    INSTALL_COMMAND="sudo flock -n /var/log/bootstrap.lock bash ${REPO_ROOT_PATH}/scripts/bootstrap.sh -e ${CLOUD_NAME} -r $SHORT_ROLE_NAME --oxatools_public-github-accountname ${OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME} --oxatools_public-github-projectname ${OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME} --oxatools_public-github-projectbranch $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH --oxatools_public-github-projectbranch $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH  --oxatools_public-github-accountname $OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME --edxconfiguration_public-github-projectname $EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME --edxconfiguration_public-github-projectbranch $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH --edxconfiguration_public-github-projectbranch $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH --cron >> /var/log/bootstrap.log 2>&1"
+    cat $INSTALL_COMMAND > $CRON_INSTALLER_SCRIPT
+
+    # Remove the task if it is already setup
+    log "Uninstalling background installer cron job"
+    crontab -l | grep -v 'sudo bash $CRON_INSTALLER_SCRIPT' | crontab -
+
+    # Setup the background job
+    log "Installing background installer cron job"
+    crontab -l | { cat; echo "*/${CRONTAB_INTERVAL_MINUTES} * * * *  sudo bash $CRON_INSTALLER_SCRIPT"; } | crontab -
+
+    exit_on_error "Crontab setup for '${TASK}' on '${HOSTNAME}' failed!" $ERROR_CRONTAB_FAILED
+    log "Crontab setup is done"
+else
+    log "Skipping Jumpbox and VMSS Bootstrap"
+fi
+
+# Exit 
 exit_on_error "OXA Installation failed"
 log "Completed custom bootstrap for the OXA Stamp. Exiting cleanly."
 exit 0

@@ -7,15 +7,28 @@ set -x
 # argument defaults
 EDX_ROLE=""
 DEPLOYMENT_ENV="dev"
-ACCESS_TOKEN=""
-OXA_TOOLS_CONFIG_VERSION="master"
-OXA_TOOLS_VERSION_OVERRIDE="master"
 CRON_MODE=0
 TARGET_FILE=""
 PROGRESS_FILE=""
 
+# Settings for the OXA-Tools public repository 
+OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
+OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME="oxa-tools"
+OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH="master"
+
+# this is the operational branch for the OXA_TOOLS public git project
+OXA_TOOLS_VERSION=""
+
+# there are cases where we want to override the edx-configuration repository itself
+EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
+EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME="edx-configuration"
+EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master"
+
+# this is the operational branch for the EDX_CONFIGURATION public git project
+CONFIGURATION_VERSION=""
+
 display_usage() {
-  echo "Usage: $0 -a|--access_token {access token} -v|--version {oxa-tools-config version} [-r|--role {jb|vmss|mongo|mysql|edxapp|fullstack}] [-e|--environment {dev|bvt|int|prod}] [--cron]"
+  echo "Usage: $0 -a|--access_token {access token} -v|--version {oxa-tools-config version} [-r|--role {jb|vmss|mongo|mysql|edxapp|fullstack}] [-e|--environment {dev|bvt|int|prod}] [--cron] --keyvault-name {azure keyvault name} --aad-webclient-id {AAD web application client id} --aad-webclient-appkey {AAD web application client key} --aad-tenant-id {AAD Tenant to authenticate against} --azure-subscription-id {Azure subscription Id}"
   exit 1
 }
 
@@ -54,26 +67,33 @@ parse_args() {
           display_usage
         fi
         ;;
-      -a|--access_token)
-        ACCESS_TOKEN="$2"
-        if [[ ${#ACCESS_TOKEN} -eq 40 ]]; then
-          shift # past argument
-        else
-          echo "Invalid access token specified\n"
-          display_usage
-        fi
-        ;;
       --cron)
         CRON_MODE=1
         shift # past argument
         ;;
-      -v|--version)
-        OXA_TOOLS_CONFIG_VERSION="$2"
-        shift # past argument
+        --oxatools_public-github-accountname)
+        OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME="$2"
         ;;
-      --tools-version-override)
-        OXA_TOOLS_VERSION_OVERRIDE="$2"
-        shift # past argument
+        --oxatools_public-github-projectname)
+          OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME="$2"
+        ;;
+        --oxatools_public-github-projectbranch)
+          OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+        ;;        
+        --oxatools_public-github-projectbranch)
+          OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+        ;;
+        --oxatools_public-github-accountname)
+        OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME="$2"
+        ;;
+        --edxconfiguration_public-github-projectname)
+          EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME="$2"
+        ;;
+        --edxconfiguration_public-github-projectbranch)
+          EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+        ;;        
+        --edxconfiguration_public-github-projectbranch)
+          EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="$2"
         ;;
       *)
         # Unknown option encountered
@@ -163,14 +183,25 @@ setup_overrides()
     QUIETMODE=$1
 
     # apply input parameter-based overrides
-    if [ "$OXA_TOOLS_VERSION_OVERRIDE" != "$OXA_TOOLS_VERSION" ];
+    if [ "$PUBLIC_GITHUB_PROJECTBRANCH" != "$OXA_TOOLS_VERSION" ];
     then
         if [ "$QUIETMODE" != "1" ];
         then
-            echo "Applying OXA Tools Version override: '$OXA_TOOLS_VERSION' to '$OXA_TOOLS_VERSION_OVERRIDE'"
+            echo "Applying OXA Tools Version override: '$OXA_TOOLS_VERSION' to '$PUBLIC_GITHUB_PROJECTBRANCH'"
         fi
 
-        OXA_TOOLS_VERSION=$OXA_TOOLS_VERSION_OVERRIDE
+        OXA_TOOLS_VERSION=$PUBLIC_GITHUB_PROJECTBRANCH
+    fi
+
+    # apply input parameter-based overrides
+    if [ "$EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH" != "$CONFIGURATION_VERSION" ];
+    then
+        if [ "$QUIETMODE" != "1" ];
+        then
+            echo "Applying OXA Tools Version override: '$CONFIGURATION_VERSION' to '$EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH'"
+        fi
+
+        CONFIGURATION_VERSION=$EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH
     fi
 }
 
@@ -179,12 +210,9 @@ setup_overrides()
 ##
 setup() 
 {
-    apt-get -y update
-    apt-get -y install git
-  
-    # sync the private repository
-    sync_repo $OXA_TOOLS_CONFIG_REPO $OXA_TOOLS_CONFIG_VERSION $OXA_TOOLS_CONFIG_PATH $ACCESS_TOKEN
-  
+    # There is an implicit pre-requisite for the GIT client to be installed. 
+    # This is already handled in the calling script
+
     # populate the deployment environment
     source $OXA_ENV_FILE
     setup_overrides
@@ -333,14 +361,22 @@ parse_args $@ # pass existing command line arguments
 ##
 BOOTSTRAP_HOME=$(readlink -f $(dirname $0))
 OXA_PATH=/oxa
-OXA_TOOLS_REPO="https://github.com/microsoft/oxa-tools.git"
-OXA_TOOLS_PATH=$OXA_PATH/oxa-tools
-OXA_TOOLS_CONFIG_REPO="https://github.com/microsoft/oxa-tools-config.git"
+
+# OXA Tools
+OXA_TOOLS_REPO="https://github.com/${PUBLIC_GITHUB_ACCOUNTNAME}/${PUBLIC_GITHUB_PROJECTNAME}.git"
+OXA_TOOLS_PATH=$OXA_PATH/$PUBLIC_GITHUB_PROJECTNAME
+
+# OXA Tools Config
 OXA_TOOLS_CONFIG_PATH=$OXA_PATH/oxa-tools-config
+OXA_ENV_PATH=$OXA_TOOLS_CONFIG_PATH/env/$DEPLOYMENT_ENV
+OXA_ENV_FILE=$OXA_ENV_PATH/$DEPLOYMENT_ENV.sh
+
+# OXA Configuration
 CONFIGURATION_PATH=$OXA_PATH/configuration
-OXA_ENV_FILE=$OXA_TOOLS_CONFIG_PATH/env/$DEPLOYMENT_ENV/$DEPLOYMENT_ENV.sh
 OXA_PLAYBOOK_CONFIG=$OXA_PATH/oxa.yml
 
+# setup the installer path & key variables
+INSTALLER_BASEPATH="${OXA_TOOLS_PATH}/scripts"
 
 ##
 ## CRON CheckPoint
