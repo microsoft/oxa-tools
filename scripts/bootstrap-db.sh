@@ -48,7 +48,7 @@ parse_args() {
       -e|--environment)
         DEPLOYMENT_ENV="${2,,}" # convert to lowercase
         is_valid=$(is_valid_arg "dev bvt int prod" $DEPLOYMENT_ENV)
-        if [ $is_valid -eq 1 ] ; then
+        if [[ $is_valid -eq 1 ]] ; then
           echo "Invalid environment specified\n"
           display_usage
         fi
