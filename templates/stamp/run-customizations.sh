@@ -76,9 +76,6 @@ parse_args()
                     exit 2
                 fi
                 ;;
-            --cloud)
-                CLOUD_NAME=$2
-                ;;
             -u|--admin-user)
                 OS_ADMIN_USERNAME=$2
                 ;;
