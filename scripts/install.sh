@@ -194,7 +194,7 @@ fi
 # This execution is now generic and will account for machine roles
 # TODO: break out shared functionalities to utilities so that they can be called independently
 # TODO: provide option to target different version of repositories
-bash $CURRENT_PATH/bootstrap-db.sh -e $CLOUD_NAME --tools-config-version $GITHUB_PROJECTBRANCH --phase $BOOTSTRAP_PHASE --tools-version-override $GITHUB_PROJECTBRANCH --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID
+bash $CURRENT_PATH/bootstrap-db.sh -e $CLOUD_NAME --phase $BOOTSTRAP_PHASE --tools-version-override $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID
 exit_on_error "Phase 0 Bootstrap for Mongo & Mysql failed for $HOST"
 
 # OpenEdX Bootstrap (EdX Database - Mysql & EdX App - VMSS)
