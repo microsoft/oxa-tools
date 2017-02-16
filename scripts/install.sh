@@ -239,7 +239,7 @@ then
 
     # Remove the task if it is already setup
     log "Uninstalling background installer cron job"
-    crontab -l | grep -v 'sudo bash $CRON_INSTALLER_SCRIPT' | crontab -
+    crontab -l | grep -v "sudo bash $CRON_INSTALLER_SCRIPT" | crontab -
 
     # Setup the background job
     log "Installing background installer cron job"

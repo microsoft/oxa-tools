@@ -21,7 +21,6 @@ EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME="edx-configuration"
 EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
 EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master"
 
-
 help()
 {
     echo "This script bootstraps the OXA Stamp"
@@ -229,5 +228,4 @@ exit_on_error "OXA stamp customization failed"
 
 # Exit (proudly)
 log "Completed execution of OXA stamp customization Exiting cleanly."
-exit 
-0
+exit 0

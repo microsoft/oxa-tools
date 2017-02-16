@@ -51,25 +51,20 @@ parse_args() {
     case "$1" in
       -r|--role)
         EDX_ROLE="${2,,}" # convert to lowercase
-        if is_valid_arg "jb vmss mongo mysql edxapp fullstack" $EDX_ROLE; then
-          shift # past argument
-        else
+        if ! is_valid_arg "jb vmss mongo mysql edxapp fullstack" $EDX_ROLE; then
           echo "Invalid role specified\n"
           display_usage
         fi
         ;;
       -e|--environment)
         DEPLOYMENT_ENV="${2,,}" # convert to lowercase
-        if is_valid_arg "dev bvt int prod" $DEPLOYMENT_ENV; then
-          shift # past argument
-        else
+        if ! is_valid_arg "dev bvt int prod" $DEPLOYMENT_ENV; then
           echo "Invalid environment specified\n"
           display_usage
         fi
         ;;
       --cron)
         CRON_MODE=1
-        shift # past argument
         ;;
         --oxatools_public-github-accountname)
         OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME="$2"
@@ -101,6 +96,7 @@ parse_args() {
         ;;
     esac
 
+    shift # past argument or value
     shift # past argument or value
   done
 }
