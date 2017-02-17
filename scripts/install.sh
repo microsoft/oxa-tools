@@ -234,7 +234,7 @@ then
     # setup the temporary cron installer script
     CRON_INSTALLER_SCRIPT="$CURRENT_PATH/background-installer.sh"
 
-    INSTALL_COMMAND="sudo flock -n /var/log/bootstrap.lock bash $REPO_ROOT/$OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME/scripts/bootstrap.sh -e $CLOUD_NAME --role $SHORT_ROLE_NAME --oxatools_public-github-accountname $OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME --oxatools_public-github-projectname $OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME --oxatools_public-github-projectbranch $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH --oxatools_public-github-projectbranch $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH --oxatools_public-github-accountname $OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME --edxconfiguration_public-github-projectname $EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME --edxconfiguration_public-github-projectbranch $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH --edxconfiguration_public-github-projectbranch $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH --cron >> /var/log/bootstrap.log 2>&1"
+    INSTALL_COMMAND="sudo flock -n /var/log/bootstrap.lock bash $REPO_ROOT/$OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME/scripts/bootstrap.sh -e $CLOUD_NAME --role $SHORT_ROLE_NAME --oxatools_public-github-accountname $OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME --oxatools_public-github-projectname $OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME --oxatools_public-github-projectbranch $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH --oxatools_public-github-projectbranch $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH --oxatools_public-github-accountname $OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME --edxconfiguration_public-github-projectname $EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME --edxconfiguration_public-github-projectbranch $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH --edxconfiguration_public-github-projectbranch $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH --installer-script-path $CRON_INSTALLER_SCRIPT --cron >> /var/log/bootstrap.log 2>&1"
     echo $INSTALL_COMMAND > $CRON_INSTALLER_SCRIPT
 
     # Remove the task if it is already setup
@@ -254,9 +254,4 @@ fi
 # Exit 
 exit_on_error "OXA Installation failed"
 log "Completed custom bootstrap for the OXA Stamp. Exiting cleanly."
-
-# remove the cron install job
-log "Uninstalling background installer cron job"
-crontab -l | grep -v "sudo bash $CRON_INSTALLER_SCRIPT" | crontab -
-
 exit 0

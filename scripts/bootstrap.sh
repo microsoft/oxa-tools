@@ -27,6 +27,9 @@ EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master"
 # this is the operational branch for the EDX_CONFIGURATION public git project
 CONFIGURATION_VERSION=""
 
+# script used for triggering background installation (setup in cron)
+CRON_INSTALLER_SCRIPT=""
+
 display_usage() {
   echo "Usage: $0 -a|--access_token {access token} -v|--version {oxa-tools-config version} [-r|--role {jb|vmss|mongo|mysql|edxapp|fullstack}] [-e|--environment {dev|bvt|int|prod}] [--cron] --keyvault-name {azure keyvault name} --aad-webclient-id {AAD web application client id} --aad-webclient-appkey {AAD web application client key} --aad-tenant-id {AAD Tenant to authenticate against} --azure-subscription-id {Azure subscription Id}"
   exit 1
@@ -89,6 +92,9 @@ parse_args() {
         ;;        
         --edxconfiguration_public-github-projectbranch)
           EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+        ;;
+        --installer-script-path)
+          CRON_INSTALLER_SCRIPT="$2"
         ;;
       *)
         # Unknown option encountered
@@ -468,8 +474,16 @@ remove_progress_file
 # log a closing message and leave expected bread crumb for status tracking
 TIMESTAMP=`date +"%D %T"`
 STATUS_MESSAGE="${TIMESTAMP} :: Completed bootstrap of ${EDX_ROLE} on ${HOSTNAME}"
+echo $STATUS_MESSAGE
 
 echo "Creating Phase 1 Crumb at '$TARGET_FILE''"
 touch $TARGET_FILE
 
-echo $STATUS_MESSAGE
+# remove the cron install job
+if [[ -e $CRON_INSTALLER_SCRIPT ]]; 
+then  
+    log "Uninstalling cron job: Background Installer Script"
+    crontab -l | grep -v "sudo bash $CRON_INSTALLER_SCRIPT" | crontab -
+
+    rm $CRON_INSTALLER_SCRIPT
+fi
