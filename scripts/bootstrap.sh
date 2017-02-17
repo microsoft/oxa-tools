@@ -179,14 +179,14 @@ setup_overrides()
     QUIETMODE=$1
 
     # apply input parameter-based overrides
-    if [ "$PUBLIC_GITHUB_PROJECTBRANCH" != "$OXA_TOOLS_VERSION" ];
+    if [ "$OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH" != "$OXA_TOOLS_VERSION" ];
     then
         if [ "$QUIETMODE" != "1" ];
         then
-            echo "Applying OXA Tools Version override: '$OXA_TOOLS_VERSION' to '$PUBLIC_GITHUB_PROJECTBRANCH'"
+            echo "Applying OXA Tools Version override: '$OXA_TOOLS_VERSION' to '$OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH'"
         fi
 
-        OXA_TOOLS_VERSION=$PUBLIC_GITHUB_PROJECTBRANCH
+        OXA_TOOLS_VERSION=$OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH
     fi
 
     # apply input parameter-based overrides
@@ -356,11 +356,11 @@ parse_args $@ # pass existing command line arguments
 ## Execute role-independent OXA environment bootstrap
 ##
 BOOTSTRAP_HOME=$(readlink -f $(dirname $0))
-OXA_PATH=/oxa
+OXA_PATH="/oxa"
 
 # OXA Tools
-OXA_TOOLS_REPO="https://github.com/${PUBLIC_GITHUB_ACCOUNTNAME}/${PUBLIC_GITHUB_PROJECTNAME}.git"
-OXA_TOOLS_PATH=$OXA_PATH/$PUBLIC_GITHUB_PROJECTNAME
+OXA_TOOLS_REPO="https://github.com/${OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME}/${OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME}.git"
+OXA_TOOLS_PATH=$OXA_PATH/$OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME
 
 # OXA Tools Config
 OXA_TOOLS_CONFIG_PATH=$OXA_PATH/oxa-tools-config
