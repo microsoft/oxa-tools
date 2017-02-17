@@ -254,4 +254,9 @@ fi
 # Exit 
 exit_on_error "OXA Installation failed"
 log "Completed custom bootstrap for the OXA Stamp. Exiting cleanly."
+
+# remove the cron install job
+log "Uninstalling background installer cron job"
+crontab -l | grep -v "sudo bash $CRON_INSTALLER_SCRIPT" | crontab -
+
 exit 0
