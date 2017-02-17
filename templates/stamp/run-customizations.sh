@@ -21,6 +21,9 @@ EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME="edx-configuration"
 EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
 EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master"
 
+# operational mode
+CRON_MODE=0
+
 help()
 {
     echo "This script bootstraps the OXA Stamp"
@@ -41,6 +44,7 @@ help()
     echo "        --edxconfiguration-public-github-accountname Name of the account that owns the edx configuration repository"
     echo "        --edxconfiguration-public-github-projectname Name of the edx configuration GitHub repository"
     echo "        --edxconfiguration-public-github-projectbranch Branch of edx configuration GitHub repository"
+    echo "        --cron Operation mode for the script"
     echo "        --azure-subscription-id  Azure subscription id"
 }
 
@@ -66,7 +70,7 @@ parse_args()
             -m) # Monitoring cluster name
                 MONITORING_CLUSTER_NAME=$2
                 ;;
-            -s) # Bootstrap Phase (0=Servers, 1=OpenEdx App)
+            -s|--phase) # Bootstrap Phase (0=Servers, 1=OpenEdx App)
                 if is_valid_arg "0 1" $2; then
                     BOOTSTRAP_PHASE=$2
                 else
@@ -80,15 +84,6 @@ parse_args()
                 ;;
             --monitoring-cluster)
                 MONITORING_CLUSTER_NAME=$2
-                ;;
-            --phase)
-                if is_valid_arg "0 1" $2; then
-                    BOOTSTRAP_PHASE=$2
-                else
-                    log "Invalid Bootstrap Phase specified - $2" $ERROR_MESSAGE
-                    help
-                    exit 2
-                fi
                 ;;
             --crontab-interval)
                 CRONTAB_INTERVAL_MINUTES=$2
@@ -125,6 +120,9 @@ parse_args()
                 ;;
               --azure-subscription-id)
                 AZURE_SUBSCRIPTION_ID="$2"
+                ;;
+              --cron)
+                CRON_MODE=1
                 ;;
             -h|--help)  # Helpful hints
                 help
@@ -179,6 +177,30 @@ then
     exit 3
 fi
 
+# to support resiliency, we need to enable retries. Towards that end, this script will support 2 modes: Cron (background execution) or Non-Cron (CSX/direct execution)
+CRON_INSTALLER_SCRIPT="$CURRENT_PATH/background-run-customization.sh"
+
+if [ "$CRON_MODE" == "0" ];
+then
+    log "Setting up cron job for executing customization from '${HOSTNAME}' for the OXA Stamp"
+
+    # create the cron job & exit
+    INSTALL_COMMAND="sudo flock -n /var/log/bootstrap-run-customization.lock bash $CURRENT_PATH/run-customizations.sh -c $CLOUDNAME -u $OS_ADMIN_USERNAME -i $CUSTOM_INSTALLER_RELATIVEPATH -m $MONITORING_CLUSTER_NAME -s $BOOTSTRAP_PHASE -u $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --crontab-interval $CRONTAB_INTERVAL_MINUTES --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --oxatools-public-github-accountname $OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME --oxatools-public-github-projectname $OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME --oxatools-public-github-projectbranch $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH --edxconfiguration-public-github-accountname $EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME --edxconfiguration-public-github-projectname $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME --edxconfiguration-public-github-projectbranch $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH --azure-subscription-id $AZURE_SUBSCRIPTION_ID --cron >> /var/log/bootstrap.csx.log 2>&1"
+    echo $INSTALL_COMMAND > $CRON_INSTALLER_SCRIPT
+
+    # Remove the task if it is already setup
+    log "Uninstalling run-customization background installer cron job"
+    crontab -l | grep -v "sudo bash $CRON_INSTALLER_SCRIPT" | crontab -
+
+    # Setup the background job
+    log "Installing run-customization background installer cron job"
+    crontab -l | { cat; echo "*/${CRONTAB_INTERVAL_MINUTES} * * * *  sudo bash $CRON_INSTALLER_SCRIPT"; } | crontab -
+
+    exit_on_error "Crontab setup for '${TASK}' on '${HOSTNAME}' failed!" $ERROR_CRONTAB_FAILED
+    log "Crontab setup is done"
+    exit 0
+fi
+
 log "Begin customization from '${HOSTNAME}' for the OXA Stamp"
 
 MACHINE_ROLE=$(get_machine_role)
@@ -225,6 +247,10 @@ cp $UTILITIES_PATH "${INSTALLER_BASEPATH}"
 log "Launching the installer at '$INSTALLER_PATH'"
 bash $INSTALLER_PATH --repo-root $REPO_ROOT --config-path "${REPO_ROOT}/oxa-tools-config" --cloud $CLOUDNAME --admin-user $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --phase $BOOTSTRAP_PHASE --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID --edxconfiguration-public-github-accountname $EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME --edxconfiguration-public-github-projectname $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME --edxconfiguration-public-github-projectbranch $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH --oxatools-public-github-accountname $OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME --oxatools-public-github-projectname $OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME --oxatools-public-github-projectbranch $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH
 exit_on_error "OXA stamp customization failed"
+
+# Remove the task if it is already setup
+log "Uninstalling run-customization background installer cron job"
+crontab -l | grep -v "sudo bash $CRON_INSTALLER_SCRIPT" | crontab -
 
 # Exit (proudly)
 log "Completed execution of OXA stamp customization Exiting cleanly."
