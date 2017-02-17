@@ -19,6 +19,7 @@ cd comprehensive
 sudo git checkout oxa/master.euc
 
 sudo chown -R edxapp:edxapp /edx/app/edxapp/themes
+sudo chmod -R u+rw /edx/app/edxapp/themes
 
 # Compile LMS assets and then restart the services so that changes take effect
 sudo su edxapp -s /bin/bash -c "source /edx/app/edxapp/edxapp_env;cd /edx/app/edxapp/edx-platform/;paver update_assets lms --settings aws"
