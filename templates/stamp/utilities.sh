@@ -568,11 +568,11 @@ send-notification()
     then
         # we have sufficient inputs to send mail
         if [[ -f $SECONDARY_LOGFILE ]] && [[ -f $MAIN_LOGFILE ]]; then
-            echo $MESSAGE | mail -s $SUBJECT $TO -A $MAIN_LOGFILE -A $SECONDARY_LOGFILE
+            echo "$MESSAGE" | mail -s "$SUBJECT" "$TO" -A "$MAIN_LOGFILE" -A "$SECONDARY_LOGFILE"
         elif [[ -f $MAIN_LOGFILE ]]; then
-            echo $MESSAGE | mail -s $SUBJECT $TO -A $MAIN_LOGFILE
+            echo "$MESSAGE" | mail -s "$SUBJECT" "$TO" -A "$MAIN_LOGFILE"
         else
-            echo $MESSAGE | mail -s $SUBJECT $TO
+            echo "$MESSAGE" | mail -s "$SUBJECT" "$TO"
         fi
     else
         log "Insufficient parameters specified for sending mail"
