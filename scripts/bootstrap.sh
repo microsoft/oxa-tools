@@ -299,7 +299,6 @@ update_stamp_jb()
 
     # edx playbooks - mysql and memcached
     $ANSIBLE_PLAYBOOK -i 10.0.0.16, $OXA_SSH_ARGS -e@$OXA_PLAYBOOK_CONFIG edx_mysql.yml
-    
     exit_on_error "Execution of edX MySQL playbook failed (Stamp JB)" 1 $SUBJECT $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
     # minimize tags? "install:base,install:system-requirements,install:configuration,install:app-requirements,install:code"
@@ -522,4 +521,4 @@ fi
 # log a closing message and leave expected bread crumb for status tracking
 NOTIFICATION_MESSAGE="Completed execution of Ansible playbooks to bootstrap the '$EDX_ROLE' role from ${HOSTNAME}"
 log "${NOTIFICATION_MESSAGE}"
-send-notification "${NOTIFICATION_MESSAGE}" $MAIL_SUBJECT $CLUSTER_ADMIN_EMAIL
+send-notification "${NOTIFICATION_MESSAGE}" "${MAIL_SUBJECT}" "${CLUSTER_ADMIN_EMAIL}"

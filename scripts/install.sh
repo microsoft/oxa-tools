@@ -266,5 +266,5 @@ exit_on_error "OXA Installation failed" 1 "${MAIL_SUBJECT} - Installer Failed" $
 # at this point, we have succeeded
 NOTIFICATION_MESSAGE="Custom bootstrap for the OXA Stamp (Phase 0) has completed successfully. The application level installer for the '$MACHINE_ROLE' role have been setup to run in the background."
 log "${NOTIFICATION_MESSAGE}"
-send-notification "${NOTIFICATION_MESSAGE}" "${MAIL_SUBJECT} - Phase 0 Bootstrap" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
+send-notification "${NOTIFICATION_MESSAGE}" "${MAIL_SUBJECT} - Phase 0 Bootstrap" "${CLUSTER_ADMIN_EMAIL}"
 exit 0
