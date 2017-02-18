@@ -4,6 +4,8 @@
 
 set -x
 
+
+
 # argument defaults
 EDX_ROLE=""
 DEPLOYMENT_ENV="dev"
@@ -29,6 +31,13 @@ CONFIGURATION_VERSION=""
 
 # script used for triggering background installation (setup in cron)
 CRON_INSTALLER_SCRIPT=""
+
+# SMTP / Mailer parameters
+CLUSTER_ADMIN_EMAIL=""
+MAIL_SUBJECT="OXA Bootstrap - Ansible Playbooks Installer"
+NOTIFICATION_MESSAGE=""
+SECONDARY_LOG="/var/log/bootstrap.csx.log"
+PRIMARY_LOG="/var/log/bootstrap.log"
 
 display_usage() {
   echo "Usage: $0 -a|--access_token {access token} -v|--version {oxa-tools-config version} [-r|--role {jb|vmss|mongo|mysql|edxapp|fullstack}] [-e|--environment {dev|bvt|int|prod}] [--cron] --keyvault-name {azure keyvault name} --aad-webclient-id {AAD web application client id} --aad-webclient-appkey {AAD web application client key} --aad-tenant-id {AAD Tenant to authenticate against} --azure-subscription-id {Azure subscription Id}"
@@ -95,6 +104,9 @@ parse_args() {
         ;;
         --installer-script-path)
           CRON_INSTALLER_SCRIPT="$2"
+        ;;
+        --cluster-admin-email)
+          CLUSTER_ADMIN_EMAIL="$2"
         ;;
       *)
         # Unknown option encountered
@@ -283,31 +295,37 @@ exit_on_error()
     fi
 }
 
-update_stamp_jb() {    
-  # edx playbooks - mysql and memcached
-  $ANSIBLE_PLAYBOOK -i 10.0.0.16, $OXA_SSH_ARGS -e@$OXA_PLAYBOOK_CONFIG edx_mysql.yml
-  exit_on_error "Execution of edX MySQL playbook failed"
+update_stamp_jb() 
+{
+    SUBJECT="${MAIL_SUBJECT} - JB DB Customization Failed"
 
-  # minimize tags? "install:base,install:system-requirements,install:configuration,install:app-requirements,install:code"
-  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_sandbox.yml -e "migrate_db=yes" --tags "edxapp-sandbox,install,migrate"
-  exit_on_error "Execution of edX MySQL migrations failed"
+    # edx playbooks - mysql and memcached
+    $ANSIBLE_PLAYBOOK -i 10.0.0.16, $OXA_SSH_ARGS -e@$OXA_PLAYBOOK_CONFIG edx_mysql.yml
+    
+    exit_on_error "Execution of edX MySQL playbook failed (Stamp JB)" 1 $SUBJECT $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
+
+    # minimize tags? "install:base,install:system-requirements,install:configuration,install:app-requirements,install:code"
+    $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_sandbox.yml -e "migrate_db=yes" --tags "edxapp-sandbox,install,migrate"
+    exit_on_error "Execution of edX MySQL migrations failed" 1 $SUBJECT $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
   
-  # oxa playbooks - mongo (enable when customized) and mysql
-  #$ANSIBLE_PLAYBOOK -i ${CLUSTERNAME}mongo1, $OXA_SSH_ARGS -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mongo"
-  #exit_on_error "Execution of OXA Mongo playbook failed"
+    # oxa playbooks - mongo (enable when customized) and mysql
+    #$ANSIBLE_PLAYBOOK -i ${CLUSTERNAME}mongo1, $OXA_SSH_ARGS -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mongo"
+    #exit_on_error "Execution of OXA Mongo playbook failed"
 
-  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mysql"
-  exit_on_error "Execution of OXA MySQL playbook failed"
+    $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mysql"
+    exit_on_error "Execution of OXA MySQL playbook failed" 1 $SUBJECT $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 }
 
-update_stamp_vmss() {
-  # edx playbooks - sandbox with remote mongo/mysql
-  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_sandbox.yml -e "migrate_db=no" --skip-tags=demo_course
-  exit_on_error "Execution of edX sandbox playbook failed"
+update_stamp_vmss() 
+{
+    $SUBJECT="${MAIL_SUBJECT} - VMSS Setup Failed"
+    # edx playbooks - sandbox with remote mongo/mysql
+    $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_sandbox.yml -e "migrate_db=no" --skip-tags=demo_course
+    exit_on_error "Execution of edX sandbox playbook failed" 1 $SUBJECT $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
   
-  # oxa playbooks
-  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "edxapp"
-  exit_on_error "Execution of OXA edxapp playbook failed"
+    # oxa playbooks
+    $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "edxapp"
+    exit_on_error "Execution of OXA edxapp playbook failed" 1 $SUBJECT $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 }
 
 update_scalable_mongo() {
@@ -355,6 +373,21 @@ remove_progress_file()
 ###############################################
 # START CORE EXECUTION
 ###############################################
+
+# source our utilities for logging and other base functions (we need this staged with the installer script)
+# the file needs to be first downloaded from the public repository
+CURRENT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+UTILITIES_PATH=$CURRENT_PATH/utilities.sh
+
+# check if the utilities file exists. If not, bail out.
+if [[ ! -e $UTILITIES_PATH ]]; 
+then  
+    echo :"Utilities not present"
+    exit 3
+fi
+
+# source the utilities now
+source $UTILITIES_PATH
 
 parse_args $@ # pass existing command line arguments
 

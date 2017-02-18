@@ -5,7 +5,6 @@
 #set -x
 
 # argument defaults
-#EDX_ROLE=""
 DEPLOYMENT_ENV="dev"
 OXA_TOOLS_VERSION_OVERRIDE="master"
 MACHINE_ROLE=""
@@ -18,6 +17,13 @@ AAD_WEBCLIENT_ID=""
 AAD_WEBCLIENT_APPKEY=""
 AAD_TENANT_ID=""
 AZURE_SUBSCRIPTION_ID=""
+
+# SMTP / Mailer parameters
+CLUSTER_ADMIN_EMAIL=""
+MAIL_SUBJECT="OXA Bootstrap - DB (Mongo & Mysql) Configuration"
+NOTIFICATION_MESSAGE=""
+SECONDARY_LOG="/var/log/bootstrap.csx.log"
+PRIMARY_LOG="/var/log/bootstrap.log"
 
 display_usage() {
     echo "Usage: $0 -a|--access_token {access token} -v|--version {oxa-tools-config version} [-e|--environment {dev|bvt|int|prod}] [--phase {0 1}] --keyvault-name {azure keyvault name} --aad-webclient-id {AAD web application client id} --aad-webclient-appkey {AAD web application client key} --aad-tenant-id {AAD Tenant to authenticate against} --azure-subscription-id {Azure subscription Id}"
@@ -80,6 +86,9 @@ parse_args() {
       --azure-subscription-id)
         AZURE_SUBSCRIPTION_ID="$2"
         ;;
+      --cluster-admin-email)
+        CLUSTER_ADMIN_EMAIL="$2"
+        ;;
       *) # Unknown option encountered
         display_usage
         ;;
@@ -111,7 +120,7 @@ exec_mongo() {
         ssh -o "StrictHostKeyChecking=no" $ADMIN_USER@$HOST "cd ~/stamp && chmod 755 ~/stamp/$MONGO_INSTALLER_SCRIPT && sudo ~/stamp/$MONGO_INSTALLER_SCRIPT -i $MONGO_INSTALLER_BASE_URL -b $MONGO_INSTALLER_PACKAGE_NAME -r $MONGO_REPLICASET_NAME -k $MONGO_REPLICASET_KEY -u $MONGO_USER -p $MONGO_PASSWORD_TEMP -x $MONGO_SERVER_IP_PREFIX -n $NODE_COUNT -o $MONGO_SERVER_IP_OFFSET -l"
     fi 
 
-    exit_on_error "Mongo installation failed for $HOST"
+    exit_on_error "Mongo installation failed for $HOST" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 }
 
 exec_mysql() {
@@ -130,7 +139,7 @@ exec_mysql() {
 
     ssh -o "StrictHostKeyChecking=no" $ADMIN_USER@$HOST "cd ~/stamp && chmod 755 ~/stamp/$MYSQL_INSTALLER_SCRIPT  && sudo ~/stamp/$MYSQL_INSTALLER_SCRIPT -r $MYSQL_REPL_USER -k $MYSQL_REPL_USER_PASSWORD_TEMP -u $MYSQL_ADMIN_USER -p $MYSQL_ADMIN_PASSWORD_TEMP -v $MYSQL_PACKAGE_VERSION -m $MYSQL_MASTER_IP -n $NODE_ID"
 
-    exit_on_error "MySQL installation failed for $HOST"
+    exit_on_error "MySQL installation failed for $HOST" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 }
 
 ##
@@ -194,17 +203,6 @@ setup_overrides()
     fi
 }
 
-##
-## Role-based ansible command lines
-##
-
-exit_on_error() {
-  if [[ $? -ne 0 ]]; then
-    echo $1 && exit 1
-  fi
-}
-
-
 ###############################################
 # Start Execution
 ###############################################
@@ -267,7 +265,7 @@ then
 fi
 
 # log a closing message and leave expected bread crumb for status tracking
-TIMESTAMP=`date +"%D %T"`
-STATUS_MESSAGE="${TIMESTAMP} :: Completed Phase 0 - OpenEdX Database (Mysql) Bootstrap from ${HOSTNAME}"
+NOTIFICATION_MESSAGE="Completed Phase 0 - OpenEdX Database (Mysql) Bootstrap from ${HOSTNAME}"
+send-notification $NOTIFICATION_MESSAGE $MAIL_SUBJECT $CLUSTER_ADMIN_EMAIL
+log $NOTIFICATION_MESSAGE
 echo $STATUS_MESSAGE >> $TARGET_FILE
-echo $STATUS_MESSAGE

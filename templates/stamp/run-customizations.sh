@@ -3,13 +3,18 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
+NOTIFICATION_MESSAGE=""
+SECONDARY_LOG="/var/log/bootstrap.csx.log"
+PRIMARY_LOG="/var/log/bootstrap.log"
+
 ERROR_MESSAGE=1
 CLOUDNAME=""
 OS_ADMIN_USERNAME=""
 CUSTOM_INSTALLER_RELATIVEPATH=""
 MONITORING_CLUSTER_NAME=""
 BOOTSTRAP_PHASE=0
-REPO_ROOT="/oxa" 
+REPO_ROOT="/oxa"
+CRONTAB_INTERVAL_MINUTES=5
 
 # Oxa Tools Github configs
 OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME="oxa-tools"
@@ -23,6 +28,17 @@ EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master"
 
 # operational mode
 CRON_MODE=0
+
+# SMTP / Mailer parameters
+SMTP_SERVER=""
+SMTP_SERVER_PORT=""
+SMTP_AUTH_USER=""
+SMTP_AUTH_USER_PASSWORD=""
+CLUSTER_ADMIN_EMAIL=""
+MAIL_SUBJECT="OXA Bootstrap - Run Customization"
+NOTIFICATION_MESSAGE=""
+SECONDARY_LOG="/var/log/bootstrap.csx.log"
+PRIMARY_LOG="/var/log/bootstrap.log"
 
 help()
 {
@@ -46,6 +62,11 @@ help()
     echo "        --edxconfiguration-public-github-projectbranch Branch of edx configuration GitHub repository"
     echo "        --cron Operation mode for the script"
     echo "        --azure-subscription-id  Azure subscription id"
+    echo "        --smtp-server FQDN of SMTP server used for relaying deployment and other system notifications"
+    echo "        --smtp-server-port Port of SMTP server used for relaying deployment and other system notifications"
+    echo "        --smtp-auth-user User name for authenticating against the SMTP server used for relaying deployment and other system notifications"
+    echo "        --smtp-auth-user-password Password for authenticating against the SMTP server used for relaying deployment and other system notifications"
+    echo "        --cluster-admin-email Email address of the administrator where system and other notifications will be sent"
 }
 
 # Parse script parameters
@@ -121,6 +142,21 @@ parse_args()
               --azure-subscription-id)
                 AZURE_SUBSCRIPTION_ID="$2"
                 ;;
+              --smtp-server)
+                SMTP_SERVER="$2"
+                ;;
+              --smtp-server-port)
+                SMTP_SERVER_PORT="$2"
+                ;;
+              --smtp-auth-user)
+                SMTP_AUTH_USER="$2"
+                ;;
+              --smtp-auth-user-password)
+                SMTP_AUTH_USER_PASSWORD="$2"
+                ;;
+              --cluster-admin-email)
+                CLUSTER_ADMIN_EMAIL="$2"
+                ;;
               --cron)
                 CRON_MODE=1
                 ;;
@@ -185,7 +221,7 @@ then
     log "Setting up cron job for executing customization from '${HOSTNAME}' for the OXA Stamp"
 
     # create the cron job & exit
-    INSTALL_COMMAND="sudo flock -n /var/log/bootstrap-run-customization.lock bash $CURRENT_PATH/run-customizations.sh -c $CLOUDNAME -u $OS_ADMIN_USERNAME -i $CUSTOM_INSTALLER_RELATIVEPATH -m $MONITORING_CLUSTER_NAME -s $BOOTSTRAP_PHASE -u $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --crontab-interval $CRONTAB_INTERVAL_MINUTES --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --oxatools-public-github-accountname $OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME --oxatools-public-github-projectname $OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME --oxatools-public-github-projectbranch $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH --edxconfiguration-public-github-accountname $EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME --edxconfiguration-public-github-projectname $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME --edxconfiguration-public-github-projectbranch $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH --azure-subscription-id $AZURE_SUBSCRIPTION_ID --cron >> /var/log/bootstrap.csx.log 2>&1"
+    INSTALL_COMMAND="sudo flock -n /var/log/bootstrap-run-customization.lock bash $CURRENT_PATH/run-customizations.sh -c $CLOUDNAME -u $OS_ADMIN_USERNAME -i $CUSTOM_INSTALLER_RELATIVEPATH -m $MONITORING_CLUSTER_NAME -s $BOOTSTRAP_PHASE -u $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --crontab-interval $CRONTAB_INTERVAL_MINUTES --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --oxatools-public-github-accountname $OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME --oxatools-public-github-projectname $OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME --oxatools-public-github-projectbranch $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH --edxconfiguration-public-github-accountname $EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME --edxconfiguration-public-github-projectname $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME --edxconfiguration-public-github-projectbranch $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH --azure-subscription-id $AZURE_SUBSCRIPTION_ID --smtp-server $SMTP_SERVER --smtp-server-port $SMTP_SERVER_PORT --smtp-auth-user $SMTP_AUTH_USER --smtp-auth-user-password $SMTP_AUTH_USER_PASSWORD --cron >> $SECONDARY_LOG 2>&1"
     echo $INSTALL_COMMAND > $CRON_INSTALLER_SCRIPT
 
     # Remove the task if it is already setup
@@ -195,8 +231,8 @@ then
     # Setup the background job
     log "Installing run-customization background installer cron job"
     crontab -l | { cat; echo "*/${CRONTAB_INTERVAL_MINUTES} * * * *  sudo bash $CRON_INSTALLER_SCRIPT"; } | crontab -
+    exit_on_error "OXA stamp customization ($INSTALLER_PATH) failed" $ERROR_CRONTAB_FAILED
 
-    exit_on_error "Crontab setup for '${TASK}' on '${HOSTNAME}' failed!" $ERROR_CRONTAB_FAILED
     log "Crontab setup is done"
     exit 0
 fi
@@ -205,6 +241,10 @@ log "Begin customization from '${HOSTNAME}' for the OXA Stamp"
 
 MACHINE_ROLE=$(get_machine_role)
 log "${HOSTNAME} has been identified as a member of the '${MACHINE_ROLE}' role"
+
+# Pre-Requisite: Setup Mailer (this is necessary for notification)
+install-mailer $SMTP_SERVER $SMTP_SERVER_PORT $SMTP_AUTH_USER $SMTP_AUTH_USER_PASSWORD $CLUSTER_ADMIN_EMAIL
+exit_on_error "Configuring the mailer failed"
 
 # 1. Setup Tools
 install-git
@@ -238,7 +278,7 @@ if [[ -d $OXA_ENV_PATH ]]; then
 fi
 
 powershell -file $INSTALLER_BASEPATH/Process-OxaToolsKeyVaultConfiguration.ps1 -Operation Download -VaultName $KEYVAULT_NAME -AadWebClientId $AAD_WEBCLIENT_ID -AadWebClientAppKey $AAD_WEBCLIENT_APPKEY -AadTenantId $AAD_TENANT_ID -TargetPath $OXA_ENV_PATH -AzureSubscriptionId $AZURE_SUBSCRIPTION_ID
-exit_on_error "Failed downloading configurations from keyvault"
+exit_on_error "Failed downloading configurations from keyvault" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
 # copy utilities to the installer path
 cp $UTILITIES_PATH "${INSTALLER_BASEPATH}"
@@ -246,12 +286,14 @@ cp $UTILITIES_PATH "${INSTALLER_BASEPATH}"
 # execute the installer if present
 log "Launching the installer at '$INSTALLER_PATH'"
 bash $INSTALLER_PATH --repo-root $REPO_ROOT --config-path "${REPO_ROOT}/oxa-tools-config" --cloud $CLOUDNAME --admin-user $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --phase $BOOTSTRAP_PHASE --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID --edxconfiguration-public-github-accountname $EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME --edxconfiguration-public-github-projectname $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME --edxconfiguration-public-github-projectbranch $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH --oxatools-public-github-accountname $OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME --oxatools-public-github-projectname $OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME --oxatools-public-github-projectbranch $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH
-exit_on_error "OXA stamp customization failed"
+exit_on_error "OXA stamp customization ($INSTALLER_PATH) failed" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
 # Remove the task if it is already setup
 log "Uninstalling run-customization background installer cron job"
 crontab -l | grep -v "sudo bash $CRON_INSTALLER_SCRIPT" | crontab -
 
-# Exit (proudly)
-log "Completed execution of OXA stamp customization Exiting cleanly."
+# Send completion notification email
+NOTIFICATION_MESSAGE="Completed execution of OXA stamp customization Exiting cleanly."
+send-notification  $NOTIFICATION_MESSAGE "${MAIL_SUBJECT} -Deployment Completed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
+log $NOTIFICATION_MESSAGE
 exit 0

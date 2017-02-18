@@ -6,8 +6,7 @@
 # This is our private bootstrap script for OXA Stamp
 # This script will be run from the Jumpbox and will handle the following tasks
 # 1. Setup SSH
-# 2. Install MDSD for Monitoring
-# 3. Run Bootstrap for Mongo & MySql
+# 2. Run Bootstrap for Mongo & MySql
 
 ERROR_MESSAGE=1
 GITHUB_PROJECTBRANCH="master"
@@ -35,6 +34,13 @@ CRONTAB_INTERVAL_MINUTES=5
 ERROR_CRONTAB_FAILED=4101
 ERROR_PHASE0_FAILED=6001
 
+# SMTP / Mailer parameters
+CLUSTER_ADMIN_EMAIL=""
+MAIL_SUBJECT="OXA Bootstrap - Bootstrap Install"
+NOTIFICATION_MESSAGE=""
+SECONDARY_LOG="/var/log/bootstrap.csx.log"
+PRIMARY_LOG="/var/log/bootstrap.log"
+
 help()
 {
     echo "This script sets up SSH, installs MDSD and runs the DB bootstrap"
@@ -57,6 +63,7 @@ help()
     echo "        --edxconfiguration-public-github-projectname Name of the edx configuration GitHub repository"
     echo "        --edxconfiguration-public-github-projectbranch Branch of edx configuration GitHub repository"
     echo "        --azure-subscription-id    Azure subscription id"
+    echo "        --cluster-admin-email Email address of the administrator where system and other notifications will be sent"
 }
 
 # Parse script parameters
@@ -129,6 +136,9 @@ parse_args()
               --edxconfiguration-public-github-projectbranch)
                 EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="$2"
                 ;;
+              --cluster-admin-email)
+                CLUSTER_ADMIN_EMAIL="$2"
+                ;;
             -h|--help)  # Helpful hints
                 help
                 exit 2
@@ -199,8 +209,8 @@ fi
 # This execution is now generic and will account for machine roles
 # TODO: break out shared functionalities to utilities so that they can be called independently
 # TODO: provide option to target different version of repositories
-bash $CURRENT_PATH/bootstrap-db.sh -e $CLOUD_NAME --phase $BOOTSTRAP_PHASE --tools-version-override $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID
-exit_on_error "Phase 0 Bootstrap for Mongo & Mysql failed for $HOST"
+bash $CURRENT_PATH/bootstrap-db.sh -e $CLOUD_NAME --phase $BOOTSTRAP_PHASE --tools-version-override $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID --cluster-admin-email $CLUSTER_ADMIN_EMAIL
+exit_on_error "Phase 0 Bootstrap for Mongo & Mysql failed for $HOST" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
 # OpenEdX Bootstrap (EdX Database - Mysql & EdX App - VMSS)
 # Due to custom script extension execution timeout limitations (40mins/90mins), we need to move Phase 1 bootstrap (AppTier Bootstrap) to a 
@@ -244,14 +254,17 @@ then
     # Setup the background job
     log "Installing background installer cron job"
     crontab -l | { cat; echo "*/${CRONTAB_INTERVAL_MINUTES} * * * *  sudo bash $CRON_INSTALLER_SCRIPT"; } | crontab -
+    exit_on_error "Crontab setup for '${TASK}' on '${HOSTNAME}' failed!" $ERROR_CRONTAB_FAILED "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
-    exit_on_error "Crontab setup for '${TASK}' on '${HOSTNAME}' failed!" $ERROR_CRONTAB_FAILED
     log "Crontab setup is done"
 else
     log "Skipping Jumpbox and VMSS Bootstrap"
 fi
 
-# Exit 
-exit_on_error "OXA Installation failed"
-log "Completed custom bootstrap for the OXA Stamp. Exiting cleanly."
+exit_on_error "OXA Installation failed" 1 "${MAIL_SUBJECT} - Installer Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
+
+# at this point, we have succeeded
+NOTIFICATION_MESSAGE="Custom bootstrap for the OXA Stamp (Phase 0) has completed successfully. The application level installer for the '$MACHINE_ROLE' role have been setup to run in the background."
+send-notification $NOTIFICATION_MESSAGE "${MAIL_SUBJECT} - Phase 0 Bootstrap" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
+log $NOTIFICATION_MESSAGE
 exit 0

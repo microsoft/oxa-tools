@@ -373,6 +373,12 @@ exit_on_error()
 {
     if [[ $? -ne 0 ]]; then
         log $1 1
+
+        # send a notification (if possible)
+        MESSAGE="$1"; SUBJECT="$3"; TO="$4"; MAIN_LOGFILE="$5"; SECONDARY_LOGFILE="$6"
+        send_notification $MESSAGE $SUBJECT $TO $MAIN_LOGFILE $SECONDARY_LOGFILE
+
+        # exit with a custom error code (if one is specified)
         if [ ! -z $2 ]; then
             exit 1
         else
@@ -492,4 +498,79 @@ install-json-processor()
     fi
 
     log "JSON Processor installed"
+}
+
+#############################################################################
+# Install GIT client
+#############################################################################
+
+install-mailer()
+{
+    SMTP_SERVER=$1; SMTP_SERVER_PORT=$2; SMTP_AUTH_USER=$3; SMTP_AUTH_USER_PASSWORD=$4; CLUSTER_ADMIN_EMAIL=$5;
+
+    if [ "$#" -lt 5 ]; then
+        echo "Install Mailer: invalid number of arguments" && exit 1
+    fi
+
+    log "Installing Mail Utilities"
+
+    log "Updating Repository"
+    apt-get update
+
+    log "Install packages in non-interactive mode"
+    debconf-set-selections <<< "postfix postfix/main_mailer_type string 'No Configuration'"
+
+    apt-get install -y mailutils ssmtp
+    exit_on_error "Failed to install the GIT clienton ${HOSTNAME} !" $ERROR_GITINSTALL_FAILED
+
+    log "Mail Utilities installed"
+
+    # Configure SMTP
+    log "Configuring mailer"
+    SMTP_CONFIG_FILE="/etc/ssmtp/ssmtp.conf"
+
+    if [[ -f $SMTP_CONFIG_FILE ]]; then
+        log "Removing existing SMTP configuration"
+        rm $SMTP_CONFIG_FILE
+    fi
+
+    log "Creating new SMTP configuration template"
+    tee /etc/ssmtp/ssmtp.conf > /dev/null <<EOF
+root={CLUSTER_ADMIN_EMAIL}
+mailhub={SMTP_SERVER}:{SMTP_SERVER_PORT}
+AuthUser={SMTP_AUTH_USER}
+AuthPass={SMTP_AUTH_USER_PASSWORD}
+UseTLS=YES
+UseSTARTTLS=YES
+EOF
+
+    # replace the place holders
+    log "Populating SMTP configuration with appropriate values"
+    sed -i "s/{CLUSTER_ADMIN_EMAIL}/${CLUSTER_ADMIN_EMAIL}/I" $SMTP_CONFIG_FILE
+    sed -i "s/{SMTP_SERVER}/${SMTP_SERVER}/I" $SMTP_CONFIG_FILE
+    sed -i "s/{SMTP_SERVER_PORT}/${SMTP_SERVER_PORT}/I" $SMTP_CONFIG_FILE
+    sed -i "s/{SMTP_AUTH_USER}/${SMTP_AUTH_USER}/I" $SMTP_CONFIG_FILE
+    sed -i "s/{SMTP_AUTH_USER_PASSWORD}/${SMTP_AUTH_USER_PASSWORD}/I" $SMTP_CONFIG_FILE
+
+    log "Completed configuring the mailer"
+}
+
+send-notification
+{
+    MESSAGE=$1; SUBJECT=$2; TO=$3; 
+    MAIN_LOGFILE=$4; SECONDARY_LOGFILE=$5
+    
+    if [ "$#" -ge 3 ]; 
+    then
+        # we have sufficient inputs to send mail
+        if [[ -f $SECONDARY_LOGFILE ]] && [[ -f $MAIN_LOGFILE ]]; then
+            echo $MESSAGE | mail -s $SUBJECT $TO -A $MAIN_LOGFILE -A $SECONDARY_LOGFILE
+        elif [[ -f $MAIN_LOGFILE ]]; then
+            echo $MESSAGE | mail -s $SUBJECT $TO -A $MAIN_LOGFILE
+        else
+            echo $MESSAGE | mail -s $SUBJECT $TO
+        fi
+    else
+        log "Insufficient parameters specified for sending mail"
+    fi
 }
