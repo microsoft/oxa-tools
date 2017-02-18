@@ -266,6 +266,6 @@ fi
 
 # log a closing message and leave expected bread crumb for status tracking
 NOTIFICATION_MESSAGE="Completed Phase 0 - OpenEdX Database (Mysql) Bootstrap from ${HOSTNAME}"
-send-notification $NOTIFICATION_MESSAGE $MAIL_SUBJECT $CLUSTER_ADMIN_EMAIL
-log $NOTIFICATION_MESSAGE
+log "${NOTIFICATION_MESSAGE}"
+send-notification "${NOTIFICATION_MESSAGE}" $MAIL_SUBJECT $CLUSTER_ADMIN_EMAIL
 echo $STATUS_MESSAGE >> $TARGET_FILE

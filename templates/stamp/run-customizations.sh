@@ -294,6 +294,6 @@ crontab -l | grep -v "sudo bash $CRON_INSTALLER_SCRIPT" | crontab -
 
 # Send completion notification email
 NOTIFICATION_MESSAGE="Completed execution of OXA stamp customization Exiting cleanly."
-send-notification  $NOTIFICATION_MESSAGE "${MAIL_SUBJECT} -Deployment Completed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
-log $NOTIFICATION_MESSAGE
+log "${NOTIFICATION_MESSAGE}"
+send-notification  "${NOTIFICATION_MESSAGE}" "${MAIL_SUBJECT} -Deployment Completed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 exit 0
