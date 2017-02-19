@@ -519,6 +519,6 @@ then
 fi
 
 # log a closing message and leave expected bread crumb for status tracking
-NOTIFICATION_MESSAGE="Completed execution of Ansible playbooks to bootstrap the '$EDX_ROLE' role from ${HOSTNAME}"
+NOTIFICATION_MESSAGE="Completed execution of Ansible playbooks to bootstrap the $EDX_ROLE role from ${HOSTNAME}"
 log "${NOTIFICATION_MESSAGE}"
 send-notification "${NOTIFICATION_MESSAGE}" "${MAIL_SUBJECT}" "${CLUSTER_ADMIN_EMAIL}"
