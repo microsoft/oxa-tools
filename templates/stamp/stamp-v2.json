@@ -170,52 +170,46 @@
                 "description": "Default number of application virtual machines within the VM Scale Set."
             }
         },
-        "customInstallerGithubAccountName": {
+        "oxaToolsGithubAccountName": {
             "type": "string",
             "defaultValue": "microsoft",
             "metadata": {
-                "description": "Name of the GitHub account where the custom installer lives"
+                "description": "Name of the account that owns the oxa-tools GitHub repository"
             }
         },
-        "customInstallerGithubProjectName": {
+        "oxaToolsGithubProjectName": {
             "type": "string",
             "defaultValue": "oxa-tools",
             "metadata": {
-                "description": "Name of the GitHub project within the GitHub account where the custom installer lives"
+                "description": "Name of the oxa-tools GitHub repository"
             }
         },
-        "customInstallerGithubBranch": {
+        "oxaToolsGithubBranch": {
             "type": "string",
             "defaultValue": "master",
             "metadata": {
-                "description": "The branch of the GitHub project from which custom installer scripts and other files will be downloaded"
+                "description": "Branch of the oxa-tools GitHub repository"
             }
         },
-        "customInstallerGithubAccessToken": {
-            "type": "secureString",
-            "metadata": {
-                "description": "The personal access token to use when interacting with the private GitHub repository where the custom installer lives"
-            }
-        },
-        "githubAccountName": {
+        "edxConfigurationGithubAccountName": {
             "type": "string",
             "defaultValue": "microsoft",
             "metadata": {
-                "description": "Name of the GitHub account where the Azure Arm Template lives"
+                "description": "Name of the account that owns the edx configuration repository"
             }
         },
-        "githubProjectName": {
+        "edxConfigurationGithubProjectName": {
             "type": "string",
-            "defaultValue": "oxa-tools",
+            "defaultValue": "edx-configuration",
             "metadata": {
-                "description": "Name of the GitHub project within the GitHub account where the Azure Arm Template lives"
+                "description": "Name of the edx configuration GitHub repository"
             }
         },
-        "githubBranch": {
+        "edxConfigurationGithubBranch": {
             "type": "string",
             "defaultValue": "master",
             "metadata": {
-                "description": "The branch of the GitHub project from which scripts and other files will be downloaded"
+                "description": "Branch of edx configuration GitHub repository"
             }
         },
         "armTemplateRelativePath": {
@@ -230,7 +224,7 @@
             "defaultValue": "14.04.0-LTS",
             "allowedValues": [
                 "16.04.0-LTS",
-                "14.04.0-LTS",
+                "14.04.5-LTS",
                 "12.04.5-LTS"
             ],
             "metadata": {
@@ -242,7 +236,7 @@
             "defaultValue": "16.04.0-LTS",
             "allowedValues": [
                 "16.04.0-LTS",
-                "14.04.0-LTS",
+                "14.04.5-LTS",
                 "12.04.5-LTS"
             ],
             "metadata": {
@@ -254,7 +248,7 @@
             "defaultValue": "16.04.0-LTS",
             "allowedValues": [
                 "16.04.0-LTS",
-                "14.04.0-LTS",
+                "14.04.5-LTS",
                 "12.04.5-LTS"
             ],
             "metadata": {
@@ -266,7 +260,7 @@
             "defaultValue": "16.04.0-LTS",
             "allowedValues": [
                 "16.04.0-LTS",
-                "14.04.0-LTS",
+                "14.04.5-LTS",
                 "12.04.5-LTS"
             ],
             "metadata": {
@@ -322,7 +316,24 @@
                 "description": "The identifier for versioning bits deployed to VMSS"
             }
         },
-
+        "aadWebClientId": {
+            "type": "string",
+            "metadata": {
+                "description": "Client Id of the AAD user or web application that will have access to the azure keyvault."
+            }
+        },
+        "aadWebClientAppKey": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Client Key of the AAD user or web application that will have access to the azure keyvault."
+            }
+        },
+        "aadTenantId": {
+            "type": "string",
+            "metadata": {
+                "description": "Id of the AAD tenant the user or web application will authenticate against."
+            }
+        },
         "keyVaultMasterAccountId": {
             "type": "string",
             "metadata": {
@@ -371,6 +382,36 @@
             "metadata": {
                 "description": "Traffic manager status for PREVIEW load balancer endpoints: [0]=Slot1.LoadBalancerEndpointStatus, [1]=Slot2.LoadBalancerEndpointStatus, [2]=Slot1.LoadBalancerEndpointPriority, [3]=Slot2.LoadBalancerEndpointPriority where LoadBalancerStatus=Enabled|Disabled, LoadBalancerEndpointPriority >= 1 and <= 1000"
             }
+        },
+        "smtpServer": {
+            "type": "string",
+            "metadata": {
+                "description": "FQDN of SMTP server used for relaying deployment and other system notifications"
+            }
+        },
+        "smtpServerPort": {
+            "type": "string",
+            "metadata": {
+                "description": "Port of SMTP server used for relaying deployment and other system notifications"
+            }
+        },
+        "smtpAuthenticationUser": {
+            "type": "string",
+            "metadata": {
+                "description": "User name for authenticating against the SMTP server used for relaying deployment and other system notifications"
+            }
+        },
+        "smtpAuthenticationUserPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Password for authenticating against the SMTP server used for relaying deployment and other system notifications"
+            }
+        },
+        "clusterAdmininistratorEmailAddress": {
+            "type": "string",
+            "metadata": {
+                "description": "Email address of the administrator where system and other notifications will be sent"
+            }
         }
     },
     "variables": {
@@ -382,16 +423,16 @@
         "insightsApiVersion": "2015-04-01",
         "keyVaultApiversion": "2015-06-01",
         "trafficManagerApiversion": "2015-11-01",
-        "mediaServicesApiVersion": "2015 -10-01",
+        "mediaServicesApiVersion": "2015-10-01",
+        "storageApiVersion": "2016-01-01",
 
         "virtualMachineExtensionsApiVersion": "[variables('defaultApiVersion')]",
         "virtualMachineApiVersion": "[variables('defaultApiVersion')]",
-        "storageApiVersion": "[variables('defaultApiVersion')]",
 
         "diagnosticStorageAccountName": "[concat(toLower(parameters('clusterName')), 'diagnostics')]",
         "storageAccountName": "[concat(toLower(parameters('clusterName')), 'vhdsa')]",
         "secureGenericStorageAccountName": "[concat(toLower(parameters('clusterName')), 'securesa')]",
-        "videoUploadsStorageAccountName": "[concat(toLower(parameters('clusterName')), 'videouploadssa')]",
+        "videoUploadsStorageAccountName": "[concat(toLower(parameters('clusterName')), 'videosa')]",
         "wamsStorageAccountName": "[concat(toLower(parameters('clusterName')), 'wamssa')]",
         "mediaServicesAccountName": "[concat(toLower(parameters('clusterName')), 'wamsmedia')]",
         "storageAccountType": "Standard_LRS",
@@ -420,7 +461,7 @@
 
         "keyVaultEnabledForDeployment": true,
         "keyVaultEnabledForTemplateDeployment": true,
-        "keyVaultEnableVaultForVolumeEncryption": true,
+        "keyVaultEnabledForVolumeEncryption": true,
         "keyVaultTenantId": "[subscription().subscriptionId]",
 
         "networkSettings": {
@@ -640,8 +681,8 @@
         "keyVaultSettings": {
             "enabledForDeployment": "[variables('keyVaultEnabledForDeployment')]",
             "enabledForTemplateDeployment": "[variables('keyVaultEnabledForTemplateDeployment')]",
-            "enableVaultForVolumeEncryption": "[variables('keyVaultEnableVaultForVolumeEncryption')]",
-            "tenantId": "[parameters('keyVaultMasterAccountId')]",
+            "enabledForVolumeEncryption": "[variables('keyVaultEnabledForVolumeEncryption')]",
+            "tenantId": "[subscription().tenantId]",
             "accessAccount": "[parameters('keyVaultMasterAccountId')]",
             "tenantKeyAccessPermission": "[parameters('keyVaultMasterAccountKeyAccessPermission')]",
             "tenantSecretAccessPermission": "[parameters('keyVaultMasterAccountSecretAccessPermission')]",
@@ -649,9 +690,14 @@
         },
 
         "azureSharedScriptUrl": "[concat('https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/shared_scripts/', variables('supportedOSName'), '/')]",
-        "templateBaseUrl": "[concat('https://raw.githubusercontent.com/',parameters('githubAccountName'), '/', parameters('githubProjectName'), '/', parameters('githubBranch'), '/', parameters('armTemplateRelativePath'), '/')]",
+        "templateBaseUrl": "[concat('https://raw.githubusercontent.com/',parameters('oxaToolsGithubAccountName'), '/', parameters('oxaToolsGithubProjectName'), '/', parameters('oxaToolsGithubBranch'), '/', parameters('armTemplateRelativePath'), '/')]",
         "clusterCustomInstallerScriptFullPath": "[concat( variables('templateBaseUrl'), parameters('customInstallerLaunchScript') )]",
-        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'), ' -a ', parameters('customInstallerGithubAccountName'),' -n ', parameters('customInstallerGithubProjectName'),' -b ', parameters('customInstallerGithubBranch'),' -i ', parameters('customInstallerMainScriptRelativePath'),' -p ', parameters('customInstallerGithubAccessToken'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'))]",
+        "customInstallerOxaToolsGitHubRepositoryParameters": "[concat(' --oxatools-public-github-accountname ', parameters('oxaToolsGithubAccountName'), ' --oxatools-public-github-projectname ', parameters('oxaToolsGithubProjectName'), ' --oxatools-public-github-projectbranch ', parameters('oxaToolsGithubBranch') )]",
+        "customInstallerEdxConfigurationGitHubRepositoryParameters": "[concat(' --edxconfiguration-public-github-accountname ', parameters('edxConfigurationGithubAccountName'), ' --edxconfiguration-public-github-projectname ', parameters('edxconfigurationGithubProjectName'), ' --edxconfiguration-public-github-projectbranch ', parameters('edxConfigurationGithubBranch') )]",
+        "customInstallerKeyVaultParameters": "[concat(' --keyvault-name ', concat(parameters('clusterName'), '-kv'), ' --aad-webclient-id ', parameters('aadWebClientId'), ' --aad-webclient-appkey ', parameters('aadWebClientAppKey'), ' --aad-tenant-id ', parameters('aadTenantId'), ' --azure-subscription-id ', subscription().subscriptionId)]",
+        "customInstallerOutputRedirect": " >> /var/log/bootstrap.csx.log 2>&1",
+        "smtpParameters": "[concat(' --smtp-server ', parameters('smtpServer'), ' --smtp-server-port ', parameters('smtpServerPort'), ' --smtp-auth-user ', parameters('smtpAuthenticationUser'), ' --smtp-auth-user-password ', parameters('smtpAuthenticationUserPassword'), '  --cluster-admin-email ', parameters('clusterAdmininistratorEmailAddress'))]",
+        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('customInstallerOutputRedirect'), variables('smtpParameters'))]",
 
         "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources.json')]",
         "jumpboxTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-jumpbox.json')]",
