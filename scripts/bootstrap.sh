@@ -532,5 +532,5 @@ then
 fi
 
 log "${NOTIFICATION_MESSAGE}"
-send-notification "${NOTIFICATION_MESSAGE}" "${MAIL_SUBJECT}" "${CLUSTER_ADMIN_EMAIL}"
+send_notification "${NOTIFICATION_MESSAGE}" "${MAIL_SUBJECT}" "${CLUSTER_ADMIN_EMAIL}"
 exit 0

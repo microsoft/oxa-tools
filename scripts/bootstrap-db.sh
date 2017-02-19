@@ -268,7 +268,7 @@ then
     # log a closing message and leave expected bread crumb for status tracking
     NOTIFICATION_MESSAGE="Installation & configuration of the backend database applications (Mongo & Mysql) completed successfully."
     log "${NOTIFICATION_MESSAGE}"
-    send-notification "${NOTIFICATION_MESSAGE}" "${MAIL_SUBJECT}" "${CLUSTER_ADMIN_EMAIL}"
+    send_notification "${NOTIFICATION_MESSAGE}" "${MAIL_SUBJECT}" "${CLUSTER_ADMIN_EMAIL}"
     echo $NOTIFICATION_MESSAGE >> $TARGET_FILE
 elif [ "$MACHINE_ROLE" == "vmss" ] ;
 then

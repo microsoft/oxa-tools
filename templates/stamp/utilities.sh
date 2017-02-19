@@ -371,7 +371,7 @@ is_valid_arg()
 # Send mail notification
 #############################################################################
 
-send-notification()
+send_notification()
 {
     MESSAGE=$1; SUBJECT=$2; TO=$3; 
     MAIN_LOGFILE=$4; SECONDARY_LOGFILE=$5

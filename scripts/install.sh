@@ -271,5 +271,5 @@ exit_on_error "OXA Installation failed" 1 "${MAIL_SUBJECT}" "${CLUSTER_ADMIN_EMA
 
 # at this point, we have succeeded
 log "${NOTIFICATION_MESSAGE}"
-send-notification "${NOTIFICATION_MESSAGE}" "${MAIL_SUBJECT}" "${CLUSTER_ADMIN_EMAIL}"
+send_notification "${NOTIFICATION_MESSAGE}" "${MAIL_SUBJECT}" "${CLUSTER_ADMIN_EMAIL}"
 exit 0
