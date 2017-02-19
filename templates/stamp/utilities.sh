@@ -366,6 +366,31 @@ is_valid_arg()
     return $result
 }
 
+
+#############################################################################
+# Send mail notification
+#############################################################################
+
+send-notification()
+{
+    MESSAGE=$1; SUBJECT=$2; TO=$3; 
+    MAIN_LOGFILE=$4; SECONDARY_LOGFILE=$5
+    
+    if [ "$#" -ge 3 ]; 
+    then
+        # we have sufficient inputs to send mail
+        if [[ -f $SECONDARY_LOGFILE ]] && [[ -f $MAIN_LOGFILE ]]; then
+            echo "$MESSAGE" | mail -s "$SUBJECT" "$TO" -A "$MAIN_LOGFILE" -A "$SECONDARY_LOGFILE"
+        elif [[ -f $MAIN_LOGFILE ]]; then
+            echo "$MESSAGE" | mail -s "$SUBJECT" "$TO" -A "$MAIN_LOGFILE"
+        else
+            echo "$MESSAGE" | mail -s "$SUBJECT" "$TO"
+        fi
+    else
+        log "Insufficient parameters specified for sending mail"
+    fi
+}
+
 #############################################################################
 # Exit on  Error
 #############################################################################
@@ -376,7 +401,7 @@ exit_on_error()
 
         # send a notification (if possible)
         MESSAGE="$1"; SUBJECT="$3"; TO="$4"; MAIN_LOGFILE="$5"; SECONDARY_LOGFILE="$6"
-        send_notification $MESSAGE $SUBJECT $TO $MAIN_LOGFILE $SECONDARY_LOGFILE
+        send_notification "${MESSAGE}" "${SUBJECT}" "${TO}" "${MAIN_LOGFILE}" "${SECONDARY_LOGFILE}"
 
         # exit with a custom error code (if one is specified)
         if [ ! -z $2 ]; then
@@ -553,28 +578,4 @@ EOF
     sed -i "s/{SMTP_AUTH_USER_PASSWORD}/${SMTP_AUTH_USER_PASSWORD}/I" $SMTP_CONFIG_FILE
 
     log "Completed configuring the mailer"
-}
-
-#############################################################################
-# Send mail notification
-#############################################################################
-
-send-notification()
-{
-    MESSAGE=$1; SUBJECT=$2; TO=$3; 
-    MAIN_LOGFILE=$4; SECONDARY_LOGFILE=$5
-    
-    if [ "$#" -ge 3 ]; 
-    then
-        # we have sufficient inputs to send mail
-        if [[ -f $SECONDARY_LOGFILE ]] && [[ -f $MAIN_LOGFILE ]]; then
-            echo "$MESSAGE" | mail -s "$SUBJECT" "$TO" -A "$MAIN_LOGFILE" -A "$SECONDARY_LOGFILE"
-        elif [[ -f $MAIN_LOGFILE ]]; then
-            echo "$MESSAGE" | mail -s "$SUBJECT" "$TO" -A "$MAIN_LOGFILE"
-        else
-            echo "$MESSAGE" | mail -s "$SUBJECT" "$TO"
-        fi
-    else
-        log "Insufficient parameters specified for sending mail"
-    fi
 }
