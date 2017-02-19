@@ -20,7 +20,8 @@ AZURE_SUBSCRIPTION_ID=""
 
 # SMTP / Mailer parameters
 CLUSTER_ADMIN_EMAIL=""
-MAIL_SUBJECT="OXA Bootstrap - DB (Mongo & Mysql) Configuration"
+MAIL_SUBJECT="OXA Bootstrap"
+CLUSTER_NAME=""
 NOTIFICATION_MESSAGE=""
 SECONDARY_LOG="/var/log/bootstrap.csx.log"
 PRIMARY_LOG="/var/log/bootstrap.log"
@@ -88,6 +89,10 @@ parse_args() {
         ;;
       --cluster-admin-email)
         CLUSTER_ADMIN_EMAIL="$2"
+        ;;
+      --cluster-name)
+        CLUSTER_NAME="$2"
+        MAIL_SUBJECT="${MAIL_SUBJECT} - ${2}: "
         ;;
       *) # Unknown option encountered
         display_usage
@@ -259,13 +264,14 @@ git config --global http.postBuffer 1048576000
 if [ "$MACHINE_ROLE" == "jumpbox" ] && [ "$BOOTSTRAP_PHASE" == "0" ];
 then
     log "OXA bootstrap complete"
+
+    # log a closing message and leave expected bread crumb for status tracking
+    NOTIFICATION_MESSAGE="Installation & configuration of the backend database applications (Mongo & Mysql) completed successfully."
+    log "${NOTIFICATION_MESSAGE}"
+    send-notification "${NOTIFICATION_MESSAGE}" "${MAIL_SUBJECT}" "${CLUSTER_ADMIN_EMAIL}"
+    echo $NOTIFICATION_MESSAGE >> $TARGET_FILE
 elif [ "$MACHINE_ROLE" == "vmss" ] ;
 then
     log "Continuing to VMSS-specific OXA bootstrap..."
 fi
 
-# log a closing message and leave expected bread crumb for status tracking
-NOTIFICATION_MESSAGE="Completed Phase 0 - OpenEdX Database (Mysql) Bootstrap from ${HOSTNAME}"
-log "${NOTIFICATION_MESSAGE}"
-send-notification "${NOTIFICATION_MESSAGE}" "${MAIL_SUBJECT}" "${CLUSTER_ADMIN_EMAIL}"
-echo $STATUS_MESSAGE >> $TARGET_FILE

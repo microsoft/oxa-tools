@@ -36,7 +36,7 @@ ERROR_PHASE0_FAILED=6001
 
 # SMTP / Mailer parameters
 CLUSTER_ADMIN_EMAIL=""
-MAIL_SUBJECT="OXA Bootstrap - Bootstrap Install"
+MAIL_SUBJECT="OXA Bootstrap"
 NOTIFICATION_MESSAGE=""
 SECONDARY_LOG="/var/log/bootstrap.csx.log"
 PRIMARY_LOG="/var/log/bootstrap.log"
@@ -106,38 +106,42 @@ parse_args()
             --keyvault-name)
                 KEYVAULT_NAME="$2"
                 ;;
-              --aad-webclient-id)
+            --aad-webclient-id)
                 AAD_WEBCLIENT_ID="$2"
                 ;;
-              --aad-webclient-appkey)
+            --aad-webclient-appkey)
                 AAD_WEBCLIENT_APPKEY="$2"
                 ;;
-              --aad-tenant-id)
+            --aad-tenant-id)
                 AAD_TENANT_ID="$2"
                 ;;
-              --azure-subscription-id)
+            --azure-subscription-id)
                 AZURE_SUBSCRIPTION_ID="$2"
                 ;;
-              --oxatools-public-github-accountname)
+            --oxatools-public-github-accountname)
                 OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME="$2"
                 ;;
-              --oxatools-public-github-projectname)
+            --oxatools-public-github-projectname)
                 OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME="$2"
                 ;;
-              --oxatools-public-github-projectbranch)
+            --oxatools-public-github-projectbranch)
                 OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH="$2"
                 ;;
-              --edxconfiguration-public-github-accountname)
+            --edxconfiguration-public-github-accountname)
                 EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME="$2"
                 ;;
-              --edxconfiguration-public-github-projectname)
+            --edxconfiguration-public-github-projectname)
                 EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME="$2"
                 ;;
-              --edxconfiguration-public-github-projectbranch)
+            --edxconfiguration-public-github-projectbranch)
                 EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="$2"
                 ;;
-              --cluster-admin-email)
+            --cluster-admin-email)
                 CLUSTER_ADMIN_EMAIL="$2"
+                ;;
+            --cluster-name)
+                CLUSTER_NAME="$2"
+                MAIL_SUBJECT="${MAIL_SUBJECT} - ${2}: "
                 ;;
             -h|--help)  # Helpful hints
                 help
@@ -208,8 +212,7 @@ fi
 # Infrastracture Bootstrap - Install & Configure 3-node Replicated Mysql Server cluster & 3-node Mongo Server ReplicaSet
 # This execution is now generic and will account for machine roles
 # TODO: break out shared functionalities to utilities so that they can be called independently
-# TODO: provide option to target different version of repositories
-bash $CURRENT_PATH/bootstrap-db.sh -e $CLOUD_NAME --phase $BOOTSTRAP_PHASE --tools-version-override $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID --cluster-admin-email $CLUSTER_ADMIN_EMAIL
+bash $CURRENT_PATH/bootstrap-db.sh -e $CLOUD_NAME --phase $BOOTSTRAP_PHASE --tools-version-override $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID --cluster-admin-email $CLUSTER_ADMIN_EMAIL --cluster-name $CLUSTER_NAME
 exit_on_error "Phase 0 Bootstrap for Mongo & Mysql failed for $HOST" 1 "${MAIL_SUBJECT} Failed" "$CLUSTER_ADMIN_EMAIL" "$PRIMARY_LOG" "$SECONDARY_LOG"
 
 # OpenEdX Bootstrap (EdX Database - Mysql & EdX App - VMSS)
@@ -224,6 +227,7 @@ then
     # there is an implicit assumption that /oxa/oxa-tools has already been cloned
     SHORT_ROLE_NAME="jb"
     TASK="Phase 1 (EDXDB) Bootstrap on ${HOSTNAME} for execution via cron @ ${CRONTAB_INTERVAL_MINUTES} minute interval"
+    NOTIFICATION_MESSAGE="Installation of the EDX Database has been scheduled."
 fi
 
 # 2. OpenEdX Application-Tier Bootstrap - Deploy OpenEdx FrontEnds to VMSS
@@ -234,6 +238,7 @@ then
     # TODO: we need a better way of passing around the 'ITHUB_PERSONAL_ACCESS_TOKEN'
     SHORT_ROLE_NAME="vmss"
     TASK="VMSS Bootstrap on ${HOSTNAME} for execution via cron @ ${CRONTAB_INTERVAL_MINUTES} minute interval"
+    NOTIFICATION_MESSAGE="Installation of the EDX Application (VMSS) has been scheduled."
 fi
 
 # PROCESS the bootstrap work load for Jumpbox or Vmss
@@ -244,7 +249,7 @@ then
     # setup the temporary cron installer script
     CRON_INSTALLER_SCRIPT="$CURRENT_PATH/background-installer.sh"
 
-    INSTALL_COMMAND="sudo flock -n /var/log/bootstrap.lock bash $REPO_ROOT/$OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME/scripts/bootstrap.sh -e $CLOUD_NAME --role $SHORT_ROLE_NAME --oxatools_public-github-accountname $OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME --oxatools_public-github-projectname $OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME --oxatools_public-github-projectbranch $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH --oxatools_public-github-projectbranch $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH --oxatools_public-github-accountname $OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME --edxconfiguration_public-github-projectname $EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME --edxconfiguration_public-github-projectbranch $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH --edxconfiguration_public-github-projectbranch $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH --installer-script-path $CRON_INSTALLER_SCRIPT --cron >> /var/log/bootstrap.log 2>&1"
+    INSTALL_COMMAND="sudo flock -n /var/log/bootstrap.lock bash $REPO_ROOT/$OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME/scripts/bootstrap.sh -e $CLOUD_NAME --role $SHORT_ROLE_NAME --oxatools_public-github-accountname $OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME --oxatools_public-github-projectname $OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME --oxatools_public-github-projectbranch $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH --oxatools_public-github-projectbranch $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH --oxatools_public-github-accountname $OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME --edxconfiguration_public-github-projectname $EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME --edxconfiguration_public-github-projectbranch $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH --edxconfiguration_public-github-projectbranch $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH --installer-script-path $CRON_INSTALLER_SCRIPT --cluster-name $CLUSTER_NAME --cron >> /var/log/bootstrap.log 2>&1"
     echo $INSTALL_COMMAND > $CRON_INSTALLER_SCRIPT
 
     # Remove the task if it is already setup
@@ -254,17 +259,16 @@ then
     # Setup the background job
     log "Installing background installer cron job"
     crontab -l | { cat; echo "*/${CRONTAB_INTERVAL_MINUTES} * * * *  sudo bash $CRON_INSTALLER_SCRIPT"; } | crontab -
-    exit_on_error "Crontab setup for '${TASK}' on '${HOSTNAME}' failed!" $ERROR_CRONTAB_FAILED "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
+    exit_on_error "Crontab setup for '${TASK}' on '${HOSTNAME}' failed!" $ERROR_CRONTAB_FAILED "${MAIL_SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
 
     log "Crontab setup is done"
 else
     log "Skipping Jumpbox and VMSS Bootstrap"
 fi
 
-exit_on_error "OXA Installation failed" 1 "${MAIL_SUBJECT} - Installer Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
+exit_on_error "OXA Installation failed" 1 "${MAIL_SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
 
 # at this point, we have succeeded
-NOTIFICATION_MESSAGE="Custom bootstrap for the OXA Stamp (Phase 0) has completed successfully. The application level installer for the '$MACHINE_ROLE' role have been setup to run in the background."
 log "${NOTIFICATION_MESSAGE}"
-send-notification "${NOTIFICATION_MESSAGE}" "${MAIL_SUBJECT} - Phase 0 Bootstrap" "${CLUSTER_ADMIN_EMAIL}"
+send-notification "${NOTIFICATION_MESSAGE}" "${MAIL_SUBJECT}" "${CLUSTER_ADMIN_EMAIL}"
 exit 0

@@ -32,7 +32,7 @@ CRON_INSTALLER_SCRIPT=""
 
 # SMTP / Mailer parameters
 CLUSTER_ADMIN_EMAIL=""
-MAIL_SUBJECT="OXA Bootstrap - Ansible Playbooks Installer"
+MAIL_SUBJECT="OXA Bootstrap"
 NOTIFICATION_MESSAGE=""
 SECONDARY_LOG="/var/log/bootstrap.csx.log"
 PRIMARY_LOG="/var/log/bootstrap.log"
@@ -106,6 +106,10 @@ parse_args() {
         --cluster-admin-email)
           CLUSTER_ADMIN_EMAIL="$2"
         ;;
+        --cluster-name)
+          CLUSTER_NAME="$2"
+          MAIL_SUBJECT="${MAIL_SUBJECT} - ${2}: "
+          ;;
       *)
         # Unknown option encountered
         display_usage
@@ -518,7 +522,15 @@ then
     rm $CRON_INSTALLER_SCRIPT
 fi
 
-# log a closing message and leave expected bread crumb for status tracking
-NOTIFICATION_MESSAGE="Completed execution of Ansible playbooks to bootstrap the $EDX_ROLE role from ${HOSTNAME}"
+# at this point, we have succeeded
+if [ "$EDX_ROLE" == "jb" ] ; 
+then
+    NOTIFICATION_MESSAGE="Installation of the EDX Database was completed successfully."
+elif [ "$EDX_ROLE" == "vmss" ] ;
+then
+    NOTIFICATION_MESSAGE="Installation of the EDX Application (VMSS) was completed successfully."
+fi
+
 log "${NOTIFICATION_MESSAGE}"
 send-notification "${NOTIFICATION_MESSAGE}" "${MAIL_SUBJECT}" "${CLUSTER_ADMIN_EMAIL}"
+exit 0
