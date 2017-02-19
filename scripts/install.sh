@@ -64,6 +64,7 @@ help()
     echo "        --edxconfiguration-public-github-projectbranch Branch of edx configuration GitHub repository"
     echo "        --azure-subscription-id    Azure subscription id"
     echo "        --cluster-admin-email Email address of the administrator where system and other notifications will be sent"
+    echo "        --cluster-name Name of the cluster being bootstrapped"
 }
 
 # Parse script parameters
