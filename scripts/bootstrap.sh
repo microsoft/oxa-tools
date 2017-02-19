@@ -58,6 +58,10 @@ is_valid_arg() {
 parse_args() {
   while [[ "$#" -gt 0 ]]
   do
+
+    # Log input parameters to facilitate troubleshooting
+    echo "Option '$1' set with value '$2'"
+
     case "$1" in
       -r|--role)
         EDX_ROLE="${2,,}" # convert to lowercase
@@ -108,7 +112,7 @@ parse_args() {
         ;;
         --cluster-name)
           CLUSTER_NAME="$2"
-          MAIL_SUBJECT="${MAIL_SUBJECT} - ${2}: "
+          MAIL_SUBJECT="${MAIL_SUBJECT} - ${2,,}"
           ;;
       *)
         # Unknown option encountered
@@ -231,7 +235,6 @@ setup()
 
     # populate the deployment environment
     source $OXA_ENV_FILE
-    setup_overrides
 
     export $(sed -e 's/#.*$//' $OXA_ENV_FILE | cut -d= -f1)
   
@@ -239,8 +242,10 @@ setup()
     OXA_ENV_OVERRIDE_FILE="$BOOTSTRAP_HOME/overrides.sh"
     if [[ -f $OXA_ENV_OVERRIDE_FILE ]]; then
         source $OXA_ENV_OVERRIDE_FILE
-        setup_overrides
     fi
+
+    # override the env configs with deployment runtime parameters
+    setup_overrides
 
     export $(sed -e 's/#.*$//' $OXA_ENV_OVERRIDE_FILE | cut -d= -f1)
     export ANSIBLE_REPO=$CONFIGURATION_REPO
@@ -389,6 +394,9 @@ fi
 
 # source the utilities now
 source $UTILITIES_PATH
+
+# Script self-idenfitication
+print_script_header
 
 parse_args $@ # pass existing command line arguments
 

@@ -92,7 +92,7 @@ parse_args() {
         ;;
       --cluster-name)
         CLUSTER_NAME="$2"
-        MAIL_SUBJECT="${MAIL_SUBJECT} - ${2}: "
+        MAIL_SUBJECT="${MAIL_SUBJECT} - ${2,,}"
         ;;
       *) # Unknown option encountered
         display_usage
