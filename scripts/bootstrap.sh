@@ -159,6 +159,15 @@ parse_args() {
       --edxtheme-public-github-projectbranch)
         EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="$2"
         ;;
+      --ansible-public-github-accountname)
+        ANSIBLE_PUBLIC_GITHUB_ACCOUNTNAME="$2"
+        ;;
+      --ansible-public-github-projectname)
+        ANSIBLE_PUBLIC_GITHUB_PROJECTNAME="$2"
+        ;;
+      --ansible-public-github-projectbranch)
+        ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+        ;;
       --edxversion)
         EDX_VERSION="$2"
         ;;
