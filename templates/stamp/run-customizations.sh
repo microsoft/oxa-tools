@@ -26,6 +26,22 @@ EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME="edx-configuration"
 EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
 EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master"
 
+# EdX Platform
+# There are cases where we want to override the edx-platform repository itself
+EDX_PLATFORM_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
+EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME="edx-platform"
+EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master"
+
+# EdX Theme
+# There are cases where we want to override the edx-platform repository itself
+EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
+EDX_THEME_PUBLIC_GITHUB_PROJECTNAME="edx-theme"
+EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="pilot"
+
+# MISC
+EDX_VERSION="named-release/dogwood.rc"
+FORUM_VERSION="mongoid5-release"
+
 # operational mode
 CRON_MODE=0
 
@@ -60,6 +76,14 @@ help()
     echo "        --edxconfiguration-public-github-accountname Name of the account that owns the edx configuration repository"
     echo "        --edxconfiguration-public-github-projectname Name of the edx configuration GitHub repository"
     echo "        --edxconfiguration-public-github-projectbranch Branch of edx configuration GitHub repository"
+    echo "        --edxplatform-public-github-accountname Name of the account that owns the edx platform repository"
+    echo "        --edxplatform-public-github-projectname Name of the edx platform GitHub repository"
+    echo "        --edxplatform-public-github-projectbranch Branch of edx platform GitHub repository"
+    echo "        --edxtheme-public-github-accountname Name of the account that owns the edx theme repository"
+    echo "        --edxtheme-public-github-projectname Name of the edx theme GitHub repository"
+    echo "        --edxtheme-public-github-projectbranch Branch of edx theme GitHub repository"
+    echo "        --edxversion EdX Named-Release to use for this deployment"
+    echo "        --forumversion EdX Named Release to use for the FORUMS component"
     echo "        --cron Operation mode for the script"
     echo "        --azure-subscription-id  Azure subscription id"
     echo "        --smtp-server FQDN of SMTP server used for relaying deployment and other system notifications"
@@ -112,56 +136,80 @@ parse_args()
             --keyvault-name)
                 KEYVAULT_NAME="$2"
                 ;;
-              --aad-webclient-id)
+            --aad-webclient-id)
                 AAD_WEBCLIENT_ID="$2"
                 ;;
-              --aad-webclient-appkey)
+            --aad-webclient-appkey)
                 AAD_WEBCLIENT_APPKEY="$2"
                 ;;
-              --aad-tenant-id)
+            --aad-tenant-id)
                 AAD_TENANT_ID="$2"
                 ;;
-              --oxatools-public-github-accountname)
+            --oxatools-public-github-accountname)
                 OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME="$2"
                 ;;
-              --oxatools-public-github-projectname)
+            --oxatools-public-github-projectname)
                 OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME="$2"
                 ;;
-              --oxatools-public-github-projectbranch)
+            --oxatools-public-github-projectbranch)
                 OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH="$2"
                 ;;
-              --edxconfiguration-public-github-accountname)
+            --edxconfiguration-public-github-accountname)
                 EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME="$2"
                 ;;
-              --edxconfiguration-public-github-projectname)
+            --edxconfiguration-public-github-projectname)
                 EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME="$2"
                 ;;
-              --edxconfiguration-public-github-projectbranch)
+            --edxconfiguration-public-github-projectbranch)
                 EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="$2"
                 ;;
-              --azure-subscription-id)
+            --edxplatform-public-github-projectname)
+                EDX_PLATFORM_PUBLIC_GITHUB_ACCOUNTNAME="$2"
+                ;;
+            --edxplatform-public-github-projectbranch)
+                EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+                ;;
+            --edxplatform-public-github-projectbranch)
+                EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+                ;;
+            --edxtheme-public-github-projectname)
+                EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME="$2"
+                ;;
+            --edxtheme-public-github-projectbranch)
+                EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+                ;;
+            --edxtheme-public-github-projectbranch)
+                EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+                ;;
+            --edxversion)
+                EDX_VERSION=="$2"
+                ;;
+            --forumversion)
+                FORUM_VERSION=="$2"
+                ;;
+            --azure-subscription-id)
                 AZURE_SUBSCRIPTION_ID="$2"
                 ;;
-              --smtp-server)
+            --smtp-server)
                 SMTP_SERVER="$2"
                 ;;
-              --smtp-server-port)
+            --smtp-server-port)
                 SMTP_SERVER_PORT="$2"
                 ;;
-              --smtp-auth-user)
+            --smtp-auth-user)
                 SMTP_AUTH_USER="$2"
                 ;;
-              --smtp-auth-user-password)
+            --smtp-auth-user-password)
                 SMTP_AUTH_USER_PASSWORD="$2"
                 ;;
-              --cluster-admin-email)
+            --cluster-admin-email)
                 CLUSTER_ADMIN_EMAIL="$2"
                 ;;
-              --cluster-name)
+            --cluster-name)
                 CLUSTER_NAME="$2"
                 MAIL_SUBJECT="${MAIL_SUBJECT} - ${2,,}"
                 ;;
-              --cron)
+            --cron)
                 CRON_MODE=1
                 ;;
             -h|--help)  # Helpful hints
@@ -289,7 +337,7 @@ cp $UTILITIES_PATH "${INSTALLER_BASEPATH}"
 
 # execute the installer if present
 log "Launching the installer at '$INSTALLER_PATH'"
-bash $INSTALLER_PATH --repo-root $REPO_ROOT --config-path "${REPO_ROOT}/oxa-tools-config" --cloud $CLOUDNAME --admin-user $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --phase $BOOTSTRAP_PHASE --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID --edxconfiguration-public-github-accountname $EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME --edxconfiguration-public-github-projectname $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME --edxconfiguration-public-github-projectbranch $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH --oxatools-public-github-accountname $OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME --oxatools-public-github-projectname $OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME --oxatools-public-github-projectbranch $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH --cluster-admin-email $CLUSTER_ADMIN_EMAIL --cluster-name $CLUSTER_NAME
+bash $INSTALLER_PATH --repo-root $REPO_ROOT --config-path "${REPO_ROOT}/oxa-tools-config" --cloud $CLOUDNAME --admin-user $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --phase $BOOTSTRAP_PHASE --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID --edxconfiguration-public-github-accountname $EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME --edxconfiguration-public-github-projectname $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME --edxconfiguration-public-github-projectbranch $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH --oxatools-public-github-accountname $OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME --oxatools-public-github-projectname $OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME --oxatools-public-github-projectbranch $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH --cluster-admin-email $CLUSTER_ADMIN_EMAIL --cluster-name $CLUSTER_NAME --edxplatform-public-github-projectname $EDX_PLATFORM_PUBLIC_GITHUB_ACCOUNTNAME --edxplatform-public-github-projectbranch $EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH --edxplatform-public-github-projectbranch $EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH --edxtheme-public-github-projectname $EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME --edxtheme-public-github-projectbranch $EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH --edxtheme-public-github-projectbranch $EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH --edxversion $EDX_VERSION --forumversion $FORUM_VERSION
 exit_on_error "OXA stamp customization ($INSTALLER_PATH) failed" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
 # Remove the task if it is already setup

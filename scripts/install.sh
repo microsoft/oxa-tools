@@ -26,6 +26,22 @@ EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME=""
 EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME=""
 EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH=""
 
+# EdX Platform
+# There are cases where we want to override the edx-platform repository itself
+EDX_PLATFORM_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
+EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME="edx-platform"
+EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master"
+
+# EdX Theme
+# There are cases where we want to override the edx-platform repository itself
+EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
+EDX_THEME_PUBLIC_GITHUB_PROJECTNAME="edx-theme"
+EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="pilot"
+
+# MISC
+EDX_VERSION="named-release/dogwood.rc"
+FORUM_VERSION="mongoid5-release"
+
 #TODO: complete plumbing this variable as a user input
 CRONTAB_INTERVAL_MINUTES=5
 
@@ -62,6 +78,14 @@ help()
     echo "        --edxconfiguration-public-github-accountname Name of the account that owns the edx configuration repository"
     echo "        --edxconfiguration-public-github-projectname Name of the edx configuration GitHub repository"
     echo "        --edxconfiguration-public-github-projectbranch Branch of edx configuration GitHub repository"
+    echo "        --edxplatform-public-github-accountname Name of the account that owns the edx platform repository"
+    echo "        --edxplatform-public-github-projectname Name of the edx platform GitHub repository"
+    echo "        --edxplatform-public-github-projectbranch Branch of edx platform GitHub repository"
+    echo "        --edxtheme-public-github-accountname Name of the account that owns the edx theme repository"
+    echo "        --edxtheme-public-github-projectname Name of the edx theme GitHub repository"
+    echo "        --edxtheme-public-github-projectbranch Branch of edx theme GitHub repository"
+    echo "        --edxversion EdX Named-Release to use for this deployment"
+    echo "        --forumversion EdX Named Release to use for the FORUMS component"
     echo "        --azure-subscription-id    Azure subscription id"
     echo "        --cluster-admin-email Email address of the administrator where system and other notifications will be sent"
     echo "        --cluster-name Name of the cluster being bootstrapped"
@@ -136,6 +160,30 @@ parse_args()
                 ;;
             --edxconfiguration-public-github-projectbranch)
                 EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+                ;;
+            --edxplatform-public-github-projectname)
+                EDX_PLATFORM_PUBLIC_GITHUB_ACCOUNTNAME="$2"
+                ;;
+            --edxplatform-public-github-projectbranch)
+                EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+                ;;
+            --edxplatform-public-github-projectbranch)
+                EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+                ;;
+            --edxtheme-public-github-projectname)
+                EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME="$2"
+                ;;
+            --edxtheme-public-github-projectbranch)
+                EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+                ;;
+            --edxtheme-public-github-projectbranch)
+                EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+                ;;
+            --edxversion)
+                EDX_VERSION=="$2"
+                ;;
+            --forumversion)
+                FORUM_VERSION=="$2"
                 ;;
             --cluster-admin-email)
                 CLUSTER_ADMIN_EMAIL="$2"
@@ -250,7 +298,7 @@ then
     # setup the temporary cron installer script
     CRON_INSTALLER_SCRIPT="$CURRENT_PATH/background-installer.sh"
 
-    INSTALL_COMMAND="sudo flock -n /var/log/bootstrap.lock bash $REPO_ROOT/$OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME/scripts/bootstrap.sh -e $CLOUD_NAME --role $SHORT_ROLE_NAME --oxatools_public-github-accountname $OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME --oxatools_public-github-projectname $OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME --oxatools_public-github-projectbranch $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH --oxatools_public-github-projectbranch $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH --oxatools_public-github-accountname $OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME --edxconfiguration_public-github-projectname $EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME --edxconfiguration_public-github-projectbranch $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH --edxconfiguration_public-github-projectbranch $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH --installer-script-path $CRON_INSTALLER_SCRIPT --cluster-admin-email $CLUSTER_ADMIN_EMAIL --cluster-name $CLUSTER_NAME --cron >> /var/log/bootstrap.log 2>&1"
+    INSTALL_COMMAND="sudo flock -n /var/log/bootstrap.lock bash $REPO_ROOT/$OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME/scripts/bootstrap.sh -e $CLOUD_NAME --role $SHORT_ROLE_NAME --oxatools_public-github-accountname $OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME --oxatools_public-github-projectname $OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME --oxatools_public-github-projectbranch $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH --oxatools_public-github-projectbranch $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH --oxatools_public-github-accountname $OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME --edxconfiguration_public-github-projectname $EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME --edxconfiguration_public-github-projectbranch $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH --edxconfiguration_public-github-projectbranch $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH --installer-script-path $CRON_INSTALLER_SCRIPT --cluster-admin-email $CLUSTER_ADMIN_EMAIL --cluster-name $CLUSTER_NAME --edxplatform-public-github-projectname $EDX_PLATFORM_PUBLIC_GITHUB_ACCOUNTNAME --edxplatform-public-github-projectbranch $EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH --edxplatform-public-github-projectbranch $EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH --edxtheme-public-github-projectname $EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME --edxtheme-public-github-projectbranch $EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH --edxtheme-public-github-projectbranch $EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH --edxversion $EDX_VERSION --forumversion $FORUM_VERSION --cron >> /var/log/bootstrap.log 2>&1"
     echo $INSTALL_COMMAND > $CRON_INSTALLER_SCRIPT
 
     # Remove the task if it is already setup

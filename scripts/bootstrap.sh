@@ -11,6 +11,7 @@ CRON_MODE=0
 TARGET_FILE=""
 PROGRESS_FILE=""
 
+# Oxa Tools
 # Settings for the OXA-Tools public repository 
 OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
 OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME="oxa-tools"
@@ -19,13 +20,30 @@ OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH="master"
 # this is the operational branch for the OXA_TOOLS public git project
 OXA_TOOLS_VERSION=""
 
-# there are cases where we want to override the edx-configuration repository itself
+# EdX Configuration
+# There are cases where we want to override the edx-configuration repository itself
 EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
 EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME="edx-configuration"
 EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master"
 
 # this is the operational branch for the EDX_CONFIGURATION public git project
 CONFIGURATION_VERSION=""
+
+# EdX Platform
+# There are cases where we want to override the edx-platform repository itself
+EDX_PLATFORM_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
+EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME="edx-platform"
+EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master"
+
+# EdX Theme
+# There are cases where we want to override the edx-platform repository itself
+EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
+EDX_THEME_PUBLIC_GITHUB_PROJECTNAME="edx-theme"
+EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="pilot"
+
+# MISC
+EDX_VERSION="named-release/dogwood.rc"
+FORUM_VERSION="mongoid5-release"
 
 # script used for triggering background installation (setup in cron)
 CRON_INSTALLER_SCRIPT=""
@@ -80,40 +98,64 @@ parse_args() {
       --cron)
         CRON_MODE=1
         ;;
-        --oxatools_public-github-accountname)
+      --oxatools_public-github-accountname)
         OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME="$2"
         ;;
-        --oxatools_public-github-projectname)
-          OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME="$2"
+      --oxatools_public-github-projectname)
+        OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME="$2"
         ;;
-        --oxatools_public-github-projectbranch)
-          OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH="$2"
-        ;;        
-        --oxatools_public-github-projectbranch)
-          OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+      --oxatools_public-github-projectbranch)
+        OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH="$2"
         ;;
-        --oxatools_public-github-accountname)
+      --oxatools_public-github-projectbranch)
+        OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+        ;;
+      --oxatools_public-github-accountname)
         OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME="$2"
         ;;
-        --edxconfiguration_public-github-projectname)
-          EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME="$2"
+      --edxconfiguration_public-github-projectname)
+        EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME="$2"
         ;;
-        --edxconfiguration_public-github-projectbranch)
-          EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="$2"
-        ;;        
-        --edxconfiguration_public-github-projectbranch)
-          EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+      --edxconfiguration_public-github-projectbranch)
+        EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="$2"
         ;;
-        --installer-script-path)
-          CRON_INSTALLER_SCRIPT="$2"
+      --edxconfiguration_public-github-projectbranch)
+        EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="$2"
         ;;
-        --cluster-admin-email)
-          CLUSTER_ADMIN_EMAIL="$2"
+      --edxplatform-public-github-projectname)
+        EDX_PLATFORM_PUBLIC_GITHUB_ACCOUNTNAME="$2"
         ;;
-        --cluster-name)
-          CLUSTER_NAME="$2"
-          MAIL_SUBJECT="${MAIL_SUBJECT} - ${2,,}"
-          ;;
+      --edxplatform-public-github-projectbranch)
+        EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+        ;;
+      --edxplatform-public-github-projectbranch)
+        EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+        ;;
+      --edxtheme-public-github-projectname)
+        EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME="$2"
+        ;;
+      --edxtheme-public-github-projectbranch)
+        EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+        ;;
+      --edxtheme-public-github-projectbranch)
+        EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+        ;;
+      --edxversion)
+        EDX_VERSION="$2"
+        ;;
+       --forumversion)
+        FORUM_VERSION="$2"
+        ;;
+      --installer-script-path)
+        CRON_INSTALLER_SCRIPT="$2"
+        ;;
+      --cluster-admin-email)
+        CLUSTER_ADMIN_EMAIL="$2"
+        ;;
+      --cluster-name)
+        CLUSTER_NAME="$2"
+        MAIL_SUBJECT="${MAIL_SUBJECT} - ${2,,}"
+        ;;
       *)
         # Unknown option encountered
         display_usage
@@ -179,7 +221,11 @@ get_bootstrap_status()
             # Source the settings
             # Moving source here reduces the noise in the logs
             source $OXA_ENV_FILE
-            setup_overrides 1
+
+            # apply the overridesm
+            if [[ -f $OXA_ENV_OVERRIDE_FILE ]]; then
+                source $OXA_ENV_OVERRIDE_FILE
+            fi
 
             # The crumb doesn't exist:: we need to execute boostrap
             # For VMSS role, we have to wait on the backend Mysql bootstrap operation
@@ -198,31 +244,16 @@ get_bootstrap_status()
     echo $PRESENCE
 }
 
-setup_overrides()
+setup_overrides_file()
 {
-    QUIETMODE=$1
-
-    # apply input parameter-based overrides
-    if [ "$OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH" != "$OXA_TOOLS_VERSION" ];
-    then
-        if [ "$QUIETMODE" != "1" ];
-        then
-            echo "Applying OXA Tools Version override: '$OXA_TOOLS_VERSION' to '$OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH'"
-        fi
-
-        OXA_TOOLS_VERSION=$OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH
-    fi
-
-    # apply input parameter-based overrides
-    if [ "$EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH" != "$CONFIGURATION_VERSION" ];
-    then
-        if [ "$QUIETMODE" != "1" ];
-        then
-            echo "Applying OXA Tools Version override: '$CONFIGURATION_VERSION' to '$EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH'"
-        fi
-
-        CONFIGURATION_VERSION=$EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH
-    fi
+    # in order to support deployment-time configuration bootstrap (specifying repository & branch for the key bits: Oxa-Tools, EdX Platform, EdX Theme, Edx Configuration)
+    # we have to allow settings for each of these repositories to override whatever existing settings there are
+    EDX_CONFIGURATION_REPO="https://github.com/${EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME}/${EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME}.git"
+    EDX_PLATFORM_REPO="https://github.com/${EDX_PLATFORM_PUBLIC_GITHUB_ACCOUNTNAME}/${EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME}.git"
+    EDX_THEME_REPO="https://github.com/${EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME}/${EDX_THEME_PUBLIC_GITHUB_PROJECTNAME}.git"
+   
+    # setup the deployment overrides (for debugging and deployment-time control of repositories used)
+    setup_deployment_overrides $OXA_ENV_OVERRIDE_FILE $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH $EDX_CONFIGURATION_REPO $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH $EDX_PLATFORM_REPO $EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH $EDX_THEME_REPO $EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH $EDX_VERSION $FORUM_VERSION
 }
 
 ##
@@ -235,17 +266,12 @@ setup()
 
     # populate the deployment environment
     source $OXA_ENV_FILE
-
     export $(sed -e 's/#.*$//' $OXA_ENV_FILE | cut -d= -f1)
-  
-    # deployment environment overrides for debugging
-    OXA_ENV_OVERRIDE_FILE="$BOOTSTRAP_HOME/overrides.sh"
+
+    # apply the overrides
     if [[ -f $OXA_ENV_OVERRIDE_FILE ]]; then
         source $OXA_ENV_OVERRIDE_FILE
     fi
-
-    # override the env configs with deployment runtime parameters
-    setup_overrides
 
     export $(sed -e 's/#.*$//' $OXA_ENV_OVERRIDE_FILE | cut -d= -f1)
     export ANSIBLE_REPO=$CONFIGURATION_REPO
@@ -414,6 +440,7 @@ OXA_TOOLS_PATH=$OXA_PATH/$OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME
 OXA_TOOLS_CONFIG_PATH=$OXA_PATH/oxa-tools-config
 OXA_ENV_PATH=$OXA_TOOLS_CONFIG_PATH/env/$DEPLOYMENT_ENV
 OXA_ENV_FILE=$OXA_ENV_PATH/$DEPLOYMENT_ENV.sh
+OXA_ENV_OVERRIDE_FILE="$BOOTSTRAP_HOME/overrides.sh"
 
 # OXA Configuration
 CONFIGURATION_PATH=$OXA_PATH/configuration
@@ -421,6 +448,9 @@ OXA_PLAYBOOK_CONFIG=$OXA_PATH/oxa.yml
 
 # setup the installer path & key variables
 INSTALLER_BASEPATH="${OXA_TOOLS_PATH}/scripts"
+
+# create the overrides settings file
+setup_overrides_file
 
 ##
 ## CRON CheckPoint

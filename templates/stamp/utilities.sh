@@ -579,3 +579,64 @@ EOF
 
     log "Completed configuring the mailer"
 }
+
+#############################################################################
+# Setup Overrides
+#############################################################################
+
+setup_deployment_overrides()
+{
+    # collect the parameters
+    OXA_TOOLS_SCRIPTS_PATH=$1;
+
+    OXA_TOOLS_VERSION=$2;                               # Tools
+    CONFIGURATION_REPO=$3; CONFIGURATION_VERSION=$4;    # Configuration
+    PLATFORM_REPO=$5; PLATFORM_VERSION=$6;              # Platform
+    THEME_REPO=$7; THEME_VERSION=$8;                    # Themeing
+    EDX_VERSION=$9; FORUM_VERSION=$10;                  # MISC
+
+    log "Creating new deployment configuration overrides"
+
+    # For simplicity, we require all parameters are set
+    if [ "$#" -lt 10 ]; then
+        echo "Not all required deployment overrides have been set. Skipping due to an invalid number of arguments"
+        exit 0;
+    fi
+
+    if [ ! -d "$OXA_TOOLS_SCRIPTS_PATH" ]; 
+    then
+        log "The specified OXA Tools scripts path '${OXA_TOOLS_SCRIPTS_PATH}' doesn't exist'. Skipping setup of deployment overrides"
+        exit 0;
+    fi
+
+    # the values being over-written are already established in settings files as values used in various playbooks
+    # this function use overrides existing settings and doesn't introduce new ones
+    # these settings must batch values present in the cloud configuration files (ie: bvt.sh)
+    OVERRIDES_FILE_PATH="${OXA_TOOLS_SCRIPTS_PATH}\overrides.sh"
+    
+    tee "${OVERRIDES_FILE_PATH}" > /dev/null <<EOF
+OXA_TOOLS_VERSION={OXA_TOOLS_VERSION}
+CONFIGURATION_REPO={CONFIGURATION_REPO}
+CONFIGURATION_VERSION={CONFIGURATION_VERSION}
+PLATFORM_REPO={PLATFORM_REPO}
+PLATFORM_VERSION={PLATFORM_VERSION}
+THEME_REPO={THEME_REPO}
+THEME_VERSION={THEME_VERSION}
+EDX_VERSION={EDX_VERSION}
+FORUM_VERSION={FORUM_VERSION}
+EOF
+
+    # replace the place holders
+    log "Populating SMTP configuration with appropriate values"
+    sed -i "s/{OXA_TOOLS_VERSION}/${OXA_TOOLS_VERSION}/I" $OVERRIDES_FILE_PATH
+    sed -i "s/{CONFIGURATION_REPO}/${CONFIGURATION_REPO}/I" $OVERRIDES_FILE_PATH
+    sed -i "s/{CONFIGURATION_VERSION}/${CONFIGURATION_VERSION}/I" $OVERRIDES_FILE_PATH
+    sed -i "s/{PLATFORM_REPO}/${PLATFORM_REPO}/I" $OVERRIDES_FILE_PATH
+    sed -i "s/{PLATFORM_VERSION}/${PLATFORM_VERSION}/I" $OVERRIDES_FILE_PATH
+    sed -i "s/{THEME_REPO}/${THEME_REPO}/I" $OVERRIDES_FILE_PATH
+    sed -i "s/{THEME_VERSION}/${THEME_VERSION}/I" $OVERRIDES_FILE_PATH
+    sed -i "s/{EDX_VERSION}/${EDX_VERSION}/I" $OVERRIDES_FILE_PATH
+    sed -i "s/{FORUM_VERSION}/${FORUM_VERSION}/I" $OVERRIDES_FILE_PATH
+
+    log "Deployment configuration overrides file has been created at '${OVERRIDES_FILE_PATH}'"
+}

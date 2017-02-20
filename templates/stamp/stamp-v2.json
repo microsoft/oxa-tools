@@ -207,9 +207,65 @@
         },
         "edxConfigurationGithubBranch": {
             "type": "string",
-            "defaultValue": "master",
+            "defaultValue": "oxa/master",
             "metadata": {
                 "description": "Branch of edx configuration GitHub repository"
+            }
+        },
+        "edxPlatformGithubAccountName": {
+            "type": "string",
+            "defaultValue": "microsoft",
+            "metadata": {
+                "description": "Name of the account that owns the edx platform repository"
+            }
+        },
+        "edxPlatformGithubProjectName": {
+            "type": "string",
+            "defaultValue": "edx-platform",
+            "metadata": {
+                "description": "Name of the edx platform GitHub repository"
+            }
+        },
+        "edxPlatformGithubBranch": {
+            "type": "string",
+            "defaultValue": "oxa/master",
+            "metadata": {
+                "description": "Branch of edx platform GitHub repository"
+            }
+        },
+        "edxThemeGithubAccountName": {
+            "type": "string",
+            "defaultValue": "microsoft",
+            "metadata": {
+                "description": "Name of the account that owns the edx theme repository"
+            }
+        },
+        "edxThemeGithubProjectName": {
+            "type": "string",
+            "defaultValue": "edx-theme",
+            "metadata": {
+                "description": "Name of the edx theme GitHub repository"
+            }
+        },
+        "edxThemeGithubBranch": {
+            "type": "string",
+            "defaultValue": "pilot",
+            "metadata": {
+                "description": "Branch of edx theme GitHub repository"
+            }
+        },
+        "edxVersion": {
+            "type": "string",
+            "defaultValue": "named-release/dogwood.rc",
+            "metadata": {
+                "description": "EdX named release (Git Tag) to deploy. See https://openedx.atlassian.net/wiki/display/DOC/Open+edX+Releases for the full list"
+            }
+        },
+        "edxForumVersion": {
+            "type": "string",
+            "defaultValue": "mongoid5-release",
+            "metadata": {
+                "description": "EdX forum version to deploy"
             }
         },
         "armTemplateRelativePath": {
@@ -693,11 +749,14 @@
         "templateBaseUrl": "[concat('https://raw.githubusercontent.com/',parameters('oxaToolsGithubAccountName'), '/', parameters('oxaToolsGithubProjectName'), '/', parameters('oxaToolsGithubBranch'), '/', parameters('armTemplateRelativePath'), '/')]",
         "clusterCustomInstallerScriptFullPath": "[concat( variables('templateBaseUrl'), parameters('customInstallerLaunchScript') )]",
         "customInstallerOxaToolsGitHubRepositoryParameters": "[concat(' --oxatools-public-github-accountname ', parameters('oxaToolsGithubAccountName'), ' --oxatools-public-github-projectname ', parameters('oxaToolsGithubProjectName'), ' --oxatools-public-github-projectbranch ', parameters('oxaToolsGithubBranch') )]",
-        "customInstallerEdxConfigurationGitHubRepositoryParameters": "[concat(' --edxconfiguration-public-github-accountname ', parameters('edxConfigurationGithubAccountName'), ' --edxconfiguration-public-github-projectname ', parameters('edxconfigurationGithubProjectName'), ' --edxconfiguration-public-github-projectbranch ', parameters('edxConfigurationGithubBranch') )]",
+        "customInstallerEdxConfigurationGitHubRepositoryParameters": "[concat(' --edxconfiguration-public-github-accountname ', parameters('edxConfigurationGithubAccountName'), ' --edxconfiguration-public-github-projectname ', parameters('edxConfigurationGithubProjectName'), ' --edxconfiguration-public-github-projectbranch ', parameters('edxConfigurationGithubBranch') )]",
+        "customInstallerEdxPlatformGitHubRepositoryParameters": "[concat(' --edxplatform-public-github-accountname ', parameters('edxPlatformGithubAccountName'), ' --edxplatform-public-github-projectname ', parameters('edxPlatformGithubProjectName'), ' --edxplatform-public-github-projectbranch ', parameters('edxPlatformGithubBranch') )]",
+        "customInstallerEdxThemeGitHubRepositoryParameters": "[concat(' --edxtheme-public-github-accountname ', parameters('edxThemeGithubAccountName'), ' --edxtheme-public-github-projectname ', parameters('edxThemeGithubProjectName'), ' --edxtheme-public-github-projectbranch ', parameters('edxThemeGithubBranch') )]",
+        "customInstallerMiscRepositoryVersionParameters": "[concat(' --edxversion ', parameters('edxVersion'), ' --forumversion ', parameters('edxForumVersion'), ' --edxtheme-public-github-projectbranch ', parameters('edxThemeGithubBranch') )]",
         "customInstallerKeyVaultParameters": "[concat(' --keyvault-name ', concat(parameters('clusterName'), '-kv'), ' --aad-webclient-id ', parameters('aadWebClientId'), ' --aad-webclient-appkey ', parameters('aadWebClientAppKey'), ' --aad-tenant-id ', parameters('aadTenantId'), ' --azure-subscription-id ', subscription().subscriptionId)]",
         "customInstallerOutputRedirect": " >> /var/log/bootstrap.csx.log 2>&1",
         "smtpParameters": "[concat(' --smtp-server ', parameters('smtpServer'), ' --smtp-server-port ', parameters('smtpServerPort'), ' --smtp-auth-user ', parameters('smtpAuthenticationUser'), ' --smtp-auth-user-password ', parameters('smtpAuthenticationUserPassword'), '  --cluster-admin-email ', parameters('clusterAdmininistratorEmailAddress'))]",
-        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('customInstallerOutputRedirect'), variables('smtpParameters'))]",
+        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('customInstallerOutputRedirect'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'))]",
 
         "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources.json')]",
         "jumpboxTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-jumpbox.json')]",
