@@ -587,14 +587,14 @@ EOF
 setup_deployment_overrides()
 {
     # collect the parameters
-    OVERRIDES_FILE_PATH=$1;
+    OVERRIDES_FILE_PATH="$1";
 
-    OXA_TOOLS_VERSION=$2;                               # Tools
-    CONFIGURATION_REPO=$3; CONFIGURATION_VERSION=$4;    # Configuration
-    PLATFORM_REPO=$5; PLATFORM_VERSION=$6;              # Platform
-    THEME_REPO=$7; THEME_VERSION=$8;                    # Themeing
-    EDX_VERSION=$9; FORUM_VERSION=$10;                  # MISC
-    ANSIBLE_REPO=$11; ANSIBLE_VERSION=$12;              # Ansible
+    OXA_TOOLS_VERSION="$2";                               # Tools
+    CONFIGURATION_REPO="$3"; CONFIGURATION_VERSION="$4";    # Configuration
+    PLATFORM_REPO="$5"; PLATFORM_VERSION="$6";              # Platform
+    THEME_REPO="$7"; THEME_VERSION="$8";                    # Themeing
+    EDX_VERSION="$9"; FORUM_VERSION="$10";                # MISC
+    ANSIBLE_REPO="$11"; ANSIBLE_VERSION="$12";          # Ansible
 
     log "Creating new deployment configuration overrides"
 
