@@ -127,6 +127,25 @@ install-git()
 }
 
 #############################################################################
+# Install Get Text 
+#############################################################################
+
+install-gettext()
+{
+    # Ensure that gettext (which includes envsubst) is installed
+    if [ $(dpkg-query -W -f='${Status}' gettext 2>/dev/null | grep -c "ok installed") -eq 0 ];
+    then
+        log "Installing Get Text"
+        apt-get install -y gettext;
+        exit_on_error "Failed to install the GetText package on ${HOSTNAME} !"
+    else
+        log "Get Text is already installed"
+    fi
+
+    log "Get Text installed"
+}
+
+#############################################################################
 # Install Mongo Shell
 #############################################################################
 

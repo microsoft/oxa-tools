@@ -300,6 +300,7 @@ exit_on_error "Configuring the mailer failed"
 
 # 1. Setup Tools
 install-git
+install-gettext
 
 if [ "$MACHINE_ROLE" == "jumpbox" ] || [ "$MACHINE_ROLE" == "vmss" ];
 then
