@@ -200,10 +200,10 @@ parse_args()
                 ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH="$2"
                 ;;
             --edxversion)
-                EDX_VERSION=="$2"
+                EDX_VERSION="$2"
                 ;;
             --forumversion)
-                FORUM_VERSION=="$2"
+                FORUM_VERSION="$2"
                 ;;
             --azure-subscription-id)
                 AZURE_SUBSCRIPTION_ID="$2"
