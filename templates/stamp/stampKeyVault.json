@@ -1,0 +1,545 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "clusterName": {
+            "type": "string",
+            "maxLength": 12
+        },
+        "clusterNameDomainName": {
+            "type": "string"
+        },
+        "osFamilySpec": {
+            "type": "string",
+            "defaultValue": "ubuntu",
+            "allowedValues": [
+                "ubuntu"
+            ]
+        },
+        "jumpBoxVmSize": {
+            "type": "string",
+            "defaultValue": "Standard_D1_v2",
+            "allowedValues": [
+                "Standard_D1_v2",
+                "Standard_D2_v2",
+                "Standard_D3_v2",
+                "Standard_D4_v2",
+                "Standard_DS2_v2",
+                "Standard_DS3_v2",
+                "Standard_DS4_v2",
+                "Standard_DS5_v2",
+                "Standard_DS11_v2",
+                "Standard_DS12_v2",
+                "Standard_DS13_v2",
+                "Standard_DS14_v2",
+                "Standard_DS15_v2"
+            ]
+        },
+        "mongoVmSize": {
+            "type": "string",
+            "defaultValue": "Standard_D2_v2",
+            "allowedValues": [
+                "Standard_D1_v2",
+                "Standard_D2_v2",
+                "Standard_D3_v2",
+                "Standard_D4_v2",
+                "Standard_DS2_v2",
+                "Standard_DS3_v2",
+                "Standard_DS4_v2",
+                "Standard_DS5_v2",
+                "Standard_DS11_v2",
+                "Standard_DS12_v2",
+                "Standard_DS13_v2",
+                "Standard_DS14_v2",
+                "Standard_DS15_v2"
+            ]
+        },
+        "mysqlVmSize": {
+            "type": "string",
+            "defaultValue": "Standard_D2_v2",
+            "allowedValues": [
+                "Standard_D1_v2",
+                "Standard_D2_v2",
+                "Standard_D3_v2",
+                "Standard_D4_v2",
+                "Standard_DS2_v2",
+                "Standard_DS3_v2",
+                "Standard_DS4_v2",
+                "Standard_DS5_v2",
+                "Standard_DS11_v2",
+                "Standard_DS12_v2",
+                "Standard_DS13_v2",
+                "Standard_DS14_v2",
+                "Standard_DS15_v2"
+            ]
+        },
+        "frontendVmSize": {
+            "type": "string",
+            "defaultValue": "Standard_D2_v2",
+            "allowedValues": [
+                "Standard_D1_v2",
+                "Standard_D2_v2",
+                "Standard_D3_v2",
+                "Standard_D4_v2",
+                "Standard_DS2_v2",
+                "Standard_DS3_v2",
+                "Standard_DS4_v2",
+                "Standard_DS5_v2",
+                "Standard_DS11_v2",
+                "Standard_DS12_v2",
+                "Standard_DS13_v2",
+                "Standard_DS14_v2",
+                "Standard_DS15_v2"
+            ],
+            "metadata": {
+                "description": "SKU, or size of the application virtual machine(s)."
+            }
+        },
+        "adminUsername": {
+            "type": "string",
+            "defaultValue": "lexoxaadmin"
+        },
+        "adminPublicKey": {
+            "type": "securestring"
+        },
+        "mongoServerAdminUserName": {
+            "type": "string",
+            "defaultValue": "lexoxamongoadmin"
+        },
+        "mongoServerAdminPassword": {
+            "type": "securestring"
+        },
+        "mysqlServerPackageVersion": {
+            "type": "string",
+            "defaultValue": "5.6"
+        },
+        "mysqlServerAdminUserName": {
+            "type": "string",
+            "defaultValue": "lexoxamysqladmin"
+        },
+        "mysqlServerReplUserName": {
+            "type": "string",
+            "defaultValue": "lexoxamysqlrepl"
+        },
+        "mysqlServerAdminPassword": {
+            "type": "securestring"
+        },
+        "mysqlServerReplPassword": {
+            "type": "securestring"
+        },
+
+        "deploymentSlot": {
+            "type": "string",
+            "defaultValue": "slot1",
+            "allowedValues": [
+                "slot1",
+                "slot2"
+            ],
+            "metadata": {
+                "description": "Deployment slot for the frontend"
+            }
+        },
+        "autoScaleEnabled": {
+            "type": "bool",
+            "defaultValue": "false",
+            "metadata": {
+                "description": "Indicator of whether or not autoscaling would be enabled on the Vm Scale Set"
+            }
+        },
+        "autoScaleCapacityDefault": {
+            "type": "int",
+            "maxValue": 20,
+            "defaultValue": 5,
+            "metadata": {
+                "description": "Default number of application virtual machines within the VM Scale Set."
+            }
+        },
+        "autoScaleCapacityMaximum": {
+            "type": "int",
+            "maxValue": 20,
+            "defaultValue": 20,
+            "metadata": {
+                "description": "Maximum number of application virtual machines within the VM Scale Set."
+            }
+        },
+        "autoScaleCapacityMinimum": {
+            "type": "int",
+            "maxValue": 20,
+            "defaultValue": 1,
+            "metadata": {
+                "description": "Default number of application virtual machines within the VM Scale Set."
+            }
+        },
+        "oxaToolsGithubAccountName": {
+            "type": "string",
+            "defaultValue": "microsoft",
+            "metadata": {
+                "description": "Name of the account that owns the oxa-tools GitHub repository"
+            }
+        },
+        "oxaToolsGithubProjectName": {
+            "type": "string",
+            "defaultValue": "oxa-tools",
+            "metadata": {
+                "description": "Name of the oxa-tools GitHub repository"
+            }
+        },
+        "oxaToolsGithubBranch": {
+            "type": "string",
+            "defaultValue": "master",
+            "metadata": {
+                "description": "Branch of the oxa-tools GitHub repository"
+            }
+        },
+        "edxConfigurationGithubAccountName": {
+            "type": "string",
+            "defaultValue": "microsoft",
+            "metadata": {
+                "description": "Name of the account that owns the edx configuration repository"
+            }
+        },
+        "edxConfigurationGithubProjectName": {
+            "type": "string",
+            "defaultValue": "edx-configuration",
+            "metadata": {
+                "description": "Name of the edx configuration GitHub repository"
+            }
+        },
+        "edxConfigurationGithubBranch": {
+            "type": "string",
+            "defaultValue": "oxa/master",
+            "metadata": {
+                "description": "Branch of edx configuration GitHub repository"
+            }
+        },
+        "edxPlatformGithubAccountName": {
+            "type": "string",
+            "defaultValue": "microsoft",
+            "metadata": {
+                "description": "Name of the account that owns the edx platform repository"
+            }
+        },
+        "edxPlatformGithubProjectName": {
+            "type": "string",
+            "defaultValue": "edx-platform",
+            "metadata": {
+                "description": "Name of the edx platform GitHub repository"
+            }
+        },
+        "edxPlatformGithubBranch": {
+            "type": "string",
+            "defaultValue": "oxa/master",
+            "metadata": {
+                "description": "Branch of edx platform GitHub repository"
+            }
+        },
+        "edxThemeGithubAccountName": {
+            "type": "string",
+            "defaultValue": "microsoft",
+            "metadata": {
+                "description": "Name of the account that owns the edx theme repository"
+            }
+        },
+        "edxThemeGithubProjectName": {
+            "type": "string",
+            "defaultValue": "edx-theme",
+            "metadata": {
+                "description": "Name of the edx theme GitHub repository"
+            }
+        },
+        "edxThemeGithubBranch": {
+            "type": "string",
+            "defaultValue": "pilot",
+            "metadata": {
+                "description": "Branch of edx theme GitHub repository"
+            }
+        },
+        "edxVersion": {
+            "type": "string",
+            "defaultValue": "named-release/dogwood.rc",
+            "metadata": {
+                "description": "EdX named release (Git Tag) to deploy. See https://openedx.atlassian.net/wiki/display/DOC/Open+edX+Releases for the full list"
+            }
+        },
+        "edxForumVersion": {
+            "type": "string",
+            "defaultValue": "mongoid5-release",
+            "metadata": {
+                "description": "EdX forum version to deploy"
+            }
+        },
+        "armTemplateRelativePath": {
+            "type": "string",
+            "defaultValue": "templates/stamp",
+            "metadata": {
+                "description": "The path relative to the root of the GitHub project's branch where the Azure Arm Template lives"
+            }
+        },
+        "vmssUbuntuOsImageSku": {
+            "type": "string",
+            "defaultValue": "14.04.0-LTS",
+            "allowedValues": [
+                "16.04.0-LTS",
+                "14.04.5-LTS",
+                "12.04.5-LTS"
+            ],
+            "metadata": {
+                "description": "The Azure Ubuntu Image version to use for VMSS instances"
+            }
+        },
+        "mysqlUbuntuOsImageSku": {
+            "type": "string",
+            "defaultValue": "16.04.0-LTS",
+            "allowedValues": [
+                "16.04.0-LTS",
+                "14.04.5-LTS",
+                "12.04.5-LTS"
+            ],
+            "metadata": {
+                "description": "The Azure Ubuntu Image version to use for Mysql instances"
+            }
+        },
+        "mongoUbuntuOsImageSku": {
+            "type": "string",
+            "defaultValue": "16.04.0-LTS",
+            "allowedValues": [
+                "16.04.0-LTS",
+                "14.04.5-LTS",
+                "12.04.5-LTS"
+            ],
+            "metadata": {
+                "description": "The Azure Ubuntu Image version to use for Mongo instances"
+            }
+        },
+        "defaultUbuntuOsImageSku": {
+            "type": "string",
+            "defaultValue": "16.04.0-LTS",
+            "allowedValues": [
+                "16.04.0-LTS",
+                "14.04.5-LTS",
+                "12.04.5-LTS"
+            ],
+            "metadata": {
+                "description": "The default Azure Ubuntu Image version to use for VMs"
+            }
+        },
+        "jumpBoxDataDiskSizeGB": {
+            "type": "int",
+            "defaultValue": 50,
+            "metadata": {
+                "description": "The size of data disk to provision and attach to the VM"
+            }
+        },
+        "mongoNodeDataDiskSizeGB": {
+            "type": "int",
+            "defaultValue": 256,
+            "metadata": {
+                "description": "The size of data disk to provision and attach to the VM"
+            }
+        },
+        "mysqlNodeDataDiskSizeGB": {
+            "type": "int",
+            "defaultValue": 256,
+            "metadata": {
+                "description": "The size of data disk to provision and attach to the VM"
+            }
+        },
+        "customInstallerLaunchScript": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Name of the bootstrap script to trigger the custom installation. This script will call the customInstallerMainScriptRelativePath"
+            }
+        },
+        "customInstallerMainScriptRelativePath": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Relative path to the custom installer file to execute. This path is relative to the root of github repository."
+            }
+        },
+        "cloud": {
+            "type": "string",
+            "defaultValue": "bvt",
+            "metadata": {
+                "description": "The target cloud/environment"
+            }
+        },
+        "deploymentVersionId": {
+            "type": "string",
+            "defaultValue": "201611211241",
+            "metadata": {
+                "description": "The identifier for versioning bits deployed to VMSS"
+            }
+        },
+        "aadWebClientId": {
+            "type": "string",
+            "metadata": {
+                "description": "Client Id of the AAD user or web application that will have access to the azure keyvault."
+            }
+        },
+        "aadWebClientAppKey": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Client Key of the AAD user or web application that will have access to the azure keyvault."
+            }
+        },
+        "aadTenantId": {
+            "type": "string",
+            "metadata": {
+                "description": "Id of the AAD tenant the user or web application will authenticate against."
+            }
+        },
+        "keyVaultMasterAccountId": {
+            "type": "string",
+            "metadata": {
+                "description": "Object Id of the AAD user or service principal that will have access to the vault. Available from the Get-AzureRMADUser or the Get-AzureRMADServicePrincipal cmdlets"
+            }
+        },
+        "keyVaultMasterAccountKeyAccessPermission": {
+            "type": "array",
+            "defaultValue": [ "all" ],
+            "metadata": {
+                "description": "Permissions to grant user to keys in the vault. Valid values are: all, create, import, update, get, list, delete, backup, restore, encrypt, decrypt, wrapkey, unwrapkey, sign, and verify."
+            }
+        },
+        "keyVaultMasterAccountSecretAccessPermission": {
+            "type": "array",
+            "defaultValue": [ "all" ],
+            "metadata": {
+                "description": "Permissions to grant user to secrets in the vault. Valid values are: all, get, set, list, and delete."
+            }
+        },
+        "keyVaultSku": {
+            "type": "string",
+            "defaultValue": "Standard",
+            "allowedValues": [
+                "Standard",
+                "Premium"
+            ],
+            "metadata": {
+                "description": "SKU for the vault"
+            }
+        },
+        "lmsTrafficManagerStateMetadata": {
+            "type": "array",
+            "metadata": {
+                "description": "Traffic manager status for LMS load balancers endpoints: [0]=Slot1.LoadBalancerEndpointStatus, [1]=Slot2.LoadBalancerEndpointStatus, [2]=Slot1.LoadBalancerEndpointPriority, [3]=Slot2.LoadBalancerEndpointPriority where LoadBalancerStatus=Enabled|Disabled, LoadBalancerEndpointPriority >= 1 and <= 1000"
+            }
+        },
+        "cmsTrafficManagerStateMetadata": {
+            "type": "array",
+            "metadata": {
+                "description": "Traffic manager status for CMS load balancers endpoints: [0]=Slot1.LoadBalancerEndpointStatus, [1]=Slot2.LoadBalancerEndpointStatus, [2]=Slot1.LoadBalancerEndpointPriority, [3]=Slot2.LoadBalancerEndpointPriority where LoadBalancerStatus=Enabled|Disabled, LoadBalancerEndpointPriority >= 1 and <= 1000"
+            }
+        },
+        "previewTrafficManagerStateMetadata": {
+            "type": "array",
+            "metadata": {
+                "description": "Traffic manager status for PREVIEW load balancer endpoints: [0]=Slot1.LoadBalancerEndpointStatus, [1]=Slot2.LoadBalancerEndpointStatus, [2]=Slot1.LoadBalancerEndpointPriority, [3]=Slot2.LoadBalancerEndpointPriority where LoadBalancerStatus=Enabled|Disabled, LoadBalancerEndpointPriority >= 1 and <= 1000"
+            }
+        },
+        "smtpServer": {
+            "type": "string",
+            "metadata": {
+                "description": "FQDN of SMTP server used for relaying deployment and other system notifications"
+            }
+        },
+        "smtpServerPort": {
+            "type": "string",
+            "metadata": {
+                "description": "Port of SMTP server used for relaying deployment and other system notifications"
+            }
+        },
+        "smtpAuthenticationUser": {
+            "type": "string",
+            "metadata": {
+                "description": "User name for authenticating against the SMTP server used for relaying deployment and other system notifications"
+            }
+        },
+        "smtpAuthenticationUserPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Password for authenticating against the SMTP server used for relaying deployment and other system notifications"
+            }
+        },
+        "clusterAdmininistratorEmailAddress": {
+            "type": "string",
+            "metadata": {
+                "description": "Email address of the administrator where system and other notifications will be sent"
+            }
+        }
+    },
+    "variables": {
+        "defaultApiVersion": "2015-05-01-preview",
+        "apiVersion": "2016-09-01",
+        "networkApiVersion": "2016-03-30",
+        "computeApiVersion": "2016-03-30",
+        "insightsApiVersion": "2015-04-01",
+        "keyVaultApiversion": "2015-06-01",
+        "trafficManagerApiversion": "2015-11-01",
+        "mediaServicesApiVersion": "2015-10-01",
+        "storageApiVersion": "2016-01-01",
+        "virtualMachineExtensionsApiVersion": "[variables('defaultApiVersion')]",
+        "virtualMachineApiVersion": "[variables('defaultApiVersion')]",
+
+        "templateBaseUrl": "[concat('https://raw.githubusercontent.com/',parameters('oxaToolsGithubAccountName'), '/', parameters('oxaToolsGithubProjectName'), '/', parameters('oxaToolsGithubBranch'), '/', parameters('armTemplateRelativePath'), '/')]",
+        "keyvaultTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-keyvault.json')]",
+        "keyVaultEnabledForDeployment": true,
+        "keyVaultEnabledForTemplateDeployment": true,
+        "keyVaultEnabledForVolumeEncryption": true,
+        "keyVaultTenantId": "[subscription().subscriptionId]",
+
+        "apiSettings": {
+            "apiVersion": "[variables('apiVersion')]",
+            "storageApiVersion": "[variables('storageApiVersion')]",
+            "virtualMachineApiVersion": "[variables('virtualMachineApiVersion')]",
+            "virtualMachineExtensionsApiVersion": "[variables('virtualMachineExtensionsApiVersion')]",
+            "networkApiVersion": "[variables('networkApiVersion')]",
+            "computeApiVersion": "[variables('computeApiVersion')]",
+            "insightsApiVersion": "[variables('insightsApiVersion')]",
+            "keyVaultApiversion": "[variables('keyVaultApiversion')]",
+            "trafficManagerApiversion": "[variables('trafficManagerApiversion')]",
+            "mediaServicesApiVersion": "[variables('mediaServicesApiVersion')]"
+        },
+        "keyVaultSettings": {
+            "enabledForDeployment": "[variables('keyVaultEnabledForDeployment')]",
+            "enabledForTemplateDeployment": "[variables('keyVaultEnabledForTemplateDeployment')]",
+            "enabledForVolumeEncryption": "[variables('keyVaultEnabledForVolumeEncryption')]",
+            "tenantId": "[subscription().tenantId]",
+            "accessAccount": "[parameters('keyVaultMasterAccountId')]",
+            "tenantKeyAccessPermission": "[parameters('keyVaultMasterAccountKeyAccessPermission')]",
+            "tenantSecretAccessPermission": "[parameters('keyVaultMasterAccountSecretAccessPermission')]",
+            "sku": "[parameters('keyVaultSku')]"
+        },
+        "networkSettings": {
+            "clusterKeyVaultName": "[concat(parameters('clusterName'), '-kv')]",
+        }
+
+    },
+    "resources": [
+        {
+            "name": "keyVault",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('apiVersion')]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('keyVaultTemplateUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "apiSettings": {
+                        "value": "[variables('apiSettings')]"
+                    },
+                    "networkSettings": {
+                        "value": "[variables('networkSettings')]"
+                    },
+                    "keyVaultSettings": {
+                        "value": "[variables('keyVaultSettings')]"
+                    }
+                }
+            }
+        }
+    ]
+}
