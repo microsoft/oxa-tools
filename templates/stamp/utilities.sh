@@ -594,6 +594,7 @@ setup_deployment_overrides()
     PLATFORM_REPO=$5; PLATFORM_VERSION=$6;              # Platform
     THEME_REPO=$7; THEME_VERSION=$8;                    # Themeing
     EDX_VERSION=$9; FORUM_VERSION=$10;                  # MISC
+    ANSIBLE_REPO=$11; ANSIBLE_VERSION=12;               # Ansible
 
     log "Creating new deployment configuration overrides"
 
@@ -624,6 +625,8 @@ THEME_REPO={THEME_REPO}
 THEME_VERSION={THEME_VERSION}
 EDX_VERSION={EDX_VERSION}
 FORUM_VERSION={FORUM_VERSION}
+ANSIBLE_REPO={ANSIBLE_REPO}
+ANSIBLE_VERSION=${ANSIBLE_VERSION}
 EOF
 
     # replace the place holders
@@ -637,6 +640,8 @@ EOF
     sed -i "s/{THEME_VERSION}/${THEME_VERSION}/I" $OVERRIDES_FILE_PATH
     sed -i "s/{EDX_VERSION}/${EDX_VERSION}/I" $OVERRIDES_FILE_PATH
     sed -i "s/{FORUM_VERSION}/${FORUM_VERSION}/I" $OVERRIDES_FILE_PATH
+    sed -i "s/{ANSIBLE_REPO}/${ANSIBLE_REPO}/I" $OVERRIDES_FILE_PATH
+    sed -i "s/{ANSIBLE_VERSION}/${ANSIBLE_VERSION}/I" $OVERRIDES_FILE_PATH
 
     log "Deployment configuration overrides file has been created at '${OVERRIDES_FILE_PATH}'"
 }

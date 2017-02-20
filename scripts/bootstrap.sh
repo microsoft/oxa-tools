@@ -41,6 +41,12 @@ EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
 EDX_THEME_PUBLIC_GITHUB_PROJECTNAME="edx-theme"
 EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="pilot"
 
+# EdX Ansible
+# There are cases where we want to override the edx\ansible repository itself
+ANSIBLE_PUBLIC_GITHUB_ACCOUNTNAME="edx"
+ANSIBLE_PUBLIC_GITHUB_PROJECTNAME="ansible"
+ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH="master"
+
 # MISC
 EDX_VERSION="named-release/dogwood.rc"
 FORUM_VERSION="mongoid5-release"
@@ -260,14 +266,17 @@ get_bootstrap_status()
 
 setup_overrides_file()
 {
+    log "Setting up deployment overrides file at $OXA_ENV_OVERRIDE_FILE"
+
     # in order to support deployment-time configuration bootstrap (specifying repository & branch for the key bits: Oxa-Tools, EdX Platform, EdX Theme, Edx Configuration)
     # we have to allow settings for each of these repositories to override whatever existing settings there are
     EDX_CONFIGURATION_REPO="https://github.com/${EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME}/${EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME}.git"
     EDX_PLATFORM_REPO="https://github.com/${EDX_PLATFORM_PUBLIC_GITHUB_ACCOUNTNAME}/${EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME}.git"
     EDX_THEME_REPO="https://github.com/${EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME}/${EDX_THEME_PUBLIC_GITHUB_PROJECTNAME}.git"
+    EDX_ANSIBLE_REPO="https://github.com/${ANSIBLE_PUBLIC_GITHUB_ACCOUNTNAME}/${ANSIBLE_PUBLIC_GITHUB_PROJECTNAME}.git"
 
     # setup the deployment overrides (for debugging and deployment-time control of repositories used)
-    setup_deployment_overrides $OXA_ENV_OVERRIDE_FILE $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH $EDX_CONFIGURATION_REPO $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH $EDX_PLATFORM_REPO $EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH $EDX_THEME_REPO $EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH $EDX_VERSION $FORUM_VERSION
+    setup_deployment_overrides $OXA_ENV_OVERRIDE_FILE $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH $EDX_CONFIGURATION_REPO $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH $EDX_PLATFORM_REPO $EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH $EDX_THEME_REPO $EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH $EDX_VERSION $FORUM_VERSION $EDX_ANSIBLE_REPO $EDX_ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH
 }
 
 ##
@@ -288,8 +297,8 @@ setup()
     fi
 
     export $(sed -e 's/#.*$//' $OXA_ENV_OVERRIDE_FILE | cut -d= -f1)
-    export ANSIBLE_REPO=$CONFIGURATION_REPO
-    export ANSIBLE_VERSION=$CONFIGURATION_VERSION
+    export ANSIBLE_REPO=$EDX_ANSIBLE_REPO
+    export ANSIBLE_VERSION=$EDX_ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH
   
     # sync public repositories
     sync_repo $OXA_TOOLS_REPO $OXA_TOOLS_VERSION $OXA_TOOLS_PATH
