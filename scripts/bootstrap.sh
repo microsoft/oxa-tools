@@ -135,20 +135,20 @@ parse_args() {
       --edxconfiguration_public-github-projectbranch)
         EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="$2"
         ;;
-      --edxplatform-public-github-projectname)
+      --edxplatform-public-github-accountname)
         EDX_PLATFORM_PUBLIC_GITHUB_ACCOUNTNAME="$2"
         ;;
-      --edxplatform-public-github-projectbranch)
-        EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+      --edxplatform-public-github-projectname)
+        EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME="$2"
         ;;
       --edxplatform-public-github-projectbranch)
         EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH="$2"
         ;;
-      --edxtheme-public-github-projectname)
+      --edxtheme-public-github-accountname)
         EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME="$2"
         ;;
-      --edxtheme-public-github-projectbranch)
-        EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+      --edxtheme-public-github-projectname)
+        EDX_THEME_PUBLIC_GITHUB_PROJECTNAME="$2"
         ;;
       --edxtheme-public-github-projectbranch)
         EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="$2"
@@ -171,6 +171,7 @@ parse_args() {
         ;;
       *)
         # Unknown option encountered
+        echo "Option '${BOLD}$1${NORM} $2' not allowed."
         display_usage
         ;;
     esac

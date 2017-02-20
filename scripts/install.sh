@@ -161,20 +161,20 @@ parse_args()
             --edxconfiguration-public-github-projectbranch)
                 EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="$2"
                 ;;
-            --edxplatform-public-github-projectname)
+            --edxplatform-public-github-accountname)
                 EDX_PLATFORM_PUBLIC_GITHUB_ACCOUNTNAME="$2"
                 ;;
-            --edxplatform-public-github-projectbranch)
-                EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+            --edxplatform-public-github-projectname)
+                EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME="$2"
                 ;;
             --edxplatform-public-github-projectbranch)
                 EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH="$2"
                 ;;
-            --edxtheme-public-github-projectname)
+            --edxtheme-public-github-accountname)
                 EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME="$2"
                 ;;
-            --edxtheme-public-github-projectbranch)
-                EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+            --edxtheme-public-github-projectname)
+                EDX_THEME_PUBLIC_GITHUB_PROJECTNAME="$2"
                 ;;
             --edxtheme-public-github-projectbranch)
                 EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="$2"
@@ -197,7 +197,7 @@ parse_args()
                 exit 2
                 ;;
             *) # unknown option
-                echo "Option -${BOLD}$2${NORM} not allowed."
+                echo "Option '${BOLD}$1${NORM} $2' not allowed."
                 help
                 exit 2
                 ;;
