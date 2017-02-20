@@ -1,3 +1,4 @@
+---
 # Modifying Country or Region list. null means country is removed from the list. Others either country is a new added country or display name is changed.
 EDXAPP_COUNTRIES_OVERRIDE:
   BO: "Bolivia"

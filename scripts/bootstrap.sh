@@ -73,6 +73,19 @@ is_valid_arg() {
   return $result
 }
 
+is_valid_arg() {
+  local list="$1"
+  local arg="$2"
+
+  if [[ $list =~ (^|[[:space:]])"$arg"($|[[:space:]]) ]] ; then
+    result=0
+  else
+    result=1
+  fi
+
+  return $result
+}
+
 parse_args() {
   while [[ "$#" -gt 0 ]]
   do
@@ -251,7 +264,7 @@ setup_overrides_file()
     EDX_CONFIGURATION_REPO="https://github.com/${EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME}/${EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME}.git"
     EDX_PLATFORM_REPO="https://github.com/${EDX_PLATFORM_PUBLIC_GITHUB_ACCOUNTNAME}/${EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME}.git"
     EDX_THEME_REPO="https://github.com/${EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME}/${EDX_THEME_PUBLIC_GITHUB_PROJECTNAME}.git"
-   
+
     # setup the deployment overrides (for debugging and deployment-time control of repositories used)
     setup_deployment_overrides $OXA_ENV_OVERRIDE_FILE $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH $EDX_CONFIGURATION_REPO $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH $EDX_PLATFORM_REPO $EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH $EDX_THEME_REPO $EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH $EDX_VERSION $FORUM_VERSION
 }
@@ -263,11 +276,11 @@ setup()
 {
     # There is an implicit pre-requisite for the GIT client to be installed. 
     # This is already handled in the calling script
-
+  
     # populate the deployment environment
     source $OXA_ENV_FILE
     export $(sed -e 's/#.*$//' $OXA_ENV_FILE | cut -d= -f1)
-
+  
     # apply the overrides
     if [[ -f $OXA_ENV_OVERRIDE_FILE ]]; then
         source $OXA_ENV_OVERRIDE_FILE
@@ -332,31 +345,31 @@ update_stamp_jb()
 {
     SUBJECT="${MAIL_SUBJECT} - JB DB Customization Failed"
 
-    # edx playbooks - mysql and memcached
-    $ANSIBLE_PLAYBOOK -i 10.0.0.16, $OXA_SSH_ARGS -e@$OXA_PLAYBOOK_CONFIG edx_mysql.yml
+  # edx playbooks - mysql and memcached
+  $ANSIBLE_PLAYBOOK -i 10.0.0.16, $OXA_SSH_ARGS -e@$OXA_PLAYBOOK_CONFIG edx_mysql.yml
     exit_on_error "Execution of edX MySQL playbook failed (Stamp JB)" 1 $SUBJECT $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
-    # minimize tags? "install:base,install:system-requirements,install:configuration,install:app-requirements,install:code"
-    $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_sandbox.yml -e "migrate_db=yes" --tags "edxapp-sandbox,install,migrate"
+  # minimize tags? "install:base,install:system-requirements,install:configuration,install:app-requirements,install:code"
+  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_sandbox.yml -e "migrate_db=yes" --tags "edxapp-sandbox,install,migrate"
     exit_on_error "Execution of edX MySQL migrations failed" 1 $SUBJECT $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
   
-    # oxa playbooks - mongo (enable when customized) and mysql
-    #$ANSIBLE_PLAYBOOK -i ${CLUSTERNAME}mongo1, $OXA_SSH_ARGS -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mongo"
-    #exit_on_error "Execution of OXA Mongo playbook failed"
+  # oxa playbooks - mongo (enable when customized) and mysql
+  #$ANSIBLE_PLAYBOOK -i ${CLUSTERNAME}mongo1, $OXA_SSH_ARGS -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mongo"
+  #exit_on_error "Execution of OXA Mongo playbook failed"
 
-    $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mysql"
+  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mysql"
     exit_on_error "Execution of OXA MySQL playbook failed" 1 $SUBJECT $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 }
 
 update_stamp_vmss() 
 {
     $SUBJECT="${MAIL_SUBJECT} - VMSS Setup Failed"
-    # edx playbooks - sandbox with remote mongo/mysql
-    $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_sandbox.yml -e "migrate_db=no" --skip-tags=demo_course
+  # edx playbooks - sandbox with remote mongo/mysql
+  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_sandbox.yml -e "migrate_db=no" --skip-tags=demo_course
     exit_on_error "Execution of edX sandbox playbook failed" 1 $SUBJECT $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
   
-    # oxa playbooks
-    $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "edxapp"
+  # oxa playbooks
+  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "edxapp"
     exit_on_error "Execution of OXA edxapp playbook failed" 1 $SUBJECT $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 }
 
@@ -390,6 +403,50 @@ update_fullstack() {
 
   # oxa playbooks - all (single VM)
   $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK
+  exit_on_error "Execution of OXA playbook failed"
+}
+
+update_devstack() {
+  if ! id -u vagrant > /dev/null 2>&1; then
+    # create required vagrant user account to avoid fatal error
+    sudo adduser --disabled-password --gecos "" vagrant
+
+    # set the vagrant password
+    sudo usermod --password $(echo $VAGRANT_USER_PASSWORD | openssl passwd -1 -stdin) vagrant
+  fi
+
+  # create some required directories to avoid fatal errors
+  if [ ! -d /edx/app/ecomworker ]; then
+    sudo mkdir -p /edx/app/ecomworker
+  fi
+
+  if [ ! -d /home/vagrant/share_x11 ]; then
+    sudo mkdir -p /home/vagrant/share_x11
+  fi
+
+  if [ ! -d /edx/app/ecommerce ]; then
+    sudo mkdir -p /edx/app/ecommerce
+  fi
+
+  if [ ! -f /home/vagrant/.bashrc ]; then
+    # create empty .bashrc file to avoid fatal error
+    sudo touch /home/vagrant/.bashrc
+  fi
+
+  if $(stat -c "%U" /home/vagrant) != "vagrant"; then
+    # Change the owner of the /home/vagrant folder and its subdirectories to the vagrant user account
+    # to avoid an error in TASK: [local_dev | login share X11 auth to app users] related to file
+    # "/home/vagrant/share_x11/share_x11.j2" msg: chown failed: failed to look up user vagrant
+    sudo chown -hR vagrant /home/vagrant
+  fi
+
+  # edx playbooks - devstack (single VM)
+  # Skip ecommerce for now since it isn't used and requires debugging
+  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG vagrant-devstack.yml --skip-tags="ecommerce,ecomworker"
+  exit_on_error "Execution of edX devstack playbook failed"
+
+  # oxa playbooks - all (single VM)
+  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK -e "edxrole=$EDX_ROLE"
   exit_on_error "Execution of OXA playbook failed"
 }
 
@@ -506,7 +563,7 @@ setup
 PATH=$PATH:/edx/bin
 ANSIBLE_PLAYBOOK=ansible-playbook
 OXA_PLAYBOOK=$OXA_TOOLS_PATH/playbooks/oxa_configuration.yml
-OXA_PLAYBOOK_ARGS="-e oxa_tools_path=$OXA_TOOLS_PATH -e oxa_tools_config_path=$OXA_TOOLS_CONFIG_PATH"
+OXA_PLAYBOOK_ARGS="-e oxa_tools_path=$OXA_TOOLS_PATH -e oxa_tools_config_path=$OXA_TOOLS_CONFIG_PATH -e template_type=$TEMPLATE_TYPE"
 OXA_SSH_ARGS="-u $ADMIN_USER --private-key=/home/$ADMIN_USER/.ssh/id_rsa"
 
 # Fixes error: RPC failed; result=56, HTTP code = 0'
@@ -533,6 +590,9 @@ case "$EDX_ROLE" in
     ;;
   fullstack)
     update_fullstack
+    ;;
+  devstack)
+    update_devstack
     ;;
   *)
     display_usage

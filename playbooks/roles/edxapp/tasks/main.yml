@@ -19,12 +19,23 @@
 # Print the shell tasks's stdout and stderr.
 - debug: var="bash_superuser.stdout_lines + [ bash_superuser.stderr ]"
 
+- name: Import kitchen sink course
+  sudo: yes
+  shell: bash ./import_kitchensink_course.sh
+  args:
+    chdir: "{{ edxapp_files_path }}"
+  register: bash_kitchen
+
+# Print the shell tasks's stdout and stderr.
+- debug: var="bash_kitchen.stdout_lines + [ bash_kitchen.stderr ]"
+
 - name: Configure Nginx SSL
   sudo: yes
   shell: bash ./configure_ssl.sh {{ NGINX_ENABLE_SSL }} {{ EDXAPP_LMS_SSL_NGINX_PORT }} {{ EDXAPP_CMS_SSL_NGINX_FRONTEND_PORT }} {{ EDXAPP_LMS_PREVIEW_SSL_NGINX_FRONTEND_PORT }}
   args:
     chdir: "{{ edxapp_files_path }}/nginx"
   register: bash
+  when: template_type is undefined or template_type != "devstack"
 
 # Print the shell tasks's stdout and stderr.
 - debug: var="bash.stdout_lines + [ bash.stderr ]"
@@ -32,6 +43,7 @@
 - name: Restart Nginx to use the new settings
   sudo: yes
   command: service nginx restart
+  when: template_type is undefined or template_type != "devstack"
 
 #- name: Apply patch to authenticate user after their reset confirmation goes through
 #  sudo: yes

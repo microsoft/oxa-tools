@@ -1,0 +1,26 @@
+1)
+ERROR 1060 (42S21): Duplicate column name 'facebook_url'
+
+2)
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'NOT NULL' at line 1
+ERROR 1054 (42S22): Unknown column 'sailthru_abandoned_cart_template' in 'email_marketing_emailmarketingconfiguration'
+
+3)
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'NOT NULL' at line 1
+ERROR 1054 (42S22): Unknown column 'sailthru_enroll_template' in 'email_marketing_emailmarketingconfiguration'
+
+4)
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'NOT NULL' at line 1
+ERROR 1054 (42S22): Unknown column 'sailthru_purchase_template' in 'email_marketing_emailmarketingconfiguration'
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'NOT NULL' at line 1
+ERROR 1054 (42S22): Unknown column 'sailthru_upgrade_template' in 'email_marketing_emailmarketingconfiguration'
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '' at line 1
+
+5)
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'NOT NULL' at line 1
+ERROR 1054 (42S22): Unknown column 'icon_image' in 'third_party_auth_ltiproviderconfig'
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'NOT NULL' at line 1
+ERROR 1054 (42S22): Unknown column 'icon_image' in 'third_party_auth_oauth2providerconfig'
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'NOT NULL' at line 1
+ERROR 1054 (42S22): Unknown column 'icon_image' in 'third_party_auth_samlproviderconfig'
+
