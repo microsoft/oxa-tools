@@ -254,6 +254,27 @@
                 "description": "Branch of edx theme GitHub repository"
             }
         },
+        "ansibleGithubAccountName": {
+            "type": "string",
+            "defaultValue": "edx",
+            "metadata": {
+                "description": "Name of the account that owns the ansible repository"
+            }
+        },
+        "ansibleGithubProjectName": {
+            "type": "string",
+            "defaultValue": "ansible",
+            "metadata": {
+                "description": "Name of the ansible GitHub repository"
+            }
+        },
+        "ansibleGithubBranch": {
+            "type": "string",
+            "defaultValue": "master",
+            "metadata": {
+                "description": "Branch of ansible GitHub repository"
+            }
+        },
         "edxVersion": {
             "type": "string",
             "defaultValue": "named-release/dogwood.rc",
