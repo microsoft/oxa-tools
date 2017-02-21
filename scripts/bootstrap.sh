@@ -540,6 +540,9 @@ PROGRESS_FILE=/var/log/bootstrap-$EDX_ROLE.progress
 
 if [ "$CRON_MODE" == "1" ];
 then
+    # turn off the debug messages since we have proper logging by now
+    set +x
+
     echo "Cron execution for ${EDX_ROLE} on ${HOSTNAME} detected."
 
     # check if we need to run the setup
