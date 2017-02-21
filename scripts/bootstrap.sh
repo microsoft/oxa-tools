@@ -9,7 +9,6 @@ EDX_ROLE=""
 DEPLOYMENT_ENV="dev"
 CRON_MODE=0
 TARGET_FILE=""
-PROGRESS_FILE=""
 
 # Oxa Tools
 # Settings for the OXA-Tools public repository 
@@ -235,11 +234,7 @@ get_bootstrap_status()
         PRESENCE=2
     else
         # check if there is an ongoing execution
-        if [ -e $PROGRESS_FILE ];
-        then
-            # execution is in progress
-            PRESENCE=3
-        elif [ "$EDX_ROLE" == "vmss" ];
+        if [ "$EDX_ROLE" == "vmss" ];
         then
             # Source the settings
             # Moving source here reduces the noise in the logs
@@ -335,23 +330,6 @@ setup()
     for config in $OXA_TOOLS_PATH/config/$TEMPLATE_TYPE/*.yml $OXA_TOOLS_PATH/config/*.yml; do
         sed -e "s/%%\([^%]*\)%%/$\{\\1\}/g" -e "s/^---.*$//g" $config | envsubst >> $OXA_PLAYBOOK_CONFIG
     done
-}
-
-##
-## Role-based ansible command lines
-##
-
-exit_on_error()
-{
-    if [[ "$?" -ne "0" ]];
-    then
-        echo $1
-
-        # in case there is an error, remove the progress crumb
-        remove_progress_file
-
-        exit 1
-    fi
 }
 
 update_stamp_jb() 
@@ -463,15 +441,6 @@ update_devstack() {
   exit_on_error "Execution of OXA playbook failed"
 }
 
-remove_progress_file()
-{
-    echo "Removing progress file at ${PROGRESS_FILE}"
-    if [ -e $PROGRESS_FILE ];
-    then
-        rm $PROGRESS_FILE
-    fi
-
-}
 ###############################################
 # START CORE EXECUTION
 ###############################################
@@ -530,7 +499,6 @@ setup_overrides_file
 
 # setup crumbs for tracking purposes
 TARGET_FILE=/var/log/bootstrap-$EDX_ROLE.log
-PROGRESS_FILE=/var/log/bootstrap-$EDX_ROLE.progress
 
 if [ "$CRON_MODE" == "1" ];
 then
@@ -560,9 +528,6 @@ then
             exit
             ;;
     esac
-
-    # setup the lock to indicate setup is in progress
-    touch $PROGRESS_FILE
 fi
 
 # Note when we started
@@ -612,9 +577,6 @@ case "$EDX_ROLE" in
     display_usage
     ;;
 esac
-
-# check for the progress files & clean it up
-remove_progress_file
 
 # Note when we ended
 # log a closing message and leave expected bread crumb for status tracking
