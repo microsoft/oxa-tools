@@ -41,6 +41,12 @@ EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
 EDX_THEME_PUBLIC_GITHUB_PROJECTNAME="edx-theme"
 EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="pilot"
 
+# EdX Ansible
+# There are cases where we want to override the edx\ansible repository itself
+ANSIBLE_PUBLIC_GITHUB_ACCOUNTNAME="edx"
+ANSIBLE_PUBLIC_GITHUB_PROJECTNAME="ansible"
+ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH="master"
+
 # MISC
 EDX_VERSION="named-release/dogwood.rc"
 FORUM_VERSION="mongoid5-release"
@@ -111,28 +117,22 @@ parse_args() {
       --cron)
         CRON_MODE=1
         ;;
-      --oxatools_public-github-accountname)
+      --oxatools-public-github-accountname)
         OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME="$2"
         ;;
-      --oxatools_public-github-projectname)
+      --oxatools-public-github-projectname)
         OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME="$2"
         ;;
-      --oxatools_public-github-projectbranch)
+      --oxatools-public-github-projectbranch)
         OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH="$2"
         ;;
-      --oxatools_public-github-projectbranch)
-        OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH="$2"
-        ;;
-      --oxatools_public-github-accountname)
-        OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME="$2"
-        ;;
-      --edxconfiguration_public-github-projectname)
+      --edxconfiguration-public-github-accountname)
         EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME="$2"
         ;;
-      --edxconfiguration_public-github-projectbranch)
-        EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+      --edxconfiguration-public-github-projectname)
+        EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME="$2"
         ;;
-      --edxconfiguration_public-github-projectbranch)
+      --edxconfiguration-public-github-projectbranch)
         EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="$2"
         ;;
       --edxplatform-public-github-accountname)
@@ -152,6 +152,15 @@ parse_args() {
         ;;
       --edxtheme-public-github-projectbranch)
         EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+        ;;
+      --ansible-public-github-accountname)
+        ANSIBLE_PUBLIC_GITHUB_ACCOUNTNAME="$2"
+        ;;
+      --ansible-public-github-projectname)
+        ANSIBLE_PUBLIC_GITHUB_PROJECTNAME="$2"
+        ;;
+      --ansible-public-github-projectbranch)
+        ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH="$2"
         ;;
       --edxversion)
         EDX_VERSION="$2"
@@ -188,9 +197,9 @@ sync_repo() {
   if [ "$#" -lt 3 ]; then
     echo "sync_repo: invalid number of arguments" && exit 1
   fi
-
+  
   # todo: scorch support?
-
+  
   if [[ ! -d $REPO_PATH ]]; then
     mkdir -p $REPO_PATH
     git clone ${REPO_URL/github/$REPO_TOKEN@github} $REPO_PATH
@@ -247,7 +256,7 @@ get_bootstrap_status()
             # It is expected that the client tools are already installed
             #echo "Testing connection to edxapp database on '${MYSQL_MASTER_IP}'"
             AUTH_USER_COUNT=`mysql -u $MYSQL_ADMIN_USER -p$MYSQL_ADMIN_PASSWORD -h $MYSQL_MASTER_IP -s -N -e "use edxapp; select count(*) from auth_user;"`
-            if [[ $? -ne 0 ]];
+            if [[ $? -ne 0 ]]; 
             then
                 #echo "Connection test failed. Keeping holding pattern for VMSS bootstrap"
                 # The crumb doesn't exist:: we need to execute boostrap, but we have unmet dependency (wait)
@@ -260,41 +269,44 @@ get_bootstrap_status()
 
 setup_overrides_file()
 {
+    log "Setting up deployment overrides file at $OXA_ENV_OVERRIDE_FILE"
+
     # in order to support deployment-time configuration bootstrap (specifying repository & branch for the key bits: Oxa-Tools, EdX Platform, EdX Theme, Edx Configuration)
     # we have to allow settings for each of these repositories to override whatever existing settings there are
     EDX_CONFIGURATION_REPO="https://github.com/${EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME}/${EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME}.git"
     EDX_PLATFORM_REPO="https://github.com/${EDX_PLATFORM_PUBLIC_GITHUB_ACCOUNTNAME}/${EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME}.git"
     EDX_THEME_REPO="https://github.com/${EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME}/${EDX_THEME_PUBLIC_GITHUB_PROJECTNAME}.git"
+    EDX_ANSIBLE_REPO="https://github.com/${ANSIBLE_PUBLIC_GITHUB_ACCOUNTNAME}/${ANSIBLE_PUBLIC_GITHUB_PROJECTNAME}.git"
 
     # setup the deployment overrides (for debugging and deployment-time control of repositories used)
-    setup_deployment_overrides $OXA_ENV_OVERRIDE_FILE $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH $EDX_CONFIGURATION_REPO $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH $EDX_PLATFORM_REPO $EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH $EDX_THEME_REPO $EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH $EDX_VERSION $FORUM_VERSION
+    setup_deployment_overrides $OXA_ENV_OVERRIDE_FILE $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH $EDX_CONFIGURATION_REPO $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH $EDX_PLATFORM_REPO $EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH $EDX_THEME_REPO $EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH $EDX_VERSION $FORUM_VERSION $EDX_ANSIBLE_REPO $ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH
 }
 
 ##
 ## Role-independent OXA environment bootstrap
 ##
-setup()
+setup() 
 {
     # There is an implicit pre-requisite for the GIT client to be installed. 
     # This is already handled in the calling script
-
+  
     # populate the deployment environment
     source $OXA_ENV_FILE
     export $(sed -e 's/#.*$//' $OXA_ENV_FILE | cut -d= -f1)
-
+  
     # apply the overrides
     if [[ -f $OXA_ENV_OVERRIDE_FILE ]]; then
         source $OXA_ENV_OVERRIDE_FILE
     fi
 
     export $(sed -e 's/#.*$//' $OXA_ENV_OVERRIDE_FILE | cut -d= -f1)
-    export ANSIBLE_REPO="https://github.com/edx/ansible.git"
-    export ANSIBLE_VERSION="master"
-
+    export ANSIBLE_REPO=$EDX_ANSIBLE_REPO
+    export ANSIBLE_VERSION=$EDX_ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH
+  
     # sync public repositories
     sync_repo $OXA_TOOLS_REPO $OXA_TOOLS_VERSION $OXA_TOOLS_PATH
     sync_repo $CONFIGURATION_REPO $CONFIGURATION_VERSION $CONFIGURATION_PATH
-
+  
     # run edx bootstrap and install requirements
     cd $CONFIGURATION_PATH
     ANSIBLE_BOOTSTRAP_SCRIPT=util/install/ansible-bootstrap.sh
@@ -313,10 +325,10 @@ setup()
 
     pip install -r requirements.txt
     exit_on_error "Failed pip-installing EdX requirements"
-
+  
     # fix OXA environment ownership
     chown -R $ADMIN_USER:$ADMIN_USER $OXA_PATH
-
+  
     # aggregate edx configuration with deployment environment expansion
     # warning: beware of yaml variable dependencies due to order of aggregation
     echo "---" > $OXA_PLAYBOOK_CONFIG
@@ -353,7 +365,7 @@ update_stamp_jb()
   # minimize tags? "install:base,install:system-requirements,install:configuration,install:app-requirements,install:code"
   $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_sandbox.yml -e "migrate_db=yes" --tags "edxapp-sandbox,install,migrate"
     exit_on_error "Execution of edX MySQL migrations failed" 1 $SUBJECT $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
-
+  
   # oxa playbooks - mongo (enable when customized) and mysql
   #$ANSIBLE_PLAYBOOK -i ${CLUSTERNAME}mongo1, $OXA_SSH_ARGS -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mongo"
   #exit_on_error "Execution of OXA Mongo playbook failed"
@@ -368,7 +380,7 @@ update_stamp_vmss()
   # edx playbooks - sandbox with remote mongo/mysql
   $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_sandbox.yml -e "migrate_db=no" --skip-tags=demo_course
     exit_on_error "Execution of edX sandbox playbook failed" 1 $SUBJECT $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
-
+  
   # oxa playbooks
   $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "edxapp"
     exit_on_error "Execution of OXA edxapp playbook failed" 1 $SUBJECT $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
@@ -378,7 +390,7 @@ update_scalable_mongo() {
   # edx playbooks - mongo
   $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_mongo.yml
   exit_on_error "Execution of edX Mongo playbook failed"
-
+  
   # oxa playbooks - mongo (enable when customized)
   #$ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mongo"
   #exit_on_error "Execution of OXA Mongo playbook failed"
@@ -387,11 +399,11 @@ update_scalable_mongo() {
 update_scalable_mysql() {
   # edx playbooks - mysql and memcached
   $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_mysql.yml
-  exit_on_error "Execution of edX MySQL playbook failed"
+  exit_on_error "Execution of edX MySQL playbook failed"  
   # minimize tags? "install:base,install:system-requirements,install:configuration,install:app-requirements,install:code"
   $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_sandbox.yml -e "migrate_db=yes" --tags "edxapp-sandbox,install,migrate"
   exit_on_error "Execution of edX MySQL migrations failed"
-
+  
   # oxa playbooks - mysql
   $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mysql"
   exit_on_error "Execution of OXA MySQL playbook failed"
@@ -409,7 +421,7 @@ update_fullstack() {
 
 update_devstack() {
   if ! id -u vagrant > /dev/null 2>&1; then
-  # create required vagrant user account to avoid fatal error
+    # create required vagrant user account to avoid fatal error
     sudo adduser --disabled-password --gecos "" vagrant
 
     # set the vagrant password
@@ -418,11 +430,11 @@ update_devstack() {
 
   # create some required directories to avoid fatal errors
   if [ ! -d /edx/app/ecomworker ]; then
-  sudo mkdir -p /edx/app/ecomworker
+    sudo mkdir -p /edx/app/ecomworker
   fi
 
   if [ ! -d /home/vagrant/share_x11 ]; then
-  sudo mkdir -p /home/vagrant/share_x11
+    sudo mkdir -p /home/vagrant/share_x11
   fi
 
   if [ ! -d /edx/app/ecommerce ]; then
@@ -430,8 +442,8 @@ update_devstack() {
   fi
 
   if [ ! -f /home/vagrant/.bashrc ]; then
-  # create empty .bashrc file to avoid fatal error
-  sudo touch /home/vagrant/.bashrc
+    # create empty .bashrc file to avoid fatal error
+    sudo touch /home/vagrant/.bashrc
   fi
 
   if $(stat -c "%U" /home/vagrant) != "vagrant"; then
@@ -522,6 +534,9 @@ PROGRESS_FILE=/var/log/bootstrap-$EDX_ROLE.progress
 
 if [ "$CRON_MODE" == "1" ];
 then
+    # turn off the debug messages since we have proper logging by now
+    set +x
+
     echo "Cron execution for ${EDX_ROLE} on ${HOSTNAME} detected."
 
     # check if we need to run the setup
@@ -551,9 +566,7 @@ then
 fi
 
 # Note when we started
-TIMESTAMP=`date +"%D %T"`
-STATUS_MESSAGE="${TIMESTAMP} :: Starting bootstrap of ${EDX_ROLE} on ${HOSTNAME}"
-echo $STATUS_MESSAGE
+log "Starting bootstrap of ${EDX_ROLE} on ${HOSTNAME}"
 
 setup
 
@@ -605,9 +618,7 @@ remove_progress_file
 
 # Note when we ended
 # log a closing message and leave expected bread crumb for status tracking
-TIMESTAMP=`date +"%D %T"`
-STATUS_MESSAGE="${TIMESTAMP} :: Completed bootstrap of ${EDX_ROLE} on ${HOSTNAME}"
-echo $STATUS_MESSAGE
+log "Completed bootstrap of ${EDX_ROLE} on ${HOSTNAME}"
 
 echo "Creating Phase 1 Crumb at '$TARGET_FILE''"
 touch $TARGET_FILE

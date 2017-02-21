@@ -254,6 +254,27 @@
                 "description": "Branch of edx theme GitHub repository"
             }
         },
+        "ansibleGithubAccountName": {
+            "type": "string",
+            "defaultValue": "edx",
+            "metadata": {
+                "description": "Name of the account that owns the ansible repository"
+            }
+        },
+        "ansibleGithubProjectName": {
+            "type": "string",
+            "defaultValue": "ansible",
+            "metadata": {
+                "description": "Name of the ansible GitHub repository"
+            }
+        },
+        "ansibleGithubBranch": {
+            "type": "string",
+            "defaultValue": "master",
+            "metadata": {
+                "description": "Branch of ansible GitHub repository"
+            }
+        },
         "edxVersion": {
             "type": "string",
             "defaultValue": "named-release/dogwood.rc",
@@ -752,11 +773,12 @@
         "customInstallerEdxConfigurationGitHubRepositoryParameters": "[concat(' --edxconfiguration-public-github-accountname ', parameters('edxConfigurationGithubAccountName'), ' --edxconfiguration-public-github-projectname ', parameters('edxConfigurationGithubProjectName'), ' --edxconfiguration-public-github-projectbranch ', parameters('edxConfigurationGithubBranch') )]",
         "customInstallerEdxPlatformGitHubRepositoryParameters": "[concat(' --edxplatform-public-github-accountname ', parameters('edxPlatformGithubAccountName'), ' --edxplatform-public-github-projectname ', parameters('edxPlatformGithubProjectName'), ' --edxplatform-public-github-projectbranch ', parameters('edxPlatformGithubBranch') )]",
         "customInstallerEdxThemeGitHubRepositoryParameters": "[concat(' --edxtheme-public-github-accountname ', parameters('edxThemeGithubAccountName'), ' --edxtheme-public-github-projectname ', parameters('edxThemeGithubProjectName'), ' --edxtheme-public-github-projectbranch ', parameters('edxThemeGithubBranch') )]",
+        "customInstallerAnsibleGitHubRepositoryParameters": "[concat(' --ansible-public-github-accountname ', parameters('ansibleGithubAccountName'), ' --ansible-public-github-projectname ', parameters('ansibleGithubProjectName'), ' --ansible-public-github-projectbranch ', parameters('ansibleGithubBranch') )]",
         "customInstallerMiscRepositoryVersionParameters": "[concat(' --edxversion ', parameters('edxVersion'), ' --forumversion ', parameters('edxForumVersion'), ' --edxtheme-public-github-projectbranch ', parameters('edxThemeGithubBranch') )]",
         "customInstallerKeyVaultParameters": "[concat(' --keyvault-name ', concat(parameters('clusterName'), '-kv'), ' --aad-webclient-id ', parameters('aadWebClientId'), ' --aad-webclient-appkey ', parameters('aadWebClientAppKey'), ' --aad-tenant-id ', parameters('aadTenantId'), ' --azure-subscription-id ', subscription().subscriptionId)]",
         "customInstallerOutputRedirect": " >> /var/log/bootstrap.csx.log 2>&1",
         "smtpParameters": "[concat(' --smtp-server ', parameters('smtpServer'), ' --smtp-server-port ', parameters('smtpServerPort'), ' --smtp-auth-user ', parameters('smtpAuthenticationUser'), ' --smtp-auth-user-password ', parameters('smtpAuthenticationUserPassword'), '  --cluster-admin-email ', parameters('clusterAdmininistratorEmailAddress'))]",
-        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('customInstallerOutputRedirect'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'))]",
+        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('customInstallerOutputRedirect'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'))]",
 
         "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources.json')]",
         "jumpboxTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-jumpbox.json')]",
