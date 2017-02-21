@@ -117,28 +117,22 @@ parse_args() {
       --cron)
         CRON_MODE=1
         ;;
-      --oxatools_public-github-accountname)
+      --oxatools-public-github-accountname)
         OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME="$2"
         ;;
-      --oxatools_public-github-projectname)
+      --oxatools-public-github-projectname)
         OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME="$2"
         ;;
-      --oxatools_public-github-projectbranch)
+      --oxatools-public-github-projectbranch)
         OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH="$2"
         ;;
-      --oxatools_public-github-projectbranch)
-        OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH="$2"
-        ;;
-      --oxatools_public-github-accountname)
-        OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME="$2"
-        ;;
-      --edxconfiguration_public-github-projectname)
+      --edxconfiguration-public-github-accountname)
         EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME="$2"
         ;;
-      --edxconfiguration_public-github-projectbranch)
-        EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+      --edxconfiguration-public-github-projectname)
+        EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME="$2"
         ;;
-      --edxconfiguration_public-github-projectbranch)
+      --edxconfiguration-public-github-projectbranch)
         EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="$2"
         ;;
       --edxplatform-public-github-accountname)
