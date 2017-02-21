@@ -572,9 +572,7 @@ then
 fi
 
 # Note when we started
-TIMESTAMP=`date +"%D %T"`
-STATUS_MESSAGE="${TIMESTAMP} :: Starting bootstrap of ${EDX_ROLE} on ${HOSTNAME}"
-echo $STATUS_MESSAGE
+log "Starting bootstrap of ${EDX_ROLE} on ${HOSTNAME}"
 
 setup
 
@@ -626,9 +624,7 @@ remove_progress_file
 
 # Note when we ended
 # log a closing message and leave expected bread crumb for status tracking
-TIMESTAMP=`date +"%D %T"`
-STATUS_MESSAGE="${TIMESTAMP} :: Completed bootstrap of ${EDX_ROLE} on ${HOSTNAME}"
-echo $STATUS_MESSAGE
+log "Completed bootstrap of ${EDX_ROLE} on ${HOSTNAME}"
 
 echo "Creating Phase 1 Crumb at '$TARGET_FILE''"
 touch $TARGET_FILE
