@@ -1,1 +1,9 @@
-*.svg eol=lf
+# Autodetect text files
+* text=auto
+
+# Definitively text files 
+*.json text
+*.sh text
+*.js text
+*.yml text
+*.ps1 text
