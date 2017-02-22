@@ -354,7 +354,7 @@ update_stamp_jb()
 
 update_stamp_vmss() 
 {
-    $SUBJECT="${MAIL_SUBJECT} - EdX App (VMSS) Setup Failed"
+    SUBJECT="${MAIL_SUBJECT} - EdX App (VMSS) Setup Failed"
     # edx playbooks - sandbox with remote mongo/mysql
     $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_sandbox.yml -e "migrate_db=no" --skip-tags=demo_course
     exit_on_error "Execution of edX sandbox playbook failed" 1 "${SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
