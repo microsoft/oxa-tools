@@ -397,11 +397,14 @@ send_notification()
 exit_on_error()
 {
     if [[ $? -ne 0 ]]; then
-        log $1 1
+        log "${1}" 1
 
-        # send a notification (if possible)
-        MESSAGE="$1"; SUBJECT="$3"; TO="$4"; MAIN_LOGFILE="$5"; SECONDARY_LOGFILE="$6"
-        send_notification "${MESSAGE}" "${SUBJECT}" "${TO}" "${MAIN_LOGFILE}" "${SECONDARY_LOGFILE}"
+        if [ "$#" -gt 3 ]; 
+        then
+            # send a notification (if possible)
+            MESSAGE="${1}"; SUBJECT="${3}"; TO="${4}"; MAIN_LOGFILE="${5}"; SECONDARY_LOGFILE="${6}"
+            send_notification "${MESSAGE}" "${SUBJECT}" "${TO}" "${MAIN_LOGFILE}" "${SECONDARY_LOGFILE}"
+        fi
 
         # exit with a custom error code (if one is specified)
         if [ ! -z $2 ]; then
