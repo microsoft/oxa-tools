@@ -37,6 +37,9 @@ Path to the arm template for bootstrapping keyvault
 .PARAMETER KeyVaultDeploymentParametersFile
 Path to the deployment parameters file for the keyvault arm deployment
 
+.PARAMETER ClusterAdministratorEmailAddress
+E-mail address of the cluster administrator. Notification email during bootstrap will be sent here. OS notifications will also be sent to this address
+
 .PARAMETER FullDeploymentArmTemplateFile
 Path to the arm template for bootstrapping keyvault
 
@@ -66,9 +69,11 @@ Param(
         [Parameter(Mandatory=$true)][string]$AadTenantId,
 
         [Parameter(Mandatory=$true)][string]$KeyVaultDeploymentArmTemplateFile,
-        [Parameter(Mandatory=$true)][string]$KeyVaultDeploymentParametersFile,
+        [Parameter(Mandatory=$false)][string]$KeyVaultDeploymentParametersFile="",
         [Parameter(Mandatory=$true)][string]$FullDeploymentArmTemplateFile,
         [Parameter(Mandatory=$true)][string]$FullDeploymentParametersFile,
+
+        [Parameter(Mandatory=$true)][string]$ClusterAdministratorEmailAddress,
 
         [Parameter(Mandatory=$false)][switch]$DeployKeyVault=$true,
         [Parameter(Mandatory=$false)][switch]$DeployStamp=$true
@@ -171,7 +176,9 @@ function Update-ClusterNameParameter
     param(
             [Parameter(Mandatory=$true)][string]$ParametersFile,
             [Parameter(Mandatory=$true)][string]$ClusterName,
-            [Parameter(Mandatory=$false)][string]$ClusterNameTemplateValue="{CLUSTERNAME}"
+            [Parameter(Mandatory=$true)][string]$AdminEmailAddress,
+            [Parameter(Mandatory=$false)][string]$ClusterNameTemplateValue="{CLUSTERNAME}",
+            [Parameter(Mandatory=$false)][string]$ClusterAdminEmailTemplateValue="{ADMINEMAILADDRESS}"
          )
 
     # check if the file exists and resolve it's path
@@ -187,10 +194,22 @@ function Update-ClusterNameParameter
     Log-Message "Parameters File: $($ParametersFile)"
     $parametersContent = gc $ParametersFile -Encoding UTF8
     $parametersContent = $parametersContent.Replace($ClusterNameTemplateValue, $ClusterName);
+    $parametersContent = $parametersContent.Replace($ClusterAdminEmailTemplateValue, $AdminEmailAddress);
 
     [IO.File]::WriteAllText($tempParametersFile, $parametersContent);
 
     return $tempParametersFile
+}
+
+#################################
+# ENTRY POINT
+#################################
+
+# set the default keyvault parameter file (if one isn't specified)
+if ($KeyVaultDeploymentParametersFile.Trim().Length -eq 0)
+{
+    Log-Message "Setting KeyVaultDeploymentParametersFile to FullDeploymentParametersFile"
+    $KeyVaultDeploymentParametersFile = $FullDeploymentParametersFile;
 }
 
 # Login
@@ -207,7 +226,7 @@ if ($DeployKeyVault)
     # provision the keyvault
     # we may need to replace the default resource group name in the parameters file
     Log-Message "Updating the cluster reference to $($ResourceGroupName)"
-    $tempParametersFile = Update-ClusterNameParameter -ParametersFile $KeyVaultDeploymentParametersFile -ClusterName $ResourceGroupName
+    $tempParametersFile = Update-ClusterNameParameter -ParametersFile $KeyVaultDeploymentParametersFile -ClusterName $ResourceGroupName -AdminEmailAddress $ClusterAdministratorEmailAddress
 
     $provisioningOperation = New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $KeyVaultDeploymentArmTemplateFile -TemplateParameterFile $tempParametersFile -Force -Verbose  
     
