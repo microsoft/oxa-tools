@@ -250,7 +250,7 @@ if ($DeployStamp)
     # kick off full deployment
     # we may need to replace the default resource group name in the parameters file
     Log-Message "Updating the cluster reference to $($ResourceGroupName)"
-    $tempParametersFile = Update-RuntimeParameters -ParametersFile $FullDeploymentParametersFile -ClusterName $ResourceGroupName
+    $tempParametersFile = Update-RuntimeParameters -ParametersFile $FullDeploymentParametersFile -ClusterName $ResourceGroupName -AdminEmailAddress $ClusterAdministratorEmailAddress
 
     New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $FullDeploymentArmTemplateFile -TemplateParameterFile $tempParametersFile -Force -Verbose  
 }
