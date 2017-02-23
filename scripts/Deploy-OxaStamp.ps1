@@ -158,20 +158,22 @@ function Get-DirectorySeparator
     return $separator
 }
 
-## Function: Authenticate-AzureRmUser
+## Function: Update-RuntimeParameters
 ##
 ## Purpose: 
-##    Authenticate the AAD user that will interact with KeyVault
+##    Update the runtime parameters
 ##
 ## Input: 
-##   ParametersFile             path to the file holding the deployment parameters (the parameters.json file)
-##   ClusterName                the cluster name
-##   ClusterNameTemplateValue   the cluster name template value to replace
+##   ParametersFile                   path to the file holding the deployment parameters (the parameters.json file)
+##   ClusterName                      the cluster name
+##   AdminEmailAddress                the cluster administrator email address
+##   ClusterNameTemplateValue         the cluster name template value to replace
+##   ClusterAdminEmailTemplateValue   the cluster admin email template value to replace
 ##
 ## Output:
 ##   nothing
 ##
-function Update-ClusterNameParameter
+function Update-RuntimeParameters
 {
     param(
             [Parameter(Mandatory=$true)][string]$ParametersFile,
@@ -226,7 +228,7 @@ if ($DeployKeyVault)
     # provision the keyvault
     # we may need to replace the default resource group name in the parameters file
     Log-Message "Updating the cluster reference to $($ResourceGroupName)"
-    $tempParametersFile = Update-ClusterNameParameter -ParametersFile $KeyVaultDeploymentParametersFile -ClusterName $ResourceGroupName -AdminEmailAddress $ClusterAdministratorEmailAddress
+    $tempParametersFile = Update-RuntimeParameters -ParametersFile $KeyVaultDeploymentParametersFile -ClusterName $ResourceGroupName -AdminEmailAddress $ClusterAdministratorEmailAddress
 
     $provisioningOperation = New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $KeyVaultDeploymentArmTemplateFile -TemplateParameterFile $tempParametersFile -Force -Verbose  
     
@@ -248,7 +250,7 @@ if ($DeployStamp)
     # kick off full deployment
     # we may need to replace the default resource group name in the parameters file
     Log-Message "Updating the cluster reference to $($ResourceGroupName)"
-    $tempParametersFile = Update-ClusterNameParameter -ParametersFile $FullDeploymentParametersFile -ClusterName $ResourceGroupName
+    $tempParametersFile = Update-RuntimeParameters -ParametersFile $FullDeploymentParametersFile -ClusterName $ResourceGroupName
 
     New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $FullDeploymentArmTemplateFile -TemplateParameterFile $tempParametersFile -Force -Verbose  
 }
