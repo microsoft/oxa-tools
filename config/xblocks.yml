@@ -1,5 +1,8 @@
+
 # Install the xblocks that are not installed by default but required on the platform
 EDXAPP_EXTRA_REQUIREMENTS:
  - name: git+https://github.com/pmitros/DoneXBlock.git@1ce0ac14d9f3df3083b951262ec82e84b58d16d1#egg=done-xblock
  - name: git+https://github.com/edx-solutions/xblock-drag-and-drop-v2.git@v2.0.11#egg=xblock-drag-and-drop-v2
+ - name: git+https://github.com/Microsoft/xblock-azure-media-services#egg=azure-media-services
+ 
  
