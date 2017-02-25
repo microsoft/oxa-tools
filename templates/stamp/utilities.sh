@@ -641,3 +641,73 @@ EOF
 
     log "Deployment configuration overrides file has been created at '${OVERRIDES_FILE_PATH}'"
 }
+
+#############################################################################
+# Setup Backup Parameters
+#############################################################################
+
+setup_backup()
+{
+    # collect the parameters
+    backup_configuration="${1}";                    # Backup settings file
+    backup_script="${2}";                           # Backup script (actually take the backup)
+    backup_log="${3}";                              # Log file for backup job
+
+    account_name="${4}" account_key="${5}";         # Storage Account 
+    backupFrequency="${6}";                         # Backup Frequency
+    backupRententionDays="${7}";                    # Backup Retention
+    mongoReplicaSetConnectionString="${8}";         # Mongo replica set connection string
+    mysqlServerList="${9}";                         # Mysql Server List
+    databaseType="${10}";                           # Database Type : mysql|mongo
+
+    log "Setting up database backup for '${databaseType}' database(s)"
+
+    # For simplicity, we require all parameters are set
+    if [ "$#" -lt 10 ]; then
+        echo "Not all required backup configuration parameters have been set"
+        exit 1;
+    fi
+
+    # persist the settings
+    tee "${backup_configuration}" > /dev/null <<EOF
+BACKUP_STORAGEACCOUNT_NAME={BACKUP_STORAGEACCOUNT_NAME}
+BACKUP_STORAGEACCOUNT_KEY={BACKUP_STORAGEACCOUNT_KEY}
+BACKUP_RETENTIONDAYS={BACKUP_RETENTIONDAYS}
+MONGO_REPLICASET_CONNECTIONSTRING={MONGO_REPLICASET_CONNECTIONSTRING}
+MYSQL_SERVER_LIST={mysqlServerList}
+DATABASE_TYPE={databaseType}
+EOF
+
+    # replace the place holders (using # since the repo path will have forward slashes)
+    log "Populating backup configuration file with appropriate values"
+    sed -i "s#{BACKUP_STORAGEACCOUNT_NAME}#${account_name}#I" $backup_configuration
+    sed -i "s#{BACKUP_STORAGEACCOUNT_KEY}#${account_key}#I" $backup_configuration
+    sed -i "s#{BACKUP_RETENTIONDAYS}#${backupRententionDays}#I" $backup_configuration
+    sed -i "s#{MONGO_REPLICASET_CONNECTIONSTRING}#${mongoReplicaSetConnectionString}#I" $backup_configuration
+    sed -i "s#{MYSQL_SERVER_LIST}#${mysqlServerList}#I" $backup_configuration
+    sed -i "s#{DATABASE_TYPE}#${databaseType}#I" $backup_configuration
+
+    # this file contains secrets (storage account key). Secure it
+    chmod 600 $backup_configuration
+
+    # create the cron job
+    cron_installer_script="${backup_script}.${databaseType}"
+    install_command="sudo bash ${backup_script} ${backup_configuration} >> $backup_log 2>&1"
+    echo $install_command > $cron_installer_script
+
+    # secure the file and make it executable
+    chmod 700 $cron_installer_script
+
+    # Remove the task if it is already setup
+    log "Uninstalling existing backup job for the '${databaseType}' database(s)"
+    crontab -l | grep -v "sudo bash ${cron_installer_script}" | crontab -
+
+    # Setup the background job
+    log "Installing backup job for the '${databaseType}' database(s)"
+    crontab -l | { cat; echo "${backupFrequency} sudo bash ${cron_installer_script}"; } | crontab -
+    exit_on_error "Failed setting up '${databaseType}' backups." $ERROR_CRONTAB_FAILED
+
+    # setup the cron job
+    log "Completed setting up database backup for '${databaseType}' database(s)"
+    # exit 0;
+}
