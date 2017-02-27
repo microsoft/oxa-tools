@@ -11,45 +11,92 @@
 
 set -x
 
-DATABASE_TYPE={databaseType}
-BACKUP_STORAGEACCOUNT_NAME={BACKUP_STORAGEACCOUNT_NAME}
-BACKUP_STORAGEACCOUNT_KEY={BACKUP_STORAGEACCOUNT_KEY}
-MONGO_BACKUP_FREQUENCY={MONGO_BACKUP_FREQUENCY}
-MYSQL_BACKUP_FREQUENCY={MYSQL_BACKUP_FREQUENCY}
-MONGO_BACKUP_RETENTIONDAYS={MONGO_BACKUP_RETENTIONDAYS}
-MYSQL_BACKUP_RETENTIONDAYS={MYSQL_BACKUP_RETENTIONDAYS}
-MONGO_REPLICASET_CONNECTIONSTRING={MONGO_REPLICASET_CONNECTIONSTRING}
-MYSQL_SERVER_LIST={mysqlServerList}
+# Path to settings file provided as an argument to this script.
+SETTINGS=
 
-# Script arguments
-ENV_FILE= # <env>.sh
-DB_TYPE=  # mongo|mysql
+#todo:use the new names
+#todo: ensure required values before execution
 
-# Derived from DB_TYPE
+# From SETTINGS file
+DATABASE_TYPE= # mongo|mysql
+
+# Reading from machines
+MONGO_REPLICASET_CONNECTIONSTRING= # old was l="10.0.0.12"
+MYSQL_SERVER_LIST= # old was MYSQL_ADDRESS="10.0.0.17"
+
+# Writing to storage
+AZURE_STORAGE_ACCOUNT=
+AZURE_STORAGE_ACCESS_KEY=
+
+# Derived from DATABASE_TYPE
 CONTAINER_NAME=
 COMPRESSED_FILE=
 BACKUP_PATH=
 
-# From ENV_FILE
-AZURE_STORAGE_ACCOUNT=
-AZURE_STORAGE_ACCESS_KEY=
-DB_USER=
-DB_PASSWORD=
-
-# todo: get IPs from <env>.sh
-MONGO_ADDRESS="10.0.0.12"
-MYSQL_ADDRESS="10.0.0.17"
-
-# Temporary
+# Temporary paths and files.
 DESTINATION_FOLDER="/var/tmp"
 TMP_QUERY_ADD="query.add.sql"
 TMP_QUERY_REMOVE="query.remove.sql"
 
+todo()
+{
+    # required
+    #todo: confirm names w/ elton
+    DB_USER=
+    DB_PASSWORD=
+
+    #todo: enforce retention policy in a (separate pull request)
+    MONGO_BACKUP_RETENTIONDAYS={MONGO_BACKUP_RETENTIONDAYS}
+    MYSQL_BACKUP_RETENTIONDAYS={MYSQL_BACKUP_RETENTIONDAYS}
+
+    # probably don't need to be concerned with cron freuency here.
+    # UNLESS we want the first run of this script to setup the cron job.
+    MONGO_BACKUP_FREQUENCY={MONGO_BACKUP_FREQUENCY}
+    MYSQL_BACKUP_FREQUENCY={MYSQL_BACKUP_FREQUENCY}
+}
+
+help()
+{
+    SCRIPT_NAME=`basename "$0"`
+
+    echo "This script $SCRIPT_NAME will backup the database"
+    echo "Options:"
+    echo "  -s|--settings-file  Path to settings"
+}
+
+# Parse script parameters
+parse_args()
+{
+    while [[ "$#" -gt 0 ]]
+        do
+
+         # Output parameters to facilitate troubleshooting
+        echo "Option $1 set with value $2"
+
+        case "$1" in
+            -s|--settings-file)
+                SETTINGS=$2
+                shift # past argument
+                ;;
+            -h|--help) # Helpful hints
+                help
+                exit 2
+                ;;
+            *) # unknown option
+                echo "ERROR. Option -${BOLD}$2${NORM} not allowed."
+                help
+                exit 2
+                ;;
+        esac
+
+        shift # past argument or value
+    done
+}
+
 source_utilities_functions()
 {
     CURRENT_SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-    OXA_TOOLS_PATH=$CURRENT_SCRIPT_PATH/../../../..
-    UTILITIES_FILE=$OXA_TOOLS_PATH/templates/stamp/utilities.sh
+    UTILITIES_FILE=$CURRENT_SCRIPT_PATH/../templates/stamp/utilities.sh
 
     if [ -f $UTILITIES_FILE ]
     then
@@ -63,52 +110,10 @@ source_utilities_functions()
     log "Common utility functions successfully imported."
 }
 
-help()
-{
-    SCRIPT_NAME=`basename "$0"`
-
-    log "This script $SCRIPT_NAME will backup the database"
-    log "Options:     -e|--environment-file    Path to settings that are enviornment-specific"
-    log "Options:     -d|--database-type       mongo or mysql"
-}
-
-# Parse script parameters
-parse_args()
-{
-    while [[ "$#" -gt 0 ]]
-        do
-
-         # Log input parameters to facilitate troubleshooting
-        log "Option $1 set with value $2"
-
-        case "$1" in
-            -e|--environment-file)
-                ENV_FILE=$2
-                shift # past argument
-                ;;
-            -d|--database-type)
-                DB_TYPE=$2
-                shift # past argument
-                ;;
-            -h|--help) # Helpful hints
-                help
-                exit 2
-                ;;
-            *) # unknown option
-                log "ERROR. Option -${BOLD}$2${NORM} not allowed."
-                help
-                exit 2
-                ;;
-        esac
-
-        shift # past argument or value
-    done
-}
-
 validate_db_type()
 {
     # validate argument
-    if [ "$DB_TYPE" != "mongo" ] && [ "$DB_TYPE" != "mysql" ];
+    if [ "$DATABASE_TYPE" != "mongo" ] && [ "$DATABASE_TYPE" != "mysql" ];
     then
         log "BAD ARGUMENT. Databse type must be mongo or mysql"
         help
@@ -116,21 +121,21 @@ validate_db_type()
         exit 3
     fi
 
-    log "Begin execution of $DB_TYPE backup script using ${DB_TYPE}dump"
+    log "Begin execution of $DATABASE_TYPE backup script using ${DATABASE_TYPE}dump"
 }
 
 use_env_values()
 {
     # Exporting for Azure CLI
-    export AZURE_STORAGE_ACCOUNT=$AZURE_ACCOUNT_NAME
-    export AZURE_STORAGE_ACCESS_KEY=$AZURE_ACCOUNT_KEY
+    export AZURE_STORAGE_ACCOUNT=$BACKUP_STORAGEACCOUNT_NAME # in <env>.sh AZURE_ACCOUNT_NAME
+    export AZURE_STORAGE_ACCESS_KEY=$BACKUP_STORAGEACCOUNT_KEY # in <env>.sh AZURE_ACCOUNT_KEY
 
     # Container names cannot contain underscores or uppercase characters
-    CONTAINER_NAME="${DB_TYPE}-backup"
+    CONTAINER_NAME="${DATABASE_TYPE}-backup"
     TIME_STAMPED=${CONTAINER_NAME}_$(date +"%Y-%m-%d_%Hh-%Mm-%Ss")
     COMPRESSED_FILE="$TIME_STAMPED.tar.gz"
 
-    if [ "$DB_TYPE" == "mysql" ]
+    if [ "$DATABASE_TYPE" == "mysql" ]
     then
         BACKUP_PATH="$TIME_STAMPED.sql"
 
@@ -138,7 +143,7 @@ use_env_values()
         DB_USER=$MYSQL_ADMIN_USER
         DB_PASSWORD=$MYSQL_ADMIN_PASSWORD
 
-    elif [ "$DB_TYPE" == "mongo" ]
+    elif [ "$DATABASE_TYPE" == "mongo" ]
     then
         BACKUP_PATH="$TIME_STAMPED"
 
@@ -187,14 +192,14 @@ create_compressed_db_dump()
 {
     pushd $DESTINATION_FOLDER
 
-    log "Copying entire $DB_TYPE database to local file system"
-    if [ "$DB_TYPE" == "mysql" ]
+    log "Copying entire $DATABASE_TYPE database to local file system"
+    if [ "$DATABASE_TYPE" == "mysql" ]
     then
         add_temp_mysql_user
         mysqldump -u $DB_USER -p$DB_PASSWORD -h $MYSQL_ADDRESS --all-databases --single-transaction > $BACKUP_PATH
         remove_temp_mysql_user
 
-    elif [ "$DB_TYPE" == "mongo" ]
+    elif [ "$DATABASE_TYPE" == "mongo" ]
     then
         mongodump -u $DB_USER -p $DB_PASSWORD --host $MONGO_ADDRESS --db edxapp --authenticationDatabase master -o $BACKUP_PATH
 
@@ -202,7 +207,7 @@ create_compressed_db_dump()
 
     exit_on_error "Failed to connect to database OR failed to create backup file."
 
-    log "Compressing entire $DB_TYPE database"
+    log "Compressing entire $DATABASE_TYPE database"
     tar -zcvf $COMPRESSED_FILE $BACKUP_PATH
 
     popd
@@ -210,7 +215,7 @@ create_compressed_db_dump()
 
 copy_db_to_azure_storage()
 {
-    log "Upload the backup $DB_TYPE file to azure blob storage"
+    log "Upload the backup $DATABASE_TYPE file to azure blob storage"
 
     # AZURE_STORAGE_ACCOUNT and AZURE_STORAGE_ACCESS_KEY are already exported for azure cli's use.
     # FYI, we could use AZURE_STORAGE_CONNECTION_STRING instead.
@@ -243,7 +248,7 @@ cleanup_local_copies()
 {
     pushd $DESTINATION_FOLDER
 
-    log "Deleting local copies of $DB_TYPE database"
+    log "Deleting local copies of $DATABASE_TYPE database"
     rm -rf $COMPRESSED_FILE
     rm -rf $BACKUP_PATH
 
@@ -253,20 +258,21 @@ cleanup_local_copies()
     popd
 }
 
+# Parse script argument(s)
+parse_args $@
+
+# Log and other functions
 source_utilities_functions
 
 # Script self-idenfitication
 print_script_header
 
-exit_if_limited_user
+source_environment_values $SETTINGS
 
-# parse script arguments
-parse_args $@
-
+# Pre-conditionals
 validate_db_type
-
-source_environment_values $ENV_FILE
-
+#todo: other valdiations
+exit_if_limited_user
 use_env_values
 
 create_compressed_db_dump
