@@ -134,7 +134,7 @@ install_mongodb()
     log "Downloading MongoDB package $PACKAGE_NAME from $PACKAGE_URL"
 
     # Configure mongodb.list file with the correct location
-    if (( $(echo "$OS_VER > 16" |bc -l) ))
+    if (( $(echo "$OS_VER > 16" | bc -l) ))
     then
         apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv EA312927
         echo "deb ${PACKAGE_URL} "$(lsb_release -sc)"/mongodb-org/3.2 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-3.2.list
@@ -304,7 +304,7 @@ start_mongodb()
 {
     log "Starting MongoDB daemon processes"
 
-    if (( $(echo "$OS_VER > 16" |bc -l) ))
+    if (( $(echo "$OS_VER > 16" | bc -l) ))
     then
         systemctl start mongodb
         systemctl enable mongodb

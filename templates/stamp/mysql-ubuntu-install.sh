@@ -106,7 +106,7 @@ start_mysql()
 {
     log "Starting Mysql Server"
 
-    if (( $(echo "$OS_VER > 16" |bc -l) ))
+    if (( $(echo "$OS_VER > 16" | bc -l) ))
     then
         systemctl start mysqld
         # enable mysqld on startup
@@ -215,7 +215,7 @@ EOF
     sed -i "s/--port=default_port/--port=${MYSQL_PORT}/I" /etc/systemd/system/mysqld.service
 
     # reload the unit
-    if (( $(echo "$OS_VER > 16" |bc -l) ))
+    if (( $(echo "$OS_VER > 16" | bc -l) ))
     then
         # Ubuntu 16 and above
         systemctl daemon-reload

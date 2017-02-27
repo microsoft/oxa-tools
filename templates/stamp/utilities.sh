@@ -160,7 +160,7 @@ install-mongodb-shell()
         SHORT_RELEASE_NUMBER=`lsb_release -sr`
         SHORT_CODENAME=`lsb_release -sc`
 
-        if (( $(echo "$SHORT_RELEASE_NUMBER > 16" |bc -l) ))
+        if (( $(echo "$SHORT_RELEASE_NUMBER > 16" | bc -l) ))
         then
             apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv EA312927
             echo "deb ${PACKAGE_URL} "${SHORT_CODENAME}"/mongodb-org/3.2 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-3.2.list
@@ -181,6 +181,25 @@ install-mongodb-shell()
 }
 
 #############################################################################
+# Install Mongo Dump and Restore
+#############################################################################
+
+install-mongodb-tools()
+{
+    install-mongodb-shell
+
+    if type mongodump >/dev/null 2>&1 && type mongorestore >/dev/null 2>&1; then
+        log "mongodump and mongorestore are already installed"
+    else
+        log "Installing Mongo Tools (mongodump and mongorestore)"
+        apt-get install -y mongodb-org-tools
+        exit_on_error "Failed to install the Mongo dump/restore on ${HOSTNAME} !" $ERROR_MONGOCLIENTINSTALL_FAILED
+    fi
+
+    log "Mongo Tools installed"
+}
+
+#############################################################################
 # Install Mysql Client
 #############################################################################
 
@@ -190,12 +209,12 @@ install-mysql-client()
         log "Mysql Client is already installed"
     else
         log "Updating Repository"
-        apt-get update
+        apt-get update -y -qq
 
         log "Installing Mysql Client"
         RELEASE_DESCRIPTION=`lsb_release -sd`
 
-        if [[ $RELEASE_DESCRIPTION =~ "14.04.5" ]]; then
+        if [[ $RELEASE_DESCRIPTION =~ "14.04" ]]; then
           log "Installing Mysql Client 5.5 for '$RELEASE_DESCRIPTION'"
           apt-get install -y mysql-client-core-5.5
         else
@@ -207,6 +226,26 @@ install-mysql-client()
     fi
 
     log "Mysql client installed"
+}
+
+#############################################################################
+# Install Mysql Dump
+#############################################################################
+
+install-mysql-dump()
+{
+    if type mysqldump >/dev/null 2>&1; then
+        log "Mysql Dump is already installed"
+    else
+        log "Updating Repository"
+        apt-get update -y -qq
+
+        log "Installing Mysql Dump"
+        apt-get install -y mysql-client
+        exit_on_error "Failed to install the Mysql dump on ${HOSTNAME} !" $ERROR_MYSQLCLIENTINSTALL_FAILED
+    fi
+
+    log "Mysql dump installed"
 }
 
 #############################################################################
@@ -527,10 +566,11 @@ install-azure-cli()
         log "Updating Repository"
         apt-get -y -qq update
 
-        # Note: nodejs-legacy isn't available nor required on Ubuntu12.
+        # Note: nodejs-legacy is required for Ubuntu14 and above.
         log "Installing nodejs-legacy, npm, and azure cli"
         apt-get install -y nodejs-legacy npm
         exit_on_error "Failed to install nodejs-legacy and/or npm on ${HOSTNAME} !" $ERROR_NODEINSTALL_FAILED
+
         npm install -g azure-cli
         exit_on_error "Failed to install azure cli on ${HOSTNAME} !" $ERROR_AZURECLI_FAILED
 

@@ -3,10 +3,7 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
-#todo: overhaul file by execution and top-to-bottom
-#todo: install missing programs 
-#       like in https://github.com/Microsoft/oxa-tools/pull/65/files
-#todo: address relevant feedback ^ (above)
+#todo: test
 
 set -x
 
@@ -163,6 +160,7 @@ EOF
     sed -i "s/{MYSQL_TEMP_USER}/${MYSQL_TEMP_USER}/I" $TMP_QUERY_ADD
     sed -i "s/{MYSQL_TEMP_PASSWORD}/${MYSQL_TEMP_PASSWORD}/I" $TMP_QUERY_ADD
 
+    install-mysql-client
     mysql -u $DB_USER -p$DB_PASSWORD -h $MYSQL_ADDRESS < $TMP_QUERY_ADD
 }
 
@@ -180,6 +178,7 @@ EOF
 
     sed -i "s/{MYSQL_TEMP_USER}/${MYSQL_TEMP_USER}/I" $TMP_QUERY_REMOVE
 
+    install-mysql-client
     mysql -u $DB_USER -p$DB_PASSWORD -h $MYSQL_ADDRESS < $TMP_QUERY_REMOVE
 }
 
@@ -192,11 +191,15 @@ create_compressed_db_dump()
     then
         add_temp_mysql_user
         #todo0:loop over list. check mysql is responding and break when backup succeeds
+
+        install-mysql-dump
         mysqldump -u $DB_USER -p$DB_PASSWORD -h $MYSQL_ADDRESS --all-databases --single-transaction > $BACKUP_PATH
+
         remove_temp_mysql_user
 
     elif [ "$DATABASE_TYPE" == "mongo" ]
     then
+        install-mongodb-tools
         mongodump -u $DB_USER -p $DB_PASSWORD --host $MONGO_REPLICASET_CONNECTIONSTRING --db edxapp --authenticationDatabase master -o $BACKUP_PATH
 
     fi
@@ -211,6 +214,8 @@ create_compressed_db_dump()
 
 copy_db_to_azure_storage()
 {
+    install-azure-cli
+
     log "Upload the backup $DATABASE_TYPE file to azure blob storage"
 
     # AZURE_STORAGE_ACCOUNT and AZURE_STORAGE_ACCESS_KEY are already exported for azure cli's use.
@@ -228,6 +233,8 @@ copy_db_to_azure_storage()
     echo
 
     result=$(azure storage blob upload $COMPRESSED_FILE $CONTAINER_NAME $COMPRESSED_FILE --json)
+
+    install-json-processor
     fileName=$(echo $result | jq '.name')
     fileSize=$(echo $result | jq '.transferSummary.totalSize')    
     if [ $fileName != "" ] && [ $fileName != null ]
