@@ -70,15 +70,15 @@ parse_args()
     while [[ "$#" -gt 0 ]]
         do
 
-         # Output parameters to facilitate troubleshooting
+        # Output parameters to facilitate troubleshooting
         echo "Option $1 set with value $2"
 
         case "$1" in
             -s|--settings-file)
                 SETTINGS=$2
-                shift # past argument
+                shift # argument
                 ;;
-            -h|--help) # Helpful hints
+            -h|--help)
                 help
                 exit 2
                 ;;
@@ -89,7 +89,7 @@ parse_args()
                 ;;
         esac
 
-        shift # past argument or value
+        shift # argument
     done
 }
 
@@ -270,9 +270,9 @@ print_script_header
 source_environment_values $SETTINGS
 
 # Pre-conditionals
+exit_if_limited_user
 validate_db_type
 #todo: other valdiations
-exit_if_limited_user
 use_env_values
 
 create_compressed_db_dump
