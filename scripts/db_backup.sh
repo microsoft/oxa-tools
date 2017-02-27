@@ -3,8 +3,7 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
-#todo: overhaul file top-to-bottom
-#todo: source file as param
+#todo: overhaul file by execution and top-to-bottom
 #todo: install missing programs 
 #       like in https://github.com/Microsoft/oxa-tools/pull/65/files
 #todo: address relevant feedback ^ (above)
@@ -12,50 +11,45 @@
 set -x
 
 # Path to settings file provided as an argument to this script.
-SETTINGS=
+SETTINGS_FILE=
 
-#todo:use the new names
-#todo: ensure required values before execution
+# From settings file
+    DATABASE_TYPE= # mongo|mysql
 
-# From SETTINGS file
-DATABASE_TYPE= # mongo|mysql
-
-# Reading from machines
-MONGO_REPLICASET_CONNECTIONSTRING= # old was l="10.0.0.12"
-MYSQL_SERVER_LIST= # old was MYSQL_ADDRESS="10.0.0.17"
-
-# Writing to storage
-AZURE_STORAGE_ACCOUNT=
-AZURE_STORAGE_ACCESS_KEY=
-
-# Derived from DATABASE_TYPE
-CONTAINER_NAME=
-COMPRESSED_FILE=
-BACKUP_PATH=
-
-# Paths and file names.
-DESTINATION_FOLDER="/var/tmp"
-TMP_QUERY_ADD="query.add.sql"
-TMP_QUERY_REMOVE="query.remove.sql"
-CURRENT_SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-UTILITIES_FILE=$CURRENT_SCRIPT_PATH/../templates/stamp/utilities.sh
-
-todo()
-{
-    # required
-    #todo: confirm names w/ elton
+    # Reading from database machines
+    MONGO_REPLICASET_CONNECTIONSTRING=
+    MYSQL_SERVER_LIST= #todo:replace old which was MYSQL_ADDRESS="10.0.0.17"
+    #todo0: confirm credential variable names
     DB_USER=
     DB_PASSWORD=
+    # Optional values. Will add another set of credentials to msyql backup.
+    MYSQL_TEMP_USER=
+    MYSQL_TEMP_PASSWORD=
+
+    # Writing to storage
+    AZURE_STORAGE_ACCOUNT=
+    AZURE_STORAGE_ACCESS_KEY=
 
     #todo: enforce retention policy in a (separate pull request)
-    MONGO_BACKUP_RETENTIONDAYS={MONGO_BACKUP_RETENTIONDAYS}
-    MYSQL_BACKUP_RETENTIONDAYS={MYSQL_BACKUP_RETENTIONDAYS}
+    #MONGO_BACKUP_RETENTIONDAYS={MONGO_BACKUP_RETENTIONDAYS}
+    #MYSQL_BACKUP_RETENTIONDAYS={MYSQL_BACKUP_RETENTIONDAYS}
 
-    # probably don't need to be concerned with cron freuency here.
+    #todo: remove these?
+    # we probably don't need to be concerned with cron freuency here.
     # UNLESS we want the first run of this script to setup the cron job.
-    MONGO_BACKUP_FREQUENCY={MONGO_BACKUP_FREQUENCY}
-    MYSQL_BACKUP_FREQUENCY={MYSQL_BACKUP_FREQUENCY}
-}
+    #MONGO_BACKUP_FREQUENCY={MONGO_BACKUP_FREQUENCY}
+    #MYSQL_BACKUP_FREQUENCY={MYSQL_BACKUP_FREQUENCY}
+
+# Paths and file names.
+    DESTINATION_FOLDER="/var/tmp"
+    TMP_QUERY_ADD="query.add.sql"
+    TMP_QUERY_REMOVE="query.remove.sql"
+    CURRENT_SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+    UTILITIES_FILE=$CURRENT_SCRIPT_PATH/../templates/stamp/utilities.sh
+    # Derived from DATABASE_TYPE
+    CONTAINER_NAME=
+    COMPRESSED_FILE=
+    BACKUP_PATH=
 
 help()
 {
@@ -77,7 +71,7 @@ parse_args()
 
         case "$1" in
             -s|--settings-file)
-                SETTINGS=$2
+                SETTINGS_FILE=$2
                 shift # argument
                 ;;
             -h|--help)
@@ -111,13 +105,17 @@ validate_db_type()
     # validate argument
     if [ "$DATABASE_TYPE" != "mongo" ] && [ "$DATABASE_TYPE" != "mysql" ];
     then
-        log "BAD ARGUMENT. Databse type must be mongo or mysql"
+        log "Databse type must be mongo or mysql"
         help
         log "exiting script"
         exit 3
     fi
+}
 
-    log "Begin execution of $DATABASE_TYPE backup script using ${DATABASE_TYPE}dump"
+validate_all_settings()
+{
+    validate_db_type
+    #todo0: waiting for elton's change so we can confirm variable names and example values for validation
 }
 
 use_env_values()
@@ -131,6 +129,7 @@ use_env_values()
     TIME_STAMPED=${CONTAINER_NAME}_$(date +"%Y-%m-%d_%Hh-%Mm-%Ss")
     COMPRESSED_FILE="$TIME_STAMPED.tar.gz"
 
+    #todo0: confirm credential variable names
     if [ "$DATABASE_TYPE" == "mysql" ]
     then
         BACKUP_PATH="$TIME_STAMPED.sql"
@@ -192,12 +191,13 @@ create_compressed_db_dump()
     if [ "$DATABASE_TYPE" == "mysql" ]
     then
         add_temp_mysql_user
+        #todo0:loop over list. check mysql is responding and break when backup succeeds
         mysqldump -u $DB_USER -p$DB_PASSWORD -h $MYSQL_ADDRESS --all-databases --single-transaction > $BACKUP_PATH
         remove_temp_mysql_user
 
     elif [ "$DATABASE_TYPE" == "mongo" ]
     then
-        mongodump -u $DB_USER -p $DB_PASSWORD --host $MONGO_ADDRESS --db edxapp --authenticationDatabase master -o $BACKUP_PATH
+        mongodump -u $DB_USER -p $DB_PASSWORD --host $MONGO_REPLICASET_CONNECTIONSTRING --db edxapp --authenticationDatabase master -o $BACKUP_PATH
 
     fi
 
@@ -263,15 +263,15 @@ source_wrapper $UTILITIES_FILE
 # Script self-idenfitication
 print_script_header
 
-log "Begin execution of $DATABASE_TYPE backup script"
+log "Begin execution of $DATABASE_TYPE backup script using ${DATABASE_TYPE}dump command."
 
 # Settings
-source_wrapper $SETTINGS
+source_wrapper $SETTINGS_FILE
 
 # Pre-conditionals
 exit_if_limited_user
-validate_db_type
-#todo: other valdiations
+validate_all_settings
+
 use_env_values
 
 create_compressed_db_dump
