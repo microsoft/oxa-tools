@@ -40,7 +40,7 @@ log()
     fi
     
     # send the message to syslog
-    logger $1
+    logger "$1"
 }
 
 #############################################################################
@@ -99,8 +99,8 @@ configure_datadisks()
     # installation cannot be made silent using the techniques that keep the
     # mdadm installation quiet: a) -y AND b) DEBIAN_FRONTEND=noninteractive.
     # Therefore, we'll install postfix early with the "No configuration" option.
-    echo "postfix postfix/main_mailer_type select No configuration" | sudo debconf-set-selections
-    sudo apt-get install -y postfix
+    echo "postfix postfix/main_mailer_type select No configuration" | debconf-set-selections
+    apt-get install -y postfix
 
     bash ./vm-disk-utils-0.1.sh -b $DATA_DISKS -s
 }
@@ -407,6 +407,20 @@ send_notification()
         fi
     else
         log "Insufficient parameters specified for sending mail"
+    fi
+}
+
+#############################################################################
+# Exit if not root user
+#############################################################################
+
+exit_if_limited_user() 
+{
+    if [ "${UID}" -ne 0 ];
+    then
+        log "Script executed without root permissions"
+        echo "You must be root to run this program." >&2
+        exit 3
     fi
 }
 

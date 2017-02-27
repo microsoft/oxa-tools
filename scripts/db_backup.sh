@@ -33,10 +33,12 @@ CONTAINER_NAME=
 COMPRESSED_FILE=
 BACKUP_PATH=
 
-# Temporary paths and files.
+# Paths and file names.
 DESTINATION_FOLDER="/var/tmp"
 TMP_QUERY_ADD="query.add.sql"
 TMP_QUERY_REMOVE="query.remove.sql"
+CURRENT_SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+UTILITIES_FILE=$CURRENT_SCRIPT_PATH/../templates/stamp/utilities.sh
 
 todo()
 {
@@ -93,21 +95,15 @@ parse_args()
     done
 }
 
-source_utilities_functions()
+source_wrapper()
 {
-    CURRENT_SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-    UTILITIES_FILE=$CURRENT_SCRIPT_PATH/../templates/stamp/utilities.sh
-
-    if [ -f $UTILITIES_FILE ]
+    if [ -f $1 ]
     then
-        # source our utilities for logging and other base functions
-        source $UTILITIES_FILE
+        source $1
     else
-        echo "Cannot find common utilities file at $UTILITIES_FILE"
+        echo "Cannot find file at $1"
         exit 1
     fi
-
-    log "Common utility functions successfully imported."
 }
 
 validate_db_type()
@@ -261,13 +257,16 @@ cleanup_local_copies()
 # Parse script argument(s)
 parse_args $@
 
-# Log and other functions
-source_utilities_functions
+# log() and other functions
+source_wrapper $UTILITIES_FILE
 
 # Script self-idenfitication
 print_script_header
 
-source_environment_values $SETTINGS
+log "Begin execution of $DATABASE_TYPE backup script"
+
+# Settings
+source_wrapper $SETTINGS
 
 # Pre-conditionals
 exit_if_limited_user
