@@ -668,21 +668,24 @@ EOF
 setup_backup()
 {
     # collect the parameters
-    backup_configuration="${1}";                    # Backup settings file
-    backup_script="${2}";                           # Backup script (actually take the backup)
-    backup_log="${3}";                              # Log file for backup job
+    backup_configuration="${1}";                            # Backup settings file
+    backup_script="${2}";                                   # Backup script (actually take the backup)
+    backup_log="${3}";                                      # Log file for backup job
 
-    account_name="${4}" account_key="${5}";         # Storage Account 
-    backupFrequency="${6}";                         # Backup Frequency
-    backupRententionDays="${7}";                    # Backup Retention
-    mongoReplicaSetConnectionString="${8}";         # Mongo replica set connection string
-    mysqlServerList="${9}";                         # Mysql Server List
-    databaseType="${10}";                           # Database Type : mysql|mongo
+    account_name="${4}" account_key="${5}";                 # Storage Account 
+    backupFrequency="${6}";                                 # Backup Frequency
+    backupRententionDays="${7}";                            # Backup Retention
+    mongoReplicaSetConnectionString="${8}";                 # Mongo replica set connection string
+    mysqlServerList="${9}";                                 # Mysql Server List
+    databaseType="${10}";                                   # Database Type : mysql|mongo
+
+    databaseUser="${11}"; databasePassword="${12}";         # Credentials for accessing the database for backup purposes
+    tempDatabaseUser="${13}"; tempDatabasePassword="${14}"; # Temporary credentials for accessing the backup (optional)
 
     log "Setting up database backup for '${databaseType}' database(s)"
 
     # For simplicity, we require all parameters are set
-    if [ "$#" -lt 10 ]; then
+    if [ "$#" -lt 12 ]; then
         echo "Not all required backup configuration parameters have been set"
         exit 1;
     fi
@@ -693,7 +696,11 @@ BACKUP_STORAGEACCOUNT_NAME={BACKUP_STORAGEACCOUNT_NAME}
 BACKUP_STORAGEACCOUNT_KEY={BACKUP_STORAGEACCOUNT_KEY}
 BACKUP_RETENTIONDAYS={BACKUP_RETENTIONDAYS}
 MONGO_REPLICASET_CONNECTIONSTRING={MONGO_REPLICASET_CONNECTIONSTRING}
-MYSQL_SERVER_LIST={mysqlServerList}
+MYSQL_SERVER_LIST={MYSQL_SERVER_LIST}
+DATABASE_USER={DATABASE_USER}
+DATABASE_PASSWORD={DATABASE_PASSWORD}
+TEMP_DATABASE_USER={TEMP_DATABASE_USER}
+TEMP_DATABASE_PASSWORD={TEMP_DATABASE_PASSWORD}
 DATABASE_TYPE={databaseType}
 EOF
 
@@ -704,6 +711,10 @@ EOF
     sed -i "s#{BACKUP_RETENTIONDAYS}#${backupRententionDays}#I" $backup_configuration
     sed -i "s#{MONGO_REPLICASET_CONNECTIONSTRING}#${mongoReplicaSetConnectionString}#I" $backup_configuration
     sed -i "s#{MYSQL_SERVER_LIST}#${mysqlServerList}#I" $backup_configuration
+    sed -i "s#{DATABASE_USER}#${databaseUser}#I" $backup_configuration
+    sed -i "s#{DATABASE_PASSWORD}#${databasePassword}#I" $backup_configuration
+    sed -i "s#{TEMP_DATABASE_USER}#${tempDatabaseUser}#I" $backup_configuration
+    sed -i "s#{TEMP_DATABASE_PASSWORD}#${tempDatabasePassword}#I" $backup_configuration
     sed -i "s#{DATABASE_TYPE}#${databaseType}#I" $backup_configuration
 
     # this file contains secrets (storage account key). Secure it
