@@ -3,7 +3,9 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
-#todo: test
+#todo: finish testing on Ubunt14Euc and Ubuntu16Fic.
+#   (fyi: all new or changed installation helpers in
+#    utilities.sh have been verified on ubuntu 14,16)
 
 set -x
 
@@ -15,8 +17,8 @@ SETTINGS_FILE=
 
     # Reading from database machines
     MONGO_REPLICASET_CONNECTIONSTRING=
-    MYSQL_SERVER_LIST= #todo:replace old which was MYSQL_ADDRESS="10.0.0.17"
-    #todo0: confirm credential variable names
+    MYSQL_SERVER_LIST= #todo:replace old variable MYSQL_ADDRESS
+    #todo: these four values missing. we'll have to do some plumbing
     DB_USER=
     DB_PASSWORD=
     # Optional values. Will add another set of credentials to msyql backup.
@@ -27,15 +29,9 @@ SETTINGS_FILE=
     AZURE_STORAGE_ACCOUNT=
     AZURE_STORAGE_ACCESS_KEY=
 
-    #todo: enforce retention policy in a (separate pull request)
+    #todo: enforce retention policy
     #MONGO_BACKUP_RETENTIONDAYS={MONGO_BACKUP_RETENTIONDAYS}
     #MYSQL_BACKUP_RETENTIONDAYS={MYSQL_BACKUP_RETENTIONDAYS}
-
-    #todo: remove these?
-    # we probably don't need to be concerned with cron freuency here.
-    # UNLESS we want the first run of this script to setup the cron job.
-    #MONGO_BACKUP_FREQUENCY={MONGO_BACKUP_FREQUENCY}
-    #MYSQL_BACKUP_FREQUENCY={MYSQL_BACKUP_FREQUENCY}
 
 # Paths and file names.
     DESTINATION_FOLDER="/var/tmp"
@@ -112,7 +108,7 @@ validate_db_type()
 validate_all_settings()
 {
     validate_db_type
-    #todo0: waiting for elton's change so we can confirm variable names and example values for validation
+    #todo: waiting for db credentials to be plumbed through
 }
 
 use_env_values()
@@ -126,7 +122,7 @@ use_env_values()
     TIME_STAMPED=${CONTAINER_NAME}_$(date +"%Y-%m-%d_%Hh-%Mm-%Ss")
     COMPRESSED_FILE="$TIME_STAMPED.tar.gz"
 
-    #todo0: confirm credential variable names
+    #todo: waiting for db credentials to be plumbed through
     if [ "$DATABASE_TYPE" == "mysql" ]
     then
         BACKUP_PATH="$TIME_STAMPED.sql"
@@ -190,7 +186,7 @@ create_compressed_db_dump()
     if [ "$DATABASE_TYPE" == "mysql" ]
     then
         add_temp_mysql_user
-        #todo0:loop over list. check mysql is responding and break when backup succeeds
+        #todo:loop over list. check mysql is responding and break when backup succeeds
 
         install-mysql-dump
         mysqldump -u $DB_USER -p$DB_PASSWORD -h $MYSQL_ADDRESS --all-databases --single-transaction > $BACKUP_PATH
