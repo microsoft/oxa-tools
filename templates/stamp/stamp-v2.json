@@ -489,6 +489,34 @@
             "metadata": {
                 "description": "Email address of the administrator where system and other notifications will be sent"
             }
+        },
+        "mongoBackupFrequency": {
+            "type": "string",
+            "defaultValue": "0 0 * * * *",
+            "metadata": {
+                "description": "Cron tab frequency for running a full backup of the mongo database. The expected format is parameter|value as supported by Ansible. See http://docs.ansible.com/ansible/cron_module.html for details"
+            }
+        },
+        "mysqlBackupFrequency": {
+            "type": "string",
+            "defaultValue": "0 */4 * * * *",
+            "metadata": {
+                "description": "Cron tab frequency for running a full backup of the mysql database. The expected format is parameter|value as supported by Ansible. See http://docs.ansible.com/ansible/cron_module.html for details"
+            }
+        },
+        "mongoBackupRetentionDays": {
+            "type": "int",
+            "defaultValue": "30",
+            "metadata": {
+                "description": "Number of days to keep old Mongo database backups. Backups older than this number of days will be deleted."
+            }
+        },
+        "mysqlBackupRetentionDays": {
+            "type": "int",
+            "defaultValue": "30",
+            "metadata": {
+                "description": "Number of days to keep old Mysql backups. Backups older than this number of days will be deleted."
+            }
         }
     },
     "variables": {
@@ -778,7 +806,11 @@
         "customInstallerKeyVaultParameters": "[concat(' --keyvault-name ', concat(parameters('clusterName'), '-kv'), ' --aad-webclient-id ', parameters('aadWebClientId'), ' --aad-webclient-appkey ', parameters('aadWebClientAppKey'), ' --aad-tenant-id ', parameters('aadTenantId'), ' --azure-subscription-id ', subscription().subscriptionId)]",
         "customInstallerOutputRedirect": " >> /var/log/bootstrap.csx.log 2>&1",
         "smtpParameters": "[concat(' --smtp-server ', parameters('smtpServer'), ' --smtp-server-port ', parameters('smtpServerPort'), ' --smtp-auth-user ', parameters('smtpAuthenticationUser'), ' --smtp-auth-user-password ', parameters('smtpAuthenticationUserPassword'), '  --cluster-admin-email ', parameters('clusterAdmininistratorEmailAddress'))]",
-        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('customInstallerOutputRedirect'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'))]",
+
+        "secureGenericStorageAccountId": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/','Microsoft.Storage/storageAccounts/', variables('secureGenericStorageAccountName'))]",
+        "secureGenericStorageAccountKey": "[listkeys(variables('secureGenericStorageAccountId'), variables('storageApiVersion')).keys[0]]",
+        "backupParameters": "[concat(' --storageAccountKey ', variables('secureGenericStorageAccountKey'),' --storageAccountName ', variables('secureGenericStorageAccountName'), ' --mongoBackupFrequency ', parameters('mongoBackupFrequency'), ' --mysqlBackupFrequency ', parameters('mysqlBackupFrequency'), ' --mongoBackupRetentionDays ', parameters('mongoBackupRetentionDays'), ' --mysqlBackupRetentionDays ', parameters('mysqlBackupRetentionDays'))]",
+        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('customInstallerOutputRedirect'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'), variables('backupParameters'))]",
 
         "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources.json')]",
         "jumpboxTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-jumpbox.json')]",

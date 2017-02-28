@@ -62,6 +62,15 @@ NOTIFICATION_MESSAGE=""
 SECONDARY_LOG="/var/log/bootstrap.csx.log"
 PRIMARY_LOG="/var/log/bootstrap.log"
 
+# Database Backup Parameters
+BACKUP_STORAGEACCOUNT_NAME=""
+BACKUP_STORAGEACCOUNT_KEY=""
+MONGO_BACKUP_FREQUENCY="0 0 * * * ",  # backup once daily
+MYSQL_BACKUP_FREQUENCY="0 */4 * * *" # backup every 4 hours
+MONGO_BACKUP_RETENTIONDAYS="7"
+MYSQL_BACKUP_RETENTIONDAYS="7"
+DATABASE_BACKUP_LOG="/var/log/db_backup.log"
+
 help()
 {
     echo "This script bootstraps the OXA Stamp"
@@ -100,6 +109,12 @@ help()
     echo "        --smtp-auth-user User name for authenticating against the SMTP server used for relaying deployment and other system notifications"
     echo "        --smtp-auth-user-password Password for authenticating against the SMTP server used for relaying deployment and other system notifications"
     echo "        --cluster-admin-email Email address of the administrator where system and other notifications will be sent"
+    echo "        --storageAccountName Name of the storage account used in backups"
+    echo "        --storageAccountKey Key for the storage account used in backups"
+    echo "        --mongoBackupFrequency Cron frequency for running a full backup of the mysql database. The expected format is parameter|value as supported by Ansible."
+    echo "        --mysqlBackupFrequency Cron frequency for running a full backup of the mysql database. The expected format is parameter|value as supported by Ansible."
+    echo "        --mongoBackupRetentionDays Number of days to keep old Mongo database backups. Backups older than this number of days will be deleted"
+    echo "        --mysqlBackupRetentionDays Number of days to keep old Mysql database backups. Backups older than this number of days will be deleted"
 }
 
 # Parse script parameters
@@ -360,6 +375,33 @@ exit_on_error "Failed downloading configurations from keyvault" 1 "${MAIL_SUBJEC
 
 # copy utilities to the installer path
 cp $UTILITIES_PATH "${INSTALLER_BASEPATH}"
+
+#####################################
+# Setup Backups
+#####################################
+
+# setup the configuration file for database backups
+source "${OXA_ENV_PATH}/${DEPLOYMENT_ENV}.sh"
+exit_on_error "Failed sourcing the environment configuration file from keyvault" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
+
+# these are fixed values
+MONGO_REPLICASET_CONNECTIONSTRING="${MONGO_REPLICASET_NAME}/10.0.0.11:27017,10.0.0.12:27017,10.0.0.13:27017"
+MYSQL_SERVER_LIST="10.0.0.16,10.0.0.17,10.0.0.18"
+DATABASE_BACKUP_SCRIPT="${INSTALLER_BASEPATH}\db_backup.sh"
+
+# setup mysql backup
+DATABASE_TYPE_TO_BACKUP="mysql"
+setup_backup "${INSTALLER_BASEPATH}\backup_configuration_${DATABASE_TYPE_TO_BACKUP}.sh" "${DATABASE_BACKUP_SCRIPT}" "${DATABASE_BACKUP_LOG}" "${BACKUP_STORAGEACCOUNT_NAME}" "${BACKUP_STORAGEACCOUNT_KEY}" "${MYSQL_BACKUP_FREQUENCY}" "${MYSQL_BACKUP_RETENTIONDAYS}" "${MONGO_REPLICASET_CONNECTIONSTRING}" "${MYSQL_SERVER_LIST}" "${DATABASE_TYPE_TO_BACKUP}"
+exit_on_error "Failed setting up the Mysql Database backup" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
+
+# setup mongo backup
+DATABASE_TYPE_TO_BACKUP="mongo"
+setup_backup "${INSTALLER_BASEPATH}\backup_configuration_${DATABASE_TYPE_TO_BACKUP}.sh" "${DATABASE_BACKUP_SCRIPT}" "${DATABASE_BACKUP_LOG}" "${BACKUP_STORAGEACCOUNT_NAME}" "${BACKUP_STORAGEACCOUNT_KEY}" "${MONGO_BACKUP_FREQUENCY}" "${MONGO_BACKUP_RETENTIONDAYS}" "${MONGO_REPLICASET_CONNECTIONSTRING}" "${MYSQL_SERVER_LIST}" "${DATABASE_TYPE_TO_BACKUP}"
+exit_on_error "Failed setting up the Mongo Database backup" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
+
+#####################################
+# Launch Installer
+#####################################
 
 # execute the installer if present
 log "Launching the installer at '$INSTALLER_PATH'"
