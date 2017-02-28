@@ -11,6 +11,11 @@ EDXAPP_SU_PASSWORD: "%%EDXAPP_SU_PASSWORD%%"
 EDXAPP_SU_EMAIL: "%%EDXAPP_SU_EMAIL%%"
 EDXAPP_SU_USERNAME: "%%EDXAPP_SU_USERNAME%%"
 
+# Enable Azure Active Directory OAuth2 Third Party Authentication
+EDXAPP_AAD_CLIENT_ID: "%%EDXAPP_AAD_CLIENT_ID%%"
+EDXAPP_AAD_SECURITY_KEY: "%%EDXAPP_AAD_SECURITY_KEY%%" 
+EDXAPP_AAD_BUTTON_NAME: "%%EDXAPP_AAD_BUTTON_NAME%%"
+
 # Configure third-party auth
 # see: http://edx.readthedocs.org/projects/edx-installing-configuring-and-running/en/latest/configuration/tpa/
 # see: https://github.com/MSOpenTech/edx-documentation/blob/master/en_us/install_operations/source/configuration/enable_sso.rst
@@ -71,7 +76,7 @@ EDXAPP_SOCIAL_MEDIA_FOOTER_NAMES: [ "linkedin" ]
 
 # see: http://edx.readthedocs.org/projects/edx-installing-configuring-and-running/en/latest/feature_flags/feature_flag_index.html
 EDXAPP_FEATURES:  
-  #ENABLE_THIRD_PARTY_AUTH: "{{ EDXAPP_ENABLE_THIRD_PARTY_AUTH }}"
+  ENABLE_THIRD_PARTY_AUTH: "%%EDXAPP_ENABLE_THIRD_PARTY_AUTH%%"
   #ENABLE_OAUTH2_PROVIDER: "{{ EDXAPP_ENABLE_OAUTH2_PROVIDER }}"
   ENABLE_SYSADMIN_DASHBOARD: true
   ENABLE_INSTRUCTOR_EMAIL: true
@@ -85,7 +90,7 @@ EDXAPP_FEATURES:
   CERTIFICATES_HTML_VIEW: true
   ENABLE_GRADE_DOWNLOADS: true
   ENABLE_VIDEO_UPLOAD_PIPELINE: true
-
+  
 # Comprehensive Theming Configuration
 EDXAPP_COMPREHENSIVE_THEME_DIRS: [ "/edx/app/edxapp/themes" ]
 EDXAPP_ENABLE_COMPREHENSIVE_THEMING: true
