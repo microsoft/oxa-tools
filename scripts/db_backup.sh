@@ -3,7 +3,7 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
-#todo:last finish testing on Ubunt14Euc and Ubuntu16Fic.
+#todo: finish testing on Ubunt14Euc and Ubuntu16Fic fullstack
 #   (fyi: all new or changed installation helpers in
 #    utilities.sh have been verified on ubuntu 14,16)
 
@@ -17,21 +17,20 @@ SETTINGS_FILE=
 
     # Reading from database machines
     MONGO_REPLICASET_CONNECTIONSTRING=
-    MYSQL_SERVER_LIST= #todo:1 replace old variable MYSQL_ADDRESS
-    #todo:2 these four values missing. we'll have to do some plumbing
-    DB_USER=
-    DB_PASSWORD=
-    # Optional values. Will add another set of credentials to msyql backup.
-    MYSQL_TEMP_USER=
-    MYSQL_TEMP_PASSWORD=
+    MYSQL_SERVER_LIST=
+    DATABASE_USER=
+    DATABASE_PASSWORD=
+    # Optional values. If provided, will add another set of credentials to msyql backup
+    TEMP_DATABASE_USER=
+    TEMP_DATABASE_PASSWORD=
 
     # Writing to storage
-    AZURE_STORAGE_ACCOUNT=
-    AZURE_STORAGE_ACCESS_KEY=
+    AZURE_STORAGE_ACCOUNT= # from BACKUP_STORAGEACCOUNT_NAME
+    AZURE_STORAGE_ACCESS_KEY= # from BACKUP_STORAGEACCOUNT_KEY
 
-    #todo:story enforce retention policy
-    #MONGO_BACKUP_RETENTIONDAYS={MONGO_BACKUP_RETENTIONDAYS}
-    #MYSQL_BACKUP_RETENTIONDAYS={MYSQL_BACKUP_RETENTIONDAYS}
+    #todo: enforce retention policy
+    #MONGO_BACKUP_RETENTIONDAYS=
+    #MYSQL_BACKUP_RETENTIONDAYS=
 
 # Paths and file names.
     DESTINATION_FOLDER="/var/tmp"
@@ -108,7 +107,7 @@ validate_db_type()
 validate_all_settings()
 {
     validate_db_type
-    #todo:2 waiting for db credentials to be plumbed through
+    #todo: validate all values
 }
 
 use_env_values()
@@ -122,60 +121,53 @@ use_env_values()
     TIME_STAMPED=${CONTAINER_NAME}_$(date +"%Y-%m-%d_%Hh-%Mm-%Ss")
     COMPRESSED_FILE="$TIME_STAMPED.tar.gz"
 
-    #todo:2 waiting for db credentials to be plumbed through
     if [ "$DATABASE_TYPE" == "mysql" ]
     then
+        # File
         BACKUP_PATH="$TIME_STAMPED.sql"
-
-        # Mysql Credentials
-        DB_USER=$MYSQL_ADMIN_USER
-        DB_PASSWORD=$MYSQL_ADMIN_PASSWORD
-
     elif [ "$DATABASE_TYPE" == "mongo" ]
     then
+        # Directory
         BACKUP_PATH="$TIME_STAMPED"
-
-        # Mongo Credentials
-        DB_USER=$MONGO_USER
-        DB_PASSWORD=$MONGO_PASSWORD
-
     fi
 }
 
 add_temp_mysql_user()
 {
-    log "Adding ${MYSQL_TEMP_USER} to db"
+    #todo: conditionalize based on whether temp credentials have been provided
+    log "Adding ${TEMP_DATABASE_USER} to db"
     touch $TMP_QUERY_ADD
     chmod 700 $TMP_QUERY_ADD
 
     tee ./$TMP_QUERY_ADD > /dev/null <<EOF
-GRANT ALL PRIVILEGES ON *.* TO '{MYSQL_TEMP_USER}'@'%' IDENTIFIED BY '{MYSQL_TEMP_PASSWORD}' WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON *.* TO '{TEMP_DATABASE_USER}'@'%' IDENTIFIED BY '{TEMP_DATABASE_PASSWORD}' WITH GRANT OPTION;
 FLUSH PRIVILEGES;
 EOF
 
-    sed -i "s/{MYSQL_TEMP_USER}/${MYSQL_TEMP_USER}/I" $TMP_QUERY_ADD
-    sed -i "s/{MYSQL_TEMP_PASSWORD}/${MYSQL_TEMP_PASSWORD}/I" $TMP_QUERY_ADD
+    sed -i "s/{TEMP_DATABASE_USER}/${TEMP_DATABASE_USER}/I" $TMP_QUERY_ADD
+    sed -i "s/{TEMP_DATABASE_PASSWORD}/${TEMP_DATABASE_PASSWORD}/I" $TMP_QUERY_ADD
 
     install-mysql-client
-    mysql -u $DB_USER -p$DB_PASSWORD -h $MYSQL_ADDRESS < $TMP_QUERY_ADD
+    mysql -u $DATABASE_USER -p$DATABASE_PASSWORD -h $1 < $TMP_QUERY_ADD
 }
 
 remove_temp_mysql_user()
 {
-    log "Removing ${MYSQL_TEMP_USER} from db"
+    #todo: conditionalize based on whether temp credentials have been provided
+    log "Removing ${TEMP_DATABASE_USER} from db"
 
     touch $TMP_QUERY_REMOVE
     chmod 700 $TMP_QUERY_REMOVE
 
     tee ./$TMP_QUERY_REMOVE > /dev/null <<EOF
-DELETE FROM mysql.user WHERE User='{MYSQL_TEMP_USER}';
+DELETE FROM mysql.user WHERE User='{TEMP_DATABASE_USER}';
 FLUSH PRIVILEGES;
 EOF
 
-    sed -i "s/{MYSQL_TEMP_USER}/${MYSQL_TEMP_USER}/I" $TMP_QUERY_REMOVE
+    sed -i "s/{TEMP_DATABASE_USER}/${TEMP_DATABASE_USER}/I" $TMP_QUERY_REMOVE
 
     install-mysql-client
-    mysql -u $DB_USER -p$DB_PASSWORD -h $MYSQL_ADDRESS < $TMP_QUERY_REMOVE
+    mysql -u $DATABASE_USER -p$DATABASE_PASSWORD -h $1 < $TMP_QUERY_REMOVE
 }
 
 create_compressed_db_dump()
@@ -185,18 +177,23 @@ create_compressed_db_dump()
     log "Copying entire $DATABASE_TYPE database to local file system"
     if [ "$DATABASE_TYPE" == "mysql" ]
     then
-        add_temp_mysql_user
-        #todo:1 loop over list. check mysql is responding and break when backup succeeds
+        #todo: add error conditioning to loop. we're currently just using the first one and assuming success
+        mysql_servers=(`echo $MYSQL_SERVER_LIST | tr , ' ' `)
+        for ip in "${mysql_servers[@]}"; do
+            add_temp_mysql_user $ip
 
-        install-mysql-dump
-        mysqldump -u $DB_USER -p$DB_PASSWORD -h $MYSQL_ADDRESS --all-databases --single-transaction > $BACKUP_PATH
+            install-mysql-dump
+            mysqldump -u $DATABASE_USER -p$DATABASE_PASSWORD -h $ip --all-databases --single-transaction > $BACKUP_PATH
 
-        remove_temp_mysql_user
+            remove_temp_mysql_user $ip
+
+            break;
+        done
 
     elif [ "$DATABASE_TYPE" == "mongo" ]
     then
         install-mongodb-tools
-        mongodump -u $DB_USER -p $DB_PASSWORD --host $MONGO_REPLICASET_CONNECTIONSTRING --db edxapp --authenticationDatabase master -o $BACKUP_PATH
+        mongodump -u $DATABASE_USER -p $DATABASE_PASSWORD --host $MONGO_REPLICASET_CONNECTIONSTRING --db edxapp --authenticationDatabase master -o $BACKUP_PATH
 
     fi
 
