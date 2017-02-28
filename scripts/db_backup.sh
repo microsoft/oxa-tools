@@ -3,7 +3,7 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
-#todo: finish testing on Ubunt14Euc and Ubuntu16Fic.
+#todo:last finish testing on Ubunt14Euc and Ubuntu16Fic.
 #   (fyi: all new or changed installation helpers in
 #    utilities.sh have been verified on ubuntu 14,16)
 
@@ -17,8 +17,8 @@ SETTINGS_FILE=
 
     # Reading from database machines
     MONGO_REPLICASET_CONNECTIONSTRING=
-    MYSQL_SERVER_LIST= #todo:replace old variable MYSQL_ADDRESS
-    #todo: these four values missing. we'll have to do some plumbing
+    MYSQL_SERVER_LIST= #todo:1 replace old variable MYSQL_ADDRESS
+    #todo:2 these four values missing. we'll have to do some plumbing
     DB_USER=
     DB_PASSWORD=
     # Optional values. Will add another set of credentials to msyql backup.
@@ -29,7 +29,7 @@ SETTINGS_FILE=
     AZURE_STORAGE_ACCOUNT=
     AZURE_STORAGE_ACCESS_KEY=
 
-    #todo: enforce retention policy
+    #todo:story enforce retention policy
     #MONGO_BACKUP_RETENTIONDAYS={MONGO_BACKUP_RETENTIONDAYS}
     #MYSQL_BACKUP_RETENTIONDAYS={MYSQL_BACKUP_RETENTIONDAYS}
 
@@ -108,7 +108,7 @@ validate_db_type()
 validate_all_settings()
 {
     validate_db_type
-    #todo: waiting for db credentials to be plumbed through
+    #todo:2 waiting for db credentials to be plumbed through
 }
 
 use_env_values()
@@ -122,7 +122,7 @@ use_env_values()
     TIME_STAMPED=${CONTAINER_NAME}_$(date +"%Y-%m-%d_%Hh-%Mm-%Ss")
     COMPRESSED_FILE="$TIME_STAMPED.tar.gz"
 
-    #todo: waiting for db credentials to be plumbed through
+    #todo:2 waiting for db credentials to be plumbed through
     if [ "$DATABASE_TYPE" == "mysql" ]
     then
         BACKUP_PATH="$TIME_STAMPED.sql"
@@ -186,7 +186,7 @@ create_compressed_db_dump()
     if [ "$DATABASE_TYPE" == "mysql" ]
     then
         add_temp_mysql_user
-        #todo:loop over list. check mysql is responding and break when backup succeeds
+        #todo:1 loop over list. check mysql is responding and break when backup succeeds
 
         install-mysql-dump
         mysqldump -u $DB_USER -p$DB_PASSWORD -h $MYSQL_ADDRESS --all-databases --single-transaction > $BACKUP_PATH

@@ -337,7 +337,7 @@ update_stamp_jb()
     SUBJECT="${MAIL_SUBJECT} - EdX Database (Mysql) Setup Failed"
 
     # edx playbooks - mysql and memcached
-    $ANSIBLE_PLAYBOOK -i 10.0.0.16, $OXA_SSH_ARGS -e@$OXA_PLAYBOOK_CONFIG edx_mysql.yml
+    $ANSIBLE_PLAYBOOK -i $MYSQL_MASTER_IP, $OXA_SSH_ARGS -e@$OXA_PLAYBOOK_CONFIG edx_mysql.yml
     exit_on_error "Execution of edX MySQL playbook failed (Stamp JB)" 1 "${SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
 
     # minimize tags? "install:base,install:system-requirements,install:configuration,install:app-requirements,install:code"

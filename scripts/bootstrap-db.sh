@@ -183,13 +183,26 @@ setup()
         
         if [ ! -e $TARGET_FILE ];
         then
-            exec_mongo 10.0.0.11 1 
-            exec_mongo 10.0.0.12 2 
-            exec_mongo 10.0.0.13 3 "-l" 
+            # Setup each mongo server
+            count=1
+            mongo_servers=(`echo $MONGO_SERVER_LIST | tr , ' ' `)
+            for ip in "${mongo_servers[@]}"; do
+                last=
+                if [[ $count == ${#mongo_servers[@]} ]]; then
+                    last="-l"
+                fi
+
+                exec_mongo $ip $count $last
+                ((count++))
+            done
  
-            exec_mysql 10.0.0.16 1
-            exec_mysql 10.0.0.17 2
-            exec_mysql 10.0.0.18 3
+            # Setup each mysql server
+            count=1
+            mysql_servers=(`echo $MYSQL_SERVER_LIST | tr , ' ' `)
+            for ip in "${mysql_servers[@]}"; do
+                exec_mysql $ip $count
+                ((count++))
+            done
         else
             log "Skipping the 'Infrastructure Bootstrap - Server Application Installation' since this is already done"
         fi
