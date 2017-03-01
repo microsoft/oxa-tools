@@ -81,6 +81,7 @@ EDXAPP_FEATURES:
   ENABLE_SYSADMIN_DASHBOARD: true
   ENABLE_INSTRUCTOR_EMAIL: true
   REQUIRE_COURSE_EMAIL_AUTH: false
+  USE_MICROSITES: true
   # PREVIEW_LMS_BASE must be localhost for course discovery to work with dns (openedx.slack - 9/14/16 @3:08pm)
   PREVIEW_LMS_BASE: "{{ EDXAPP_PREVIEW_SITE_NAME }}"
   DISABLE_COURSE_CREATION: true
