@@ -90,6 +90,7 @@ EDXAPP_FEATURES:
   CERTIFICATES_HTML_VIEW: true
   ENABLE_GRADE_DOWNLOADS: true
   ENABLE_VIDEO_UPLOAD_PIPELINE: true
+  ENABLE_CSMH_EXTENDED: true 
   
 # Comprehensive Theming Configuration
 EDXAPP_COMPREHENSIVE_THEME_DIRS: [ "/edx/app/edxapp/themes" ]
