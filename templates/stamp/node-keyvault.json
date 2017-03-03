@@ -1,0 +1,53 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "apiSettings": {
+            "type": "object",
+            "metadata": {
+                "Description": "API version of the resource type"
+            }
+        },
+        "networkSettings": {
+            "type": "secureObject",
+            "metadata": {
+                "Description": "Network settings object"
+            }
+        },
+        "keyVaultSettings": {
+            "type": "object",
+            "metadata": {
+                "Description": "Key Vault settings object"
+            }
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.KeyVault/vaults",
+            "name": "[parameters('networkSettings').clusterKeyVaultName]",
+            "apiVersion": "[parameters('apiSettings').keyVaultApiversion]",
+            "location": "[resourceGroup().location]",
+            "tags": {},
+            "properties": {
+                "enabledForDeployment": "[parameters('keyVaultSettings').enabledForDeployment]",
+                "enabledForTemplateDeployment": "[parameters('keyVaultSettings').enabledForTemplateDeployment]",
+                "enabledForVolumeEncryption": "[parameters('keyVaultSettings').enabledForVolumeEncryption]",
+                "tenantId": "[parameters('keyVaultSettings').tenantId]",
+                "accessPolicies": [
+                    {
+                        "tenantId": "[parameters('keyVaultSettings').tenantId]",
+                        "objectId": "[parameters('keyVaultSettings').accessAccount]",
+                        "permissions": {
+                            "keys": "[parameters('keyVaultSettings').tenantKeyAccessPermission]",
+                            "secrets": "[parameters('keyVaultSettings').tenantSecretAccessPermission]"
+                        }
+                    }
+                ],
+                "sku": {
+                    "name": "[parameters('keyVaultSettings').sku]",
+                    "family": "A"
+                }
+            }
+        }
+    ]
+}

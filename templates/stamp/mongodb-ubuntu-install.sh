@@ -42,7 +42,7 @@ help()
     echo "        -a (arbiter indicator)"    
     echo "        -l (last member indicator)"    
     echo "        -o (IP Address Offset)"    
-	echo "        -Z (Debug Mode)"    
+    echo "        -Z (Debug Mode)"
 }
 
 # source our utilities for logging and other base functions
@@ -53,12 +53,7 @@ print_script_header
 
 log "Begin execution of MongoDB installation script extension on ${HOSTNAME}"
 
-if [ "${UID}" -ne 0 ];
-then
-    log "Script executed without root permissions"
-    echo "You must be root to run this program." >&2
-    exit 3
-fi
+exit_if_limited_user
 
 # Parse script parameters
 while getopts :i:b:r:k:u:p:x:n:o:z:alh optname; do
@@ -139,7 +134,7 @@ install_mongodb()
     log "Downloading MongoDB package $PACKAGE_NAME from $PACKAGE_URL"
 
     # Configure mongodb.list file with the correct location
-    if (( $(echo "$OS_VER > 16" |bc -l) ))
+    if (( $(echo "$OS_VER > 16" | bc -l) ))
     then
         apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv EA312927
         echo "deb ${PACKAGE_URL} "$(lsb_release -sc)"/mongodb-org/3.2 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-3.2.list
@@ -309,7 +304,7 @@ start_mongodb()
 {
     log "Starting MongoDB daemon processes"
 
-    if (( $(echo "$OS_VER > 16" |bc -l) ))
+    if (( $(echo "$OS_VER > 16" | bc -l) ))
     then
         systemctl start mongodb
         systemctl enable mongodb
