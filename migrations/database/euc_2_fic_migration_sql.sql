@@ -115,6 +115,7 @@ CREATE TABLE `grades_coursepersistentgradesflag` (`id` integer AUTO_INCREMENT NO
 CREATE TABLE `grades_persistentgradesenabledflag` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `change_date` datetime(6) NOT NULL, `enabled` bool NOT NULL, `enabled_for_all_courses` bool NOT NULL, `changed_by_id` integer NULL);
 ALTER TABLE `grades_coursepersistentgradesflag` ADD CONSTRAINT `grades_coursepers_changed_by_id_38bec876127ebacc_fk_auth_user_id` FOREIGN KEY (`changed_by_id`) REFERENCES `auth_user` (`id`);
 ALTER TABLE `grades_persistentgradesenabledflag` ADD CONSTRAINT `grades_persistent_changed_by_id_2350d66400243149_fk_auth_user_id` FOREIGN KEY (`changed_by_id`) REFERENCES `auth_user` (`id`);
+DROP INDEX `course_id` ON `grades_coursepersistentgradesflag`;
 COMMIT;
 /*============grades  0004=============================*/
 BEGIN;
