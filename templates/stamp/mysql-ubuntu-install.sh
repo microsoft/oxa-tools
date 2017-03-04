@@ -47,13 +47,7 @@ print_script_header
 
 log "Begin execution of Mysql installation script extension on ${HOSTNAME}"
 
-if [ "${UID}" -ne 0 ];
-then
-    log "Script executed without root permissions"
-    echo "You must be root to run this program." >&2
-    exit 3
-fi
-
+exit_if_limited_user
 
 # Parse script parameters
 while getopts :n:m:v:k:r:u:p:h optname; do
@@ -112,7 +106,7 @@ start_mysql()
 {
     log "Starting Mysql Server"
 
-    if (( $(echo "$OS_VER > 16" |bc -l) ))
+    if (( $(echo "$OS_VER > 16" | bc -l) ))
     then
         systemctl start mysqld
         # enable mysqld on startup
@@ -160,8 +154,8 @@ install_mysql_server()
 
     package=$MYSQL_SERVER_PACKAGE_NAME
 
-    # todo: another conditional is required for sql5.6 on ubuntu16. 
-    if (( $(echo "$OS_VER < 16" |bc -l) )) && [ $mysqlServerPackageVersion == "5.7" ]
+    # Special cases.
+    if (( $(echo "$OS_VER < 16" | bc -l) )) && [ $PACKAGE_VERSION == "5.7" ]
     then
         # Allow sql 5.7 on ubuntu 14 and below.
         package=${PACKAGE_NAME}
@@ -171,6 +165,10 @@ install_mysql_server()
         echo mysql-apt-config mysql-apt-config/select-product select Ok | debconf-set-selections
         dpkg -i $debFileName.deb
         rm $debFileName*
+    elif (( $(echo "$OS_VER > 16" | bc -l) )) && (( $(echo "$PACKAGE_VERSION < 5.7" | bc -l) ))
+    then
+        # Allows sql 5.6 on ubuntu 16
+        add-apt-repository 'deb http://archive.ubuntu.com/ubuntu trusty universe'
     fi
 
     apt-get -y -qq update
@@ -217,7 +215,7 @@ EOF
     sed -i "s/--port=default_port/--port=${MYSQL_PORT}/I" /etc/systemd/system/mysqld.service
 
     # reload the unit
-    if (( $(echo "$OS_VER > 16" |bc -l) ))
+    if (( $(echo "$OS_VER > 16" | bc -l) ))
     then
         # Ubuntu 16 and above
         systemctl daemon-reload

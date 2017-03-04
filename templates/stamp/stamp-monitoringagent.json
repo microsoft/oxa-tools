@@ -1,0 +1,188 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "clusterName": {
+            "type": "string",
+            "maxLength": 12
+        },
+        "clusterAdmininistratorEmailAddress": {
+            "type": "string",
+            "metadata": {
+                "description": "Email address of the administrator where system and other notifications will be sent"
+            }
+        },
+        "agentType": {
+            "type": "string",
+            "defaultValue": "oms",
+            "allowedValues": [
+                "oms",
+                "datadog"
+            ]
+        },
+        "primaryKey": {
+            "type": "securestring"
+        },
+        "omsWorkspaceId": {
+            "type": "string"
+        },
+        "oxaToolsGithubAccountName": {
+            "type": "string",
+            "defaultValue": "microsoft",
+            "metadata": {
+                "description": "Name of the account that owns the oxa-tools GitHub repository"
+            }
+        },
+        "oxaToolsGithubProjectName": {
+            "type": "string",
+            "defaultValue": "oxa-tools",
+            "metadata": {
+                "description": "Name of the oxa-tools GitHub repository"
+            }
+        },
+        "oxaToolsGithubBranch": {
+            "type": "string",
+            "defaultValue": "master",
+            "metadata": {
+                "description": "Branch of the oxa-tools GitHub repository"
+            }
+        },
+        "deploymentVersionId": {
+            "type": "string",
+            "defaultValue": "201611211241",
+            "metadata": {
+                "description": "The identifier for versioning bits deployed to VMSS. Check the name of the VMSS you are targeting: {clusterName}-vmss-{deploymentVersionId}"
+            }
+        }
+    },
+
+    "variables": {
+        "monitoringExtensionName": "[concat('install', parameters('agentType'), 'agent')]",
+        "vmssName": "[concat(parameters('clusterName'), '-vmss-', parameters('deploymentVersionId'))]",
+
+        "clusterJumpBoxName": "[concat(parameters('clusterName'), '-jb')]",
+        "clusterMongoDataNodeName": "[concat(parameters('clusterName'), '-mongo')]",
+        "clusterMysqlDataNodeName": "[concat(parameters('clusterName'), '-mysql')]",
+        "clusterVirtualMachineScaleSetName": "[variables('vmssName')]",
+
+        "defaultApiVersion": "2015-05-01-preview",
+        "computeApiVersion": "2016-03-30",
+        "virtualMachineExtensionsApiVersion": "[variables('defaultApiVersion')]",
+
+        "templateBaseUrl": "[concat('https://raw.githubusercontent.com/',parameters('oxaToolsGithubAccountName'), '/', parameters('oxaToolsGithubProjectName'), '/', parameters('oxaToolsGithubBranch'), '/')]",
+        "agentInstallerScript": "install-monitoringagent.sh",
+        "relativeAgentInstallerScriptPath": "[concat('scripts/', variables('agentInstallerScript'))]",
+        "relativeUtilitiesScriptPath": "templates/stamp/utilities.sh",
+
+        "agentInstallerCommand": "[concat('bash ', variables('agentInstallerScript'),' --cluster-admin-email ', parameters('clusterAdmininistratorEmailAddress'), ' --agent-type ', parameters('agentType'), ' --primary-key ', parameters('primaryKey'), ' --oms-workspaceid ', parameters('omsWorkspaceId'), '  >> /var/log/bootstrap.csx.log 2>&1')]",
+
+        "monitoringAgentInstallerFiles": {
+            "scriptsToDownload": [
+                "[concat(variables('templateBaseUrl'), variables('relativeUtilitiesScriptPath'))]",
+                "[concat(variables('templateBaseUrl'), variables('relativeAgentInstallerScriptPath'))]"
+            ],
+            "agentInstallerCommand": "[variables('agentInstallerCommand')]"
+        }
+    },
+
+    "resources": [
+        {
+            "comments": "Monitoring agent installer for Jumpbox.",
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(variables('clusterJumpBoxName'),'/', variables('monitoringExtensionName'))]",
+            "apiVersion": "[variables('virtualMachineExtensionsApiVersion')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publisher": "Microsoft.Azure.Extensions",
+                "type": "CustomScript",
+                "typeHandlerVersion": "2.0",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "fileUris": "[variables('monitoringAgentInstallerFiles').scriptsToDownload]"
+                },
+                "protectedSettings": {
+                    "commandToExecute": "[variables('monitoringAgentInstallerFiles').agentInstallerCommand]"
+                }
+            }
+        },
+        {
+            "comments": "Monitoring agent installer for Mongo DBs.",
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(variables('clusterMongoDataNodeName'), copyindex(1), '/', variables('monitoringExtensionName'))]",
+            "apiVersion": "[variables('virtualMachineExtensionsApiVersion')]",
+            "location": "[resourceGroup().location]",
+            "copy": {
+                "name": "mongoNodesLoop",
+                "count": 3
+            },
+            "properties": {
+                "publisher": "Microsoft.Azure.Extensions",
+                "type": "CustomScript",
+                "typeHandlerVersion": "2.0",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "fileUris": "[variables('monitoringAgentInstallerFiles').scriptsToDownload]"
+                },
+                "protectedSettings": {
+                    "commandToExecute": "[variables('monitoringAgentInstallerFiles').agentInstallerCommand]"
+                }
+            }
+        },
+        {
+            "comments": "Monitoring agent installer for Mysql DBs.",
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(variables('clusterMysqlDataNodeName'), copyindex(1), '/', variables('monitoringExtensionName'))]",
+            "apiVersion": "[variables('virtualMachineExtensionsApiVersion')]",
+            "location": "[resourceGroup().location]",
+            "copy": {
+                "name": "mysqlNodesLoop",
+                "count": 3
+            },
+            "properties": {
+                "publisher": "Microsoft.Azure.Extensions",
+                "type": "CustomScript",
+                "typeHandlerVersion": "2.0",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "fileUris": "[variables('monitoringAgentInstallerFiles').scriptsToDownload]"
+                },
+                "protectedSettings": {
+                    "commandToExecute": "[variables('monitoringAgentInstallerFiles').agentInstallerCommand]"
+                }
+            }
+        },
+        {
+            "comments": "Monitoring agent installer for VMSS.",
+            "type": "Microsoft.Compute/virtualMachineScaleSets",
+            "name": "[variables('clusterVirtualMachineScaleSetName')]",
+            "apiVersion": "[variables('computeApiVersion')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "upgradePolicy": {
+                    "mode": "Automatic"
+                },
+                "virtualMachineProfile": {
+                    "extensionProfile": {
+                        "extensions": [
+                            {
+                                "name": "[concat(variables('clusterVirtualMachineScaleSetName'), '_', variables('monitoringExtensionName'))]",
+                                "properties": {
+                                    "publisher": "Microsoft.Azure.Extensions",
+                                    "type": "CustomScript",
+                                    "typeHandlerVersion": "2.0",
+                                    "autoUpgradeMinorVersion": true,
+                                    "settings": {
+                                        "fileUris": "[variables('monitoringAgentInstallerFiles').scriptsToDownload]"
+                                    },
+                                    "protectedSettings": {
+                                        "commandToExecute": "[variables('monitoringAgentInstallerFiles').agentInstallerCommand]"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    ]
+}
