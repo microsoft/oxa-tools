@@ -385,6 +385,7 @@ tune_memory
 tune_system
 
 # Step 3: Install Mysql Server & Initial Configuration"
+install-bc
 install_mysql_server
 create_config_file
 restart_mysql
