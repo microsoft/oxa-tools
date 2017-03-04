@@ -558,7 +558,7 @@ install-azurepowershellcmdlets()
 }
 
 #############################################################################
-# Install Powershell
+# Hydrate Configurations (fetch configs from keyvault)
 #############################################################################
 
 hydrate-configurations()
