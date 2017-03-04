@@ -371,6 +371,7 @@ set_timezone
 
 if [ "$MACHINE_ROLE" == "jumpbox" ] || [ "$MACHINE_ROLE" == "vmss" ];
 then
+    install-bc
     install-mongodb-shell
     install-mysql-client
 
