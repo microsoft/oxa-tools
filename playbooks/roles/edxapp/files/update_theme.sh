@@ -10,16 +10,16 @@ if [ "$1" == "true" ] || [ "$1" == "True" ]; then
 	if [[ -d /edx/app/edxapp/themes ]]; then
 	  sudo rm -fr /edx/app/edxapp/themes
 	fi
-
-	# Create themes folder
-	sudo mkdir /edx/app/edxapp/themes
-	cd /edx/app/edxapp/themes
+	
+	cd /edx/app/edxapp
 
 	# Download comprehensive theming from github to folder /edx/app/edxapp/themes/comprehensive 
-	sudo git clone https://github.com/microsoft/edx-theme.git comprehensive
-	cd comprehensive
-	sudo git checkout oxa/master.fic
-
+	sudo git clone https://github.com/microsoft/edx-theme.git themes -b oxa/master.fic
+	
+	for i in `ls -d1 /edx/app/edxapp/themes/*/lms/static/images`; do
+       sudo cp /oxa/oxa-tools-config/images/* $i;
+    done
+		
 	sudo chown -R edxapp:edxapp /edx/app/edxapp/themes
 	sudo chmod -R u+rw /edx/app/edxapp/themes
 
