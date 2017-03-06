@@ -21,7 +21,7 @@
 
 - name: Import kitchen sink course
   sudo: yes
-  shell: bash ./import_kitchensink_course.sh
+  shell: bash ./import_kitchensink_course.sh "{{ EDXAPP_IMPORT_KITCHENSINK_COURSE }}"
   args:
     chdir: "{{ edxapp_files_path }}"
   register: bash_kitchen

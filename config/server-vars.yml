@@ -17,6 +17,9 @@ EDXAPP_AAD_SECURITY_KEY: "%%EDXAPP_AAD_SECURITY_KEY%%"
 EDXAPP_AAD_BUTTON_NAME: "%%EDXAPP_AAD_BUTTON_NAME%%"
 EDXAPP_AAD_ENABLE: "%%EDXAPP_ENABLE_THIRD_PARTY_AUTH%%"
 
+# Import Kitchen Sink Course Configuration
+EDXAPP_IMPORT_KITCHENSINK_COURSE: "%%EDXAPP_IMPORT_KITCHENSINK_COURSE%%"
+
 # Configure third-party auth
 # see: http://edx.readthedocs.org/projects/edx-installing-configuring-and-running/en/latest/configuration/tpa/
 # see: https://github.com/MSOpenTech/edx-documentation/blob/master/en_us/install_operations/source/configuration/enable_sso.rst
