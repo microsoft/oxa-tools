@@ -7,7 +7,7 @@
 #  register: bash_theme
 
 # Print the shell tasks's stdout and stderr.
-- debug: var="bash_theme.stdout_lines + [ bash_theme.stderr ]"
+#- debug: var="bash_theme.stdout_lines + [ bash_theme.stderr ]"
 
 - name: Create the super user
   sudo: yes
