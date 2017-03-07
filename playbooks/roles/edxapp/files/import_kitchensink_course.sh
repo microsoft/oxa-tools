@@ -14,7 +14,6 @@ sudo mkdir /tmp/ks_source
 cd /tmp
 
 # Download kitchen sink course from github to folder /tmp/ks_source 
-#todo: replace w/ a clone wrapper in utilities.sh
 sudo git clone https://github.com/Microsoft/oxa_kitchen_sink.git ks_source
 
 sudo chown -R edxapp:www-data /tmp/ks_source
