@@ -3,7 +3,7 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 #
-# Fyi, the caller for this can be found in oxa-tools/templates/stamp/stamp*json files
+# todo: is this dead code or is it invoked through arm template's extension scripts? (aka oxa-tools/templates/stamp/stamp*json files)
 
 GITHUB_PERSONAL_ACCESS_TOKEN=""
 GITHUB_ACCOUNTNAME=""
@@ -98,6 +98,7 @@ install-mysql-client
 
 # 1. Clone the GitHub repository with the secrets and other support files
 clone_repository $GITHUB_ACCOUNTNAME $GITHUB_PROJECTNAME $GITHUB_PROJECTBRANCH $GITHUB_PERSONAL_ACCESS_TOKEN
+#todo: if this is live code, transform values
 
 #2. Launch custom installer
 # REFACTOR: point to the appropriate file for the cloud-specific deployment or pass parameters
@@ -105,13 +106,13 @@ CUSTOM_INSTALLER_PATH=~/$GITHUB_PROJECTNAME/$CUSTOM_INSTALLER_RELATIVEPATH
 
 if [[ -e $CUSTOM_INSTALLER_PATH ]]; then  
     log "Launching the custom installer at '$CUSTOM_INSTALLER_PATH'"
-    
+
     log "Exporting ConfigRootPath=~/$GITHUB_PROJECTNAME, CloudName=$CLOUD_NAME, MONITORING_CLUSTER_NAME=$MONITORING_CLUSTER_NAME"
     export CONFIG_ROOTPATH=~/$GITHUB_PROJECTNAME
     export CLOUDNAME=$CLOUD_NAME 
     export MONITORING_CLUSTER_NAME=$MONITORING_CLUSTER_NAME
 
-    bash $CUSTOM_INSTALLER_PATH     
+    bash $CUSTOM_INSTALLER_PATH
 else
     log "$CUSTOM_INSTALLER_PATH does not exist"
 fi

@@ -306,15 +306,15 @@ print_script_header
 parse_args $@ # pass existing command line arguments
 
 # Validate parameters
-if [ "$OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME" == "" ] || [ "$OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME" == "" ] || [ "$OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH" == "" ] || [ "$CLOUDNAME" == "" ] ;
+if [ -z "$OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME" ] || [ -z "$OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME" ] || [ -z "$OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH" ] || [ -z "$CLOUDNAME" ] ;
 then
-    log "Incomplete OXA Tools Github repository configuration: Github Personal Access Token, Account Name,  Project Name & Branch Name are required." $ERROR_MESSAGE
+    log "Incomplete OXA Tools Github repository configuration: Github Account Name,  Project Name & Branch Name are required." $ERROR_MESSAGE
     exit 3
 fi
 
 if [ "$EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME" == "" ] || [ "$EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME" == "" ] || [ "$EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH" == "" ] ;
 then
-    log "Incomplete EDX Configuration Github repository configuration: Github Personal Access Token, Account Name,  Project Name & Branch Name are required." $ERROR_MESSAGE
+    log "Incomplete EDX Configuration Github repository configuration: Github Account Name,  Project Name & Branch Name are required." $ERROR_MESSAGE
     exit 3
 fi
 
@@ -399,6 +399,9 @@ fi
 
 powershell -file $INSTALLER_BASEPATH/Process-OxaToolsKeyVaultConfiguration.ps1 -Operation Download -VaultName $KEYVAULT_NAME -AadWebClientId $AAD_WEBCLIENT_ID -AadWebClientAppKey $AAD_WEBCLIENT_APPKEY -AadTenantId $AAD_TENANT_ID -TargetPath $OXA_ENV_PATH -AzureSubscriptionId $AZURE_SUBSCRIPTION_ID
 exit_on_error "Failed downloading configurations from keyvault" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
+
+# replace "deployment-time" values
+#todo:
 
 # copy utilities to the installer path
 cp $UTILITIES_PATH "${INSTALLER_BASEPATH}"
