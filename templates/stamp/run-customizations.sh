@@ -400,9 +400,6 @@ fi
 powershell -file $INSTALLER_BASEPATH/Process-OxaToolsKeyVaultConfiguration.ps1 -Operation Download -VaultName $KEYVAULT_NAME -AadWebClientId $AAD_WEBCLIENT_ID -AadWebClientAppKey $AAD_WEBCLIENT_APPKEY -AadTenantId $AAD_TENANT_ID -TargetPath $OXA_ENV_PATH -AzureSubscriptionId $AZURE_SUBSCRIPTION_ID
 exit_on_error "Failed downloading configurations from keyvault" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
-# replace "deployment-time" values
-#todo:
-
 # copy utilities to the installer path
 cp $UTILITIES_PATH "${INSTALLER_BASEPATH}"
 
@@ -414,8 +411,23 @@ if [ "$MACHINE_ROLE" == "jumpbox" ];
 then
     log "Starting backup configuration on '${HOSTNAME}' as a member in the '${MACHINE_ROLE}' role"
 
-    # setup the configuration file for database backups
-    source "${OXA_ENV_PATH}/${DEPLOYMENT_ENV}.sh"
+    # setup the configuration file for database backups.
+    config_file="${OXA_ENV_PATH}/${DEPLOYMENT_ENV}.sh"
+
+    # Get BASE_URL
+    source $config_file
+    exit_on_error "Failed sourcing the environment configuration file from keyvault" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
+
+    # replace "deployment-time" values and re-source
+    install-gettext
+    export BASE_URL=$BASE_URL
+    export AZURE_ACCOUNT_NAME=$BACKUP_STORAGEACCOUNT_NAME
+    export AZURE_ACCOUNT_KEY=$AZURE_ACCOUNT_KEY
+    # todo: use cluser name to drive replication values
+    envsubst < $config_file | tee $config_file
+
+    # re-source
+    source $config_file
     exit_on_error "Failed sourcing the environment configuration file from keyvault" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
     # these are fixed values
