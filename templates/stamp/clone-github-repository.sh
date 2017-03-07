@@ -98,7 +98,7 @@ install-mysql-client
 
 # 1. Clone the GitHub repository with the secrets and other support files
 clone_repository $GITHUB_ACCOUNTNAME $GITHUB_PROJECTNAME $GITHUB_PROJECTBRANCH $GITHUB_PERSONAL_ACCESS_TOKEN
-#todo: if this is live code, transform values
+#todo: if this is live code, transform "deployment-time" values
 
 #2. Launch custom installer
 # REFACTOR: point to the appropriate file for the cloud-specific deployment or pass parameters

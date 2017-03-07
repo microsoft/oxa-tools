@@ -339,7 +339,7 @@ clone_repository()
         exit 3
     fi
 
-    # if repository path is not specified then use home directory
+    # If repository path is not specified then use home directory
     if [ -z $REPO_PATH ]
     then
         REPO_PATH=~/$PROJECT_NAME
@@ -348,8 +348,7 @@ clone_repository()
     # Clean up any residue of the repository. (scorch)
     clean_repository $REPO_PATH
 
-    #todo: see todo in sync_repo(). We don't provide the token here because
-    #   sync_repo() will try adding it again.
+    #todo: We don't provide the token here because sync_repo() will try adding it again. See todo in sync_repo().
     REPO_URL=`get_github_url "$ACCOUNT_NAME" "$PROJECT_NAME"`
 
     sync_repo $REPO_URL $BRANCH $REPO_PATH $ACCESS_TOKEN
@@ -425,8 +424,8 @@ sync_repo()
   
     if [[ ! -d $REPO_PATH ]]; then
         sudo mkdir -p $REPO_PATH
-        # todo: prevent adding REPO_TOKEN more than once by using get_github_url(). in other words, this
-        #   function should no longer take a url, but create it just in time via get_github_url()
+        # todo: we should prevent adding REPO_TOKEN more than once. One option is to use get_github_url()
+        #   to create the url "just-in-time" instead of taking a url as a parameter.
         sudo git clone --recursive ${REPO_URL/github/$REPO_TOKEN@github} $REPO_PATH
         exit_on_error "Failed cloning repository $REPO_URL to $REPO_PATH"
     else

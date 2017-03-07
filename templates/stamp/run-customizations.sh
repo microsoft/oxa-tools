@@ -414,19 +414,19 @@ then
     # setup the configuration file for database backups.
     config_file="${OXA_ENV_PATH}/${DEPLOYMENT_ENV}.sh"
 
-    # Get BASE_URL
+    # get BASE_URL value
     source $config_file
     exit_on_error "Failed sourcing the environment configuration file from keyvault" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
-    # replace "deployment-time" values and re-source
+    # replace "deployment-time" values. Persist to file.
     install-gettext
     export BASE_URL=$BASE_URL
     export AZURE_ACCOUNT_NAME=$BACKUP_STORAGEACCOUNT_NAME
     export AZURE_ACCOUNT_KEY=$AZURE_ACCOUNT_KEY
-    # todo: use cluser name to drive replication values
+    # todo: use cluser name to drive replication values, etc.
     envsubst < $config_file | tee $config_file
 
-    # re-source
+    # re-source with new "deployment-time" values.
     source $config_file
     exit_on_error "Failed sourcing the environment configuration file from keyvault" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
