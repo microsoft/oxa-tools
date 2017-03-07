@@ -2,6 +2,8 @@
 #
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
+#
+# Fyi, the caller for this can be found in oxa-tools/templates/stamp/stamp*json files
 
 GITHUB_PERSONAL_ACCESS_TOKEN=""
 GITHUB_ACCOUNTNAME=""
