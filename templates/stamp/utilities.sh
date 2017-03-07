@@ -304,48 +304,59 @@ setup-ssh()
     fi
 }
 
+#todo: replace all instances of 'github.com' with this function
 #############################################################################
-# Clone GitHub Repository
+# Get GitHub Url. Examples:
+#   1) CONFIGURATION=`get_github_url "$CONFIGURATION_ORG" "$CONFIGURATION_FOLDER"`
+#   2) SECRET_REPO=`get_github_url "$ORG" "$REPO" "$TOKEN"`
+#############################################################################
+
+get_github_url()
+{
+    if [ -z $3 ]; then
+        echo "https://github.com/$1/$2.git"
+    else
+        echo "https://$3@github.com/$1/$2.git"
+    fi
+}
+
+#############################################################################
+# Clone GitHub Repository (will scorch existing directory)
 #############################################################################
 
 clone_repository()
 {
-    # required params
+    # Required params
     ACCOUNT_NAME=$1; PROJECT_NAME=$2; BRANCH=$3
 
-    #optional args
+    # Optional args
     ACCESS_TOKEN=$4; REPO_PATH=$5
 
     # Validate parameters
-    if [ "$ACCOUNT_NAME" == "" ] || [ "$PROJECT_NAME" == "" ] || [ "$BRANCH" == "" ] ;
+    if [ -z $ACCOUNT_NAME ] || [ -z $PROJECT_NAME ] || [ -z $BRANCH ] ;
     then
         log "You must specify the GitHub account name, project name and branch " "ERROR"
         exit 3
     fi
-    
-    # setup the access token 
-    if [ ! -z $ACCESS_TOKEN ]
-    then
-        ACCESS_TOKEN_WITH_SEPARATOR="${ACCESS_TOKEN}@github.com"
-    else
-        ACCESS_TOKEN_WITH_SEPARATOR="github.com"
-    fi
 
-    # if repository path is not specified, default it to the user's home directory'
+    # if repository path is not specified then use home directory
     if [ -z $REPO_PATH ]
     then
         REPO_PATH=~/$PROJECT_NAME
     fi 
 
-    # clean up any residue of the repository
+    # Clean up any residue of the repository. (scorch)
     clean_repository $REPO_PATH
 
-    log "Cloning the project with: https://${ACCESS_TOKEN_WITH_SEPARATOR}/${ACCOUNT_NAME}/${PROJECT_NAME}.git from the '$BRANCH' branch and saved at $REPO_PATH"
-    git clone -b $BRANCH https://$ACCESS_TOKEN_WITH_SEPARATOR/$ACCOUNT_NAME/$PROJECT_NAME.git $REPO_PATH
+    #todo: see todo in sync_repo(). We don't provide the token here because
+    #   sync_repo() will try adding it again.
+    REPO_URL=`get_github_url "$ACCOUNT_NAME" "$PROJECT_NAME"`
+
+    sync_repo $REPO_URL $BRANCH $REPO_PATH $ACCESS_TOKEN
 }
 
 #############################################################################
-# Clean GitHub Repository - delete only
+# Clean GitHub Repository - delete only (scorch)
 #############################################################################
 
 clean_repository()
@@ -400,31 +411,35 @@ print_script_header()
 }
 
 #############################################################################
-# Sync Repo
-# TODO: reconcile duplication with clone_repository
+# Clone or Sync Repo (as the name implies: this will not scorch an existing enlistment, but sync it)
 #############################################################################
 
-sync_repo() 
+sync_repo()
 {
     REPO_URL=$1; REPO_VERSION=$2; REPO_PATH=$3
     REPO_TOKEN=$4 # optional
-  
+
     if [ "$#" -lt 3 ]; then
         echo "sync_repo: invalid number of arguments" && exit 1
     fi
   
-    # todo: scorch support?
-  
     if [[ ! -d $REPO_PATH ]]; then
         sudo mkdir -p $REPO_PATH
-        sudo git clone ${REPO_URL/github/$REPO_TOKEN@github} $REPO_PATH
+        # todo: prevent adding REPO_TOKEN more than once by using get_github_url(). in other words, this
+        #   function should no longer take a url, but create it just in time via get_github_url()
+        sudo git clone --recursive ${REPO_URL/github/$REPO_TOKEN@github} $REPO_PATH
+        exit_on_error "Failed cloning repository $REPO_URL to $REPO_PATH"
     else
         pushd $REPO_PATH
-        sudo git pull
+        sudo git pull --all
+        exit_on_error "Failed syncing repository $REPO_URL to $REPO_PATH"
         popd
     fi
 
-    pushd $REPO_PATH && sudo git checkout ${REPO_VERSION:-master} && popd
+    pushd $REPO_PATH
+    sudo git checkout ${REPO_VERSION:-master}
+    exit_on_error "Failed checking out branch $REPO_VERSION from repository $REPO_URL in $REPO_PATH"
+    popd
 }
 
 #############################################################################
@@ -753,7 +768,7 @@ setup_backup()
     backup_script="${2}";                                   # Backup script (actually take the backup)
     backup_log="${3}";                                      # Log file for backup job
 
-    account_name="${4}"; account_key="${5}";                 # Storage Account 
+    account_name="${4}"; account_key="${5}";                # Storage Account 
     backupFrequency="${6}";                                 # Backup Frequency
     backupRententionDays="${7}";                            # Backup Retention
     mongoReplicaSetConnectionString="${8}";                 # Mongo replica set connection string
