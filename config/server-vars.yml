@@ -17,6 +17,9 @@ EDXAPP_AAD_SECURITY_KEY: "%%EDXAPP_AAD_SECURITY_KEY%%"
 EDXAPP_AAD_BUTTON_NAME: "%%EDXAPP_AAD_BUTTON_NAME%%"
 EDXAPP_AAD_ENABLE: "%%EDXAPP_ENABLE_THIRD_PARTY_AUTH%%"
 
+# Import Kitchen Sink Course Configuration
+EDXAPP_IMPORT_KITCHENSINK_COURSE: "%%EDXAPP_IMPORT_KITCHENSINK_COURSE%%"
+
 # Configure third-party auth
 # see: http://edx.readthedocs.org/projects/edx-installing-configuring-and-running/en/latest/configuration/tpa/
 # see: https://github.com/MSOpenTech/edx-documentation/blob/master/en_us/install_operations/source/configuration/enable_sso.rst
@@ -94,10 +97,10 @@ EDXAPP_FEATURES:
   ENABLE_CSMH_EXTENDED: true 
   
 # Comprehensive Theming Configuration
-EDXAPP_COMPREHENSIVE_THEME_DIRS: [ "/edx/app/edxapp/edx-platform/themes" ]
+EDXAPP_COMPREHENSIVE_THEME_DIRS: "%%EDXAPP_COMPREHENSIVE_THEME_DIRS%%"
+EDXAPP_ENABLE_COMPREHENSIVE_THEMING: "%%EDXAPP_ENABLE_COMPREHENSIVE_THEMING%%"
+EDXAPP_DEFAULT_SITE_THEME: "%%EDXAPP_DEFAULT_SITE_THEME%%"
 COMPREHENSIVE_THEME_DIRS: "{{ EDXAPP_COMPREHENSIVE_THEME_DIRS }}"
-EDXAPP_ENABLE_COMPREHENSIVE_THEMING: true
-EDXAPP_DEFAULT_SITE_THEME: "comprehensive"
 
 # storage uploads
 EDXAPP_DEFAULT_FILE_STORAGE: "storages.backends.azure_storage.AzureStorage"
