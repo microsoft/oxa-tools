@@ -13,7 +13,8 @@ fi
 sudo mkdir /edx/app/edxapp/themes
 cd /edx/app/edxapp/themes
 
-# Download comprehensive theming from github to folder /edx/app/edxapp/themes/comprehensive 
+# Download comprehensive theming from github to folder /edx/app/edxapp/themes/comprehensive
+#todo: replace w/ a clone wrapper in utilities.sh
 sudo git clone https://github.com/microsoft/edx-theme.git comprehensive
 cd comprehensive
 sudo git checkout oxa/master.euc
