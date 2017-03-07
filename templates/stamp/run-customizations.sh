@@ -366,7 +366,7 @@ exit_on_error "Configuring the mailer failed"
 
 # 1. Setup Tools
 install-git
-install-gettext
+install-gettext # pre-requisite for envsubst command below
 set_timezone
 
 if [ "$MACHINE_ROLE" == "jumpbox" ] || [ "$MACHINE_ROLE" == "vmss" ];
@@ -419,7 +419,6 @@ then
     exit_on_error "Failed sourcing the environment configuration file from keyvault" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
     # replace "deployment-time" values. Persist to file.
-    install-gettext
     export BASE_URL=$BASE_URL
     export AZURE_ACCOUNT_NAME=$BACKUP_STORAGEACCOUNT_NAME
     export AZURE_ACCOUNT_KEY=$AZURE_ACCOUNT_KEY
