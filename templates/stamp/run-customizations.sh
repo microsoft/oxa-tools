@@ -3,6 +3,8 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
+set -x
+
 NOTIFICATION_MESSAGE=""
 SECONDARY_LOG="/var/log/bootstrap.csx.log"
 PRIMARY_LOG="/var/log/bootstrap.log"
@@ -291,7 +293,7 @@ parse_args()
                 EDXAPP_IMPORT_KITCHENSINK_COURSE="$2"
                 ;;
              --enable-comprehensive-theming)
-                EDXAPP_ENABLE_COMPREHENSIVE_THEMING="$2"
+                EDXAPP_ENABLE_COMPREHENSIVE_THEMING="${2,,}"
                 ;;
              --comprehensive-theming-directory)
                 EDXAPP_COMPREHENSIVE_THEME_DIR="$2"
@@ -300,7 +302,7 @@ parse_args()
                 EDXAPP_DEFAULT_SITE_THEME="$2"
                 ;;
              --enable-thirdparty-auth)
-                EDXAPP_ENABLE_THIRD_PARTY_AUTH="$2"
+                EDXAPP_ENABLE_THIRD_PARTY_AUTH="${2,,}"
                 ;;
              --aad-loginbutton-text)
                 EDXAPP_AAD_BUTTON_NAME="${2//_/ }"
@@ -327,27 +329,26 @@ persist_deployment_time_values()
     config_file="${OXA_ENV_PATH}/${DEPLOYMENT_ENV}.sh"
 
     # get BASE_URL value
-    source $config_file
-    exit_on_error "Failed sourcing the environment configuration file from keyvault" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
-
-    # export "deployment-time" values
-    export BASE_URL=$BASE_URL
-    export AZURE_ACCOUNT_NAME=$BACKUP_STORAGEACCOUNT_NAME
-    export AZURE_ACCOUNT_KEY=$BACKUP_STORAGEACCOUNT_KEY
-    export CLUSTERNAME=$CLUSTER_NAME
-    export MONGO_REPLICASET_NAME=${CLUSTER_NAME}rs
-    #todo: add more values set by parse_args() like github, smtp, etc.
-    export EDXAPP_ENABLE_THIRD_PARTY_AUTH=${EDXAPP_ENABLE_THIRD_PARTY_AUTH}
-    export EDXAPP_AAD_CLIENT_ID=${EDXAPP_AAD_CLIENT_ID}
-    export EDXAPP_AAD_SECURITY_KEY=${EDXAPP_AAD_SECURITY_KEY}
-    export EDXAPP_AAD_BUTTON_NAME=${EDXAPP_AAD_BUTTON_NAME}
-    export EDXAPP_ENABLE_COMPREHENSIVE_THEMING=${EDXAPP_ENABLE_COMPREHENSIVE_THEMING}
-    export EDXAPP_COMPREHENSIVE_THEME_DIR=${EDXAPP_COMPREHENSIVE_THEME_DIR} # todo: ensure formatting in yaml output works as intended.
-    export EDXAPP_DEFAULT_SITE_THEME=${EDXAPP_DEFAULT_SITE_THEME}
-    export EDXAPP_IMPORT_KITCHENSINK_COURSE=${EDXAPP_IMPORT_KITCHENSINK_COURSE}
+    #source $config_file
+    #exit_on_error "Failed sourcing the environment configuration file from keyvault" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
     # replace and persist "deployment-time" values
-    envsubst < $config_file | tee $config_file
+    #todo: add more values set by parse_args() like github, smtp, etc.
+    log "Populating backup configuration file with appropriate values"
+    sed -i "s#{AZURE_ACCOUNT_NAME}#${BACKUP_STORAGEACCOUNT_NAME}#I" $config_file
+    sed -i "s#{AZURE_ACCOUNT_KEY}#${BACKUP_STORAGEACCOUNT_KEY}#I" $config_file
+    sed -i "s#{CLUSTERNAME}#${CLUSTER_NAME}#I" $config_file
+    sed -i "s#{MONGO_REPLICASET_NAME}#${CLUSTER_NAME}rs#I" $config_file
+
+    sed -i "s#{EDXAPP_ENABLE_THIRD_PARTY_AUTH}#${EDXAPP_ENABLE_THIRD_PARTY_AUTH}#I" $config_file
+    sed -i "s#{EDXAPP_AAD_CLIENT_ID}#${EDXAPP_AAD_CLIENT_ID}#I" $config_file
+    sed -i "s#{EDXAPP_AAD_SECURITY_KEY}#${EDXAPP_AAD_SECURITY_KEY}#I" $config_file
+
+    sed -i "s#{EDXAPP_AAD_BUTTON_NAME}#${EDXAPP_AAD_BUTTON_NAME}#I" $config_file
+    sed -i "s#{EDXAPP_ENABLE_COMPREHENSIVE_THEMING}#${EDXAPP_ENABLE_COMPREHENSIVE_THEMING}#I" $config_file
+    sed -i "s#{EDXAPP_COMPREHENSIVE_THEME_DIR}#${EDXAPP_COMPREHENSIVE_THEME_DIR}#I" $config_file
+    sed -i "s#{EDXAPP_DEFAULT_SITE_THEME}#${EDXAPP_DEFAULT_SITE_THEME}#I" $config_file
+    sed -i "s#{EDXAPP_IMPORT_KITCHENSINK_COURSE}#${EDXAPP_IMPORT_KITCHENSINK_COURSE}#I" $config_file
 
     # re-source with new "deployment-time" values for database backups.
     source $config_file
