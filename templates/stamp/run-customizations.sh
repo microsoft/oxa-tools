@@ -303,7 +303,9 @@ parse_args()
                 EDXAPP_ENABLE_THIRD_PARTY_AUTH="$2"
                 ;;
              --aad-loginbutton-text)
-                EDXAPP_AAD_BUTTON_NAME="$2"
+                EDXAPP_AAD_BUTTON_NAME="${2//_/ }"
+                echo "Option '${1}' reset to '$EDXAPP_AAD_BUTTON_NAME'"
+                ;;
                 ;;
             -h|--help)  # Helpful hints
                 help
@@ -373,7 +375,7 @@ then
     ANSIBLE_GITHUB_PARAMS="--ansible-public-github-accountname \"${ANSIBLE_PUBLIC_GITHUB_ACCOUNTNAME}\" --ansible-public-github-projectname \"${ANSIBLE_PUBLIC_GITHUB_PROJECTNAME}\" --ansible-public-github-projectbranch \"${ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH}\""
     SAMPLE_COURSE_PARAMS="--import-kitchensink-course \"${EDXAPP_IMPORT_KITCHENSINK_COURSE}\""
     COMPREHENSIVE_THEMING_PARAMS="--enable-comprehensive-theming \"${EDXAPP_ENABLE_COMPREHENSIVE_THEMING}\" --comprehensive-theming-directory \"${EDXAPP_COMPREHENSIVE_THEME_DIR}\" --comprehensive-theming-name \"${EDXAPP_DEFAULT_SITE_THEME}\""
-    AUTHENTICATION_PARAMS="--enable-thirdparty-auth \"${EDXAPP_ENABLE_THIRD_PARTY_AUTH}\" --aad-loginbutton-text \"${EDXAPP_AAD_BUTTON_NAME}\""
+    AUTHENTICATION_PARAMS="--enable-thirdparty-auth \"${EDXAPP_ENABLE_THIRD_PARTY_AUTH}\" --aad-loginbutton-text \"${EDXAPP_AAD_BUTTON_NAME// /_}\""
 
     # Strip out the spaces for passing it along
     MONGO_BACKUP_FREQUENCY="${MONGO_BACKUP_FREQUENCY// /_}"
