@@ -172,7 +172,7 @@
         },
         {
             "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat(parameters('networkSettings').clusterJumpBoxName, '/installmdm')]",
+            "name": "[concat(parameters('networkSettings').clusterJumpBoxName, '/installoxa')]",
             "apiVersion": "[parameters('apiSettings').virtualMachineExtensionsApiVersion]",
             "location": "[resourceGroup().location]",
             "dependsOn": [
