@@ -39,6 +39,7 @@ EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master"
 EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
 EDX_THEME_PUBLIC_GITHUB_PROJECTNAME="edx-theme"
 EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="pilot"
+EDX_THEME_NAME="default"
 
 # EdX Ansible
 # There are cases where we want to override the edx\ansible repository itself
@@ -256,6 +257,12 @@ setup()
     # Sync public repositories using utilities.sh
     sync_repo $OXA_TOOLS_REPO $OXA_TOOLS_VERSION $OXA_TOOLS_PATH
     sync_repo $CONFIGURATION_REPO $CONFIGURATION_VERSION $CONFIGURATION_PATH
+
+    # setup theme
+    #THEME_PATH="${OXA_PATH}/${EDX_THEME_PUBLIC_GITHUB_PROJECTNAME}"
+    #sync_repo $EDX_THEME_REPO $EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH "${THEME_PATH}/${EDX_THEME_NAME}"
+    #ln -s $THEME_PATH /edx/app/edxapp/themes
+    #chown -R edxapp:edxapp $THEME_PATH
 
     # run edx bootstrap and install requirements
     cd $CONFIGURATION_PATH

@@ -12,6 +12,7 @@ ERROR_MYSQLCLIENTINSTALL_FAILED=5301
 ERROR_MYSQLUTILITIESINSTALL_FAILED=5302
 ERROR_POWERSHELLINSTALL_FAILED=5401
 ERROR_HYDRATECONFIG_FAILED=5410
+ERROR_BCINSTALL_FAILED=5402
 ERROR_NODEINSTALL_FAILED=6101
 ERROR_AZURECLI_FAILED=6201
 
@@ -198,6 +199,24 @@ install-mongodb-tools()
     fi
 
     log "Mongo Tools installed"
+}
+
+
+#############################################################################
+# Install BC
+#############################################################################
+
+install-bc()
+{
+    if type bc >/dev/null 2>&1; then
+        log "BC is already installed"
+    else
+        log "Installing BC"
+        apt-get install -y bc
+        exit_on_error "Failed to install BC on ${HOSTNAME} !" $ERROR_BCINSTALL_FAILED
+    fi
+
+    log "BC utility installed"
 }
 
 #############################################################################
