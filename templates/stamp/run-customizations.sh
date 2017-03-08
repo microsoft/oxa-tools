@@ -414,7 +414,7 @@ fi
 
 # 2. Install & Configure the infrastructure & EdX applications
 log "Cloning the public OXA Tools Repository"
-clone_repository $OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME $OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH ''  "${REPO_ROOT}/${OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME}"
+#clone_repository $OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME $OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH ''  "${REPO_ROOT}/${OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME}"
 
 # setup the installer path & key variables
 INSTALLER_BASEPATH="${REPO_ROOT}/${OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME}/scripts"
@@ -431,8 +431,8 @@ if [[ -d $OXA_ENV_PATH ]]; then
     rm -rf $OXA_ENV_PATH
 fi
 
-powershell -file $INSTALLER_BASEPATH/Process-OxaToolsKeyVaultConfiguration.ps1 -Operation Download -VaultName $KEYVAULT_NAME -AadWebClientId $AAD_WEBCLIENT_ID -AadWebClientAppKey $AAD_WEBCLIENT_APPKEY -AadTenantId $AAD_TENANT_ID -TargetPath $OXA_ENV_PATH -AzureSubscriptionId $AZURE_SUBSCRIPTION_ID
-exit_on_error "Failed downloading configurations from keyvault" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
+#powershell -file $INSTALLER_BASEPATH/Process-OxaToolsKeyVaultConfiguration.ps1 -Operation Download -VaultName $KEYVAULT_NAME -AadWebClientId $AAD_WEBCLIENT_ID -AadWebClientAppKey $AAD_WEBCLIENT_APPKEY -AadTenantId $AAD_TENANT_ID -TargetPath $OXA_ENV_PATH -AzureSubscriptionId $AZURE_SUBSCRIPTION_ID
+#exit_on_error "Failed downloading configurations from keyvault" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
 persist_deployment_time_values
 
