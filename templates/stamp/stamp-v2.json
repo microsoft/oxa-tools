@@ -517,6 +517,48 @@
             "metadata": {
                 "description": "Number of days to keep old Mysql backups. Backups older than this number of days will be deleted."
             }
+        },
+        "importKitchenSinkCourse": {
+            "type": "bool",
+            "defaultValue": true,
+            "metadata": {
+                "description": "Indicator of whether not not to import the Microsoft Kitchen Sink sample course."
+            }
+        },
+        "enableComprehensiveTheming": {
+            "type": "bool",
+            "defaultValue": true,
+            "metadata": {
+                "description": "Indicator of whether not not to enable comprehensive themeing. If this value is set to 'true', make sure to set the themeing directory & default theme name accordingly"
+            }
+        },
+        "comprehensiveThemingDirectory": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Root path to the directory containing the comprehensive themes"
+            }
+        },
+        "comprehensiveThemingName": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Name of the comprehensive available under the 'comprehensiveThemingDirectory' that will be used"
+            }
+        },
+        "enableThirdPartyAuth": {
+            "type": "bool",
+            "defaultValue": true,
+            "metadata": {
+                "description": "Indicator of whether or not third-party authentication will be enabled (ie: AAD, or other OAuth provider)"
+            }
+        },
+        "aadLoginButtonText": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Text for the authentication button"
+            }
         }
     },
     "variables": {
@@ -810,7 +852,12 @@
         "secureGenericStorageAccountId": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/','Microsoft.Storage/storageAccounts/', variables('secureGenericStorageAccountName'))]",
         "secureGenericStorageAccountKey": "PLACEHOLDER_KEY",
         "backupParameters": "[concat(' --storage-account-key ', variables('secureGenericStorageAccountKey'),' --storage-account-name ', variables('secureGenericStorageAccountName'), ' --mongo-backup-frequency \"', replace(parameters('mongoBackupFrequency'), ' ', '_'), '\" --mysql-backup-frequency \"', replace(parameters('mysqlBackupFrequency'), ' ', '_'), '\" --mongo-backup-retention-days ', parameters('mongoBackupRetentionDays'), ' --mysql-backup-retention-days ', parameters('mysqlBackupRetentionDays'))]",
-        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'), variables('backupParameters'), variables('customInstallerOutputRedirect'))]",
+
+        "sampleCourseParameters": "[concat(' --import-kitchensink-course ', parameters('importKitchenSinkCourse'))]",
+        "comprehensiveThemingParameters": "[concat(' --enable-comprehensive-theming ', parameters('enableComprehensiveTheming'), ' --comprehensive-theming-directory ', parameters('comprehensiveThemingDirectory'), ' --comprehensive-theming-name ', parameters('comprehensiveThemingName'))]",
+        "authenticationParameters": "[concat(' --enable-thirdparty-auth ', parameters('enableThirdPartyAuth'), ' --aad-loginbutton-text ', parameters('aadLoginButtonText'))]",
+
+        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'), variables('backupParameters'), variables('customInstallerOutputRedirect'), variables('sampleCourseParameters'), variables('comprehensiveThemingParameters'), variables('authenticationParameters') )]",
 
         "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources.json')]",
         "jumpboxTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-jumpbox.json')]",

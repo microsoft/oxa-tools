@@ -39,6 +39,7 @@ EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master"
 EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
 EDX_THEME_PUBLIC_GITHUB_PROJECTNAME="edx-theme"
 EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="pilot"
+EDX_THEME_NAME="default"
 
 # EdX Ansible
 # There are cases where we want to override the edx\ansible repository itself
@@ -163,25 +164,6 @@ parse_args() {
   done
 }
 
-sync_repo() {
-  REPO_URL=$1; REPO_VERSION=$2; REPO_PATH=$3
-  REPO_TOKEN=$4 # optional
-
-  if [ "$#" -lt 3 ]; then
-    echo "sync_repo: invalid number of arguments" && exit 1
-  fi
-
-  # todo: scorch support?
-
-  if [[ ! -d $REPO_PATH ]]; then
-    mkdir -p $REPO_PATH
-    git clone ${REPO_URL/github/$REPO_TOKEN@github} $REPO_PATH
-
-    exit_on_error "Failed syncing repository $REPO_URL | $REPO_VERSION"
-  fi
-  pushd $REPO_PATH && git checkout ${REPO_VERSION:-master} && popd
-}
-
 ##
 ## Check if bootstrap needs to be run for the specified role
 ##
@@ -272,9 +254,15 @@ setup()
     export ANSIBLE_REPO=$EDX_ANSIBLE_REPO
     export ANSIBLE_VERSION=$EDX_ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH
   
-    # sync public repositories
+    # Sync public repositories using utilities.sh
     sync_repo $OXA_TOOLS_REPO $OXA_TOOLS_VERSION $OXA_TOOLS_PATH
     sync_repo $CONFIGURATION_REPO $CONFIGURATION_VERSION $CONFIGURATION_PATH
+
+    # setup theme
+    #THEME_PATH="${OXA_PATH}/${EDX_THEME_PUBLIC_GITHUB_PROJECTNAME}"
+    #sync_repo $EDX_THEME_REPO $EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH "${THEME_PATH}/${EDX_THEME_NAME}"
+    #ln -s $THEME_PATH /edx/app/edxapp/themes
+    #chown -R edxapp:edxapp $THEME_PATH
 
     # run edx bootstrap and install requirements
     cd $CONFIGURATION_PATH

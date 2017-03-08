@@ -1,5 +1,5 @@
 # Autodetect text files
-* text=auto
+* text eol=lf
 
 # Definitively text files 
 *.json text

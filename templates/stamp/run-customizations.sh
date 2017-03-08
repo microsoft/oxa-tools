@@ -70,6 +70,20 @@ MYSQL_BACKUP_FREQUENCY="0 */4 * * *" # backup every 4 hours
 MONGO_BACKUP_RETENTIONDAYS="7"
 MYSQL_BACKUP_RETENTIONDAYS="7"
 
+# Microsoft Sample course
+EDXAPP_IMPORT_KITCHENSINK_COURSE=false;
+
+# Comprehensive Theming
+EDXAPP_ENABLE_COMPREHENSIVE_THEMING=false
+EDXAPP_COMPREHENSIVE_THEME_DIR=""
+EDXAPP_DEFAULT_SITE_THEME=""
+
+# Third Party Authentication (ie: AAD)
+EDXAPP_ENABLE_THIRD_PARTY_AUTH=false
+EDXAPP_AAD_CLIENT_ID=""
+EDXAPP_AAD_SECURITY_KEY=""
+EDXAPP_AAD_BUTTON_NAME=""
+
 help()
 {
     echo "This script bootstraps the OXA Stamp"
@@ -114,6 +128,12 @@ help()
     echo "        --mysql-backup-frequency Cron frequency for running a full backup of the mysql database. The expected format is parameter|value as supported by Ansible."
     echo "        --mongo-backup-retention-days Number of days to keep old Mongo database backups. Backups older than this number of days will be deleted"
     echo "        --mysql-backup-retention-days Number of days to keep old Mysql database backups. Backups older than this number of days will be deleted"
+    echo "        --import-kitchensink-course Indicator of whether not not to import the Microsoft Kitchen Sink sample course."
+    echo "        --enable-comprehensive-theming Indicator of whether not not to enable comprehensive themeing. If this value is set to 'true', make sure to set the themeing directory & default theme name accordingly."
+    echo "        --comprehensive-theming-directory Root path to the directory containing the comprehensive themes."
+    echo "        --comprehensive-theming-name Name of the comprehensive available under the 'comprehensiveThemingDirectory' that will be used."
+    echo "        --enable-thirdparty-auth Indicator of whether or not third-party authentication will be enabled (ie: AAD, or other OAuth provider)."
+    echo "        --aad-loginbutton-text Text for the authentication button."
 }
 
 # Parse script parameters
@@ -165,9 +185,11 @@ parse_args()
                 ;;
             --aad-webclient-appkey)
                 AAD_WEBCLIENT_APPKEY="$2"
+                EDXAPP_AAD_SECURITY_KEY="$2"
                 ;;
             --aad-tenant-id)
                 AAD_TENANT_ID="$2"
+                EDXAPP_AAD_CLIENT_ID="$2"
                 ;;
             --oxatools-public-github-accountname)
                 OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME="$2"
@@ -251,19 +273,38 @@ parse_args()
              --storage-account-key)
                 BACKUP_STORAGEACCOUNT_KEY="$2"
                 ;;
-              --mongo-backup-frequency)
+             --mongo-backup-frequency)
                 MONGO_BACKUP_FREQUENCY="${2//_/ }"
                 echo "Option '${1}' reset to '$MONGO_BACKUP_FREQUENCY'"
                 ;;
-              --mysql-backup-frequency)
+             --mysql-backup-frequency)
                 MYSQL_BACKUP_FREQUENCY="${2//_/ }"
                 echo "Option '${1}' reset to '$MYSQL_BACKUP_FREQUENCY'"
                 ;;
-              --mongo-backup-retention-days)
+             --mongo-backup-retention-days)
                 MONGO_BACKUP_RETENTIONDAYS="$2"
                 ;;
-              --mysql-backup-retention-days)
+             --mysql-backup-retention-days)
                 MYSQL_BACKUP_RETENTIONDAYS="$2"
+                ;;
+             --import-kitchensink-course)
+                EDXAPP_IMPORT_KITCHENSINK_COURSE="$2"
+                ;;
+             --enable-comprehensive-theming)
+                EDXAPP_ENABLE_COMPREHENSIVE_THEMING="$2"
+                ;;
+             --comprehensive-theming-directory)
+                EDXAPP_COMPREHENSIVE_THEME_DIR="$2"
+                ;;
+             --comprehensive-theming-name)
+                EDXAPP_DEFAULT_SITE_THEME="$2"
+                ;;
+             --enable-thirdparty-auth)
+                EDXAPP_ENABLE_THIRD_PARTY_AUTH="$2"
+                ;;
+             --aad-loginbutton-text)
+                EDXAPP_AAD_BUTTON_NAME="${2//_/ }"
+                echo "Option '${1}' reset to '$EDXAPP_AAD_BUTTON_NAME'"
                 ;;
             -h|--help)  # Helpful hints
                 help
@@ -281,23 +322,55 @@ parse_args()
     done
 }
 
+persist_deployment_time_values()
+{
+    config_file="${OXA_ENV_PATH}/${DEPLOYMENT_ENV}.sh"
+
+    # get BASE_URL value
+    source $config_file
+    exit_on_error "Failed sourcing the environment configuration file from keyvault" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
+
+    # export "deployment-time" values
+    export BASE_URL=$BASE_URL
+    export AZURE_ACCOUNT_NAME=$BACKUP_STORAGEACCOUNT_NAME
+    export AZURE_ACCOUNT_KEY=$BACKUP_STORAGEACCOUNT_KEY
+    export CLUSTERNAME=$CLUSTER_NAME
+    export MONGO_REPLICASET_NAME=${CLUSTER_NAME}rs
+    #todo: add more values set by parse_args() like github, smtp, etc.
+    export EDXAPP_ENABLE_THIRD_PARTY_AUTH=${EDXAPP_ENABLE_THIRD_PARTY_AUTH}
+    export EDXAPP_AAD_CLIENT_ID=${EDXAPP_AAD_CLIENT_ID}
+    export EDXAPP_AAD_SECURITY_KEY=${EDXAPP_AAD_SECURITY_KEY}
+    export EDXAPP_AAD_BUTTON_NAME=${EDXAPP_AAD_BUTTON_NAME}
+    export EDXAPP_ENABLE_COMPREHENSIVE_THEMING=${EDXAPP_ENABLE_COMPREHENSIVE_THEMING}
+    export EDXAPP_COMPREHENSIVE_THEME_DIR=${EDXAPP_COMPREHENSIVE_THEME_DIR} # todo: ensure formatting in yaml output works as intended.
+    export EDXAPP_DEFAULT_SITE_THEME=${EDXAPP_DEFAULT_SITE_THEME}
+    export EDXAPP_IMPORT_KITCHENSINK_COURSE=${EDXAPP_IMPORT_KITCHENSINK_COURSE}
+
+    # replace and persist "deployment-time" values
+    envsubst < $config_file | tee $config_file
+
+    # re-source with new "deployment-time" values for database backups.
+    source $config_file
+    exit_on_error "Failed sourcing the environment configuration file after transform" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
+}
+
 ###############################################
 # Start Execution
 ###############################################
 
-# source our utilities for logging and other base functions (we need this staged with the installer script)
-# the file needs to be first downloaded from the public repository
+# Source our utilities for logging and other base functions (we need this staged with the installer script).
+# The file needs to be first downloaded from the public repository and this download happens as part of the custom script extension
 CURRENT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 UTILITIES_PATH=$CURRENT_PATH/utilities.sh
 
-# check if the utilities file exists. If not, bail out.
+# Check if the utilities file exists. If not, bail out.
 if [[ ! -e $UTILITIES_PATH ]]; 
 then  
     echo :"Utilities not present"
     exit 3
 fi
 
-# source the utilities now
+# Source the utilities now
 source $UTILITIES_PATH
 
 # Script self-idenfitication
@@ -306,40 +379,43 @@ print_script_header
 parse_args $@ # pass existing command line arguments
 
 # Validate parameters
-if [ "$OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME" == "" ] || [ "$OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME" == "" ] || [ "$OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH" == "" ] || [ "$CLOUDNAME" == "" ] ;
+if [ -z "$OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME" ] || [ -z "$OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME" ] || [ -z "$OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH" ] || [ -z "$CLOUDNAME" ] ;
 then
-    log "Incomplete OXA Tools Github repository configuration: Github Personal Access Token, Account Name,  Project Name & Branch Name are required." $ERROR_MESSAGE
+    log "Incomplete OXA Tools Github repository configuration: Github Account Name,  Project Name & Branch Name are required." $ERROR_MESSAGE
     exit 3
 fi
 
 if [ "$EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME" == "" ] || [ "$EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME" == "" ] || [ "$EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH" == "" ] ;
 then
-    log "Incomplete EDX Configuration Github repository configuration: Github Personal Access Token, Account Name,  Project Name & Branch Name are required." $ERROR_MESSAGE
+    log "Incomplete EDX Configuration Github repository configuration: Github Account Name,  Project Name & Branch Name are required." $ERROR_MESSAGE
     exit 3
 fi
 
-# to support resiliency, we need to enable retries. Towards that end, this script will support 2 modes: Cron (background execution) or Non-Cron (Custom Script Extension-CSX/direct execution)
+# To support resiliency, we need to enable retries. Towards that end, this script will support 2 modes: Cron (background execution) or Non-Cron (Custom Script Extension-CSX/direct execution)
 CRON_INSTALLER_SCRIPT="$CURRENT_PATH/background-run-customization.sh"
 
 if [ "$CRON_MODE" == "0" ];
 then
     log "Setting up cron job for executing customization from '${HOSTNAME}' for the OXA Stamp"
 
-    # setup the repo parameters individually
+    # Setup the repo parameters individually
     OXA_TOOLS_GITHUB_PARAMS="--oxatools-public-github-accountname \"${OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME}\" --oxatools-public-github-projectname \"${OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME}\" --oxatools-public-github-projectbranch \"${OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH}\""
     EDX_CONFIGURATION_GITHUB_PARAMS="--edxconfiguration-public-github-accountname \"${EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME}\" --edxconfiguration-public-github-projectname \"${EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME}\" --edxconfiguration-public-github-projectbranch \"${EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH}\""
     EDX_PLATFORM_GITHUB_PARAMS="--edxplatform-public-github-accountname \"${EDX_PLATFORM_PUBLIC_GITHUB_ACCOUNTNAME}\" --edxplatform-public-github-projectname \"${EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME}\" --edxplatform-public-github-projectbranch \"${EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH}\""
     EDX_THEME_GITHUB_PARAMS="--edxtheme-public-github-accountname \"${EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME}\" --edxtheme-public-github-projectname \"${EDX_THEME_PUBLIC_GITHUB_PROJECTNAME}\" --edxtheme-public-github-projectbranch \"${EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH}\""
     ANSIBLE_GITHUB_PARAMS="--ansible-public-github-accountname \"${ANSIBLE_PUBLIC_GITHUB_ACCOUNTNAME}\" --ansible-public-github-projectname \"${ANSIBLE_PUBLIC_GITHUB_PROJECTNAME}\" --ansible-public-github-projectbranch \"${ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH}\""
+    SAMPLE_COURSE_PARAMS="--import-kitchensink-course \"${EDXAPP_IMPORT_KITCHENSINK_COURSE}\""
+    COMPREHENSIVE_THEMING_PARAMS="--enable-comprehensive-theming \"${EDXAPP_ENABLE_COMPREHENSIVE_THEMING}\" --comprehensive-theming-directory \"${EDXAPP_COMPREHENSIVE_THEME_DIR}\" --comprehensive-theming-name \"${EDXAPP_DEFAULT_SITE_THEME}\""
+    AUTHENTICATION_PARAMS="--enable-thirdparty-auth \"${EDXAPP_ENABLE_THIRD_PARTY_AUTH}\" --aad-loginbutton-text \"${EDXAPP_AAD_BUTTON_NAME// /_}\""
 
-    # strip out the spaces for passing it along
+    # Strip out the spaces for passing it along
     MONGO_BACKUP_FREQUENCY="${MONGO_BACKUP_FREQUENCY// /_}"
     MYSQL_BACKUP_FREQUENCY="${MYSQL_BACKUP_FREQUENCY// /_}"
 
     BACKUP_PARAMS="--storage-account-name \"${BACKUP_STORAGEACCOUNT_NAME}\" --storage-account-key \"${BACKUP_STORAGEACCOUNT_KEY}\" --mongo-backup-frequency \"${MONGO_BACKUP_FREQUENCY}\" --mysql-backup-frequency \"${MYSQL_BACKUP_FREQUENCY}\" --mongo-backup-retention-days \"${MONGO_BACKUP_RETENTIONDAYS}\" --mysql-backup-retention-days \"${MYSQL_BACKUP_RETENTIONDAYS}\""
 
-    # create the cron job & exit
-    INSTALL_COMMAND="sudo flock -n /var/log/bootstrap-run-customization.lock bash $CURRENT_PATH/run-customizations.sh -c $CLOUDNAME -u $OS_ADMIN_USERNAME -i $CUSTOM_INSTALLER_RELATIVEPATH -m $MONITORING_CLUSTER_NAME -s $BOOTSTRAP_PHASE -u $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --crontab-interval $CRONTAB_INTERVAL_MINUTES --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID --smtp-server $SMTP_SERVER --smtp-server-port $SMTP_SERVER_PORT --smtp-auth-user $SMTP_AUTH_USER --smtp-auth-user-password $SMTP_AUTH_USER_PASSWORD --cluster-admin-email $CLUSTER_ADMIN_EMAIL --cluster-name $CLUSTER_NAME ${OXA_TOOLS_GITHUB_PARAMS} ${EDX_CONFIGURATION_GITHUB_PARAMS} ${EDX_PLATFORM_GITHUB_PARAMS} ${EDX_THEME_GITHUB_PARAMS} ${ANSIBLE_GITHUB_PARAMS} ${BACKUP_PARAMS} --edxversion $EDX_VERSION --forumversion $FORUM_VERSION --cron >> $SECONDARY_LOG 2>&1"
+    # Create the cron job & exit
+    INSTALL_COMMAND="sudo flock -n /var/log/bootstrap-run-customization.lock bash $CURRENT_PATH/run-customizations.sh -c $CLOUDNAME -u $OS_ADMIN_USERNAME -i $CUSTOM_INSTALLER_RELATIVEPATH -m $MONITORING_CLUSTER_NAME -s $BOOTSTRAP_PHASE -u $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --crontab-interval $CRONTAB_INTERVAL_MINUTES --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID --smtp-server $SMTP_SERVER --smtp-server-port $SMTP_SERVER_PORT --smtp-auth-user $SMTP_AUTH_USER --smtp-auth-user-password $SMTP_AUTH_USER_PASSWORD --cluster-admin-email $CLUSTER_ADMIN_EMAIL --cluster-name $CLUSTER_NAME ${OXA_TOOLS_GITHUB_PARAMS} ${EDX_CONFIGURATION_GITHUB_PARAMS} ${EDX_PLATFORM_GITHUB_PARAMS} ${EDX_THEME_GITHUB_PARAMS} ${ANSIBLE_GITHUB_PARAMS} ${BACKUP_PARAMS} ${SAMPLE_COURSE_PARAMS} ${COMPREHENSIVE_THEMING_PARAMS} ${AUTHENTICATION_PARAMS} --edxversion ${EDX_VERSION} --forumversion ${FORUM_VERSION} --cron >> $SECONDARY_LOG 2>&1"
     echo $INSTALL_COMMAND > $CRON_INSTALLER_SCRIPT
 
     # Remove the task if it is already setup
@@ -366,11 +442,12 @@ exit_on_error "Configuring the mailer failed"
 
 # 1. Setup Tools
 install-git
-install-gettext
+install-gettext # required for envsubst command
 set_timezone
 
 if [ "$MACHINE_ROLE" == "jumpbox" ] || [ "$MACHINE_ROLE" == "vmss" ];
 then
+    install-bc
     install-mongodb-shell
     install-mysql-client
 
@@ -400,8 +477,10 @@ fi
 powershell -file $INSTALLER_BASEPATH/Process-OxaToolsKeyVaultConfiguration.ps1 -Operation Download -VaultName $KEYVAULT_NAME -AadWebClientId $AAD_WEBCLIENT_ID -AadWebClientAppKey $AAD_WEBCLIENT_APPKEY -AadTenantId $AAD_TENANT_ID -TargetPath $OXA_ENV_PATH -AzureSubscriptionId $AZURE_SUBSCRIPTION_ID
 exit_on_error "Failed downloading configurations from keyvault" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
-# copy utilities to the installer path
-cp $UTILITIES_PATH "${INSTALLER_BASEPATH}"
+persist_deployment_time_values
+
+# Create a link to the utilities.sh library to be used by the other installer scripts
+ln -s $UTILITIES_PATH "${INSTALLER_BASEPATH}/utilities.sh"
 
 #####################################
 # Setup Backups
@@ -410,10 +489,6 @@ cp $UTILITIES_PATH "${INSTALLER_BASEPATH}"
 if [ "$MACHINE_ROLE" == "jumpbox" ];
 then
     log "Starting backup configuration on '${HOSTNAME}' as a member in the '${MACHINE_ROLE}' role"
-
-    # setup the configuration file for database backups
-    source "${OXA_ENV_PATH}/${DEPLOYMENT_ENV}.sh"
-    exit_on_error "Failed sourcing the environment configuration file from keyvault" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
     # these are fixed values
     MONGO_REPLICASET_CONNECTIONSTRING="${MONGO_REPLICASET_NAME}/${MONGO_SERVER_LIST}"

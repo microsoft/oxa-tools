@@ -157,6 +157,10 @@
             "name": "[variables('clusterVirtualMachineScaleSetName')]",
             "apiVersion": "[variables('computeApiVersion')]",
             "location": "[resourceGroup().location]",
+            "copy": {
+                "name": "VMSSLoop",
+                "count": 1
+            },
             "properties": {
                 "upgradePolicy": {
                     "mode": "Automatic"
@@ -165,7 +169,7 @@
                     "extensionProfile": {
                         "extensions": [
                             {
-                                "name": "[concat(variables('clusterVirtualMachineScaleSetName'), '_', variables('monitoringExtensionName'))]",
+                                "name": "[concat(variables('clusterVirtualMachineScaleSetName'), '_', copyIndex(1), variables('monitoringExtensionName'))]",
                                 "properties": {
                                     "publisher": "Microsoft.Azure.Extensions",
                                     "type": "CustomScript",
