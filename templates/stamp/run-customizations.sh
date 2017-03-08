@@ -306,7 +306,6 @@ parse_args()
                 EDXAPP_AAD_BUTTON_NAME="${2//_/ }"
                 echo "Option '${1}' reset to '$EDXAPP_AAD_BUTTON_NAME'"
                 ;;
-                ;;
             -h|--help)  # Helpful hints
                 help
                 exit 2
