@@ -7,6 +7,7 @@ set -x
 # argument defaults
 EDX_ROLE=""
 DEPLOYMENT_ENV="dev"
+ACCESS_TOKEN=""
 CRON_MODE=0
 TARGET_FILE=""
 
@@ -14,7 +15,7 @@ TARGET_FILE=""
 # Settings for the OXA-Tools public repository 
 OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
 OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME="oxa-tools"
-OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH="master"
+OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master.fic"
 
 # this is the operational branch for the OXA_TOOLS public git project
 OXA_TOOLS_VERSION=""
@@ -23,7 +24,7 @@ OXA_TOOLS_VERSION=""
 # There are cases where we want to override the edx-configuration repository itself
 EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
 EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME="edx-configuration"
-EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master"
+EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master.fic"
 
 # this is the operational branch for the EDX_CONFIGURATION public git project
 CONFIGURATION_VERSION=""
@@ -32,7 +33,7 @@ CONFIGURATION_VERSION=""
 # There are cases where we want to override the edx-platform repository itself
 EDX_PLATFORM_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
 EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME="edx-platform"
-EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master"
+EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master.fic"
 
 # EdX Theme
 # There are cases where we want to override the edx-platform repository itself
@@ -47,8 +48,9 @@ ANSIBLE_PUBLIC_GITHUB_PROJECTNAME="ansible"
 ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH="master"
 
 # MISC
-EDX_VERSION="named-release/dogwood.rc"
-FORUM_VERSION="mongoid5-release"
+EDX_VERSION="master"
+#FORUM_VERSION="mongoid5-release"
+FORUM_VERSION="open-release/ficus.master"
 
 # script used for triggering background installation (setup in cron)
 CRON_INSTALLER_SCRIPT=""
@@ -86,6 +88,10 @@ parse_args() {
           echo "Invalid environment specified\n"
           display_usage
         fi
+        ;;
+      # For fullstack deployments
+      -a|--access_token)
+        ACCESS_TOKEN="$2"
         ;;
       --cron)
         CRON_MODE=1
@@ -422,7 +428,7 @@ update_devstack() {
 # source our utilities for logging and other base functions (we need this staged with the installer script)
 # the file needs to be first downloaded from the public repository
 CURRENT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-UTILITIES_PATH=$CURRENT_PATH/utilities.sh
+UTILITIES_PATH=$CURRENT_PATH/../templates/stamp/utilities.sh
 
 # check if the utilities file exists. If not, bail out.
 if [[ ! -e $UTILITIES_PATH ]]; 
