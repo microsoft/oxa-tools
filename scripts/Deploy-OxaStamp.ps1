@@ -79,133 +79,15 @@ Param(
         [Parameter(Mandatory=$false)][switch]$DeployStamp=$true
      )
 
-##  Function: LogMessage
-##
-##  Purpose: Write a message to a log file
-##
-##  Input: 
-##      Message          - string - message to write
-##      LogType          - string - message type
-##      Foregroundcolor  - string - color of the output for Log-Messageonly
-##
-##  Ouput: null
-function Log-Message
-{
-    param(
-            [Parameter(Mandatory=$false)][object]$Message,
-            [Parameter(Mandatory=$false)][ValidateSet("Verbose","Output", "Host", "Error", "Warning")][string]$LogType="Host",
-            [Parameter(Mandatory=$false)][string]$Foregroundcolor = "White",
-            [Parameter(Mandatory=$false)][string]$Context = "",
-            [Parameter(Mandatory=$false)][switch]$NoNewLine,
-            [Parameter(Mandatory=$false)][switch]$ClearLine,
-            [Parameter(Mandatory=$false)][switch]$SkipTimestamp
-         )
 
-    
-    # append header to identify where the call came from for debugging purposes
-    if ($Context -ne "")
-    {
-        $Message = "$Context - $Message";
-    }
-
-    # if necessary, prepend a blank line
-    if ($ClearLine -eq $true)
-    {
-        $logTime = [System.Environment]::NewLine
-    }
-
-    # prepend log time
-    $logTime += "[$(get-date -format u)]";
-
-    if($NoNewLine -eq $false -and $SkipTimestamp -eq $false)
-    {
-        $logLine = "$logTime :: $Message";
-    }
-    else
-    {
-        $logLine = $Message;
-    }
-
-    switch($LogType)
-    {
-        "Verbose" {  Write-Verbose $logLine; }
-        "Output"  {  Write-Output $logLine ; }
-        "Host"    {  Write-Host $logLine -ForegroundColor $ForegroundColor -NoNewline:$NoNewLine; }
-        "Error"   {  Write-Error $logLine; }
-        "Warning" {  Write-Warning $logLine ; }
-        default   {  Write-Host $logLine -ForegroundColor $ForegroundColor -NoNewline:$NoNewLine; }
-    }
-}
-
-## Function: Get-DirectorySeparator
-##
-## Purpose: 
-##    Get the directory separator appropriate for the OS
-##
-## Input: 
-##
-## Output:
-##   OS-specific directory separator
-##
-function Get-DirectorySeparator
-{
-    $separator = "/";
-    if ($env:ComSpec)
-    {
-        $separator = "\"
-    }
-
-    return $separator
-}
-
-## Function: Update-RuntimeParameters
-##
-## Purpose: 
-##    Update the runtime parameters
-##
-## Input: 
-##   ParametersFile                   path to the file holding the deployment parameters (the parameters.json file)
-##   ClusterName                      the cluster name
-##   AdminEmailAddress                the cluster administrator email address
-##   ClusterNameTemplateValue         the cluster name template value to replace
-##   ClusterAdminEmailTemplateValue   the cluster admin email template value to replace
-##
-## Output:
-##   nothing
-##
-function Update-RuntimeParameters
-{
-    param(
-            [Parameter(Mandatory=$true)][string]$ParametersFile,
-            [Parameter(Mandatory=$true)][string]$ClusterName,
-            [Parameter(Mandatory=$true)][string]$AdminEmailAddress,
-            [Parameter(Mandatory=$false)][string]$ClusterNameTemplateValue="{CLUSTERNAME}",
-            [Parameter(Mandatory=$false)][string]$ClusterAdminEmailTemplateValue="{ADMINEMAILADDRESS}"
-         )
-
-    # check if the file exists and resolve it's path
-    $ParametersFile = Resolve-Path -Path $ParametersFile -ErrorAction Stop
-    
-    # create a temp file and perform the necessary template replacements
-    $tempParametersFile = [System.IO.Path]::GetTempFileName();
-    if ((Test-Path -Path $tempParametersFile) -eq $false)
-    {
-        throw "Could not create a temporary file"
-    }
-
-    Log-Message "Parameters File: $($ParametersFile)"
-    $parametersContent = gc $ParametersFile -Encoding UTF8
-    $parametersContent = $parametersContent.Replace($ClusterNameTemplateValue, $ClusterName);
-    $parametersContent = $parametersContent.Replace($ClusterAdminEmailTemplateValue, $AdminEmailAddress);
-
-    [IO.File]::WriteAllText($tempParametersFile, $parametersContent);
-
-    return $tempParametersFile
-}
 
 #################################
 # ENTRY POINT
 #################################
+
+$invocation = (Get-Variable MyInvocation).Value 
+$currentPath = Split-Path $invocation.MyCommand.Path 
+Import-Module "$($currentPath)/Common.ps1" -Force
 
 # set the default keyvault parameter file (if one isn't specified)
 if ($KeyVaultDeploymentParametersFile.Trim().Length -eq 0)
