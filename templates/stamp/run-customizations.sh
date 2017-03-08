@@ -13,7 +13,7 @@ OS_ADMIN_USERNAME=""
 CUSTOM_INSTALLER_RELATIVEPATH=""
 MONITORING_CLUSTER_NAME=""
 BOOTSTRAP_PHASE=0
-REPO_ROOT="/oxa"
+REPO_ROOT="/home/localstepdo/e"
 CRONTAB_INTERVAL_MINUTES=5
 
 # Oxa Tools Github configs
@@ -283,6 +283,7 @@ parse_args()
 
 persist_deployment_time_values()
 {
+    set -x
     config_file="${OXA_ENV_PATH}/${DEPLOYMENT_ENV}.sh"
 
     # get BASE_URL value
@@ -306,7 +307,8 @@ persist_deployment_time_values()
     export EDXAPP_IMPORT_KITCHENSINK_COURSE=${EDXAPP_IMPORT_KITCHENSINK_COURSE}
 
     # replace and persist "deployment-time" values
-    envsubst < $config_file | tee $config_file
+    envsubst < $config_file # | tee $config_file
+    exit
 
     # re-source with new "deployment-time" values for database backups.
     source $config_file
