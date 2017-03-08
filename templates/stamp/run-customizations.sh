@@ -281,6 +281,37 @@ parse_args()
     done
 }
 
+persist_deployment_time_values()
+{
+    config_file="${OXA_ENV_PATH}/${DEPLOYMENT_ENV}.sh"
+
+    # get BASE_URL value
+    source $config_file
+    exit_on_error "Failed sourcing the environment configuration file from keyvault" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
+
+    # replace "deployment-time" values. Persist to file.
+    export BASE_URL=$BASE_URL
+    export AZURE_ACCOUNT_NAME=$BACKUP_STORAGEACCOUNT_NAME
+    export AZURE_ACCOUNT_KEY=$BACKUP_STORAGEACCOUNT_KEY
+    export CLUSTERNAME=$CLUSTER_NAME
+    export MONGO_REPLICASET_NAME=${CLUSTER_NAME}rs
+    #todo: add more values set by parse_args() like github, smtp, etc.
+    #todo: replace hardcoding below w/ plumbing.
+    export EDXAPP_ENABLE_THIRD_PARTY_AUTH=true
+    export EDXAPP_AAD_CLIENT_ID="a7e7d83a-ccb7-45ba-830e-90a278079440"
+    export EDXAPP_AAD_SECURITY_KEY="18T5uE9z0ebwPfFXv1nYIzA5dqh5N6ikLT2RNnIARWk="
+    export EDXAPP_AAD_BUTTON_NAME="Microsoft AAD"
+    export EDXAPP_ENABLE_COMPREHENSIVE_THEMING=true
+    export EDXAPP_COMPREHENSIVE_THEME_DIRS="[ \"/edx/app/edxapp/themes\" ]"
+    export EDXAPP_DEFAULT_SITE_THEME="comprehensive"
+    export EDXAPP_IMPORT_KITCHENSINK_COURSE=false
+    envsubst < $config_file | tee $config_file
+
+    # re-source with new "deployment-time" values for database backups.
+    source $config_file
+    exit_on_error "Failed sourcing the environment configuration file after transform" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
+}
+
 ###############################################
 # Start Execution
 ###############################################
@@ -366,7 +397,7 @@ exit_on_error "Configuring the mailer failed"
 
 # 1. Setup Tools
 install-git
-install-gettext # pre-requisite for envsubst command below
+install-gettext # required for envsubst command
 set_timezone
 
 if [ "$MACHINE_ROLE" == "jumpbox" ] || [ "$MACHINE_ROLE" == "vmss" ];
@@ -400,6 +431,8 @@ fi
 powershell -file $INSTALLER_BASEPATH/Process-OxaToolsKeyVaultConfiguration.ps1 -Operation Download -VaultName $KEYVAULT_NAME -AadWebClientId $AAD_WEBCLIENT_ID -AadWebClientAppKey $AAD_WEBCLIENT_APPKEY -AadTenantId $AAD_TENANT_ID -TargetPath $OXA_ENV_PATH -AzureSubscriptionId $AZURE_SUBSCRIPTION_ID
 exit_on_error "Failed downloading configurations from keyvault" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
+persist_deployment_time_values
+
 # copy utilities to the installer path
 cp $UTILITIES_PATH "${INSTALLER_BASEPATH}"
 
@@ -410,24 +443,6 @@ cp $UTILITIES_PATH "${INSTALLER_BASEPATH}"
 if [ "$MACHINE_ROLE" == "jumpbox" ];
 then
     log "Starting backup configuration on '${HOSTNAME}' as a member in the '${MACHINE_ROLE}' role"
-
-    # setup the configuration file for database backups.
-    config_file="${OXA_ENV_PATH}/${DEPLOYMENT_ENV}.sh"
-
-    # get BASE_URL value
-    source $config_file
-    exit_on_error "Failed sourcing the environment configuration file from keyvault" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
-
-    # replace "deployment-time" values. Persist to file.
-    export BASE_URL=$BASE_URL
-    export AZURE_ACCOUNT_NAME=$BACKUP_STORAGEACCOUNT_NAME
-    export AZURE_ACCOUNT_KEY=$AZURE_ACCOUNT_KEY
-    # todo: use cluser name to drive replication values, etc.
-    envsubst < $config_file | tee $config_file
-
-    # re-source with new "deployment-time" values.
-    source $config_file
-    exit_on_error "Failed sourcing the environment configuration file from keyvault" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
     # these are fixed values
     MONGO_REPLICASET_CONNECTIONSTRING="${MONGO_REPLICASET_NAME}/${MONGO_SERVER_LIST}"
