@@ -348,7 +348,9 @@ persist_deployment_time_values()
     export EDXAPP_IMPORT_KITCHENSINK_COURSE=${EDXAPP_IMPORT_KITCHENSINK_COURSE}
 
     # replace and persist "deployment-time" values
-    envsubst < $config_file # | tee $config_file
+    cp $config_file "$config_file.original"
+    envsubst < $config_file > "$config_file.after"
+    cp "$config_file.after" $config_file
     exit
 
     # re-source with new "deployment-time" values for database backups.
@@ -473,7 +475,7 @@ export HOME=$(dirname ~/.)
 
 if [[ -d $OXA_ENV_PATH ]]; then
     log "Removing the existing configuration from '${OXA_ENV_PATH}'"
-    rm -rf $OXA_ENV_PATH
+    #rm -rf $OXA_ENV_PATH
 fi
 
 #powershell -file $INSTALLER_BASEPATH/Process-OxaToolsKeyVaultConfiguration.ps1 -Operation Download -VaultName $KEYVAULT_NAME -AadWebClientId $AAD_WEBCLIENT_ID -AadWebClientAppKey $AAD_WEBCLIENT_APPKEY -AadTenantId $AAD_TENANT_ID -TargetPath $OXA_ENV_PATH -AzureSubscriptionId $AZURE_SUBSCRIPTION_ID
