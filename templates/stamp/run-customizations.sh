@@ -3,6 +3,8 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
+set -x
+
 NOTIFICATION_MESSAGE=""
 SECONDARY_LOG="/var/log/bootstrap.csx.log"
 PRIMARY_LOG="/var/log/bootstrap.log"
@@ -291,7 +293,7 @@ parse_args()
                 EDXAPP_IMPORT_KITCHENSINK_COURSE="$2"
                 ;;
              --enable-comprehensive-theming)
-                EDXAPP_ENABLE_COMPREHENSIVE_THEMING="$2"
+                EDXAPP_ENABLE_COMPREHENSIVE_THEMING="${2,,}"
                 ;;
              --comprehensive-theming-directory)
                 EDXAPP_COMPREHENSIVE_THEME_DIR="$2"
@@ -300,7 +302,7 @@ parse_args()
                 EDXAPP_DEFAULT_SITE_THEME="$2"
                 ;;
              --enable-thirdparty-auth)
-                EDXAPP_ENABLE_THIRD_PARTY_AUTH="$2"
+                EDXAPP_ENABLE_THIRD_PARTY_AUTH="${2,,}"
                 ;;
              --aad-loginbutton-text)
                 EDXAPP_AAD_BUTTON_NAME="${2//_/ }"
