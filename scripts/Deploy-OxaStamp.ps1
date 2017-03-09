@@ -79,8 +79,6 @@ Param(
         [Parameter(Mandatory=$false)][switch]$DeployStamp=$true
      )
 
-
-
 #################################
 # ENTRY POINT
 #################################
@@ -105,34 +103,46 @@ Set-AzureSubscription -SubscriptionName $AzureSubscriptionName | Out-Null
 # create the resource group
 New-AzureRmResourceGroup -Name $ResourceGroupName -Location $Location -Force
 
-if ($DeployKeyVault)
-{
-    # provision the keyvault
-    # we may need to replace the default resource group name in the parameters file
-    Log-Message "Updating the cluster reference to $($ResourceGroupName)"
-    $tempParametersFile = Update-RuntimeParameters -ParametersFile $KeyVaultDeploymentParametersFile -ClusterName $ResourceGroupName -AdminEmailAddress $ClusterAdministratorEmailAddress
+#prep the variables we want to use for replacement
+$replacements = @{ "CLUSTERNAME"=$ResourceGroupName;  "ADMINEMAILADDRESS"=$ClusterAdministratorEmailAddress; }
+$tempParametersFile = Update-RuntimeParameters -ParametersFile $KeyVaultDeploymentParametersFile -ReplacementHash $replacements;
 
-    $provisioningOperation = New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $KeyVaultDeploymentArmTemplateFile -TemplateParameterFile $tempParametersFile -Force -Verbose  
-    
-    if ($provisioningOperation.ProvisioningState -ine "Succeeded")
+try
+{
+    if ($DeployKeyVault)
     {
-        $provisioningOperation
-        throw "Unable to provision the resource group $($ResourceGroupName)"
+        # provision the keyvault
+        # we may need to replace the default resource group name in the parameters file
+        Log-Message "Cluster: $ResourceGroupName | Template: $KeyVaultDeploymentArmTemplateFile | Parameters file: $($tempParametersFile)"
+        $provisioningOperation = New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $KeyVaultDeploymentArmTemplateFile -TemplateParameterFile $tempParametersFile -Force -Verbose  
+    
+        if ($provisioningOperation.ProvisioningState -ine "Succeeded")
+        {
+            $provisioningOperation
+            throw "Unable to provision the resource group $($ResourceGroupName)"
+        }
+
+        # pre-populate the keyvault
+        $scriptPath = split-path -parent $MyInvocation.MyCommand.Definition
+        $separator = Get-DirectorySeparator
+        Log-Message "Populating keyvault using script at $($scriptPath)$($separator)Process-OxaToolsKeyVaultConfiguration.ps1"
+        &"$($scriptPath)$($separator)Process-OxaToolsKeyVaultConfiguration.ps1" -Operation Upload -VaultName "$($ResourceGroupName)-kv" -AadWebClientId $AadWebClientId -AadWebClientAppKey $AadWebClientAppKey -AadTenantId $AadTenantId -AzureSubscriptionId $AzureSubscriptionName -TargetPath $TargetPath
     }
 
-    # pre-populate the keyvault
-    $scriptPath = split-path -parent $MyInvocation.MyCommand.Definition
-    $separator = Get-DirectorySeparator
-    Log-Message "Populating keyvault using script at $($scriptPath)$($separator)Process-OxaToolsKeyVaultConfiguration.ps1"
-    &"$($scriptPath)$($separator)Process-OxaToolsKeyVaultConfiguration.ps1" -Operation Upload -VaultName "$($ResourceGroupName)-kv" -AadWebClientId $AadWebClientId -AadWebClientAppKey $AadWebClientAppKey -AadTenantId $AadTenantId -AzureSubscriptionId $AzureSubscriptionName -TargetPath $TargetPath
+    if ($DeployStamp)
+    {
+        # kick off full deployment
+        # we may need to replace the default resource group name in the parameters file
+        New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $FullDeploymentArmTemplateFile -TemplateParameterFile $tempParametersFile -Force -Verbose  
+    }
 }
-
-if ($DeployStamp)
+catch
 {
-    # kick off full deployment
-    # we may need to replace the default resource group name in the parameters file
-    Log-Message "Updating the cluster reference to $($ResourceGroupName)"
-    $tempParametersFile = Update-RuntimeParameters -ParametersFile $FullDeploymentParametersFile -ClusterName $ResourceGroupName -AdminEmailAddress $ClusterAdministratorEmailAddress
-
-    New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $FullDeploymentArmTemplateFile -TemplateParameterFile $tempParametersFile -Force -Verbose  
+    Log-Message $_.Exception.Message
+    throw
+}
+finally
+{
+    Log-Message "Cleaning up temporary parameter file"
+    Remove-Item -Path $tempParametersFile;
 }

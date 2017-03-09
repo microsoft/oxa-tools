@@ -517,6 +517,48 @@
             "metadata": {
                 "description": "Number of days to keep old Mysql backups. Backups older than this number of days will be deleted."
             }
+        },
+        "importKitchenSinkCourse": {
+            "type": "bool",
+            "defaultValue": true,
+            "metadata": {
+                "description": "Indicator of whether not not to import the Microsoft Kitchen Sink sample course."
+            }
+        },
+        "enableComprehensiveTheming": {
+            "type": "bool",
+            "defaultValue": true,
+            "metadata": {
+                "description": "Indicator of whether not not to enable comprehensive themeing. If this value is set to 'true', make sure to set the themeing directory & default theme name accordingly"
+            }
+        },
+        "comprehensiveThemingDirectory": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Root path to the directory containing the comprehensive themes"
+            }
+        },
+        "comprehensiveThemingName": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Name of the comprehensive available under the 'comprehensiveThemingDirectory' that will be used"
+            }
+        },
+        "enableThirdPartyAuth": {
+            "type": "bool",
+            "defaultValue": true,
+            "metadata": {
+                "description": "Indicator of whether or not third-party authentication will be enabled (ie: AAD, or other OAuth provider)"
+            }
+        },
+        "aadLoginButtonText": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Text for the authentication button"
+            }
         }
     },
     "variables": {
