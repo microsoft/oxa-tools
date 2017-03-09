@@ -21,8 +21,8 @@ The Id of the Azure subscription
 .PARAMETER StorageAccountName
 Name of the storage account where the container will be created
 
-.PARAMETER StorageContainerName
-Name of the storage container to create
+.PARAMETER StorageContainerNames
+Name(s) of the storage container(s) to create. Use a comma-separated list to specify multiple containers
 
 .INPUTS
 None. You cannot pipe objects to Create-StorageContainer.ps1
@@ -41,8 +41,8 @@ Param(
         [Parameter(Mandatory=$true)][string]$AadTenantId,
         [Parameter(Mandatory=$true)][string]$AzureSubscriptionId,
         [Parameter(Mandatory=$true)][string]$StorageAccountName,
-        [Parameter(Mandatory=$true)][hashtable]$StorageAccountKey,
-        [Parameter(Mandatory=$true)][hashtable]$StorageContainerName
+        [Parameter(Mandatory=$true)][string]$StorageAccountKey,
+        [Parameter(Mandatory=$true)][string]$StorageContainerNames
      )
 
 ###########################################
@@ -79,4 +79,11 @@ Authenticate-AzureRmUser -AadWebClientId $AadWebClientId -AadWebClientAppKey $Aa
 Set-AzureSubscriptionContext -AzureSubscriptionId $AzureSubscriptionId
 
 # Create the container
-Create-StorageContainer -StorageAccountName $StorageAccountName -StorageAccountKey $StorageAccountKey -StorageContainerName $StorageContainerName
+[array]$storageContainerList = $StorageContainerNames.Split(",");
+
+foreach($storageContainerName in $storageContainerList)
+{
+    # todo: add retries for better resiliency
+    Log-Message "Creating Storage Container: $($storageContainerName)"
+    Create-StorageContainer -StorageAccountName $StorageAccountName -StorageAccountKey $StorageAccountKey -StorageContainerName $storageContainerName
+}
