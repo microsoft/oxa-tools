@@ -424,7 +424,7 @@
                                         "fileUris": "[parameters('customSettings').vmScripts]"
                                     },
                                     "protectedSettings": {
-                                        "commandToExecute": "[parameters('customSettings').commandToExecute]"
+                                        "commandToExecute": "[replace(parameters('customSettings').commandToExecute, parameters('customSettings').storageKeyPlaceholder, parameters('customSettings').secureGenericStorageAccountKey)]",
                                     }
                                 }
                             },
