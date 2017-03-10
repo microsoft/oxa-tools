@@ -86,6 +86,10 @@ EDXAPP_AAD_CLIENT_ID=""
 EDXAPP_AAD_SECURITY_KEY=""
 EDXAPP_AAD_BUTTON_NAME=""
 
+# traffic manager
+DOMAIN_OVERRIDE=""
+DOMAIN_SEPARATOR=""
+
 help()
 {
     echo "This script bootstraps the OXA Stamp"
@@ -136,6 +140,8 @@ help()
     echo "        --comprehensive-theming-name Name of the comprehensive available under the 'comprehensiveThemingDirectory' that will be used."
     echo "        --enable-thirdparty-auth Indicator of whether or not third-party authentication will be enabled (ie: AAD, or other OAuth provider)."
     echo "        --aad-loginbutton-text Text for the authentication button."
+    echo "        --base-domain-override base domain for the stamp"
+    echo "        --domain-separator domain separator character"
 }
 
 # Parse script parameters
@@ -308,6 +314,12 @@ parse_args()
                 EDXAPP_AAD_BUTTON_NAME="${2//_/ }"
                 echo "Option '${1}' reset to '$EDXAPP_AAD_BUTTON_NAME'"
                 ;;
+             --base-domain-override)
+                DOMAIN_OVERRIDE="${2,,}"
+                ;;
+             --domain-separator)
+                DOMAIN_SEPARATOR="${2,,}"
+                ;;
             -h|--help)  # Helpful hints
                 help
                 exit 2
@@ -347,6 +359,15 @@ persist_deployment_time_values()
     sed -i "s#{EDXAPP_COMPREHENSIVE_THEME_DIRECTORY}#${EDXAPP_COMPREHENSIVE_THEME_DIR}#I" $config_file
     sed -i "s#{EDXAPP_DEFAULT_SITE_THEME}#${EDXAPP_DEFAULT_SITE_THEME}#I" $config_file
     sed -i "s#{EDXAPP_IMPORT_KITCHENSINK_COURSE}#${EDXAPP_IMPORT_KITCHENSINK_COURSE}#I" $config_file
+
+    if [ ! -z ${DOMAIN_OVERRIDE} ]; 
+    then
+        log "Overriding the base url"
+        sed -i "s#^BASE_URL=.*#BASE_URL=${DOMAIN_OVERRIDE}#I" $config_file
+        sed -i "s#^LMS_URL=.*#LMS_URL=lms${DOMAIN_SEPARATOR}${DOMAIN_OVERRIDE}#I" $config_file
+        sed -i "s#^CMS_URL=.*#CMS_URL=cms${DOMAIN_SEPARATOR}${DOMAIN_OVERRIDE}#I" $config_file
+        sed -i "s#^PREVIEW_URL=.*#PREVIEW_URL=preview${DOMAIN_SEPARATOR}${DOMAIN_OVERRIDE}#I" $config_file
+    fi
 
     # Re-source the cloud configurations
     source $config_file
