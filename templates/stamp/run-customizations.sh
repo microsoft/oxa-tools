@@ -344,9 +344,13 @@ persist_deployment_time_values()
     export EDXAPP_AAD_SECURITY_KEY=${EDXAPP_AAD_SECURITY_KEY}
     export EDXAPP_AAD_BUTTON_NAME=${EDXAPP_AAD_BUTTON_NAME}
     export EDXAPP_ENABLE_COMPREHENSIVE_THEMING=${EDXAPP_ENABLE_COMPREHENSIVE_THEMING}
-    export EDXAPP_COMPREHENSIVE_THEME_DIRECTORY=${EDXAPP_COMPREHENSIVE_THEME_DIR} # todo: ensure formatting in yaml output works as intended.
+    # this is still not working - export EDXAPP_COMPREHENSIVE_THEME_DIRECTORY=${EDXAPP_COMPREHENSIVE_THEME_DIR} # todo: ensure formatting in yaml output works as intended.
     export EDXAPP_DEFAULT_SITE_THEME=${EDXAPP_DEFAULT_SITE_THEME}
     export EDXAPP_IMPORT_KITCHENSINK_COURSE=${EDXAPP_IMPORT_KITCHENSINK_COURSE}
+
+    # Special case for theming directory
+    # passing this variable from bash to yml continues to be problematic. 
+    sed -i "s#{EDXAPP_COMPREHENSIVE_THEME_DIRECTORY}#${EDXAPP_COMPREHENSIVE_THEME_DIR}#I" $config_file
 
     # replace and persist "deployment-time" values
     cp $config_file "$config_file.original"
