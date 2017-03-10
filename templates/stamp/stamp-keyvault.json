@@ -559,6 +559,20 @@
             "metadata": {
                 "description": "Text for the authentication button"
             }
+        },
+        "baseDomain": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Domain override for the site. This needs to be the base domain to which cms and lms sub-domains will be added"
+            }
+        },
+        "domainSeparator": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Separator to use for sub-domains (lms|cms|preview)"
+            }
         }
     },
     "variables": {
