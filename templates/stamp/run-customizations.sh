@@ -514,26 +514,31 @@ if [ "$MACHINE_ROLE" == "jumpbox" ];
 then
     log "Starting backup configuration on '${HOSTNAME}' as a member in the '${MACHINE_ROLE}' role"
 
-    # setup the configuration file for database backups
-    source "${OXA_ENV_PATH}/${DEPLOYMENT_ENV}.sh"
-    exit_on_error "Failed sourcing the environment configuration file from keyvault" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
-
-    # these are fixed values
+    # These are fixed values
     MONGO_REPLICASET_CONNECTIONSTRING="${MONGO_REPLICASET_NAME}/${MONGO_SERVER_LIST}"
     DATABASE_BACKUP_SCRIPT="${INSTALLER_BASEPATH}/db_backup.sh"
 
-    # setup mysql backup
+    # Setup mysql backup
     DATABASE_TYPE_TO_BACKUP="mysql"
     DATABASE_BACKUP_LOG="/var/log/db_backup_${DATABASE_TYPE_TO_BACKUP}.log"
     setup_backup "${INSTALLER_BASEPATH}/backup_configuration_${DATABASE_TYPE_TO_BACKUP}.sh" "${DATABASE_BACKUP_SCRIPT}" "${DATABASE_BACKUP_LOG}" "${BACKUP_STORAGEACCOUNT_NAME}" "${BACKUP_STORAGEACCOUNT_KEY}" "${MYSQL_BACKUP_FREQUENCY}" "${MYSQL_BACKUP_RETENTIONDAYS}" "${MONGO_REPLICASET_CONNECTIONSTRING}" "${MYSQL_SERVER_LIST}" "${DATABASE_TYPE_TO_BACKUP}" "${MYSQL_ADMIN_USER}" "${MYSQL_ADMIN_PASSWORD}" "${MYSQL_TEMP_USER}" "${MYSQL_TEMP_PASSWORD}"
     exit_on_error "Failed setting up the Mysql Database backup" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
-    # setup mongo backup
+    # Setup mongo backup
     DATABASE_TYPE_TO_BACKUP="mongo"
     DATABASE_BACKUP_LOG="/var/log/db_backup_${DATABASE_TYPE_TO_BACKUP}.log"
     setup_backup "${INSTALLER_BASEPATH}/backup_configuration_${DATABASE_TYPE_TO_BACKUP}.sh" "${DATABASE_BACKUP_SCRIPT}" "${DATABASE_BACKUP_LOG}" "${BACKUP_STORAGEACCOUNT_NAME}" "${BACKUP_STORAGEACCOUNT_KEY}" "${MONGO_BACKUP_FREQUENCY}" "${MONGO_BACKUP_RETENTIONDAYS}" "${MONGO_REPLICASET_CONNECTIONSTRING}" "${MYSQL_SERVER_LIST}" "${DATABASE_TYPE_TO_BACKUP}" "${MONGO_USER}" "${MONGO_PASSWORD}" "${MONGO_USER}" "${MONGO_PASSWORD}"
     exit_on_error "Failed setting up the Mongo Database backup" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
-fi
+
+    # TODO: investigate further and implement more elegant fix
+    # When the comprehensive theming dirs is specified, edxapp:migrate task fails with :  ImproperlyConfigured: COMPREHENSIVE_THEME_DIRS
+    # As an interim mitigation, create the folder.
+    if [ ! -z "${EDXAPP_COMPREHENSIVE_THEME_DIR}" ] && [ -d "${EDXAPP_COMPREHENSIVE_THEME_DIR}" ]; 
+    then
+        log "Creating comprehensive themeing directory at ${EDXAPP_COMPREHENSIVE_THEME_DIR}"
+        mkdir -p "${EDXAPP_COMPREHENSIVE_THEME_DIR}"
+        chown -R edxapp:edxapp "${EDXAPP_COMPREHENSIVE_THEME_DIR}"
+    fi
 
 #####################################
 # Launch Installer
