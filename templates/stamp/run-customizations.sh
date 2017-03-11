@@ -477,7 +477,7 @@ then
     # TODO: investigate further and implement more elegant fix
     # When the comprehensive theming dirs is specified, edxapp:migrate task fails with :  ImproperlyConfigured: COMPREHENSIVE_THEME_DIRS
     # As an interim mitigation, create the folder.
-    if [ ! -z "${EDXAPP_COMPREHENSIVE_THEME_DIR}" ] && [ -d "${EDXAPP_COMPREHENSIVE_THEME_DIR}" ]; 
+    if [ ! -z "${EDXAPP_COMPREHENSIVE_THEME_DIR}" ] && [ ! -d "${EDXAPP_COMPREHENSIVE_THEME_DIR}" ]; 
     then
         log "Creating comprehensive themeing directory at ${EDXAPP_COMPREHENSIVE_THEME_DIR}"
         mkdir -p "${EDXAPP_COMPREHENSIVE_THEME_DIR}"
