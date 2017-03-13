@@ -487,6 +487,8 @@ send_notification()
             echo "$MESSAGE" | mail -s "$SUBJECT" "$TO" -A "$MAIN_LOGFILE" -A "$SECONDARY_LOGFILE"
         elif [[ -f $MAIN_LOGFILE ]]; then
             echo "$MESSAGE" | mail -s "$SUBJECT" "$TO" -A "$MAIN_LOGFILE"
+        elif [[ -f $SECONDARY_LOGFILE ]]; then
+            echo "$MESSAGE" | mail -s "$SUBJECT" "$TO" -A "$SECONDARY_LOGFILE"
         else
             echo "$MESSAGE" | mail -s "$SUBJECT" "$TO"
         fi
