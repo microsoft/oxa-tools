@@ -104,7 +104,14 @@ Set-AzureSubscription -SubscriptionName $AzureSubscriptionName | Out-Null
 New-AzureRmResourceGroup -Name $ResourceGroupName -Location $Location -Force
 
 #prep the variables we want to use for replacement
-$replacements = @{ "CLUSTERNAME"=$ResourceGroupName;  "ADMINEMAILADDRESS"=$ClusterAdministratorEmailAddress; }
+$replacements = @{ 
+                    "CLUSTERNAME"=$ResourceGroupName;  
+                    "ADMINEMAILADDRESS"=$ClusterAdministratorEmailAddress; 
+                    "AADWEBCLIENTID"=$AadWebClientId; 
+                    "AADWEBCLIENTAPPKEY"=$AadWebClientAppKey; 
+                    "AADTENANTID"=$AadTenantId;
+                }
+
 $tempParametersFile = Update-RuntimeParameters -ParametersFile $KeyVaultDeploymentParametersFile -ReplacementHash $replacements;
 
 try
