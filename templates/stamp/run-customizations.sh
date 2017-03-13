@@ -190,6 +190,7 @@ parse_args()
                 ;;
             --aad-webclient-id)
                 AAD_WEBCLIENT_ID="$2"
+                EDXAPP_AAD_CLIENT_ID="$2"
                 ;;
             --aad-webclient-appkey)
                 AAD_WEBCLIENT_APPKEY="$2"
@@ -197,7 +198,6 @@ parse_args()
                 ;;
             --aad-tenant-id)
                 AAD_TENANT_ID="$2"
-                EDXAPP_AAD_CLIENT_ID="$2"
                 ;;
             --oxatools-public-github-accountname)
                 OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME="$2"
