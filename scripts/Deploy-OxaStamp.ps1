@@ -46,12 +46,26 @@ Path to the arm template for bootstrapping keyvault
 .PARAMETER FullDeploymentArmTemplateFile
 Path to the deployment parameters file for the keyvault arm deployment
 
+.PARAMETER SmtpServer
+SMTP Server to use for deployment and other notifications (it is assumed the server supports TLS)
+
+.PARAMETER SmtpServerPort
+SMTP Server port used for connection
+
+.PARAMETER SmtpAuthenticationUser
+SMTP Server user name to authenticate with
+
+.PARAMETER SmtpAuthenticationUserPassword
+Password for the SMTP Server user to authenticate with
+
+.PARAMETER ServiceAccountPassword
+Password to use for creating backend service accounts (Mysql, Mongo admin users)
+
 .INPUTS
 None. You cannot pipe objects to Deploy-OxaStamp.ps1
 
 .OUTPUTS
 None
-
 
 .EXAMPLE
 .\Deploy-OxaStamp.ps1 -AzureSubscriptionName SomeSubscription -ResourceGroupName OxaMasterNode -Location "west us" -TargetPath "E:\env\bvt" -AadWebClientId "1178d667e54c" -AadWebClientAppKey "BDtkq10kdGxI6QgtyNI=" -AadTenantId "1db47" -KeyVaultDeploymentArmTemplateFile "E:\stampKeyVault.json" -KeyVaultDeploymentParametersFile "E:\env\bvt\parameters.json" -FullDeploymentParametersFile "E:\env\bvt\parameters.json" -FullDeploymentArmTemplateFile "E:\stamp-v2.json" -DeployKeyVault -DeployStamp:$false
@@ -76,7 +90,14 @@ Param(
         [Parameter(Mandatory=$true)][string]$ClusterAdministratorEmailAddress,
 
         [Parameter(Mandatory=$false)][switch]$DeployKeyVault=$true,
-        [Parameter(Mandatory=$false)][switch]$DeployStamp=$true
+        [Parameter(Mandatory=$false)][switch]$DeployStamp=$true,
+
+        [Parameter(Mandatory=$false)][string]$SmtpServer="",
+        [Parameter(Mandatory=$false)][string]$SmtpServerPort="",
+        [Parameter(Mandatory=$false)][string]$SmtpAuthenticationUser="",
+        [Parameter(Mandatory=$false)][string]$SmtpAuthenticationUserPassword="",
+
+        [Parameter(Mandatory=$false)][string]$ServiceAccountPassword="=crq+4L5QFrMCIKJaVazBWisd0fMJR"
      )
 
 #################################
@@ -110,7 +131,17 @@ $replacements = @{
                     "AADWEBCLIENTID"=$AadWebClientId; 
                     "AADWEBCLIENTAPPKEY"=$AadWebClientAppKey; 
                     "AADTENANTID"=$AadTenantId;
+                    "SERVICEACCOUNTPASSWORD"=$ServiceAccountPassword
                 }
+
+# Assumption: if the SMTP server is specified, the rest of its configuration will be specified
+if ($smtpServer)
+{
+    $replacements["SMTPSERVER"]=$smtpServer
+    $replacements["SMTPSERVERPORT"]=$smtpServerPort
+    $replacements["SMTPAUTHENTICATIONUSER"]=$smtpAuthenticationUser
+    $replacements["SMTPAUTHENTICATIONUSERPASSWORD"]=$smtpAuthenticationUserPassword
+}
 
 $tempParametersFile = Update-RuntimeParameters -ParametersFile $KeyVaultDeploymentParametersFile -ReplacementHash $replacements;
 
