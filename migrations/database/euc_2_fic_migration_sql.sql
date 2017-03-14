@@ -501,7 +501,7 @@ COMMIT;
 
 
 /* Current Database: programs */
-BEGIN
+BEGIN;
 CREATE DATABASE IF NOT EXISTS `programs` DEFAULT CHARACTER SET utf8;
 USE `programs`;
 
