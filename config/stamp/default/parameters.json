@@ -27,34 +27,34 @@
             "value": "lexoxaadmin"
         },
         "adminPublicKey": {
-            "value": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCv5jR5oGpB4XCqfF31nl1xV9/veuDWVH4VC7lTJISXIAg5I5MW6hpn0ix7BvtIFQlA/MXdp0NHx/p8iPIFnh6Jk+lBwWXDRfl9P88YljWvKIhjFJ+jhyjSzf/wysuQQpNAWZiW0LARIINUVf6LiOf9tOSCTeDiX8FhIhe5g0Q1eDMsvGXgjlSSaGhnfzWW6iFnQWE57Kbvh8O+5pJXZ3LlDQ2zm1CIereR7G6RX5J1oJcPs5gaX6MfPbPn8f0kfZrFiBrxeq40jmGZ/dWqs0LFOeNqo4sMM+oFcyp8go1I6WWeIbJAnqktjU659xstb+fp7q4n20lQ1PJh7AMxmSxkSUmPmLIHAROsSBWvRoHJpOHPXp44y6dS/4xWN4DWDF7fw8BlKuVyLeXqDOxbTqxfNTIyoKx3LCjWINNJxiZtj8icragB0ZMNl0OMNWRJ3ySIPQdbKD3ufGVs7ZvrN/jQOkyYKMsBqSLVXwJHQm+GzRI48a7Ot3Mbrqm18LxNT91ejPinT0C3bmiqmqeIPV5lpkpl4BcdYNETXgo5sqAAHhxirJyCsvOtG/7aTyCk5CWhwZ2JyIqs4K4ayo6u9CpJly1Tr2pzSQqgie+kYzA7B9W4M7BMe03uWD2j3OtVqfz34emTBsbK5//2fEI6bzZB+oLpHSpUZaM3R2jNMBtvMw== LeXSTedX@microsoft.com"
+            "value": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCj0GHnhX8L8cPtCFhNPTClvDMzeMsB+ys5uMaqFgTa2mrWSUBsbsVwK91H6mwtrKRJf42Ry5DVYKLPf8XSz22v5iyZ1DrbkGJcmHRWEBFA47habQFg+eXBUSENUf1cMOh4RwkN1olCLpsdeKrF0Rj6k3ZFODUJIf+v5HYKFkj+8iVdQh0wgnPVxneqIKcbqNLO8ymmAiTT+fYaubPWzJmq8nUKoNZRiPXSSAwHHtNouR4vvPtOU7je2TxzoYIcM/Ja6YycBx44W+A7ygY5/hmij4Byhm20MLZLoBLX2AMp8horzqWhdF/wvFMhv8FTTzlWpwhuEpbd2M4B6Tylajm8lwA9u/9MO6lEbqnX/XH/KS9hPZdKvqXgbPTzM265Aea0LPXHDdF0f9AID6Xl3grHrtkKFGMzbgqFtF9nd51kwDTZr2b1zIVWb6XxDXXVhX4XqWniCT8xEzuGyMp4/mhaghRDhT45Alu6Frv6d5+IjeabBSXOwwe+8NpTDc0+hxM/MYiE4K6EHpPqwxOoRJcZFrjdSxQGGrCD+bLJbGfI8tn96Wq4zBBUMp+iX1iXXNScgqUAaSoNKEH8ag177oOvtH3AsB/b7Nm/eUIr/WYfYESlft1M1h25Lvu6QgFyqJlwdXSPCiIYbR6nK6WI2Zz6cActCLoJaN7IPw6RLeY+tw== admin@contoso.com"
         },
         "mongoServerAdminUserName": {
-            "value": "lexoxamongoadmin"
+            "value": "oxamongoadmin"
         },
         "mongoServerAdminPassword": {
-            "value": "8cN36MVezvJ7M4CLdbD6Ph3D"
+            "value": "{SERVICEACCOUNTPASSWORD}"
         },
         "mysqlServerPackageVersion": {
             "value": "5.6"
         },
         "mysqlServerAdminUserName": {
-            "value": "lexoxamysqladmin"
+            "value": "oxamysqladmin"
         },
         "mysqlServerAdminPassword": {
-            "value": "IgxHTDO5tL226mChsLHMjVQ"
+            "value": "{SERVICEACCOUNTPASSWORD}"
         },
         "mysqlServerReplUserName": {
-            "value": "lexoxamysqlrepl"
+            "value": "oxamysqlrepluser"
         },
         "mysqlServerReplPassword": {
-            "value": "d4DrWOo0wgesWqeGDyGWb14NN"
+            "value": "{SERVICEACCOUNTPASSWORD}"
         },
         "deploymentSlot": {
             "value": "slot1"
         },
         "deploymentVersionId": {
-            "value": "201701131009"
+            "value": "201703141409"
         },
         "autoScaleEnabled": {
             "value": true
@@ -119,7 +119,6 @@
         "edxForumVersion": {
             "value": "open-release/ficus.master"
         },
-
         "armTemplateRelativePath": {
             "value": "templates/stamp"
         },
@@ -155,7 +154,7 @@
         },
 
         "keyVaultMasterAccountId": {
-            "value": "77ddb6aa-bca4-4237-9c8d-680f0a871984"
+            "value": "[]"
         },
         "keyVaultMasterAccountKeyAccessPermission": {
             "value": [
@@ -195,25 +194,25 @@
             ]
         },
         "aadWebClientId": {
-            "value": "a23c74dd-e32a-47c7-a5d7-4fc0bb0c3297"
+            "value": "{AADWEBCLIENTID}"
         },
         "aadWebClientAppKey": {
-            "value": "QZ3ddyY4EBxNaY+UKfoQeYcBQNSs4ZinIL4oHQtKN9w="
+            "value": "{AADWEBCLIENTAPPKEY}"
         },
         "aadTenantId": {
-            "value": "72f988bf-86f1-41af-91ab-2d7cd011db47"
+            "value": "{AADTENANTID}"
         },
         "smtpServer": {
-            "value": "smtpa-ch1.msn.com"
+            "value": "{SMTPSERVER}"
         },
         "smtpServerPort": {
-            "value": "25025"
+            "value": "{SMTPSERVERPORT}"
         },
         "smtpAuthenticationUser": {
-            "value": "_MLXITE3Email"
+            "value": "{SMTPAUTHENTICATIONUSER}"
         },
         "smtpAuthenticationUserPassword": {
-            "value": "N?@RjR@zAA9SD7A"
+            "value": "{SMTPAUTHENTICATIONUSERPASSWORD}"
         },
         "clusterAdmininistratorEmailAddress": {
             "value": "{ADMINEMAILADDRESS}"
@@ -237,16 +236,16 @@
             "value": true
         },
         "comprehensiveThemingDirectory": {
-            "value": "/edx/app/edxapp/themes"
+            "value": ""
         },
         "comprehensiveThemingName": {
-            "value": "comprehensive"
+            "value": ""
         },
         "enableThirdPartyAuth": {
             "value": true
         },
         "aadLoginButtonText": {
-            "value": "Microsoft AAD"
+            "value": ""
         },
         "baseDomain": {
             "value": "{CLUSTERNAME}-tm.trafficmanager.net"
