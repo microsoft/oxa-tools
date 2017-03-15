@@ -68,106 +68,112 @@ display_usage() {
   exit 1
 }
 
-parse_args() {
-  while [[ "$#" -gt 0 ]]
-  do
+parse_args() 
+{
+      while [[ "$#" -gt 0 ]]
+      do
 
-    # Log input parameters to facilitate troubleshooting
-    echo "Option '$1' set with value '$2'"
+        # Log input parameters to facilitate troubleshooting
+        echo "Option '$1' set with value '$2'"
 
-    case "$1" in
-      -r|--role)
-        EDX_ROLE="${2,,}" # convert to lowercase
-        if ! is_valid_arg "jb vmss mongo mysql edxapp fullstack" $EDX_ROLE; then
-          echo "Invalid role specified\n"
-          display_usage
+        case "$1" in
+          -r|--role)
+            EDX_ROLE="${2,,}" # convert to lowercase
+            if ! is_valid_arg "jb vmss mongo mysql edxapp fullstack" $EDX_ROLE; then
+              echo "Invalid role specified\n"
+              display_usage
+            fi
+            ;;
+          -e|--environment)
+            DEPLOYMENT_ENV="${2,,}" # convert to lowercase
+            if ! is_valid_arg "dev bvt int prod" $DEPLOYMENT_ENV; then
+              echo "Invalid environment specified\n"
+              display_usage
+            fi
+            ;;
+          # For fullstack deployments
+          -a|--access_token)
+            ACCESS_TOKEN="${arg_value}"
+            ;;
+          --cron)
+            CRON_MODE=1
+            ;;
+          --oxatools-public-github-accountname)
+            OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME="${arg_value}"
+            ;;
+          --oxatools-public-github-projectname)
+            OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME="${arg_value}"
+            ;;
+          --oxatools-public-github-projectbranch)
+            OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH="${arg_value}"
+            ;;
+          --edxconfiguration-public-github-accountname)
+            EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME="${arg_value}"
+            ;;
+          --edxconfiguration-public-github-projectname)
+            EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME="${arg_value}"
+            ;;
+          --edxconfiguration-public-github-projectbranch)
+            EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="${arg_value}"
+            ;;
+          --edxplatform-public-github-accountname)
+            EDX_PLATFORM_PUBLIC_GITHUB_ACCOUNTNAME="${arg_value}"
+            ;;
+          --edxplatform-public-github-projectname)
+            EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME="${arg_value}"
+            ;;
+          --edxplatform-public-github-projectbranch)
+            EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH="${arg_value}"
+            ;;
+          --edxtheme-public-github-accountname)
+            EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME="${arg_value}"
+            ;;
+          --edxtheme-public-github-projectname)
+            EDX_THEME_PUBLIC_GITHUB_PROJECTNAME="${arg_value}"
+            ;;
+          --edxtheme-public-github-projectbranch)
+            EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="${arg_value}"
+            ;;
+          --ansible-public-github-accountname)
+            ANSIBLE_PUBLIC_GITHUB_ACCOUNTNAME="${arg_value}"
+            ;;
+          --ansible-public-github-projectname)
+            ANSIBLE_PUBLIC_GITHUB_PROJECTNAME="${arg_value}"
+            ;;
+          --ansible-public-github-projectbranch)
+            ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH="${arg_value}"
+            ;;
+          --edxversion)
+            EDX_VERSION="${arg_value}"
+            ;;
+           --forumversion)
+            FORUM_VERSION="${arg_value}"
+            ;;
+          --installer-script-path)
+            CRON_INSTALLER_SCRIPT="${arg_value}"
+            ;;
+          --cluster-admin-email)
+            CLUSTER_ADMIN_EMAIL="${arg_value}"
+            ;;
+          --cluster-name)
+            CLUSTER_NAME="${arg_value}"
+            MAIL_SUBJECT="${MAIL_SUBJECT} - ${2,,}"
+            ;;
+          *)
+            # Unknown option encountered
+            echo "Option '${BOLD}$1${NORM} $2' not allowed."
+            display_usage
+            ;;
+        esac
+
+        shift # past argument or value
+
+        if [ $shift_once -eq 0 ]; 
+        then
+            shift # past argument or value
         fi
-        ;;
-      -e|--environment)
-        DEPLOYMENT_ENV="${2,,}" # convert to lowercase
-        if ! is_valid_arg "dev bvt int prod" $DEPLOYMENT_ENV; then
-          echo "Invalid environment specified\n"
-          display_usage
-        fi
-        ;;
-      # For fullstack deployments
-      -a|--access_token)
-        ACCESS_TOKEN="$2"
-        ;;
-      --cron)
-        CRON_MODE=1
-        ;;
-      --oxatools-public-github-accountname)
-        OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME="$2"
-        ;;
-      --oxatools-public-github-projectname)
-        OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME="$2"
-        ;;
-      --oxatools-public-github-projectbranch)
-        OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH="$2"
-        ;;
-      --edxconfiguration-public-github-accountname)
-        EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME="$2"
-        ;;
-      --edxconfiguration-public-github-projectname)
-        EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME="$2"
-        ;;
-      --edxconfiguration-public-github-projectbranch)
-        EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="$2"
-        ;;
-      --edxplatform-public-github-accountname)
-        EDX_PLATFORM_PUBLIC_GITHUB_ACCOUNTNAME="$2"
-        ;;
-      --edxplatform-public-github-projectname)
-        EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME="$2"
-        ;;
-      --edxplatform-public-github-projectbranch)
-        EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH="$2"
-        ;;
-      --edxtheme-public-github-accountname)
-        EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME="$2"
-        ;;
-      --edxtheme-public-github-projectname)
-        EDX_THEME_PUBLIC_GITHUB_PROJECTNAME="$2"
-        ;;
-      --edxtheme-public-github-projectbranch)
-        EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="$2"
-        ;;
-      --ansible-public-github-accountname)
-        ANSIBLE_PUBLIC_GITHUB_ACCOUNTNAME="$2"
-        ;;
-      --ansible-public-github-projectname)
-        ANSIBLE_PUBLIC_GITHUB_PROJECTNAME="$2"
-        ;;
-      --ansible-public-github-projectbranch)
-        ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH="$2"
-        ;;
-      --edxversion)
-        EDX_VERSION="$2"
-        ;;
-       --forumversion)
-        FORUM_VERSION="$2"
-        ;;
-      --installer-script-path)
-        CRON_INSTALLER_SCRIPT="$2"
-        ;;
-      --cluster-admin-email)
-        CLUSTER_ADMIN_EMAIL="$2"
-        ;;
-      --cluster-name)
-        CLUSTER_NAME="$2"
-        MAIL_SUBJECT="${MAIL_SUBJECT} - ${2,,}"
-        ;;
-      *)
-        # Unknown option encountered
-        echo "Option '${BOLD}$1${NORM} $2' not allowed."
-        display_usage
-        ;;
-    esac
 
-    shift # past argument or value
-    shift # past argument or value
-  done
+      done
 }
 
 ##

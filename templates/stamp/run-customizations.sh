@@ -3,8 +3,6 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
-set -x
-
 NOTIFICATION_MESSAGE=""
 SECONDARY_LOG="/var/log/bootstrap.csx.log"
 PRIMARY_LOG="/var/log/bootstrap.log"
@@ -152,188 +150,202 @@ parse_args()
     while [[ "$#" -gt 0 ]]
         do
 
+        arg_value="${2}"
+        shift_once=0
+
+        if [[ "${arg_value}" =~ "--" ]]; 
+        then
+            arg_value=""
+            shift_once=1
+        fi
+
          # Log input parameters to facilitate troubleshooting
-        echo "Option '$1' set with value '$2'"
+        echo "Option '${1}' set with value '"${arg_value}"'"
 
         case "$1" in
             -c) # Cloud Name
-                CLOUDNAME=$2
+                CLOUDNAME="${arg_value}"
                 ;;
             -u) # OS Admin User Name
-                OS_ADMIN_USERNAME=$2
+                OS_ADMIN_USERNAME="${arg_value}"
                 ;;
             -i) # Custom script relative path
-                CUSTOM_INSTALLER_RELATIVEPATH=$2
+                CUSTOM_INSTALLER_RELATIVEPATH="${arg_value}"
                 ;;
             -m) # Monitoring cluster name
-                MONITORING_CLUSTER_NAME=$2
+                MONITORING_CLUSTER_NAME="${arg_value}"
                 ;;
             -s|--phase) # Bootstrap Phase (0=Servers, 1=OpenEdx App)
-                if is_valid_arg "0 1" $2; then
-                    BOOTSTRAP_PHASE=$2
+                if is_valid_arg "0 1" "${arg_value}"; then
+                    BOOTSTRAP_PHASE="${arg_value}"
                 else
-                    log "Invalid Bootstrap Phase specified - $2" $ERROR_MESSAGE
+                    log "Invalid Bootstrap Phase specified - ${arg_value}" $ERROR_MESSAGE
                     help
                     exit 2
                 fi
                 ;;
             -u|--admin-user)
-                OS_ADMIN_USERNAME=$2
+                OS_ADMIN_USERNAME="${arg_value}"
                 ;;
             --monitoring-cluster)
-                MONITORING_CLUSTER_NAME=$2
+                MONITORING_CLUSTER_NAME="${arg_value}"
                 ;;
             --crontab-interval)
-                CRONTAB_INTERVAL_MINUTES=$2
+                CRONTAB_INTERVAL_MINUTES="${arg_value}"
                 ;;
             --keyvault-name)
-                KEYVAULT_NAME="$2"
+                KEYVAULT_NAME="${arg_value}"
                 ;;
             --aad-webclient-id)
-                AAD_WEBCLIENT_ID="$2"
-                EDXAPP_AAD_CLIENT_ID="$2"
+                AAD_WEBCLIENT_ID="${arg_value}"
+                EDXAPP_AAD_CLIENT_ID="${arg_value}"
                 ;;
             --aad-webclient-appkey)
-                AAD_WEBCLIENT_APPKEY="$2"
-                EDXAPP_AAD_SECURITY_KEY="$2"
+                AAD_WEBCLIENT_APPKEY="${arg_value}"
+                EDXAPP_AAD_SECURITY_KEY="${arg_value}"
                 ;;
             --aad-tenant-id)
-                AAD_TENANT_ID="$2"
+                AAD_TENANT_ID="${arg_value}"
                 ;;
             --oxatools-public-github-accountname)
-                OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME="$2"
+                OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME="${arg_value}"
                 ;;
             --oxatools-public-github-projectname)
-                OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME="$2"
+                OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME="${arg_value}"
                 ;;
             --oxatools-public-github-projectbranch)
-                OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+                OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH="${arg_value}"
                 ;;
             --edxconfiguration-public-github-accountname)
-                EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME="$2"
+                EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME="${arg_value}"
                 ;;
             --edxconfiguration-public-github-projectname)
-                EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME="$2"
+                EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME="${arg_value}"
                 ;;
             --edxconfiguration-public-github-projectbranch)
-                EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+                EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="${arg_value}"
                 ;;
             --edxplatform-public-github-accountname)
-                EDX_PLATFORM_PUBLIC_GITHUB_ACCOUNTNAME="$2"
+                EDX_PLATFORM_PUBLIC_GITHUB_ACCOUNTNAME="${arg_value}"
                 ;;
             --edxplatform-public-github-projectname)
-                EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME="$2"
+                EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME="${arg_value}"
                 ;;
             --edxplatform-public-github-projectbranch)
-                EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+                EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH="${arg_value}"
                 ;;
             --edxtheme-public-github-accountname)
-                EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME="$2"
+                EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME="${arg_value}"
                 ;;
             --edxtheme-public-github-projectname)
-                EDX_THEME_PUBLIC_GITHUB_PROJECTNAME="$2"
+                EDX_THEME_PUBLIC_GITHUB_PROJECTNAME="${arg_value}"
                 ;;
             --edxtheme-public-github-projectbranch)
-                EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+                EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="${arg_value}"
                 ;;
             --ansible-public-github-accountname)
-                ANSIBLE_PUBLIC_GITHUB_ACCOUNTNAME="$2"
+                ANSIBLE_PUBLIC_GITHUB_ACCOUNTNAME="${arg_value}"
                 ;;
             --ansible-public-github-projectname)
-                ANSIBLE_PUBLIC_GITHUB_PROJECTNAME="$2"
+                ANSIBLE_PUBLIC_GITHUB_PROJECTNAME="${arg_value}"
                 ;;
             --ansible-public-github-projectbranch)
-                ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+                ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH="${arg_value}"
                 ;;
             --edxversion)
-                EDX_VERSION="$2"
+                EDX_VERSION="${arg_value}"
                 ;;
             --forumversion)
-                FORUM_VERSION="$2"
+                FORUM_VERSION="${arg_value}"
                 ;;
             --azure-subscription-id)
-                AZURE_SUBSCRIPTION_ID="$2"
+                AZURE_SUBSCRIPTION_ID="${arg_value}"
                 ;;
             --smtp-server)
-                SMTP_SERVER="$2"
+                SMTP_SERVER="${arg_value}"
                 ;;
             --smtp-server-port)
-                SMTP_SERVER_PORT="$2"
+                SMTP_SERVER_PORT="${arg_value}"
                 ;;
             --smtp-auth-user)
-                SMTP_AUTH_USER="$2"
+                SMTP_AUTH_USER="${arg_value}"
                 ;;
             --smtp-auth-user-password)
-                SMTP_AUTH_USER_PASSWORD="$2"
+                SMTP_AUTH_USER_PASSWORD="${arg_value}"
                 ;;
             --cluster-admin-email)
-                CLUSTER_ADMIN_EMAIL="$2"
+                CLUSTER_ADMIN_EMAIL="${arg_value}"
                 ;;
             --cluster-name)
-                CLUSTER_NAME="$2"
-                MAIL_SUBJECT="${MAIL_SUBJECT} - ${2,,}"
+                CLUSTER_NAME="${arg_value}"
+                MAIL_SUBJECT="${MAIL_SUBJECT} - ${arg_value,,}"
                 ;;
             --cron)
                 CRON_MODE=1
                 ;;
             --storage-account-name)
-                BACKUP_STORAGEACCOUNT_NAME="$2"
+                BACKUP_STORAGEACCOUNT_NAME="${arg_value}"
                 ;;
              --storage-account-key)
-                BACKUP_STORAGEACCOUNT_KEY="$2"
+                BACKUP_STORAGEACCOUNT_KEY="${arg_value}"
                 ;;
              --mongo-backup-frequency)
-                MONGO_BACKUP_FREQUENCY="${2//_/ }"
+                MONGO_BACKUP_FREQUENCY="${arg_value//_/ }"
                 echo "Option '${1}' reset to '$MONGO_BACKUP_FREQUENCY'"
                 ;;
              --mysql-backup-frequency)
-                MYSQL_BACKUP_FREQUENCY="${2//_/ }"
+                MYSQL_BACKUP_FREQUENCY="${arg_value//_/ }"
                 echo "Option '${1}' reset to '$MYSQL_BACKUP_FREQUENCY'"
                 ;;
              --mongo-backup-retention-days)
-                MONGO_BACKUP_RETENTIONDAYS="$2"
+                MONGO_BACKUP_RETENTIONDAYS="${arg_value}"
                 ;;
              --mysql-backup-retention-days)
-                MYSQL_BACKUP_RETENTIONDAYS="$2"
+                MYSQL_BACKUP_RETENTIONDAYS="${arg_value}"
                 ;;
              --import-kitchensink-course)
-                EDXAPP_IMPORT_KITCHENSINK_COURSE="$2"
+                EDXAPP_IMPORT_KITCHENSINK_COURSE="${arg_value}"
                 ;;
              --enable-comprehensive-theming)
                 EDXAPP_ENABLE_COMPREHENSIVE_THEMING="${2,,}"
                 ;;
              --comprehensive-theming-directory)
-                EDXAPP_COMPREHENSIVE_THEME_DIR="$2"
+                EDXAPP_COMPREHENSIVE_THEME_DIR="${arg_value}"
                 ;;
              --comprehensive-theming-name)
-                EDXAPP_DEFAULT_SITE_THEME="$2"
+                EDXAPP_DEFAULT_SITE_THEME="${arg_value}"
                 ;;
              --enable-thirdparty-auth)
-                EDXAPP_ENABLE_THIRD_PARTY_AUTH="${2,,}"
+                EDXAPP_ENABLE_THIRD_PARTY_AUTH="${arg_value,,}"
                 ;;
              --aad-loginbutton-text)
-                EDXAPP_AAD_BUTTON_NAME="${2//_/ }"
+                EDXAPP_AAD_BUTTON_NAME="${arg_value//_/ }"
                 echo "Option '${1}' reset to '$EDXAPP_AAD_BUTTON_NAME'"
                 ;;
              --base-domain-override)
-                DOMAIN_OVERRIDE="${2,,}"
+                DOMAIN_OVERRIDE="${arg_value,,}"
                 ;;
              --domain-separator)
-                DOMAIN_SEPARATOR="${2,,}"
+                DOMAIN_SEPARATOR="${arg_value,,}"
                 ;;
             -h|--help)  # Helpful hints
                 help
                 exit 2
                 ;;
             *) # unknown option
-                echo "Option '${BOLD}$1${NORM} $2' not allowed."
+                echo "Option '${BOLD}$1${NORM} ${arg_value}' not allowed."
                 help
                 exit 2
                 ;;
         esac
         
         shift # past argument
-        shift # past argument or value
+
+        if [ $shift_once -eq 0 ]; 
+        then
+            shift # past argument or value
+        fi
+
     done
 }
 
