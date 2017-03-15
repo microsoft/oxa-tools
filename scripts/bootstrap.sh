@@ -70,11 +70,19 @@ display_usage() {
 
 parse_args() 
 {
-      while [[ "$#" -gt 0 ]]
-      do
+    while [[ "$#" -gt 0 ]]
+    do
+        arg_value="${2}"
+        shift_once=0
 
-        # Log input parameters to facilitate troubleshooting
-        echo "Option '$1' set with value '$2'"
+        if [[ "${arg_value}" =~ "--" ]]; 
+        then
+            arg_value=""
+            shift_once=1
+        fi
+
+         # Log input parameters to facilitate troubleshooting
+        echo "Option '${1}' set with value '"${arg_value}"'"
 
         case "$1" in
           -r|--role)
@@ -173,7 +181,7 @@ parse_args()
             shift # past argument or value
         fi
 
-      done
+    done
 }
 
 ##

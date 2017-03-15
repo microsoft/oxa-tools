@@ -104,7 +104,7 @@ help()
 parse_args()
 {
     while [[ "$#" -gt 0 ]]
-        do
+    do
 
         arg_value="${2}"
         shift_once=0
