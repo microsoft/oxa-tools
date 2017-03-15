@@ -26,15 +26,13 @@ PREVIEW_URL=preview.$BASE_URL
 # uri format: [lms|cms]-%%CLUSTERNAME%%-%%DEPLOYMENT_SLOT%%.%%REGION%%.cloudapp.azure.com
 TEMPLATE_TYPE=stamp # stamp|scalable|fullstack|devstack
 CLUSTERNAME={CLUSTERNAME}
-DEPLOYMENT_SLOT=staging
-REGION=centralus
-ADMIN_USER=lexoxaadmin
+ADMIN_USER=oxaadmin
 OXA_TOOLS_VERSION=oxa/master.fic
 
 # config/server-vars.yml
 #YOUTUBE_API_KEY=todo
-PLATFORM_NAME="Microsoft Learning"
-PLATFORM_EMAIL=MLXSWAT@microsoft.com
+PLATFORM_NAME="{EDXAPP_PLATFORM_NAME}"
+PLATFORM_EMAIL="{EDXAPP_PLATFORM_EMAIL}"
 
 # config/versions.yml
 CONFIGURATION_REPO=https://github.com/Microsoft/edx-configuration.git
@@ -46,14 +44,14 @@ THEME_VERSION=oxa/master.fic
 EDX_VERSION=open-release/ficus.master
 FORUM_VERSION=open-release/ficus.master
 
-SITE_DNS=oxa-example.westus.cloudapp.azure.com
+#SITE_DNS=oxa-example.westus.cloudapp.azure.com
 
 # fullstack uses default EMAIL_HOST=localhost
 # config/scalable/scalable.yml, config/stamp/stamp.yml
-EDXAPP_EMAIL_HOST="SMTPa-kaw.msn.com"
-EDXAPP_EMAIL_HOST_USER="GME\\\\_MLXITE3Email"
-EDXAPP_EMAIL_HOST_PASSWORD="N?@RjR@zAA9SD7A"
-EDXAPP_EMAIL_PORT=25025
+EDXAPP_EMAIL_HOST=
+EDXAPP_EMAIL_HOST_USER=
+EDXAPP_EMAIL_HOST_PASSWORD=
+EDXAPP_EMAIL_PORT=
 EDXAPP_EMAIL_USE_TLS=true
 
 # storage uploads
@@ -61,19 +59,19 @@ AZURE_ACCOUNT_NAME={AZURE_ACCOUNT_NAME}
 AZURE_ACCOUNT_KEY={AZURE_ACCOUNT_KEY}
 
 NGINX_ENABLE_SSL=True
-NGINX_SSL_CERTIFICATE=/oxa/oxa-tools-config/env/bvt/$BASE_URL.crt
-NGINX_SSL_KEY=/oxa/oxa-tools-config/env/bvt/$BASE_URL.key
+NGINX_SSL_CERTIFICATE=/oxa/oxa-tools-config/env/bvt/cert.crt
+NGINX_SSL_KEY=/oxa/oxa-tools-config/env/bvt/cert.key
 
 ##########################
 # MONGO
 ##########################
 
 # Mongo Credentials
-MONGO_USER=lexoxamongoadmin
-MONGO_PASSWORD=8cN36MVezvJ7M4CLdbD6Ph3D
+MONGO_USER=oxamongoadmin
+MONGO_PASSWORD=7wfD0P0MCDNP4wEQoREmvnb3hGv
 
 # Mongo Replicaset Credentials
-MONGO_REPLICASET_KEY=tcvhiyu5h2o5o
+MONGO_REPLICASET_KEY=7wfD0P0MCDNP4wEQoREmvnb3hGv
 MONGO_REPLICASET_NAME={MONGO_REPLICASET_NAME}
 
 # MongoDB Installer Configurations
@@ -89,27 +87,27 @@ MONGO_SERVER_LIST=10.0.0.11,10.0.0.12,10.0.0.13
 ##########################
 
 # Mysql Credentials
-MYSQL_ADMIN_USER=lexoxamysqladmin
-MYSQL_ADMIN_PASSWORD=IgxHTDO5tL226mChsLHMjVQ
+MYSQL_ADMIN_USER=oxamysqladmin
+MYSQL_ADMIN_PASSWORD=7wfD0P0MCDNP4wEQoREmvnb3hGv
 
 # MySql Temporary Credentials
-MYSQL_TEMP_USER=LEXBIMySqlAccnt
-MYSQL_TEMP_PASSWORD=4ZymYZudCdhWKRpyXeFm3RR84r
+MYSQL_TEMP_USER=oxamysqlbackup
+MYSQL_TEMP_PASSWORD=7wfD0P0MCDNP4wEQoREmvnb3hGv
 
 # App and Replication accounts
-MYSQL_USER=lexoxamysqlrepl
-MYSQL_PASSWORD=d4DrWOo0wgesWqeGDyGWb14NN
+MYSQL_USER=oxamysqlrepl
+MYSQL_PASSWORD=7wfD0P0MCDNP4wEQoREmvnb3hGv
 
 # Mysql Installer Configurations
 MYSQL_INSTALLER_SCRIPT=mysql-ubuntu-install.sh
-MYSQL_REPL_USER=lexoxamysqlrepl
-MYSQL_REPL_USER_PASSWORD=d4DrWOo0wgesWqeGDyGWb14NN
+MYSQL_REPL_USER=oxamysqlrepl
+MYSQL_REPL_USER_PASSWORD=7wfD0P0MCDNP4wEQoREmvnb3hGv
 MYSQL_PACKAGE_VERSION="5.6"
 MYSQL_MASTER_IP=10.0.0.16
 MYSQL_SERVER_LIST=10.0.0.16,10.0.0.17,10.0.0.18
 
 # Superuser Information
-EDXAPP_SU_PASSWORD="cAmerica02!"
+EDXAPP_SU_PASSWORD="7wfD0P0MCDNP4wEQoREmvnb3hGv"
 EDXAPP_SU_EMAIL="oxamaster@microsoft.com"
 EDXAPP_SU_USERNAME="oxamaster"
 
