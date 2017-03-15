@@ -2,8 +2,6 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
-#set -x
-
 # argument defaults
 DEPLOYMENT_ENV="dev"
 OXA_TOOLS_VERSION_OVERRIDE="master"
@@ -44,64 +42,77 @@ is_valid_arg() {
   return $result
 }
 
-parse_args() {
-  while [[ "$#" -gt 0 ]]
-  do
-    
-    # Log input parameters to facilitate troubleshooting
-    echo "Option '$1' set with value '$2'"
+parse_args() 
+{
+    while [[ "$#" -gt 0 ]]
+    do
+        arg_value="${2}"
+        shift_once=0
 
-    case "$1" in
-      -e|--environment)
-        DEPLOYMENT_ENV="${2,,}" # convert to lowercase
-        is_valid=$(is_valid_arg "dev bvt int prod" $DEPLOYMENT_ENV)
-        if [[ $is_valid -eq 1 ]] ; then
-          echo "Invalid environment specified\n"
-          display_usage
+        if [[ "${arg_value}" =~ "--" ]]; 
+        then
+            arg_value=""
+            shift_once=1
         fi
-        ;;
-        --phase)
-            if is_valid_arg "0 1" $2; then
-                BOOTSTRAP_PHASE=$2
-            else
-                log "Invalid Bootstrap Phase specified - $2" $ERROR_MESSAGE
-                help
-                exit 2
-            fi
-        ;;
-      --tools-version-override)
-        OXA_TOOLS_VERSION_OVERRIDE="$2"
-        ;;
-      --keyvault-name)
-        KEYVAULT_NAME="$2"
-        ;;
-      --aad-webclient-id)
-        AAD_WEBCLIENT_ID="$2"
-        ;;
-      --aad-webclient-appkey)
-        AAD_WEBCLIENT_APPKEY="$2"
-        ;;
-      --aad-tenant-id)
-        AAD_TENANT_ID="$2"
-        ;;
-      --azure-subscription-id)
-        AZURE_SUBSCRIPTION_ID="$2"
-        ;;
-      --cluster-admin-email)
-        CLUSTER_ADMIN_EMAIL="$2"
-        ;;
-      --cluster-name)
-        CLUSTER_NAME="$2"
-        MAIL_SUBJECT="${MAIL_SUBJECT} - ${2,,}"
-        ;;
-      *) # Unknown option encountered
-        display_usage
-        ;;
-    esac
 
-    shift # past argument or value
-    shift # past argument or value
-  done
+        # Log input parameters to facilitate troubleshooting
+        echo "Option '$1' set with value '${arg_value}'"
+
+        case "$1" in
+          -e|--environment)
+            DEPLOYMENT_ENV="${arg_value,,}" # convert to lowercase
+            is_valid=$(is_valid_arg "dev bvt int prod" $DEPLOYMENT_ENV)
+            if [[ $is_valid -eq 1 ]] ; then
+              echo "Invalid environment specified\n"
+              display_usage
+            fi
+            ;;
+            --phase)
+                if is_valid_arg "0 1" "${arg_value}"; then
+                    BOOTSTRAP_PHASE="${arg_value}"
+                else
+                    log "Invalid Bootstrap Phase specified - ${arg_value}" $ERROR_MESSAGE
+                    help
+                    exit 2
+                fi
+            ;;
+          --tools-version-override)
+            OXA_TOOLS_VERSION_OVERRIDE="${arg_value}"
+            ;;
+          --keyvault-name)
+            KEYVAULT_NAME="${arg_value}"
+            ;;
+          --aad-webclient-id)
+            AAD_WEBCLIENT_ID="${arg_value}"
+            ;;
+          --aad-webclient-appkey)
+            AAD_WEBCLIENT_APPKEY="${arg_value}"
+            ;;
+          --aad-tenant-id)
+            AAD_TENANT_ID="${arg_value}"
+            ;;
+          --azure-subscription-id)
+            AZURE_SUBSCRIPTION_ID="${arg_value}"
+            ;;
+          --cluster-admin-email)
+            CLUSTER_ADMIN_EMAIL="${arg_value}"
+            ;;
+          --cluster-name)
+            CLUSTER_NAME="${arg_value}"
+            MAIL_SUBJECT="${MAIL_SUBJECT} - ${arg_value,,}"
+            ;;
+          *) # Unknown option encountered
+            display_usage
+            ;;
+        esac
+
+        shift # past argument or value
+
+        if [ $shift_once -eq 0 ]; 
+        then
+            shift # past argument or value
+        fi
+    done
 }
 
 exec_mongo() {

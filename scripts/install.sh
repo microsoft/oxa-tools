@@ -106,123 +106,136 @@ parse_args()
     while [[ "$#" -gt 0 ]]
         do
 
+        arg_value="${2}"
+        shift_once=0
+
+        if [[ "${arg_value}" =~ "--" ]]; 
+        then
+            arg_value=""
+            shift_once=1
+        fi
+
          # Log input parameters to facilitate troubleshooting
-        echo "Option '$1' set with value '$2'"
+        echo "Option '${1}' set with value '"${arg_value}"'"
 
         case "$1" in
             --repo-root)
-                REPO_ROOT=$2
+                REPO_ROOT="${arg_value}"
                 ;;
             --config-path)
-                CONFIG_PATH=$2
+                CONFIG_PATH="${arg_value}"
                 ;;
             --cloud)
-                CLOUD_NAME=$2
+                CLOUD_NAME="${arg_value}"
                 ;;
             -u|--admin-user)
-                OS_ADMIN_USERNAME=$2
+                OS_ADMIN_USERNAME="${arg_value}"
                 ;;
             --monitoring-cluster)
-                MONITORING_CLUSTER_NAME=$2
+                MONITORING_CLUSTER_NAME="${arg_value}"
                 ;;
             --phase)
-                if is_valid_arg "0 1" $2; then
-                    BOOTSTRAP_PHASE=$2
+                if is_valid_arg "0 1" "${arg_value}"; then
+                    BOOTSTRAP_PHASE="${arg_value}"
                 else
-                    log "Invalid Bootstrap Phase specified - $2" $ERROR_MESSAGE
+                    log "Invalid Bootstrap Phase specified - ${arg_value}" $ERROR_MESSAGE
                     help
                     exit 2
                 fi
                 ;;
             --crontab-interval)
-                CRONTAB_INTERVAL_MINUTES=$2
+                CRONTAB_INTERVAL_MINUTES="${arg_value}"
                 ;;
             --keyvault-name)
-                KEYVAULT_NAME="$2"
+                KEYVAULT_NAME="${arg_value}"
                 ;;
             --aad-webclient-id)
-                AAD_WEBCLIENT_ID="$2"
+                AAD_WEBCLIENT_ID="${arg_value}"
                 ;;
             --aad-webclient-appkey)
-                AAD_WEBCLIENT_APPKEY="$2"
+                AAD_WEBCLIENT_APPKEY="${arg_value}"
                 ;;
             --aad-tenant-id)
-                AAD_TENANT_ID="$2"
+                AAD_TENANT_ID="${arg_value}"
                 ;;
             --azure-subscription-id)
-                AZURE_SUBSCRIPTION_ID="$2"
+                AZURE_SUBSCRIPTION_ID="${arg_value}"
                 ;;
             --oxatools-public-github-accountname)
-                OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME="$2"
+                OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME="${arg_value}"
                 ;;
             --oxatools-public-github-projectname)
-                OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME="$2"
+                OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME="${arg_value}"
                 ;;
             --oxatools-public-github-projectbranch)
-                OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+                OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH="${arg_value}"
                 ;;
             --edxconfiguration-public-github-accountname)
-                EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME="$2"
+                EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME="${arg_value}"
                 ;;
             --edxconfiguration-public-github-projectname)
-                EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME="$2"
+                EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME="${arg_value}"
                 ;;
             --edxconfiguration-public-github-projectbranch)
-                EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+                EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="${arg_value}"
                 ;;
             --edxplatform-public-github-accountname)
-                EDX_PLATFORM_PUBLIC_GITHUB_ACCOUNTNAME="$2"
+                EDX_PLATFORM_PUBLIC_GITHUB_ACCOUNTNAME="${arg_value}"
                 ;;
             --edxplatform-public-github-projectname)
-                EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME="$2"
+                EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME="${arg_value}"
                 ;;
             --edxplatform-public-github-projectbranch)
-                EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+                EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH="${arg_value}"
                 ;;
             --edxtheme-public-github-accountname)
-                EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME="$2"
+                EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME="${arg_value}"
                 ;;
             --edxtheme-public-github-projectname)
-                EDX_THEME_PUBLIC_GITHUB_PROJECTNAME="$2"
+                EDX_THEME_PUBLIC_GITHUB_PROJECTNAME="${arg_value}"
                 ;;
             --edxtheme-public-github-projectbranch)
-                EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+                EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="${arg_value}"
                 ;;
             --ansible-public-github-accountname)
-                ANSIBLE_PUBLIC_GITHUB_ACCOUNTNAME="$2"
+                ANSIBLE_PUBLIC_GITHUB_ACCOUNTNAME="${arg_value}"
                 ;;
             --ansible-public-github-projectname)
-                ANSIBLE_PUBLIC_GITHUB_PROJECTNAME="$2"
+                ANSIBLE_PUBLIC_GITHUB_PROJECTNAME="${arg_value}"
                 ;;
             --ansible-public-github-projectbranch)
-                ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+                ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH="${arg_value}"
                 ;;
             --edxversion)
-                EDX_VERSION="$2"
+                EDX_VERSION="${arg_value}"
                 ;;
             --forumversion)
-                FORUM_VERSION="$2"
+                FORUM_VERSION="${arg_value}"
                 ;;
             --cluster-admin-email)
-                CLUSTER_ADMIN_EMAIL="$2"
+                CLUSTER_ADMIN_EMAIL="${arg_value}"
                 ;;
             --cluster-name)
-                CLUSTER_NAME="$2"
-                MAIL_SUBJECT="${MAIL_SUBJECT} - ${2,,}"
+                CLUSTER_NAME="${arg_value}"
+                MAIL_SUBJECT="${MAIL_SUBJECT} - ${arg_value,,}"
                 ;;
             -h|--help)  # Helpful hints
                 help
                 exit 2
                 ;;
             *) # unknown option
-                echo "Option '${BOLD}$1${NORM} $2' not allowed."
+                echo "Option '${BOLD}$1${NORM} ${arg_value}' not allowed."
                 help
                 exit 2
                 ;;
         esac
 
         shift # past argument or value
-        shift # past argument or value
+
+        if [ $shift_once -eq 0 ]; 
+        then
+            shift # past argument or value
+        fi
     done
 }
 
