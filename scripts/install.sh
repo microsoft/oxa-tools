@@ -267,7 +267,7 @@ print_script_header
 # validate key arguments
 if [ "$GITHUB_PROJECTBRANCH" == "" ] || [ "$CLOUD_NAME" == "" ] ;
 then
-    log "Incomplete Github configuration: Github Personal Access Token, Account Name,  Project Name & Branch Name are required." $ERROR_MESSAGE
+    log "Incomplete Github configuration: Github Account Name,  Project Name & Branch Name are required." $ERROR_MESSAGE
     exit 3
 fi
 
@@ -315,7 +315,6 @@ if [ "$MACHINE_ROLE" == "vmss" ];
 then
     # 2. EDXAPP Bootstrap - Deploy OpenEdx Application to VMSS instance
     # there is an implicit assumption that /oxa/oxa-tools has already been cloned
-    # TODO: we need a better way of passing around the 'ITHUB_PERSONAL_ACCESS_TOKEN'
     SHORT_ROLE_NAME="vmss"
     TASK="VMSS Bootstrap on ${HOSTNAME} for execution via cron @ ${CRONTAB_INTERVAL_MINUTES} minute interval"
     NOTIFICATION_MESSAGE="Installation of the EDX Application (VMSS) has been scheduled."

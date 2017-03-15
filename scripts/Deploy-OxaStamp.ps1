@@ -31,6 +31,9 @@ The azure active directory web application key for authentication
 .PARAMETER AadTenantId
 The azure active directory tenant id for authentication
 
+.PARAMETER KeyVaultUserObjectId
+Object id of the user to be granted full keyvault access. If no value is specified, the service principal (AadWebClientId) object id will be used
+
 .PARAMETER KeyVaultDeploymentArmTemplateFile
 Path to the arm template for bootstrapping keyvault
 
@@ -81,6 +84,7 @@ Param(
         [Parameter(Mandatory=$true)][string]$AadWebClientId,
         [Parameter(Mandatory=$true)][string]$AadWebClientAppKey,
         [Parameter(Mandatory=$true)][string]$AadTenantId,
+        [Parameter(Mandatory=$false)][string]$KeyVaultUserObjectId="",
 
         [Parameter(Mandatory=$true)][string]$KeyVaultDeploymentArmTemplateFile,
         [Parameter(Mandatory=$false)][string]$KeyVaultDeploymentParametersFile="",
@@ -124,7 +128,8 @@ Set-AzureSubscription -SubscriptionName $AzureSubscriptionName | Out-Null
 # create the resource group
 New-AzureRmResourceGroup -Name $ResourceGroupName -Location $Location -Force
 
-#prep the variables we want to use for replacement
+# Setup parameters for dynamic arm template creation
+# Prep the variables we want to use for replacement
 $replacements = @{ 
                     "CLUSTERNAME"=$ResourceGroupName;  
                     "ADMINEMAILADDRESS"=$ClusterAdministratorEmailAddress; 
@@ -141,6 +146,8 @@ if (!$KeyVaultUserObjectId)
     $principal = Get-AzureRMADServicePrincipal -ServicePrincipalName $AadWebClientId
     $KeyVaultUserObjectId = $principal.Id
 }
+
+$replacements["KEYVAULTUSEROBJECTID"]=$KeyVaultUserObjectId
 
 # Assumption: if the SMTP server is specified, the rest of its configuration will be specified
 if ($smtpServer)
