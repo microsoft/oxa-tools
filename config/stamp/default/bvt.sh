@@ -31,8 +31,8 @@ OXA_TOOLS_VERSION=oxa/master.fic
 
 # config/server-vars.yml
 #YOUTUBE_API_KEY=todo
-PLATFORM_NAME="{EDXAPP_PLATFORM_NAME}"
-PLATFORM_EMAIL="{EDXAPP_PLATFORM_EMAIL}"
+PLATFORM_NAME=
+PLATFORM_EMAIL=
 
 # config/versions.yml
 CONFIGURATION_REPO=https://github.com/Microsoft/edx-configuration.git
@@ -43,8 +43,6 @@ THEME_REPO=https://github.com/Microsoft/edx-theme.git
 THEME_VERSION=oxa/master.fic
 EDX_VERSION=open-release/ficus.master
 FORUM_VERSION=open-release/ficus.master
-
-#SITE_DNS=oxa-example.westus.cloudapp.azure.com
 
 # fullstack uses default EMAIL_HOST=localhost
 # config/scalable/scalable.yml, config/stamp/stamp.yml
@@ -67,11 +65,11 @@ NGINX_SSL_KEY=/oxa/oxa-tools-config/env/bvt/cert.key
 ##########################
 
 # Mongo Credentials
-MONGO_USER=oxamongoadmin
-MONGO_PASSWORD=7wfD0P0MCDNP4wEQoREmvnb3hGv
+MONGO_USER=
+MONGO_PASSWORD=
 
 # Mongo Replicaset Credentials
-MONGO_REPLICASET_KEY=7wfD0P0MCDNP4wEQoREmvnb3hGv
+MONGO_REPLICASET_KEY=
 MONGO_REPLICASET_NAME={MONGO_REPLICASET_NAME}
 
 # MongoDB Installer Configurations
@@ -88,28 +86,29 @@ MONGO_SERVER_LIST=10.0.0.11,10.0.0.12,10.0.0.13
 
 # Mysql Credentials
 MYSQL_ADMIN_USER=oxamysqladmin
-MYSQL_ADMIN_PASSWORD=7wfD0P0MCDNP4wEQoREmvnb3hGv
+MYSQL_ADMIN_PASSWORD=
 
 # MySql Temporary Credentials
 MYSQL_TEMP_USER=oxamysqlbackup
-MYSQL_TEMP_PASSWORD=7wfD0P0MCDNP4wEQoREmvnb3hGv
+MYSQL_TEMP_PASSWORD=
 
-# App and Replication accounts
+# App and Replication accounts (same account??)
+# TODO: separate the replication user from the edxapp user
 MYSQL_USER=oxamysqlrepl
-MYSQL_PASSWORD=7wfD0P0MCDNP4wEQoREmvnb3hGv
+MYSQL_PASSWORD=
+MYSQL_REPL_USER=oxamysqlrepl
+MYSQL_REPL_USER_PASSWORD=
 
 # Mysql Installer Configurations
 MYSQL_INSTALLER_SCRIPT=mysql-ubuntu-install.sh
-MYSQL_REPL_USER=oxamysqlrepl
-MYSQL_REPL_USER_PASSWORD=7wfD0P0MCDNP4wEQoREmvnb3hGv
 MYSQL_PACKAGE_VERSION="5.6"
 MYSQL_MASTER_IP=10.0.0.16
 MYSQL_SERVER_LIST=10.0.0.16,10.0.0.17,10.0.0.18
 
-# Superuser Information
-EDXAPP_SU_PASSWORD="7wfD0P0MCDNP4wEQoREmvnb3hGv"
-EDXAPP_SU_EMAIL="oxamaster@microsoft.com"
-EDXAPP_SU_USERNAME="oxamaster"
+# Superuser Information (this gives front door access to the application. This value must be updated.)
+EDXAPP_SU_PASSWORD=
+EDXAPP_SU_EMAIL=
+EDXAPP_SU_USERNAME=
 
 # Azure Active Directory OAuth2 Third Party Authentication Configuration
 EDXAPP_ENABLE_THIRD_PARTY_AUTH={EDXAPP_ENABLE_THIRD_PARTY_AUTH}
@@ -119,7 +118,6 @@ EDXAPP_AAD_BUTTON_NAME="{EDXAPP_AAD_BUTTON_NAME}"
 
 # Comprehensive Theming Configuration
 EDXAPP_ENABLE_COMPREHENSIVE_THEMING={EDXAPP_ENABLE_COMPREHENSIVE_THEMING}
-# todo: ensure formatting in yaml output works as intended.
 EDXAPP_COMPREHENSIVE_THEME_DIRS=\[\ \"{EDXAPP_COMPREHENSIVE_THEME_DIRECTORY}\"\ \]
 EDXAPP_DEFAULT_SITE_THEME="{EDXAPP_DEFAULT_SITE_THEME}"
 

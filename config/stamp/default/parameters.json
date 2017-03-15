@@ -50,6 +50,12 @@
         "mysqlServerReplPassword": {
             "value": "{SERVICEACCOUNTPASSWORD}"
         },
+        "mysqlBackupUserName": {
+            "value": "oxamysqlbackupuser"
+        },
+        "mysqlBackupUserPassword": {
+            "value": "{SERVICEACCOUNTPASSWORD}"
+        },
         "deploymentSlot": {
             "value": "slot1"
         },
@@ -252,6 +258,15 @@
         },
         "domainSeparator": {
             "value": "-"
+        },
+        "edxappSuperUserName": {
+            "value": "edxappadmin"
+        },
+        "edxappSuperUserPassword": {
+            "value": "{SERVICEACCOUNTPASSWORD}"
+        },
+        "edxappSuperUserEmail": {
+            "value": "{ADMINEMAILADDRESS}"
         }
     }
 }
