@@ -121,10 +121,17 @@
             "type": "string",
             "defaultValue": "lexoxamysqlrepl"
         },
+        "mysqlBackupUserName": {
+            "type": "string",
+            "defaultValue": "lexoxamysqlbackup"
+        },
         "mysqlServerAdminPassword": {
             "type": "securestring"
         },
         "mysqlServerReplPassword": {
+            "type": "securestring"
+        },
+        "mysqlBackupUserPassword": {
             "type": "securestring"
         },
 
@@ -572,6 +579,27 @@
             "defaultValue": "",
             "metadata": {
                 "description": "Separator to use for sub-domains (lms|cms|preview)"
+            }
+        },
+        "edxappSuperUserName": {
+            "type": "string",
+            "defaultValue": "oxamaster",
+            "metadata": {
+                "description": "User name  of user with full access to the EDX application"
+            }
+        },
+        "edxappSuperUserPassword": {
+            "type": "securestring",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Password for user with full access to the EDX application"
+            }
+        },
+        "edxappSuperUserEmail": {
+            "type": "string",
+            "defaultValue": "oxamaster",
+            "metadata": {
+                "description": "Email address for the user with full access to the EDX application"
             }
         }
     },
