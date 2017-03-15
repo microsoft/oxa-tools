@@ -134,6 +134,14 @@ $replacements = @{
                     "SERVICEACCOUNTPASSWORD"=$ServiceAccountPassword
                 }
 
+# Add the user for keyvault access
+if (!$KeyVaultUserObjectId)
+{
+    Log-Message "The keyvault user was not specify. Using the provided service principal '$AadWebClientId' to derive the object Id"
+    $principal = Get-AzureRMADServicePrincipal -ServicePrincipalName $AadWebClientId
+    $KeyVaultUserObjectId = $principal.Id
+}
+
 # Assumption: if the SMTP server is specified, the rest of its configuration will be specified
 if ($smtpServer)
 {
