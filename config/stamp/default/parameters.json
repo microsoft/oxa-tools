@@ -154,7 +154,7 @@
         },
 
         "keyVaultMasterAccountId": {
-            "value": "[]"
+            "value": "{KEYVAULTUSEROBJECTID}"
         },
         "keyVaultMasterAccountKeyAccessPermission": {
             "value": [
