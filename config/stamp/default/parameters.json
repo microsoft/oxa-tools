@@ -230,10 +230,10 @@
             "value": 30
         },
         "importKitchenSinkCourse": {
-            "value": true
+            "value": false
         },
         "enableComprehensiveTheming": {
-            "value": true
+            "value": false
         },
         "comprehensiveThemingDirectory": {
             "value": ""
@@ -242,7 +242,7 @@
             "value": ""
         },
         "enableThirdPartyAuth": {
-            "value": true
+            "value": false
         },
         "aadLoginButtonText": {
             "value": ""
