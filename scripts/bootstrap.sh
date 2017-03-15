@@ -86,14 +86,14 @@ parse_args()
 
         case "$1" in
           -r|--role)
-            EDX_ROLE="${2,,}" # convert to lowercase
+            EDX_ROLE="${arg_value,,}" # convert to lowercase
             if ! is_valid_arg "jb vmss mongo mysql edxapp fullstack" $EDX_ROLE; then
               echo "Invalid role specified\n"
               display_usage
             fi
             ;;
           -e|--environment)
-            DEPLOYMENT_ENV="${2,,}" # convert to lowercase
+            DEPLOYMENT_ENV="${arg_value,,}" # convert to lowercase
             if ! is_valid_arg "dev bvt int prod" $DEPLOYMENT_ENV; then
               echo "Invalid environment specified\n"
               display_usage
@@ -165,11 +165,11 @@ parse_args()
             ;;
           --cluster-name)
             CLUSTER_NAME="${arg_value}"
-            MAIL_SUBJECT="${MAIL_SUBJECT} - ${2,,}"
+            MAIL_SUBJECT="${MAIL_SUBJECT} - ${arg_value,,}"
             ;;
           *)
             # Unknown option encountered
-            echo "Option '${BOLD}$1${NORM} $2' not allowed."
+            echo "Option '${BOLD}$1${NORM} ${arg_value}' not allowed."
             display_usage
             ;;
         esac
