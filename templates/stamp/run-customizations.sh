@@ -281,6 +281,38 @@ parse_args()
     done
 }
 
+persist_deployment_time_values()
+{
+    config_file="${OXA_ENV_PATH}/${DEPLOYMENT_ENV}.sh"
+
+    # get BASE_URL value
+    source $config_file
+    exit_on_error "Failed sourcing the environment configuration file from keyvault" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
+
+    # export "deployment-time" values
+    export BASE_URL=$BASE_URL
+    export AZURE_ACCOUNT_NAME=$BACKUP_STORAGEACCOUNT_NAME
+    export AZURE_ACCOUNT_KEY=$BACKUP_STORAGEACCOUNT_KEY
+    export CLUSTERNAME=$CLUSTER_NAME
+    export MONGO_REPLICASET_NAME=${CLUSTER_NAME}rs
+    #todo: add more values set by parse_args() like github, smtp, etc.
+    export EDXAPP_ENABLE_THIRD_PARTY_AUTH=${EDXAPP_ENABLE_THIRD_PARTY_AUTH}
+    export EDXAPP_AAD_CLIENT_ID=${EDXAPP_AAD_CLIENT_ID}
+    export EDXAPP_AAD_SECURITY_KEY=${EDXAPP_AAD_SECURITY_KEY}
+    export EDXAPP_AAD_BUTTON_NAME=${EDXAPP_AAD_BUTTON_NAME}
+    export EDXAPP_ENABLE_COMPREHENSIVE_THEMING=${EDXAPP_ENABLE_COMPREHENSIVE_THEMING}
+    export EDXAPP_COMPREHENSIVE_THEME_DIR=${EDXAPP_COMPREHENSIVE_THEME_DIR} # todo: ensure formatting in yaml output works as intended.
+    export EDXAPP_DEFAULT_SITE_THEME=${EDXAPP_DEFAULT_SITE_THEME}
+    export EDXAPP_IMPORT_KITCHENSINK_COURSE=${EDXAPP_IMPORT_KITCHENSINK_COURSE}
+
+    # replace and persist "deployment-time" values
+    envsubst < $config_file | tee $config_file
+
+    # re-source with new "deployment-time" values for database backups.
+    source $config_file
+    exit_on_error "Failed sourcing the environment configuration file after transform" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
+}
+
 ###############################################
 # Start Execution
 ###############################################
@@ -306,15 +338,15 @@ print_script_header
 parse_args $@ # pass existing command line arguments
 
 # Validate parameters
-if [ "$OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME" == "" ] || [ "$OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME" == "" ] || [ "$OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH" == "" ] || [ "$CLOUDNAME" == "" ] ;
+if [ -z "$OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME" ] || [ -z "$OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME" ] || [ -z "$OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH" ] || [ -z "$CLOUDNAME" ] ;
 then
-    log "Incomplete OXA Tools Github repository configuration: Github Personal Access Token, Account Name,  Project Name & Branch Name are required." $ERROR_MESSAGE
+    log "Incomplete OXA Tools Github repository configuration: Github Account Name,  Project Name & Branch Name are required." $ERROR_MESSAGE
     exit 3
 fi
 
 if [ "$EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME" == "" ] || [ "$EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME" == "" ] || [ "$EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH" == "" ] ;
 then
-    log "Incomplete EDX Configuration Github repository configuration: Github Personal Access Token, Account Name,  Project Name & Branch Name are required." $ERROR_MESSAGE
+    log "Incomplete EDX Configuration Github repository configuration: Github Account Name,  Project Name & Branch Name are required." $ERROR_MESSAGE
     exit 3
 fi
 
@@ -366,7 +398,7 @@ exit_on_error "Configuring the mailer failed"
 
 # 1. Setup Tools
 install-git
-install-gettext
+install-gettext # required for envsubst command
 set_timezone
 
 if [ "$MACHINE_ROLE" == "jumpbox" ] || [ "$MACHINE_ROLE" == "vmss" ];
@@ -400,6 +432,8 @@ fi
 powershell -file $INSTALLER_BASEPATH/Process-OxaToolsKeyVaultConfiguration.ps1 -Operation Download -VaultName $KEYVAULT_NAME -AadWebClientId $AAD_WEBCLIENT_ID -AadWebClientAppKey $AAD_WEBCLIENT_APPKEY -AadTenantId $AAD_TENANT_ID -TargetPath $OXA_ENV_PATH -AzureSubscriptionId $AZURE_SUBSCRIPTION_ID
 exit_on_error "Failed downloading configurations from keyvault" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
+persist_deployment_time_values
+
 # copy utilities to the installer path
 cp $UTILITIES_PATH "${INSTALLER_BASEPATH}"
 
@@ -410,10 +444,6 @@ cp $UTILITIES_PATH "${INSTALLER_BASEPATH}"
 if [ "$MACHINE_ROLE" == "jumpbox" ];
 then
     log "Starting backup configuration on '${HOSTNAME}' as a member in the '${MACHINE_ROLE}' role"
-
-    # setup the configuration file for database backups
-    source "${OXA_ENV_PATH}/${DEPLOYMENT_ENV}.sh"
-    exit_on_error "Failed sourcing the environment configuration file from keyvault" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
     # these are fixed values
     MONGO_REPLICASET_CONNECTIONSTRING="${MONGO_REPLICASET_NAME}/${MONGO_SERVER_LIST}"
