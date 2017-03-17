@@ -359,6 +359,7 @@ tune_memory
 tune_system
 
 # Step 3
+install-bc
 install_mongodb
 
 # Step 4

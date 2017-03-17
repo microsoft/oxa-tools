@@ -6,17 +6,7 @@
             "type": "string",
             "maxLength": 12
         },
-        "clusterNameDomainName": {
-            "type": "string"
-        },
-        "osFamilySpec": {
-            "type": "string",
-            "defaultValue": "ubuntu",
-            "allowedValues": [
-                "ubuntu"
-            ]
-        },
-        "jumpBoxVmSize": {
+        "vmSize": {
             "type": "string",
             "defaultValue": "Standard_D1_v2",
             "allowedValues": [
@@ -35,76 +25,8 @@
                 "Standard_DS15_v2"
             ]
         },
-        "mongoVmSize": {
-            "type": "string",
-            "defaultValue": "Standard_D2_v2",
-            "allowedValues": [
-                "Standard_D1_v2",
-                "Standard_D2_v2",
-                "Standard_D3_v2",
-                "Standard_D4_v2",
-                "Standard_DS2_v2",
-                "Standard_DS3_v2",
-                "Standard_DS4_v2",
-                "Standard_DS5_v2",
-                "Standard_DS11_v2",
-                "Standard_DS12_v2",
-                "Standard_DS13_v2",
-                "Standard_DS14_v2",
-                "Standard_DS15_v2"
-            ]
-        },
-        "mysqlVmSize": {
-            "type": "string",
-            "defaultValue": "Standard_D2_v2",
-            "allowedValues": [
-                "Standard_D1_v2",
-                "Standard_D2_v2",
-                "Standard_D3_v2",
-                "Standard_D4_v2",
-                "Standard_DS2_v2",
-                "Standard_DS3_v2",
-                "Standard_DS4_v2",
-                "Standard_DS5_v2",
-                "Standard_DS11_v2",
-                "Standard_DS12_v2",
-                "Standard_DS13_v2",
-                "Standard_DS14_v2",
-                "Standard_DS15_v2"
-            ]
-        },
-        "frontendVmSize": {
-            "type": "string",
-            "defaultValue": "Standard_D2_v2",
-            "allowedValues": [
-                "Standard_D1_v2",
-                "Standard_D2_v2",
-                "Standard_D3_v2",
-                "Standard_D4_v2",
-                "Standard_DS2_v2",
-                "Standard_DS3_v2",
-                "Standard_DS4_v2",
-                "Standard_DS5_v2",
-                "Standard_DS11_v2",
-                "Standard_DS12_v2",
-                "Standard_DS13_v2",
-                "Standard_DS14_v2",
-                "Standard_DS15_v2"
-            ],
-            "metadata": {
-                "description": "SKU, or size of the application virtual machine(s)."
-            }
-        },
-        "adminUsername": {
-            "type": "string",
-            "defaultValue": "lexoxaadmin"
-        },
         "adminPublicKey": {
             "type": "securestring"
-        },
-        "mongoServerAdminUserName": {
-            "type": "string",
-            "defaultValue": "lexoxamongoadmin"
         },
         "mongoServerAdminPassword": {
             "type": "securestring"
@@ -121,17 +43,10 @@
             "type": "string",
             "defaultValue": "lexoxamysqlrepl"
         },
-        "mysqlBackupUserName": {
-            "type": "string",
-            "defaultValue": "lexoxamysqlbackup"
-        },
         "mysqlServerAdminPassword": {
             "type": "securestring"
         },
         "mysqlServerReplPassword": {
-            "type": "securestring"
-        },
-        "mysqlBackupUserPassword": {
             "type": "securestring"
         },
 
@@ -580,30 +495,14 @@
             "metadata": {
                 "description": "Separator to use for sub-domains (lms|cms|preview)"
             }
-        },
-        "edxappSuperUserName": {
-            "type": "string",
-            "defaultValue": "oxamaster",
-            "metadata": {
-                "description": "User name  of user with full access to the EDX application"
-            }
-        },
-        "edxappSuperUserPassword": {
-            "type": "securestring",
-            "defaultValue": "",
-            "metadata": {
-                "description": "Password for user with full access to the EDX application"
-            }
-        },
-        "edxappSuperUserEmail": {
-            "type": "string",
-            "defaultValue": "oxamaster",
-            "metadata": {
-                "description": "Email address for the user with full access to the EDX application"
-            }
         }
     },
     "variables": {
+
+        "clusterNameDomainName": "[parameters('clusterName')]",
+        "adminUsername": "oxaadmin",
+        "mongoServerAdminUserName": "[concat('mongo', variables('adminUsername'))]",
+
         "defaultApiVersion": "2015-05-01-preview",
         "apiVersion": "2016-09-01",
         "availabilitySetApiVersion": "2015-06-15",
@@ -661,7 +560,7 @@
             "osDiskSuffix": "-osDisk",
             "availabilitySetNameSuffix": "-as",
             "ipConfigSuffix": "-ipconfig",
-            "adminUsername": "[parameters('adminUsername')]",
+            "adminUsername": "[variables('adminUsername')]",
             "adminPublicKey": "[parameters('adminPublicKey')]",
             "mongoServerAdminPassword": "[parameters('mongoServerAdminPassword')]",
             "publicIpAddressType": "Dynamic",
@@ -755,9 +654,9 @@
             "loadbalancerSettings": {
                 "deploymentSlot": "[parameters('deploymentSlot')]",
                 "loadBalancerName": "[variables('loadBalancerName')]",
-                "cmsLoadBalancerDomainName": "[concat('cms-', parameters('clusterNameDomainName'), '-', parameters('deploymentSlot'))]",
-                "lmsLoadBalancerDomainName": "[concat('lms-', parameters('clusterNameDomainName'), '-', parameters('deploymentSlot'))]",
-                "previewLoadBalancerDomainName": "[concat('preview-', parameters('clusterNameDomainName'), '-', parameters('deploymentSlot'))]",
+                "cmsLoadBalancerDomainName": "[concat('cms-', variables('clusterNameDomainName'), '-', parameters('deploymentSlot'))]",
+                "lmsLoadBalancerDomainName": "[concat('lms-', variables('clusterNameDomainName'), '-', parameters('deploymentSlot'))]",
+                "previewLoadBalancerDomainName": "[concat('preview-', variables('clusterNameDomainName'), '-', parameters('deploymentSlot'))]",
                 "natPoolName": "[concat(parameters('clusterName'), '-natpool')]",
 
                 "cmsPublicAddressName": "[variables('cmsPublicAddressName')]",
@@ -812,7 +711,7 @@
             "mediaServicesAccountName": "[variables('mediaServicesAccountName')]"
         },
         "jumpboxMachineSettings": {
-            "vmSize": "[parameters('jumpBoxVmSize')]",
+            "vmSize": "[parameters('vmSize')]",
             "osImageReference": {
                 "publisher": "[variables('supportedOSImagePublisher')]",
                 "offer": "[variables('supportedOSImageOffer')]",
@@ -822,7 +721,7 @@
             "dataDiskSize": "[parameters('jumpBoxDataDiskSizeGB')]"
         },
         "mongoMachineSettings": {
-            "vmSize": "[parameters('mongoVmSize')]",
+            "vmSize": "[parameters('vmSize')]",
             "osImageReference": {
                 "publisher": "[variables('supportedOSImagePublisher')]",
                 "offer": "[variables('supportedOSImageOffer')]",
@@ -834,7 +733,7 @@
             "installerPackages": "mongodb-org"
         },
         "mysqlMachineSettings": {
-            "vmSize": "[parameters('mysqlVmSize')]",
+            "vmSize": "[parameters('vmSize')]",
             "osImageReference": {
                 "publisher": "[variables('supportedOSImagePublisher')]",
                 "offer": "[variables('supportedOSImageOffer')]",
@@ -844,14 +743,14 @@
             "dataDiskSize": "[parameters('mysqlNodeDataDiskSizeGB')]"
         },
         "frontendMachineSettings": {
-            "vmSize": "[parameters('frontendVmSize')]",
+            "vmSize": "[parameters('vmSize')]",
             "osImageReference": {
                 "publisher": "[variables('supportedOSImagePublisher')]",
                 "offer": "[variables('supportedOSImageOffer')]",
                 "sku": "[parameters('vmssUbuntuOsImageSku')]",
                 "version": "latest"
             },
-            "capacity": "[parameters('frontendVmSize')]",
+            "capacity": "[parameters('vmSize')]",
             "dataDiskSize": 256
         },
         "apiSettings": {
@@ -900,10 +799,8 @@
         "sampleCourseParameters": "[concat(' --import-kitchensink-course ', parameters('importKitchenSinkCourse'))]",
         "comprehensiveThemingParameters": "[concat(' --enable-comprehensive-theming ', parameters('enableComprehensiveTheming'), ' --comprehensive-theming-directory ', parameters('comprehensiveThemingDirectory'), ' --comprehensive-theming-name ', parameters('comprehensiveThemingName'))]",
         "authenticationParameters": "[concat(' --enable-thirdparty-auth ', parameters('enableThirdPartyAuth'), ' --aad-loginbutton-text \"', replace(parameters('aadLoginButtonText'), ' ', '_'), '\"')]",
-        "databaseParameters": "[concat(' --mongo-adminuser ', parameters('mongoServerAdminUserName'), ' --mongo-adminuserpassword \"', parameters('mongoServerAdminPassword'), '\" --mongo-replicasetkey \"', variables('mongoReplicaSetKey'), '\" --mysql-backupuser ', parameters('mysqlBackupUserName'), ' --mysql-backupuserpassword \"', parameters('mysqlBackupUserPassword'), '\" --mysql-repluser \"', parameters('mysqlServerReplUserName'), '\" --mysql-repluserpassword \"', parameters('mysqlServerReplPassword'), '\" --mysql-adminuser \"', parameters('mysqlServerAdminUserName'), '\" --mysql-adminuserpassword \"', parameters('mysqlServerAdminPassword'), '\" --mysql-repluser \"', parameters('mysqlServerReplUserName'), '\" --mysql-repluserpassword \"', parameters('mysqlServerReplPassword'), '\" --mysql-adminuser \"', parameters('mysqlServerAdminUserName'), '\" --mysql-adminuserpassword \"', parameters('mysqlServerAdminPassword'), '\"')]",
-        "edxappParameters": "[concat(' --edxapp-superuser \"', parameters('edxappSuperUserName'), '\" --edxapp-superuserpassword \"', parameters('edxappSuperUserPassword'), '\" --edxapp-superuseremail \"', parameters('edxappSuperUserEmail'), '\"')]",
 
-        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'), variables('backupParameters'), variables('sampleCourseParameters'), variables('comprehensiveThemingParameters'), variables('authenticationParameters'), variables('customInstallerDomainOverrideParameters'), variables('databaseParameters'), variables('edxappParameters'), variables('customInstallerOutputRedirect') )]",
+        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', variables('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'), variables('backupParameters'), variables('sampleCourseParameters'), variables('comprehensiveThemingParameters'), variables('authenticationParameters'), variables('customInstallerDomainOverrideParameters'), variables('customInstallerOutputRedirect') )]",
 
         "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources.json')]",
         "jumpboxTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-jumpbox.json')]",
@@ -917,7 +814,7 @@
 
         "installerUtilitiesScript": "utilities.sh",
         "mongoDbInstallerScript": "[concat('mongodb-', variables('supportedOSName'), '-install.sh')]",
-        "mongoDbInstallerCommand": "[concat('bash ', variables('mongoDbInstallerScript'), ' -i ', variables('mongoMachineSettings').installerBaseUrl, ' -b ', variables('mongoMachineSettings').installerPackages, ' -r ', variables('mongoReplicaSetName'), ' -k ', variables('mongoReplicaSetKey'), ' -u ', parameters('mongoServerAdminUserName'), ' -p ', base64(parameters('mongoServerAdminPassword')), ' -x ', variables('networkSettings').serverIpPrefix, ' -n ', variables('networkSettings').mongoDataNodeCount)]",
+        "mongoDbInstallerCommand": "[concat('bash ', variables('mongoDbInstallerScript'), ' -i ', variables('mongoMachineSettings').installerBaseUrl, ' -b ', variables('mongoMachineSettings').installerPackages, ' -r ', variables('mongoReplicaSetName'), ' -k ', variables('mongoReplicaSetKey'), ' -u ', variables('mongoServerAdminUserName'), ' -p ', base64(parameters('mongoServerAdminPassword')), ' -x ', variables('networkSettings').serverIpPrefix, ' -n ', variables('networkSettings').mongoDataNodeCount)]",
         "mongoDBInstallerSettings": {
             "scriptsToDownload": [
                 "[concat(variables('templateBaseUrl'), variables('mongoDbInstallerScript'))]",
@@ -1246,38 +1143,6 @@
                             "monitorConfigPath": "[variables('networkSettings').trafficManagerSettings.cms.monitorConfigPath]",
                             "endpoint1": "[variables('networkSettings').trafficManagerSettings.cms.endpoint1]",
                             "endpoint2": "[variables('networkSettings').trafficManagerSettings.cms.endpoint2]"
-                        }
-                    }
-                }
-            }
-        },
-        {
-            "name": "trafficManagerPreview",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('apiVersion')]",
-            "dependsOn": [
-                "vmss"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('trafficManagerTemplateUrl')]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "apiSettings": {
-                        "value": "[variables('apiSettings')]"
-                    },
-                    "customSettings": {
-                        "value": {
-                            "trafficManagerName": "[variables('networkSettings').trafficManagerSettings.preview.name]",
-                            "relativeDnsName": "[variables('networkSettings').trafficManagerSettings.preview.name]",
-                            "dnsTtl": "[variables('networkSettings').trafficManagerSettings.dnsTtlSeconds]",
-                            "monitorConfigProtocol": "[variables('networkSettings').trafficManagerSettings.monitorConfigProtocol]",
-                            "monitorConfigPort": "[variables('networkSettings').trafficManagerSettings.preview.monitorConfigPort]",
-                            "monitorConfigPath": "[variables('networkSettings').trafficManagerSettings.preview.monitorConfigPath]",
-                            "endpoint1": "[variables('networkSettings').trafficManagerSettings.preview.endpoint1]",
-                            "endpoint2": "[variables('networkSettings').trafficManagerSettings.preview.endpoint2]"
                         }
                     }
                 }

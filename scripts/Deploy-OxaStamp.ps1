@@ -31,6 +31,9 @@ The azure active directory web application key for authentication
 .PARAMETER AadTenantId
 The azure active directory tenant id for authentication
 
+.PARAMETER KeyVaultUserObjectId
+Object id of the user to be granted full keyvault access. If no value is specified, the service principal (AadWebClientId) object id will be used
+
 .PARAMETER KeyVaultDeploymentArmTemplateFile
 Path to the arm template for bootstrapping keyvault
 
@@ -46,12 +49,26 @@ Path to the arm template for bootstrapping keyvault
 .PARAMETER FullDeploymentArmTemplateFile
 Path to the deployment parameters file for the keyvault arm deployment
 
+.PARAMETER SmtpServer
+SMTP Server to use for deployment and other notifications (it is assumed the server supports TLS)
+
+.PARAMETER SmtpServerPort
+SMTP Server port used for connection
+
+.PARAMETER SmtpAuthenticationUser
+SMTP Server user name to authenticate with
+
+.PARAMETER SmtpAuthenticationUserPassword
+Password for the SMTP Server user to authenticate with
+
+.PARAMETER ServiceAccountPassword
+Password to use for creating backend service accounts (Mysql, Mongo admin users)
+
 .INPUTS
 None. You cannot pipe objects to Deploy-OxaStamp.ps1
 
 .OUTPUTS
 None
-
 
 .EXAMPLE
 .\Deploy-OxaStamp.ps1 -AzureSubscriptionName SomeSubscription -ResourceGroupName OxaMasterNode -Location "west us" -TargetPath "E:\env\bvt" -AadWebClientId "1178d667e54c" -AadWebClientAppKey "BDtkq10kdGxI6QgtyNI=" -AadTenantId "1db47" -KeyVaultDeploymentArmTemplateFile "E:\stampKeyVault.json" -KeyVaultDeploymentParametersFile "E:\env\bvt\parameters.json" -FullDeploymentParametersFile "E:\env\bvt\parameters.json" -FullDeploymentArmTemplateFile "E:\stamp-v2.json" -DeployKeyVault -DeployStamp:$false
@@ -67,6 +84,7 @@ Param(
         [Parameter(Mandatory=$true)][string]$AadWebClientId,
         [Parameter(Mandatory=$true)][string]$AadWebClientAppKey,
         [Parameter(Mandatory=$true)][string]$AadTenantId,
+        [Parameter(Mandatory=$false)][string]$KeyVaultUserObjectId="",
 
         [Parameter(Mandatory=$true)][string]$KeyVaultDeploymentArmTemplateFile,
         [Parameter(Mandatory=$false)][string]$KeyVaultDeploymentParametersFile="",
@@ -76,136 +94,23 @@ Param(
         [Parameter(Mandatory=$true)][string]$ClusterAdministratorEmailAddress,
 
         [Parameter(Mandatory=$false)][switch]$DeployKeyVault=$true,
-        [Parameter(Mandatory=$false)][switch]$DeployStamp=$true
+        [Parameter(Mandatory=$false)][switch]$DeployStamp=$true,
+
+        [Parameter(Mandatory=$false)][string]$SmtpServer="",
+        [Parameter(Mandatory=$false)][string]$SmtpServerPort="",
+        [Parameter(Mandatory=$false)][string]$SmtpAuthenticationUser="",
+        [Parameter(Mandatory=$false)][string]$SmtpAuthenticationUserPassword="",
+
+        [Parameter(Mandatory=$false)][string]$ServiceAccountPassword="=crq+4L5QFrMCIKJaVazBWisd0fMJR"
      )
-
-##  Function: LogMessage
-##
-##  Purpose: Write a message to a log file
-##
-##  Input: 
-##      Message          - string - message to write
-##      LogType          - string - message type
-##      Foregroundcolor  - string - color of the output for Log-Messageonly
-##
-##  Ouput: null
-function Log-Message
-{
-    param(
-            [Parameter(Mandatory=$false)][object]$Message,
-            [Parameter(Mandatory=$false)][ValidateSet("Verbose","Output", "Host", "Error", "Warning")][string]$LogType="Host",
-            [Parameter(Mandatory=$false)][string]$Foregroundcolor = "White",
-            [Parameter(Mandatory=$false)][string]$Context = "",
-            [Parameter(Mandatory=$false)][switch]$NoNewLine,
-            [Parameter(Mandatory=$false)][switch]$ClearLine,
-            [Parameter(Mandatory=$false)][switch]$SkipTimestamp
-         )
-
-    
-    # append header to identify where the call came from for debugging purposes
-    if ($Context -ne "")
-    {
-        $Message = "$Context - $Message";
-    }
-
-    # if necessary, prepend a blank line
-    if ($ClearLine -eq $true)
-    {
-        $logTime = [System.Environment]::NewLine
-    }
-
-    # prepend log time
-    $logTime += "[$(get-date -format u)]";
-
-    if($NoNewLine -eq $false -and $SkipTimestamp -eq $false)
-    {
-        $logLine = "$logTime :: $Message";
-    }
-    else
-    {
-        $logLine = $Message;
-    }
-
-    switch($LogType)
-    {
-        "Verbose" {  Write-Verbose $logLine; }
-        "Output"  {  Write-Output $logLine ; }
-        "Host"    {  Write-Host $logLine -ForegroundColor $ForegroundColor -NoNewline:$NoNewLine; }
-        "Error"   {  Write-Error $logLine; }
-        "Warning" {  Write-Warning $logLine ; }
-        default   {  Write-Host $logLine -ForegroundColor $ForegroundColor -NoNewline:$NoNewLine; }
-    }
-}
-
-## Function: Get-DirectorySeparator
-##
-## Purpose: 
-##    Get the directory separator appropriate for the OS
-##
-## Input: 
-##
-## Output:
-##   OS-specific directory separator
-##
-function Get-DirectorySeparator
-{
-    $separator = "/";
-    if ($env:ComSpec)
-    {
-        $separator = "\"
-    }
-
-    return $separator
-}
-
-## Function: Update-RuntimeParameters
-##
-## Purpose: 
-##    Update the runtime parameters
-##
-## Input: 
-##   ParametersFile                   path to the file holding the deployment parameters (the parameters.json file)
-##   ClusterName                      the cluster name
-##   AdminEmailAddress                the cluster administrator email address
-##   ClusterNameTemplateValue         the cluster name template value to replace
-##   ClusterAdminEmailTemplateValue   the cluster admin email template value to replace
-##
-## Output:
-##   nothing
-##
-function Update-RuntimeParameters
-{
-    param(
-            [Parameter(Mandatory=$true)][string]$ParametersFile,
-            [Parameter(Mandatory=$true)][string]$ClusterName,
-            [Parameter(Mandatory=$true)][string]$AdminEmailAddress,
-            [Parameter(Mandatory=$false)][string]$ClusterNameTemplateValue="{CLUSTERNAME}",
-            [Parameter(Mandatory=$false)][string]$ClusterAdminEmailTemplateValue="{ADMINEMAILADDRESS}"
-         )
-
-    # check if the file exists and resolve it's path
-    $ParametersFile = Resolve-Path -Path $ParametersFile -ErrorAction Stop
-    
-    # create a temp file and perform the necessary template replacements
-    $tempParametersFile = [System.IO.Path]::GetTempFileName();
-    if ((Test-Path -Path $tempParametersFile) -eq $false)
-    {
-        throw "Could not create a temporary file"
-    }
-
-    Log-Message "Parameters File: $($ParametersFile)"
-    $parametersContent = gc $ParametersFile -Encoding UTF8
-    $parametersContent = $parametersContent.Replace($ClusterNameTemplateValue, $ClusterName);
-    $parametersContent = $parametersContent.Replace($ClusterAdminEmailTemplateValue, $AdminEmailAddress);
-
-    [IO.File]::WriteAllText($tempParametersFile, $parametersContent);
-
-    return $tempParametersFile
-}
 
 #################################
 # ENTRY POINT
 #################################
+
+$invocation = (Get-Variable MyInvocation).Value 
+$currentPath = Split-Path $invocation.MyCommand.Path 
+Import-Module "$($currentPath)/Common.ps1" -Force
 
 # set the default keyvault parameter file (if one isn't specified)
 if ($KeyVaultDeploymentParametersFile.Trim().Length -eq 0)
@@ -223,34 +128,74 @@ Set-AzureSubscription -SubscriptionName $AzureSubscriptionName | Out-Null
 # create the resource group
 New-AzureRmResourceGroup -Name $ResourceGroupName -Location $Location -Force
 
-if ($DeployKeyVault)
+# Setup parameters for dynamic arm template creation
+# Prep the variables we want to use for replacement
+$replacements = @{ 
+                    "CLUSTERNAME"=$ResourceGroupName;  
+                    "ADMINEMAILADDRESS"=$ClusterAdministratorEmailAddress; 
+                    "AADWEBCLIENTID"=$AadWebClientId; 
+                    "AADWEBCLIENTAPPKEY"=$AadWebClientAppKey; 
+                    "AADTENANTID"=$AadTenantId;
+                    "SERVICEACCOUNTPASSWORD"=$ServiceAccountPassword
+                }
+
+# Add the user for keyvault access
+if (!$KeyVaultUserObjectId)
 {
-    # provision the keyvault
-    # we may need to replace the default resource group name in the parameters file
-    Log-Message "Updating the cluster reference to $($ResourceGroupName)"
-    $tempParametersFile = Update-RuntimeParameters -ParametersFile $KeyVaultDeploymentParametersFile -ClusterName $ResourceGroupName -AdminEmailAddress $ClusterAdministratorEmailAddress
-
-    $provisioningOperation = New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $KeyVaultDeploymentArmTemplateFile -TemplateParameterFile $tempParametersFile -Force -Verbose  
-    
-    if ($provisioningOperation.ProvisioningState -ine "Succeeded")
-    {
-        $provisioningOperation
-        throw "Unable to provision the resource group $($ResourceGroupName)"
-    }
-
-    # pre-populate the keyvault
-    $scriptPath = split-path -parent $MyInvocation.MyCommand.Definition
-    $separator = Get-DirectorySeparator
-    Log-Message "Populating keyvault using script at $($scriptPath)$($separator)Process-OxaToolsKeyVaultConfiguration.ps1"
-    &"$($scriptPath)$($separator)Process-OxaToolsKeyVaultConfiguration.ps1" -Operation Upload -VaultName "$($ResourceGroupName)-kv" -AadWebClientId $AadWebClientId -AadWebClientAppKey $AadWebClientAppKey -AadTenantId $AadTenantId -AzureSubscriptionId $AzureSubscriptionName -TargetPath $TargetPath
+    Log-Message "The keyvault user was not specify. Using the provided service principal '$AadWebClientId' to derive the object Id"
+    $principal = Get-AzureRMADServicePrincipal -ServicePrincipalName $AadWebClientId
+    $KeyVaultUserObjectId = $principal.Id
 }
 
-if ($DeployStamp)
-{
-    # kick off full deployment
-    # we may need to replace the default resource group name in the parameters file
-    Log-Message "Updating the cluster reference to $($ResourceGroupName)"
-    $tempParametersFile = Update-RuntimeParameters -ParametersFile $FullDeploymentParametersFile -ClusterName $ResourceGroupName -AdminEmailAddress $ClusterAdministratorEmailAddress
+$replacements["KEYVAULTUSEROBJECTID"]=$KeyVaultUserObjectId
 
-    New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $FullDeploymentArmTemplateFile -TemplateParameterFile $tempParametersFile -Force -Verbose  
+# Assumption: if the SMTP server is specified, the rest of its configuration will be specified
+if ($smtpServer)
+{
+    $replacements["SMTPSERVER"]=$smtpServer
+    $replacements["SMTPSERVERPORT"]=$smtpServerPort
+    $replacements["SMTPAUTHENTICATIONUSER"]=$smtpAuthenticationUser
+    $replacements["SMTPAUTHENTICATIONUSERPASSWORD"]=$smtpAuthenticationUserPassword
+}
+
+$tempParametersFile = Update-RuntimeParameters -ParametersFile $KeyVaultDeploymentParametersFile -ReplacementHash $replacements;
+
+try
+{
+    if ($DeployKeyVault)
+    {
+        # provision the keyvault
+        # we may need to replace the default resource group name in the parameters file
+        Log-Message "Cluster: $ResourceGroupName | Template: $KeyVaultDeploymentArmTemplateFile | Parameters file: $($tempParametersFile)"
+        $provisioningOperation = New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $KeyVaultDeploymentArmTemplateFile -TemplateParameterFile $tempParametersFile -Force -Verbose  
+    
+        if ($provisioningOperation.ProvisioningState -ine "Succeeded")
+        {
+            $provisioningOperation
+            throw "Unable to provision the resource group $($ResourceGroupName)"
+        }
+
+        # pre-populate the keyvault
+        $scriptPath = split-path -parent $MyInvocation.MyCommand.Definition
+        $separator = Get-DirectorySeparator
+        Log-Message "Populating keyvault using script at $($scriptPath)$($separator)Process-OxaToolsKeyVaultConfiguration.ps1"
+        &"$($scriptPath)$($separator)Process-OxaToolsKeyVaultConfiguration.ps1" -Operation Upload -VaultName "$($ResourceGroupName)-kv" -AadWebClientId $AadWebClientId -AadWebClientAppKey $AadWebClientAppKey -AadTenantId $AadTenantId -AzureSubscriptionId $AzureSubscriptionName -TargetPath $TargetPath
+    }
+
+    if ($DeployStamp)
+    {
+        # kick off full deployment
+        # we may need to replace the default resource group name in the parameters file
+        New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $FullDeploymentArmTemplateFile -TemplateParameterFile $tempParametersFile -Force -Verbose  
+    }
+}
+catch
+{
+    Log-Message $_.Exception.Message
+    throw
+}
+finally
+{
+    Log-Message "Cleaning up temporary parameter file"
+    Remove-Item -Path $tempParametersFile;
 }

@@ -414,7 +414,7 @@
                     "extensionProfile": {
                         "extensions": [
                             {
-                                "name": "[concat(parameters('networkSettings').clusterVirtualMachineScaleSetName, '-installmdm')]",
+                                "name": "[concat(parameters('networkSettings').clusterVirtualMachineScaleSetName, '-installoxa')]",
                                 "properties": {
                                     "publisher": "Microsoft.Azure.Extensions",
                                     "type": "CustomScript",
@@ -424,7 +424,7 @@
                                         "fileUris": "[parameters('customSettings').vmScripts]"
                                     },
                                     "protectedSettings": {
-                                        "commandToExecute": "[parameters('customSettings').commandToExecute]"
+                                        "commandToExecute": "[replace(parameters('customSettings').commandToExecute, parameters('customSettings').storageKeyPlaceholder, parameters('customSettings').secureGenericStorageAccountKey)]",
                                     }
                                 }
                             },

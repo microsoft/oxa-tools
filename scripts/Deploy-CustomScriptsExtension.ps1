@@ -58,72 +58,37 @@ Param(
         [Parameter(Mandatory=$true)][string]$AadTenantId,
         [Parameter(Mandatory=$true)][string]$TemplateFile,
         [Parameter(Mandatory=$true)][string]$TemplateParameterFile,
+
+        [Parameter(Mandatory=$true)][string]$ClusterAdmininistratorEmailAddress,
+        [Parameter(Mandatory=$true)][ValidateSet("oms","datadog")][string]$AgentType,
+        [Parameter(Mandatory=$true)][string]$PrimaryKey,
+        [Parameter(Mandatory=$false)][string]$OmsWorkspaceId="-",
+        [Parameter(Mandatory=$true)][string]$DeploymentVersionId,
+        [Parameter(Mandatory=$false)][string]$OxaToolsGithubAccountName="Microsoft",
+        [Parameter(Mandatory=$false)][string]$OxaToolsGithubProjectName="oxa-tools",
+        [Parameter(Mandatory=$false)][string]$OxaToolsGithubBranch="oxa/master.fic ",
         [Parameter(Mandatory=$false)][switch]$Upgrade
      )
 
-##  Function: LogMessage
-##
-##  Purpose: Write a message to a log file
-##
-##  Input: 
-##      Message          - string - message to write
-##      LogType          - string - message type
-##      Foregroundcolor  - string - color of the output for Log-Messageonly
-##
-##  Ouput: null
-function Log-Message
-{
-    param(
-            [Parameter(Mandatory=$false)][object]$Message,
-            [Parameter(Mandatory=$false)][ValidateSet("Verbose","Output", "Host", "Error", "Warning")][string]$LogType="Host",
-            [Parameter(Mandatory=$false)][string]$Foregroundcolor = "White",
-            [Parameter(Mandatory=$false)][string]$Context = "",
-            [Parameter(Mandatory=$false)][switch]$NoNewLine,
-            [Parameter(Mandatory=$false)][switch]$ClearLine,
-            [Parameter(Mandatory=$false)][switch]$SkipTimestamp
-         )
 
-    
-    # append header to identify where the call came from for debugging purposes
-    if ($Context -ne "")
-    {
-        $Message = "$Context - $Message";
-    }
+#################################
+# ENTRY POINT
+#################################
 
-    # if necessary, prepend a blank line
-    if ($ClearLine -eq $true)
-    {
-        $logTime = [System.Environment]::NewLine
-    }
+$invocation = (Get-Variable MyInvocation).Value 
+$currentPath = Split-Path $invocation.MyCommand.Path 
+Import-Module "$($currentPath)/Common.ps1" -Force
 
-    # prepend log time
-    $logTime += "[$(get-date -format u)]";
-
-    if($NoNewLine -eq $false -and $SkipTimestamp -eq $false)
-    {
-        $logLine = "$logTime :: $Message";
-    }
-    else
-    {
-        $logLine = $Message;
-    }
-
-    switch($LogType)
-    {
-        "Verbose" {  Write-Verbose $logLine; }
-        "Output"  {  Write-Output $logLine ; }
-        "Host"    {  Write-Host $logLine -ForegroundColor $ForegroundColor -NoNewline:$NoNewLine; }
-        "Error"   {  Write-Error $logLine; }
-        "Warning" {  Write-Warning $logLine ; }
-        default   {  Write-Host $logLine -ForegroundColor $ForegroundColor -NoNewline:$NoNewLine; }
-    }
-}
-
-$jobs = @()
+# Login
+$clientSecret = ConvertTo-SecureString -String $AadWebClientAppKey -AsPlainText -Force
+$aadCredential = New-Object System.Management.Automation.PSCredential($AadWebClientId, $clientSecret)
+Login-AzureRmAccount -ServicePrincipal -TenantId $AadTenantId -SubscriptionName $AzureSubscriptionName -Credential $aadCredential -ErrorAction Stop
+Set-AzureSubscription -SubscriptionName $AzureSubscriptionName | Out-Null
 
 # if upgrade is set, we skip deleting the existing extensions
 if ($Upgrade -eq $false)
 {
+    $jobs = @()
 
     # get all VMs
     Log-Message "Getting all VMs in the '$ResourceGroupName' resource group";
@@ -148,8 +113,7 @@ if ($Upgrade -eq $false)
                                                     Set-AzureSubscription -SubscriptionName $AzureSubscriptionName | Out-Null
 
                                                     Remove-AzureRmVMCustomScriptExtension -ResourceGroupName $ResourceGroupName -VMName $vmName -Name $extensionName -Force
-                                                
-                                                
+
             } -ArgumentList $vm.Name, $extensionName, $ResourceGroupName, $AadWebClientAppKey, $AadWebClientId, $AadTenantId, $AzureSubscriptionName;
         }
     }
@@ -174,6 +138,24 @@ else
     Log-Message "Skipping removal of existing extensions"
 }
 
+#prep the variables we want to use for replacement
+$replacements = @{
+                    "ClusterName"=$ResourceGroupName; 
+                    "ClusterAdmininistratorEmailAddress"=$ClusterAdmininistratorEmailAddress;
+                    "AgentType"=$AgentType;
+                    "PrimaryKey"=$PrimaryKey;
+                    "OmsWorkspaceId"=$OmsWorkspaceId;
+                    "DeploymentVersionId"=$DeploymentVersionId;
+                    "OxaToolsGithubAccountName"=$OxaToolsGithubAccountName;
+                    "OxaToolsGithubProjectName"=$OxaToolsGithubProjectName;
+                    "OxaToolsGithubBranch"=$OxaToolsGithubBranch;
+                }
+
+$tempParametersFile = Update-RuntimeParameters -ParametersFile $TemplateParameterFile -ReplacementHash $replacements;
+
 # install the new extension
-New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $templateFile -TemplateParameterFile $templateParameterFile -Force -Verbose
+New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $templateFile -TemplateParameterFile $tempParametersFile -Force -Verbose
+
+# Log-Message "Temp file: $tempParametersFile"
+Remove-Item $tempParametersFile
 

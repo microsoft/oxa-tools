@@ -121,10 +121,17 @@
             "type": "string",
             "defaultValue": "lexoxamysqlrepl"
         },
+        "mysqlBackupUserName": {
+            "type": "string",
+            "defaultValue": "lexoxamysqlbackup"
+        },
         "mysqlServerAdminPassword": {
             "type": "securestring"
         },
         "mysqlServerReplPassword": {
+            "type": "securestring"
+        },
+        "mysqlBackupUserPassword": {
             "type": "securestring"
         },
 
@@ -517,6 +524,83 @@
             "metadata": {
                 "description": "Number of days to keep old Mysql backups. Backups older than this number of days will be deleted."
             }
+        },
+        "importKitchenSinkCourse": {
+            "type": "bool",
+            "defaultValue": true,
+            "metadata": {
+                "description": "Indicator of whether not not to import the Microsoft Kitchen Sink sample course."
+            }
+        },
+        "enableComprehensiveTheming": {
+            "type": "bool",
+            "defaultValue": true,
+            "metadata": {
+                "description": "Indicator of whether not not to enable comprehensive themeing. If this value is set to 'true', make sure to set the themeing directory & default theme name accordingly"
+            }
+        },
+        "comprehensiveThemingDirectory": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Root path to the directory containing the comprehensive themes"
+            }
+        },
+        "comprehensiveThemingName": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Name of the comprehensive available under the 'comprehensiveThemingDirectory' that will be used"
+            }
+        },
+        "enableThirdPartyAuth": {
+            "type": "bool",
+            "defaultValue": true,
+            "metadata": {
+                "description": "Indicator of whether or not third-party authentication will be enabled (ie: AAD, or other OAuth provider)"
+            }
+        },
+        "aadLoginButtonText": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Text for the authentication button"
+            }
+        },
+        "baseDomain": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Domain override for the site. This needs to be the base domain to which cms and lms sub-domains will be added"
+            }
+        },
+        "domainSeparator": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Separator to use for sub-domains (lms|cms|preview)"
+            }
+        },
+        "edxappSuperUserName": {
+            "type": "string",
+            "defaultValue": "oxamaster",
+            "metadata": {
+                "description": "User name  of user with full access to the EDX application"
+            }
+        },
+        "edxappSuperUserPassword": {
+            "type": "securestring",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Password for user with full access to the EDX application"
+            }
+        },
+        "edxappSuperUserEmail": {
+            "type": "string",
+            "defaultValue": "oxamaster",
+            "metadata": {
+                "description": "Email address for the user with full access to the EDX application"
+            }
         }
     },
     "variables": {
@@ -770,7 +854,7 @@
         "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'), variables('backupParameters'), variables('customInstallerOutputRedirect'))]",
 
         "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources.json')]",
-        "keyvaultTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-keyvault.json')]",
+        "keyvaultTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-keyvault.json')]"
     },
     "resources": [
         {

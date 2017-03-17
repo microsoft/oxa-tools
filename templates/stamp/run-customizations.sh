@@ -70,6 +70,25 @@ MYSQL_BACKUP_FREQUENCY="0 */4 * * *" # backup every 4 hours
 MONGO_BACKUP_RETENTIONDAYS="7"
 MYSQL_BACKUP_RETENTIONDAYS="7"
 
+# Microsoft Sample course
+EDXAPP_IMPORT_KITCHENSINK_COURSE=false;
+
+# Comprehensive Theming
+EDXAPP_ENABLE_COMPREHENSIVE_THEMING=false
+EDXAPP_COMPREHENSIVE_THEME_DIR=""
+EDXAPP_DEFAULT_THEME_DIR="/edx/app/edxapp/edx-platform"
+EDXAPP_DEFAULT_SITE_THEME=""
+
+# Third Party Authentication (ie: AAD)
+EDXAPP_ENABLE_THIRD_PARTY_AUTH=false
+EDXAPP_AAD_CLIENT_ID=""
+EDXAPP_AAD_SECURITY_KEY=""
+EDXAPP_AAD_BUTTON_NAME=""
+
+# traffic manager
+DOMAIN_OVERRIDE=""
+DOMAIN_SEPARATOR=""
+
 help()
 {
     echo "This script bootstraps the OXA Stamp"
@@ -114,6 +133,14 @@ help()
     echo "        --mysql-backup-frequency Cron frequency for running a full backup of the mysql database. The expected format is parameter|value as supported by Ansible."
     echo "        --mongo-backup-retention-days Number of days to keep old Mongo database backups. Backups older than this number of days will be deleted"
     echo "        --mysql-backup-retention-days Number of days to keep old Mysql database backups. Backups older than this number of days will be deleted"
+    echo "        --import-kitchensink-course Indicator of whether not not to import the Microsoft Kitchen Sink sample course."
+    echo "        --enable-comprehensive-theming Indicator of whether not not to enable comprehensive themeing. If this value is set to 'true', make sure to set the themeing directory & default theme name accordingly."
+    echo "        --comprehensive-theming-directory Root path to the directory containing the comprehensive themes."
+    echo "        --comprehensive-theming-name Name of the comprehensive available under the 'comprehensiveThemingDirectory' that will be used."
+    echo "        --enable-thirdparty-auth Indicator of whether or not third-party authentication will be enabled (ie: AAD, or other OAuth provider)."
+    echo "        --aad-loginbutton-text Text for the authentication button."
+    echo "        --base-domain-override base domain for the stamp"
+    echo "        --domain-separator domain separator character"
 }
 
 # Parse script parameters
@@ -123,181 +150,359 @@ parse_args()
     while [[ "$#" -gt 0 ]]
         do
 
+        arg_value="${2}"
+        shift_once=0
+
+        if [[ "${arg_value}" =~ "--" ]]; 
+        then
+            arg_value=""
+            shift_once=1
+        fi
+
          # Log input parameters to facilitate troubleshooting
-        echo "Option '$1' set with value '$2'"
+        echo "Option '${1}' set with value '"${arg_value}"'"
 
         case "$1" in
             -c) # Cloud Name
-                CLOUDNAME=$2
+                CLOUDNAME="${arg_value}"
                 ;;
             -u) # OS Admin User Name
-                OS_ADMIN_USERNAME=$2
+                OS_ADMIN_USERNAME="${arg_value}"
                 ;;
             -i) # Custom script relative path
-                CUSTOM_INSTALLER_RELATIVEPATH=$2
+                CUSTOM_INSTALLER_RELATIVEPATH="${arg_value}"
                 ;;
             -m) # Monitoring cluster name
-                MONITORING_CLUSTER_NAME=$2
+                MONITORING_CLUSTER_NAME="${arg_value}"
                 ;;
             -s|--phase) # Bootstrap Phase (0=Servers, 1=OpenEdx App)
-                if is_valid_arg "0 1" $2; then
-                    BOOTSTRAP_PHASE=$2
+                if is_valid_arg "0 1" "${arg_value}"; then
+                    BOOTSTRAP_PHASE="${arg_value}"
                 else
-                    log "Invalid Bootstrap Phase specified - $2" $ERROR_MESSAGE
+                    log "Invalid Bootstrap Phase specified - ${arg_value}" $ERROR_MESSAGE
                     help
                     exit 2
                 fi
                 ;;
             -u|--admin-user)
-                OS_ADMIN_USERNAME=$2
+                OS_ADMIN_USERNAME="${arg_value}"
                 ;;
             --monitoring-cluster)
-                MONITORING_CLUSTER_NAME=$2
+                MONITORING_CLUSTER_NAME="${arg_value}"
                 ;;
             --crontab-interval)
-                CRONTAB_INTERVAL_MINUTES=$2
+                CRONTAB_INTERVAL_MINUTES="${arg_value}"
                 ;;
             --keyvault-name)
-                KEYVAULT_NAME="$2"
+                KEYVAULT_NAME="${arg_value}"
                 ;;
             --aad-webclient-id)
-                AAD_WEBCLIENT_ID="$2"
+                AAD_WEBCLIENT_ID="${arg_value}"
+                EDXAPP_AAD_CLIENT_ID="${arg_value}"
                 ;;
             --aad-webclient-appkey)
-                AAD_WEBCLIENT_APPKEY="$2"
+                AAD_WEBCLIENT_APPKEY="${arg_value}"
+                EDXAPP_AAD_SECURITY_KEY="${arg_value}"
                 ;;
             --aad-tenant-id)
-                AAD_TENANT_ID="$2"
+                AAD_TENANT_ID="${arg_value}"
                 ;;
             --oxatools-public-github-accountname)
-                OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME="$2"
+                OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME="${arg_value}"
                 ;;
             --oxatools-public-github-projectname)
-                OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME="$2"
+                OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME="${arg_value}"
                 ;;
             --oxatools-public-github-projectbranch)
-                OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+                OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH="${arg_value}"
                 ;;
             --edxconfiguration-public-github-accountname)
-                EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME="$2"
+                EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME="${arg_value}"
                 ;;
             --edxconfiguration-public-github-projectname)
-                EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME="$2"
+                EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME="${arg_value}"
                 ;;
             --edxconfiguration-public-github-projectbranch)
-                EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+                EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="${arg_value}"
                 ;;
             --edxplatform-public-github-accountname)
-                EDX_PLATFORM_PUBLIC_GITHUB_ACCOUNTNAME="$2"
+                EDX_PLATFORM_PUBLIC_GITHUB_ACCOUNTNAME="${arg_value}"
                 ;;
             --edxplatform-public-github-projectname)
-                EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME="$2"
+                EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME="${arg_value}"
                 ;;
             --edxplatform-public-github-projectbranch)
-                EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+                EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH="${arg_value}"
                 ;;
             --edxtheme-public-github-accountname)
-                EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME="$2"
+                EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME="${arg_value}"
                 ;;
             --edxtheme-public-github-projectname)
-                EDX_THEME_PUBLIC_GITHUB_PROJECTNAME="$2"
+                EDX_THEME_PUBLIC_GITHUB_PROJECTNAME="${arg_value}"
                 ;;
             --edxtheme-public-github-projectbranch)
-                EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+                EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="${arg_value}"
                 ;;
             --ansible-public-github-accountname)
-                ANSIBLE_PUBLIC_GITHUB_ACCOUNTNAME="$2"
+                ANSIBLE_PUBLIC_GITHUB_ACCOUNTNAME="${arg_value}"
                 ;;
             --ansible-public-github-projectname)
-                ANSIBLE_PUBLIC_GITHUB_PROJECTNAME="$2"
+                ANSIBLE_PUBLIC_GITHUB_PROJECTNAME="${arg_value}"
                 ;;
             --ansible-public-github-projectbranch)
-                ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH="$2"
+                ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH="${arg_value}"
                 ;;
             --edxversion)
-                EDX_VERSION="$2"
+                EDX_VERSION="${arg_value}"
                 ;;
             --forumversion)
-                FORUM_VERSION="$2"
+                FORUM_VERSION="${arg_value}"
                 ;;
             --azure-subscription-id)
-                AZURE_SUBSCRIPTION_ID="$2"
+                AZURE_SUBSCRIPTION_ID="${arg_value}"
                 ;;
             --smtp-server)
-                SMTP_SERVER="$2"
+                SMTP_SERVER="${arg_value}"
                 ;;
             --smtp-server-port)
-                SMTP_SERVER_PORT="$2"
+                SMTP_SERVER_PORT="${arg_value}"
                 ;;
             --smtp-auth-user)
-                SMTP_AUTH_USER="$2"
+                SMTP_AUTH_USER="${arg_value}"
                 ;;
             --smtp-auth-user-password)
-                SMTP_AUTH_USER_PASSWORD="$2"
+                SMTP_AUTH_USER_PASSWORD="${arg_value}"
                 ;;
             --cluster-admin-email)
-                CLUSTER_ADMIN_EMAIL="$2"
+                CLUSTER_ADMIN_EMAIL="${arg_value}"
                 ;;
             --cluster-name)
-                CLUSTER_NAME="$2"
-                MAIL_SUBJECT="${MAIL_SUBJECT} - ${2,,}"
+                CLUSTER_NAME="${arg_value}"
+                MAIL_SUBJECT="${MAIL_SUBJECT} - ${arg_value,,}"
                 ;;
             --cron)
                 CRON_MODE=1
                 ;;
             --storage-account-name)
-                BACKUP_STORAGEACCOUNT_NAME="$2"
+                BACKUP_STORAGEACCOUNT_NAME="${arg_value}"
                 ;;
              --storage-account-key)
-                BACKUP_STORAGEACCOUNT_KEY="$2"
+                BACKUP_STORAGEACCOUNT_KEY="${arg_value}"
                 ;;
-              --mongo-backup-frequency)
-                MONGO_BACKUP_FREQUENCY="${2//_/ }"
+             --mongo-backup-frequency)
+                MONGO_BACKUP_FREQUENCY="${arg_value//_/ }"
                 echo "Option '${1}' reset to '$MONGO_BACKUP_FREQUENCY'"
                 ;;
-              --mysql-backup-frequency)
-                MYSQL_BACKUP_FREQUENCY="${2//_/ }"
+             --mysql-backup-frequency)
+                MYSQL_BACKUP_FREQUENCY="${arg_value//_/ }"
                 echo "Option '${1}' reset to '$MYSQL_BACKUP_FREQUENCY'"
                 ;;
-              --mongo-backup-retention-days)
-                MONGO_BACKUP_RETENTIONDAYS="$2"
+             --mongo-backup-retention-days)
+                MONGO_BACKUP_RETENTIONDAYS="${arg_value}"
                 ;;
-              --mysql-backup-retention-days)
-                MYSQL_BACKUP_RETENTIONDAYS="$2"
+             --mysql-backup-retention-days)
+                MYSQL_BACKUP_RETENTIONDAYS="${arg_value}"
+                ;;
+             --import-kitchensink-course)
+                EDXAPP_IMPORT_KITCHENSINK_COURSE="${arg_value}"
+                ;;
+             --enable-comprehensive-theming)
+                EDXAPP_ENABLE_COMPREHENSIVE_THEMING="${2,,}"
+                ;;
+             --comprehensive-theming-directory)
+                EDXAPP_COMPREHENSIVE_THEME_DIR="${arg_value}"
+                ;;
+             --comprehensive-theming-name)
+                EDXAPP_DEFAULT_SITE_THEME="${arg_value}"
+                ;;
+             --enable-thirdparty-auth)
+                EDXAPP_ENABLE_THIRD_PARTY_AUTH="${arg_value,,}"
+                ;;
+             --aad-loginbutton-text)
+                EDXAPP_AAD_BUTTON_NAME="${arg_value//_/ }"
+                echo "Option '${1}' reset to '$EDXAPP_AAD_BUTTON_NAME'"
+                ;;
+             --base-domain-override)
+                DOMAIN_OVERRIDE="${arg_value,,}"
+                ;;
+             --domain-separator)
+                DOMAIN_SEPARATOR="${arg_value,,}"
+                ;;
+             --mongo-adminuser)
+                MONGO_USER="${arg_value}"
+                ;;
+             --mongo-adminuserpassword)
+                MONGO_PASSWORD="${arg_value}"
+                ;;
+             --mongo-replicasetkey)
+                MONGO_REPLICASET_KEY="${arg_value}"
+                ;;
+             --mysql-adminuser)
+                MYSQL_ADMIN_USER="${arg_value}"
+                ;;
+             --mysql-adminuserpassword)
+                MYSQL_ADMIN_PASSWORD="${arg_value}"
+                ;;
+             --mysql-repluser)
+                MYSQL_REPL_USER="${arg_value}"
+                ;;
+             --mysql-repluserpassword)
+                MYSQL_REPL_USER_PASSWORD="${arg_value}"
+                ;;
+             --mysql-backupuser)
+                MYSQL_BACKUP_USER="${arg_value}"
+                ;;
+             --mysql-backupuserpassword)
+                MYSQL_BACKUP_USER_PASSWORD="${arg_value}"
+                ;;
+             --edxapp-superuser)
+                EDXAPP_SU_USERNAME="${arg_value}"
+                ;;
+             --edxapp-superuserpassword)
+                EDXAPP_SU_PASSWORD="${arg_value}"
+                ;;
+             --edxapp-superuseremail)
+                EDXAPP_SU_EMAIL="${arg_value}"
+                ;;
+             --import-kitchensink-course)
+                EDXAPP_IMPORT_KITCHENSINK_COURSE="${arg_value}"
+                ;;
+             --enable-comprehensive-theming)
+                EDXAPP_ENABLE_COMPREHENSIVE_THEMING="${2,,}"
+                ;;
+             --comprehensive-theming-directory)
+                EDXAPP_COMPREHENSIVE_THEME_DIR="${arg_value}"
+                ;;
+             --comprehensive-theming-name)
+                EDXAPP_DEFAULT_SITE_THEME="${arg_value}"
+                ;;
+             --enable-thirdparty-auth)
+                EDXAPP_ENABLE_THIRD_PARTY_AUTH="${arg_value,,}"
+                ;;
+             --aad-loginbutton-text)
+                EDXAPP_AAD_BUTTON_NAME="${arg_value//_/ }"
+                echo "Option '${1}' reset to '$EDXAPP_AAD_BUTTON_NAME'"
+                ;;
+             --base-domain-override)
+                DOMAIN_OVERRIDE="${arg_value,,}"
+                ;;
+             --domain-separator)
+                DOMAIN_SEPARATOR="${arg_value,,}"
                 ;;
             -h|--help)  # Helpful hints
                 help
                 exit 2
                 ;;
             *) # unknown option
-                echo "Option '${BOLD}$1${NORM} $2' not allowed."
+                echo "Option '${BOLD}$1${NORM} ${arg_value}' not allowed."
                 help
                 exit 2
                 ;;
         esac
         
         shift # past argument
-        shift # past argument or value
+
+        if [ $shift_once -eq 0 ]; 
+        then
+            shift # past argument or value
+        fi
+
     done
+}
+
+#############################################################################
+# Persist Deployment-Time Values
+# This allows parameters passed at deployment-time to override existing 
+# values
+#############################################################################
+
+persist_deployment_time_values()
+{
+    config_file="${OXA_ENV_PATH}/${DEPLOYMENT_ENV}.sh"
+
+    log "Overriding cloud configurations with deploy-time parameters"
+    # Overrides with placeholders
+    sed -i "s#{AZURE_ACCOUNT_NAME}#${BACKUP_STORAGEACCOUNT_NAME}#I" $config_file
+    sed -i "s#{AZURE_ACCOUNT_KEY}#${BACKUP_STORAGEACCOUNT_KEY}#I" $config_file
+    sed -i "s#{CLUSTERNAME}#${CLUSTER_NAME}#I" $config_file
+    sed -i "s#{MONGO_REPLICASET_NAME}#${CLUSTER_NAME}rs#I" $config_file
+    sed -i "s#{EDXAPP_ENABLE_THIRD_PARTY_AUTH}#${EDXAPP_ENABLE_THIRD_PARTY_AUTH}#I" $config_file
+    sed -i "s#{EDXAPP_AAD_CLIENT_ID}#${EDXAPP_AAD_CLIENT_ID}#I" $config_file
+    sed -i "s#{EDXAPP_AAD_SECURITY_KEY}#${EDXAPP_AAD_SECURITY_KEY}#I" $config_file
+    sed -i "s#{EDXAPP_AAD_BUTTON_NAME}#${EDXAPP_AAD_BUTTON_NAME}#I" $config_file
+    sed -i "s#{EDXAPP_ENABLE_COMPREHENSIVE_THEMING}#${EDXAPP_ENABLE_COMPREHENSIVE_THEMING}#I" $config_file
+    sed -i "s#{EDXAPP_COMPREHENSIVE_THEME_DIRECTORY}#${EDXAPP_COMPREHENSIVE_THEME_DIR}#I" $config_file
+    sed -i "s#{EDXAPP_DEFAULT_SITE_THEME}#${EDXAPP_DEFAULT_SITE_THEME}#I" $config_file
+    sed -i "s#{EDXAPP_IMPORT_KITCHENSINK_COURSE}#${EDXAPP_IMPORT_KITCHENSINK_COURSE}#I" $config_file
+
+    sed -i "s#{EDXAPP_PLATFORM_NAME}#${EDXAPP_PLATFORM_NAME}#I" $config_file
+    sed -i "s#{EDXAPP_PLATFORM_EMAIL}#${EDXAPP_PLATFORM_EMAIL}#I" $config_file
+
+    # Overrides without placeholders
+    
+    # Application settings
+    sed -i "s#^ADMIN_USER=.*#ADMIN_USER=${OS_ADMIN_USERNAME}#I" $config_file
+    sed -i "s#^PLATFORM_NAME=.*#PLATFORM_NAME=${PLATFORM_NAME}#I" $config_file
+    
+    sed -i "s#^EDXAPP_EMAIL_HOST=.*#EDXAPP_EMAIL_HOST=${SMTP_SERVER}#I" $config_file
+    sed -i "s#^EDXAPP_EMAIL_HOST_USER=.*#EDXAPP_EMAIL_HOST_USER=${SMTP_AUTH_USER}#I" $config_file
+    sed -i "s#^EDXAPP_EMAIL_HOST_PASSWORD=.*#EDXAPP_EMAIL_HOST_PASSWORD=${SMTP_AUTH_USER_PASSWORD}#I" $config_file
+    sed -i "s#^EDXAPP_EMAIL_PORT=.*#EDXAPP_EMAIL_PORT=${SMTP_SERVER_PORT}#I" $config_file
+
+    sed -i "s#^EDXAPP_SU_PASSWORD=.*#EDXAPP_SU_PASSWORD=${EDXAPP_SU_PASSWORD}#I" $config_file
+    sed -i "s#^EDXAPP_SU_EMAIL=.*#EDXAPP_SU_EMAIL=${EDXAPP_SU_EMAIL}#I" $config_file
+    sed -i "s#^EDXAPP_SU_USERNAME=.*#EDXAPP_SU_USERNAME=${EDXAPP_SU_USERNAME}#I" $config_file
+
+    # Mongo Credentials
+    sed -i "s#^MONGO_USER=.*#MONGO_USER=${MONGO_USER}#I" $config_file
+    sed -i "s#^MONGO_PASSWORD=.*#MONGO_PASSWORD=${MONGO_PASSWORD}#I" $config_file
+    sed -i "s#^MONGO_REPLICASET_KEY=.*#MONGO_REPLICASET_KEY=${MONGO_REPLICASET_KEY}#I" $config_file
+    
+    # Mysql Credentials
+    sed -i "s#^MYSQL_ADMIN_USER=.*#MYSQL_ADMIN_USER=${MYSQL_ADMIN_USER}#I" $config_file
+    sed -i "s#^MYSQL_ADMIN_PASSWORD=.*#MYSQL_ADMIN_PASSWORD=${MYSQL_ADMIN_PASSWORD}#I" $config_file
+
+    sed -i "s#^MYSQL_TEMP_USER=.*#MYSQL_TEMP_USER=${MYSQL_BACKUP_USER}#I" $config_file
+    sed -i "s#^MYSQL_TEMP_PASSWORD=.*#MYSQL_TEMP_PASSWORD=${MYSQL_BACKUP_USER_PASSWORD}#I" $config_file
+
+    sed -i "s#^MYSQL_USER=.*#MYSQL_USER=${MYSQL_REPL_USER}#I" $config_file
+    sed -i "s#^MYSQL_PASSWORD=.*#MYSQL_PASSWORD=${MYSQL_REPL_USER_PASSWORD}#I" $config_file
+    sed -i "s#^MYSQL_REPL_USER=.*#MYSQL_REPL_USER=${MYSQL_REPL_USER}#I" $config_file
+    sed -i "s#^MYSQL_REPL_USER_PASSWORD=.*#MYSQL_REPL_USER_PASSWORD=${MYSQL_REPL_USER_PASSWORD}#I" $config_file
+
+    if [ ! -z ${DOMAIN_OVERRIDE} ]; 
+    then
+        log "Overriding the base url"
+        sed -i "s#^BASE_URL=.*#BASE_URL=${DOMAIN_OVERRIDE}#I" $config_file
+        sed -i "s#^LMS_URL=.*#LMS_URL=lms${DOMAIN_SEPARATOR}${DOMAIN_OVERRIDE}#I" $config_file
+        sed -i "s#^CMS_URL=.*#CMS_URL=cms${DOMAIN_SEPARATOR}${DOMAIN_OVERRIDE}#I" $config_file
+        sed -i "s#^PREVIEW_URL=.*#PREVIEW_URL=preview${DOMAIN_SEPARATOR}${DOMAIN_OVERRIDE}#I" $config_file
+    else
+        log "Domain override not specified"
+    fi
+
+    # Re-source the cloud configurations
+    source $config_file
+    exit_on_error "Failed sourcing the environment configuration file after transform" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 }
 
 ###############################################
 # Start Execution
 ###############################################
 
-# source our utilities for logging and other base functions (we need this staged with the installer script)
-# the file needs to be first downloaded from the public repository
+# Source our utilities for logging and other base functions (we need this staged with the installer script).
+# The file needs to be first downloaded from the public repository and this download happens as part of the custom script extension
 CURRENT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 UTILITIES_PATH=$CURRENT_PATH/utilities.sh
 
-# check if the utilities file exists. If not, bail out.
+# Check if the utilities file exists. If not, bail out.
 if [[ ! -e $UTILITIES_PATH ]]; 
 then  
     echo :"Utilities not present"
     exit 3
 fi
 
-# source the utilities now
+# Source the utilities now
 source $UTILITIES_PATH
 
 # Script self-idenfitication
@@ -306,40 +511,46 @@ print_script_header
 parse_args $@ # pass existing command line arguments
 
 # Validate parameters
-if [ "$OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME" == "" ] || [ "$OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME" == "" ] || [ "$OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH" == "" ] || [ "$CLOUDNAME" == "" ] ;
+if [ -z "$OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME" ] || [ -z "$OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME" ] || [ -z "$OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH" ] || [ -z "$CLOUDNAME" ] ;
 then
-    log "Incomplete OXA Tools Github repository configuration: Github Personal Access Token, Account Name,  Project Name & Branch Name are required." $ERROR_MESSAGE
+    log "Incomplete OXA Tools Github repository configuration: Github Account Name,  Project Name & Branch Name are required." $ERROR_MESSAGE
     exit 3
 fi
 
 if [ "$EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME" == "" ] || [ "$EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME" == "" ] || [ "$EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH" == "" ] ;
 then
-    log "Incomplete EDX Configuration Github repository configuration: Github Personal Access Token, Account Name,  Project Name & Branch Name are required." $ERROR_MESSAGE
+    log "Incomplete EDX Configuration Github repository configuration: Github Account Name,  Project Name & Branch Name are required." $ERROR_MESSAGE
     exit 3
 fi
 
-# to support resiliency, we need to enable retries. Towards that end, this script will support 2 modes: Cron (background execution) or Non-Cron (Custom Script Extension-CSX/direct execution)
+# To support resiliency, we need to enable retries. Towards that end, this script will support 2 modes: Cron (background execution) or Non-Cron (Custom Script Extension-CSX/direct execution)
 CRON_INSTALLER_SCRIPT="$CURRENT_PATH/background-run-customization.sh"
 
 if [ "$CRON_MODE" == "0" ];
 then
     log "Setting up cron job for executing customization from '${HOSTNAME}' for the OXA Stamp"
 
-    # setup the repo parameters individually
+    # Setup the repo parameters individually
     OXA_TOOLS_GITHUB_PARAMS="--oxatools-public-github-accountname \"${OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME}\" --oxatools-public-github-projectname \"${OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME}\" --oxatools-public-github-projectbranch \"${OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH}\""
     EDX_CONFIGURATION_GITHUB_PARAMS="--edxconfiguration-public-github-accountname \"${EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME}\" --edxconfiguration-public-github-projectname \"${EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME}\" --edxconfiguration-public-github-projectbranch \"${EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH}\""
     EDX_PLATFORM_GITHUB_PARAMS="--edxplatform-public-github-accountname \"${EDX_PLATFORM_PUBLIC_GITHUB_ACCOUNTNAME}\" --edxplatform-public-github-projectname \"${EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME}\" --edxplatform-public-github-projectbranch \"${EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH}\""
     EDX_THEME_GITHUB_PARAMS="--edxtheme-public-github-accountname \"${EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME}\" --edxtheme-public-github-projectname \"${EDX_THEME_PUBLIC_GITHUB_PROJECTNAME}\" --edxtheme-public-github-projectbranch \"${EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH}\""
     ANSIBLE_GITHUB_PARAMS="--ansible-public-github-accountname \"${ANSIBLE_PUBLIC_GITHUB_ACCOUNTNAME}\" --ansible-public-github-projectname \"${ANSIBLE_PUBLIC_GITHUB_PROJECTNAME}\" --ansible-public-github-projectbranch \"${ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH}\""
+    SAMPLE_COURSE_PARAMS="--import-kitchensink-course \"${EDXAPP_IMPORT_KITCHENSINK_COURSE}\""
+    COMPREHENSIVE_THEMING_PARAMS="--enable-comprehensive-theming \"${EDXAPP_ENABLE_COMPREHENSIVE_THEMING}\" --comprehensive-theming-directory \"${EDXAPP_COMPREHENSIVE_THEME_DIR}\" --comprehensive-theming-name \"${EDXAPP_DEFAULT_SITE_THEME}\""
+    AUTHENTICATION_PARAMS="--enable-thirdparty-auth \"${EDXAPP_ENABLE_THIRD_PARTY_AUTH}\" --aad-loginbutton-text \"${EDXAPP_AAD_BUTTON_NAME// /_}\""
+    DOMAIN_PARAMS="--base-domain-override \"${DOMAIN_OVERRIDE}\" --domain-separator \"${DOMAIN_SEPARATOR}\""
+    EDXAPP_PARAMS="--edxapp-superuser \"${EDXAPP_SU_USERNAME}\" --edxapp-superuserpassword \"${EDXAPP_SU_PASSWORD}\" --edxapp-superuseremail \"${EDXAPP_SU_EMAIL}\""
+    DATABASE_PARAMS="--mysql-backupuser \"${MYSQL_BACKUP_USER}\" --mysql-backupuserpassword \"${MYSQL_BACKUP_USER_PASSWORD}\" --mysql-repluser \"${MYSQL_REPL_USER}\" --mysql-repluserpassword \"${MYSQL_REPL_USER_PASSWORD}\" --mysql-adminuser \"${MYSQL_ADMIN_USER}\" --mysql-adminuserpassword \"${MYSQL_ADMIN_PASSWORD}\" --mongo-adminuser \"${MONGO_USER}\" --mongo-adminuserpassword \"${MONGO_PASSWORD}\" --mongo-replicasetkey \"${MONGO_REPLICASET_KEY}\""
 
-    # strip out the spaces for passing it along
+    # Strip out the spaces for passing it along
     MONGO_BACKUP_FREQUENCY="${MONGO_BACKUP_FREQUENCY// /_}"
     MYSQL_BACKUP_FREQUENCY="${MYSQL_BACKUP_FREQUENCY// /_}"
 
     BACKUP_PARAMS="--storage-account-name \"${BACKUP_STORAGEACCOUNT_NAME}\" --storage-account-key \"${BACKUP_STORAGEACCOUNT_KEY}\" --mongo-backup-frequency \"${MONGO_BACKUP_FREQUENCY}\" --mysql-backup-frequency \"${MYSQL_BACKUP_FREQUENCY}\" --mongo-backup-retention-days \"${MONGO_BACKUP_RETENTIONDAYS}\" --mysql-backup-retention-days \"${MYSQL_BACKUP_RETENTIONDAYS}\""
 
-    # create the cron job & exit
-    INSTALL_COMMAND="sudo flock -n /var/log/bootstrap-run-customization.lock bash $CURRENT_PATH/run-customizations.sh -c $CLOUDNAME -u $OS_ADMIN_USERNAME -i $CUSTOM_INSTALLER_RELATIVEPATH -m $MONITORING_CLUSTER_NAME -s $BOOTSTRAP_PHASE -u $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --crontab-interval $CRONTAB_INTERVAL_MINUTES --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID --smtp-server $SMTP_SERVER --smtp-server-port $SMTP_SERVER_PORT --smtp-auth-user $SMTP_AUTH_USER --smtp-auth-user-password $SMTP_AUTH_USER_PASSWORD --cluster-admin-email $CLUSTER_ADMIN_EMAIL --cluster-name $CLUSTER_NAME ${OXA_TOOLS_GITHUB_PARAMS} ${EDX_CONFIGURATION_GITHUB_PARAMS} ${EDX_PLATFORM_GITHUB_PARAMS} ${EDX_THEME_GITHUB_PARAMS} ${ANSIBLE_GITHUB_PARAMS} ${BACKUP_PARAMS} --edxversion $EDX_VERSION --forumversion $FORUM_VERSION --cron >> $SECONDARY_LOG 2>&1"
+    # Create the cron job & exit
+    INSTALL_COMMAND="sudo flock -n /var/log/bootstrap-run-customization.lock bash $CURRENT_PATH/run-customizations.sh -c $CLOUDNAME -u $OS_ADMIN_USERNAME -i $CUSTOM_INSTALLER_RELATIVEPATH -m $MONITORING_CLUSTER_NAME -s $BOOTSTRAP_PHASE -u $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --crontab-interval $CRONTAB_INTERVAL_MINUTES --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID --smtp-server $SMTP_SERVER --smtp-server-port $SMTP_SERVER_PORT --smtp-auth-user $SMTP_AUTH_USER --smtp-auth-user-password $SMTP_AUTH_USER_PASSWORD --cluster-admin-email $CLUSTER_ADMIN_EMAIL --cluster-name $CLUSTER_NAME ${OXA_TOOLS_GITHUB_PARAMS} ${EDX_CONFIGURATION_GITHUB_PARAMS} ${EDX_PLATFORM_GITHUB_PARAMS} ${EDX_THEME_GITHUB_PARAMS} ${ANSIBLE_GITHUB_PARAMS} ${BACKUP_PARAMS} ${SAMPLE_COURSE_PARAMS} ${COMPREHENSIVE_THEMING_PARAMS} ${AUTHENTICATION_PARAMS} ${DOMAIN_PARAMS} ${EDXAPP_PARAMS} --edxversion ${EDX_VERSION} --forumversion ${FORUM_VERSION} ${DATABASE_PARAMS} --cron >> $SECONDARY_LOG 2>&1"
     echo $INSTALL_COMMAND > $CRON_INSTALLER_SCRIPT
 
     # Remove the task if it is already setup
@@ -366,16 +577,32 @@ exit_on_error "Configuring the mailer failed"
 
 # 1. Setup Tools
 install-git
-install-gettext
+install-gettext # required for envsubst command
 set_timezone
 
 if [ "$MACHINE_ROLE" == "jumpbox" ] || [ "$MACHINE_ROLE" == "vmss" ];
 then
+    install-bc
     install-mongodb-shell
     install-mysql-client
 
     install-powershell
     install-azure-cli
+
+    # When the comprehensive theming dirs is specified, edxapp:migrate task fails with :  ImproperlyConfigured: COMPREHENSIVE_THEME_DIRS
+    # As an interim mitigation, create the folder if the path specified is not under the edx-platform directory (where the default themes directory is)
+    if [ ! -z "${EDXAPP_COMPREHENSIVE_THEME_DIR}" ] && [ ! -d "${EDXAPP_COMPREHENSIVE_THEME_DIR}" ]; 
+    then
+        # now check if the path specified is within the default edx-platform/themes directory
+        if [[ "${EDXAPP_COMPREHENSIVE_THEME_DIR}" =~ "${EDXAPP_DEFAULT_THEME_DIR}" ]]; 
+        then
+            log "'${EDXAPP_COMPREHENSIVE_THEME_DIR}' falls under the default theme directory. Skipping creation since the edx-platform clone will create it."
+        else
+            log "Creating comprehensive themeing directory at ${EDXAPP_COMPREHENSIVE_THEME_DIR}"
+            mkdir -p "${EDXAPP_COMPREHENSIVE_THEME_DIR}"
+            chown -R edxapp:edxapp "${EDXAPP_COMPREHENSIVE_THEME_DIR}"
+        fi
+    fi
 fi
 
 # 2. Install & Configure the infrastructure & EdX applications
@@ -400,8 +627,14 @@ fi
 powershell -file $INSTALLER_BASEPATH/Process-OxaToolsKeyVaultConfiguration.ps1 -Operation Download -VaultName $KEYVAULT_NAME -AadWebClientId $AAD_WEBCLIENT_ID -AadWebClientAppKey $AAD_WEBCLIENT_APPKEY -AadTenantId $AAD_TENANT_ID -TargetPath $OXA_ENV_PATH -AzureSubscriptionId $AZURE_SUBSCRIPTION_ID
 exit_on_error "Failed downloading configurations from keyvault" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
-# copy utilities to the installer path
-cp $UTILITIES_PATH "${INSTALLER_BASEPATH}"
+# create storage container for edxapp:migrate & other reporting features (containers for the database backup will be created dynamically)
+powershell -file $INSTALLER_BASEPATH/Create-StorageContainer.ps1 -AadWebClientId $AAD_WEBCLIENT_ID -AadWebClientAppKey $AAD_WEBCLIENT_APPKEY -AadTenantId $AAD_TENANT_ID -AzureSubscriptionId $AZURE_SUBSCRIPTION_ID -StorageAccountName "${BACKUP_STORAGEACCOUNT_NAME}" -StorageAccountKey "${BACKUP_STORAGEACCOUNT_KEY}" -StorageContainerNames "uploads,reports,tracking"
+exit_on_error "Failed creating container(s) for edxapp:migrate (uploads,reports,tracking) in '${BACKUP_STORAGEACCOUNT_NAME}'" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
+
+persist_deployment_time_values
+
+# Create a link to the utilities.sh library to be used by the other installer scripts
+ln -s $UTILITIES_PATH "${INSTALLER_BASEPATH}/utilities.sh"
 
 #####################################
 # Setup Backups
@@ -411,21 +644,17 @@ if [ "$MACHINE_ROLE" == "jumpbox" ];
 then
     log "Starting backup configuration on '${HOSTNAME}' as a member in the '${MACHINE_ROLE}' role"
 
-    # setup the configuration file for database backups
-    source "${OXA_ENV_PATH}/${DEPLOYMENT_ENV}.sh"
-    exit_on_error "Failed sourcing the environment configuration file from keyvault" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
-
-    # these are fixed values
+    # These are fixed values
     MONGO_REPLICASET_CONNECTIONSTRING="${MONGO_REPLICASET_NAME}/${MONGO_SERVER_LIST}"
     DATABASE_BACKUP_SCRIPT="${INSTALLER_BASEPATH}/db_backup.sh"
 
-    # setup mysql backup
+    # Setup mysql backup
     DATABASE_TYPE_TO_BACKUP="mysql"
     DATABASE_BACKUP_LOG="/var/log/db_backup_${DATABASE_TYPE_TO_BACKUP}.log"
     setup_backup "${INSTALLER_BASEPATH}/backup_configuration_${DATABASE_TYPE_TO_BACKUP}.sh" "${DATABASE_BACKUP_SCRIPT}" "${DATABASE_BACKUP_LOG}" "${BACKUP_STORAGEACCOUNT_NAME}" "${BACKUP_STORAGEACCOUNT_KEY}" "${MYSQL_BACKUP_FREQUENCY}" "${MYSQL_BACKUP_RETENTIONDAYS}" "${MONGO_REPLICASET_CONNECTIONSTRING}" "${MYSQL_SERVER_LIST}" "${DATABASE_TYPE_TO_BACKUP}" "${MYSQL_ADMIN_USER}" "${MYSQL_ADMIN_PASSWORD}" "${MYSQL_TEMP_USER}" "${MYSQL_TEMP_PASSWORD}"
     exit_on_error "Failed setting up the Mysql Database backup" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
-    # setup mongo backup
+    # Setup mongo backup
     DATABASE_TYPE_TO_BACKUP="mongo"
     DATABASE_BACKUP_LOG="/var/log/db_backup_${DATABASE_TYPE_TO_BACKUP}.log"
     setup_backup "${INSTALLER_BASEPATH}/backup_configuration_${DATABASE_TYPE_TO_BACKUP}.sh" "${DATABASE_BACKUP_SCRIPT}" "${DATABASE_BACKUP_LOG}" "${BACKUP_STORAGEACCOUNT_NAME}" "${BACKUP_STORAGEACCOUNT_KEY}" "${MONGO_BACKUP_FREQUENCY}" "${MONGO_BACKUP_RETENTIONDAYS}" "${MONGO_REPLICASET_CONNECTIONSTRING}" "${MYSQL_SERVER_LIST}" "${DATABASE_TYPE_TO_BACKUP}" "${MONGO_USER}" "${MONGO_PASSWORD}" "${MONGO_USER}" "${MONGO_PASSWORD}"
