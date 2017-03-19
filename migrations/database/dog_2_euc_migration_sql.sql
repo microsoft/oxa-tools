@@ -595,11 +595,6 @@ COMMIT;
 */
 USE edxapp;
 BEGIN;
-/* DROP TABLE certificates_badgeimageconfiguration */
-DROP TABLE certificates_badgeimageconfiguration;
-
-/* DROP TABLE certificates_badgeassertion */
-DROP TABLE certificates_badgeassertion;
 
 /* microsite_configuration_micrositehistory */
 ALTER TABLE microsite_configuration_micrositehistory DROP INDEX `key`;
