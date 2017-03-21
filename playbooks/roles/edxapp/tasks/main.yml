@@ -19,6 +19,16 @@
 # Print the shell tasks's stdout and stderr.
 - debug: var="bash_superuser.stdout_lines + [ bash_superuser.stderr ]"
 
+- name: Enable AAD
+  sudo: yes
+  shell: bash aad_configuration.sh "{{ EDXAPP_MYSQL_HOST }}" "{{ EDXAPP_MYSQL_USER_ADMIN }}" "{{ EDXAPP_MYSQL_PASSWORD_ADMIN }}" "{{ EDXAPP_AAD_BUTTON_NAME }}" "{{ EDXAPP_AAD_CLIENT_ID }}" "{{ EDXAPP_AAD_SECURITY_KEY }}" "{{ EDXAPP_AAD_ENABLE }}"
+  args:
+    chdir: "{{ edxapp_files_path }}"
+  register: bash_aad
+
+# Print the shell task's stdout and stderr.
+- debug: var="bash_aad.stdout_lines + [ bash_aad.stderr ]"
+
 - name: Import kitchen sink course
   sudo: yes
   shell: bash ./import_kitchensink_course.sh "{{ EDXAPP_IMPORT_KITCHENSINK_COURSE }}"
