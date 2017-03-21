@@ -2,7 +2,7 @@ THIS IS A BRANDED TEXT TEMPLATE. {course_title}
 
 {{message_body}}
 ----
-Copyright 2016 Microsoft.
+Copyright 2017 Microsoft
 ----
 This email was automatically sent from {platform_name}.
 You are receiving this email at address {email} because you are enrolled in {course_title}
