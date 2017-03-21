@@ -64,6 +64,12 @@ Password for the SMTP Server user to authenticate with
 .PARAMETER ServiceAccountPassword
 Password to use for creating backend service accounts (Mysql, Mongo admin users)
 
+.PARAMETER PlatformName
+Name used to identify the application
+
+.PARAMETER PlatformEmailAddress
+Email address associated with the application
+
 .INPUTS
 None. You cannot pipe objects to Deploy-OxaStamp.ps1
 
@@ -101,7 +107,14 @@ Param(
         [Parameter(Mandatory=$false)][string]$SmtpAuthenticationUser="",
         [Parameter(Mandatory=$false)][string]$SmtpAuthenticationUserPassword="",
 
-        [Parameter(Mandatory=$false)][string]$ServiceAccountPassword="=crq+4L5QFrMCIKJaVazBWisd0fMJR"
+        [Parameter(Mandatory=$false)][string]$ServiceAccountPassword="=crq+4L5QFrMCIKJaVazBWisd0fMJR",
+
+        [Parameter(Mandatory=$false)][string]$PlatformName="Contoso Learning",
+        [Parameter(Mandatory=$false)][string]$PlatformEmailAddress="",
+
+        [Parameter(Mandatory=$false)][string]$EdxAppSuperUserName="edxappadmin",
+        [Parameter(Mandatory=$false)][string]$EdxAppSuperUserPassword="",
+        [Parameter(Mandatory=$false)][string]$EdxAppSuperUserEmail=""
      )
 
 #################################
@@ -128,16 +141,30 @@ Set-AzureSubscription -SubscriptionName $AzureSubscriptionName | Out-Null
 # create the resource group
 New-AzureRmResourceGroup -Name $ResourceGroupName -Location $Location -Force
 
+######################################################
 # Setup parameters for dynamic arm template creation
-# Prep the variables we want to use for replacement
-$replacements = @{ 
-                    "CLUSTERNAME"=$ResourceGroupName;  
-                    "ADMINEMAILADDRESS"=$ClusterAdministratorEmailAddress; 
-                    "AADWEBCLIENTID"=$AadWebClientId; 
-                    "AADWEBCLIENTAPPKEY"=$AadWebClientAppKey; 
-                    "AADTENANTID"=$AadTenantId;
-                    "SERVICEACCOUNTPASSWORD"=$ServiceAccountPassword
-                }
+######################################################
+
+# todo: move this to a supporting function 
+# Set default value for the Platform Email address
+if (!$PlatformEmailAddress)
+{
+    Log-Message "Falling back to '$ClusterAdministratorEmailAddress' since a platform email address was not specified."
+    $PlatformEmailAddress = $ClusterAdministratorEmailAddress
+}
+
+# Set defaults for Edx Super User (if necessary)
+if (!$EdxAppSuperUserPassword)
+{
+    Log-Message "Falling back to '$ServiceAccountPassword' since a password for the Edx App Super User was was not specified."
+    $EdxAppSuperUserPassword = $ServiceAccountPassword
+}
+
+if (!$EdxAppSuperUserEmail)
+{
+    Log-Message "Falling back to '$ClusterAdministratorEmailAddress' since a password for the Edx App Super User Email was was not specified."
+    $EdxAppSuperUserEmail = $ClusterAdministratorEmailAddress
+}
 
 # Add the user for keyvault access
 if (!$KeyVaultUserObjectId)
@@ -147,7 +174,21 @@ if (!$KeyVaultUserObjectId)
     $KeyVaultUserObjectId = $principal.Id
 }
 
-$replacements["KEYVAULTUSEROBJECTID"]=$KeyVaultUserObjectId
+# Prep the variables we want to use for replacement
+$replacements = @{ 
+                    "CLUSTERNAME"=$ResourceGroupName;  
+                    "ADMINEMAILADDRESS"=$ClusterAdministratorEmailAddress; 
+                    "AADWEBCLIENTID"=$AadWebClientId; 
+                    "AADWEBCLIENTAPPKEY"=$AadWebClientAppKey; 
+                    "AADTENANTID"=$AadTenantId;
+                    "SERVICEACCOUNTPASSWORD"=$ServiceAccountPassword;
+                    "EDXAPPPLATFORMNAME"=$PlatformName;
+                    "EDXAPPPLATFORMEMAIL"=$PlatformEmailAddress;
+                    "KEYVAULTUSEROBJECTID"=$KeyVaultUserObjectId;
+                    "EDXAPPSUPERUSERNAME"=$EdxAppSuperUserName;
+                    "EDXAPPSUPERUSERPASSWORD"=$EdxAppSuperUserPassword;
+                    "EDXAPPSUPERUSEREMAIL"=$EdxAppSuperUserEmail;
+                }
 
 # Assumption: if the SMTP server is specified, the rest of its configuration will be specified
 if ($smtpServer)
@@ -158,6 +199,7 @@ if ($smtpServer)
     $replacements["SMTPAUTHENTICATIONUSERPASSWORD"]=$smtpAuthenticationUserPassword
 }
 
+# Update the deployment parameters
 $tempParametersFile = Update-RuntimeParameters -ParametersFile $KeyVaultDeploymentParametersFile -ReplacementHash $replacements;
 
 try

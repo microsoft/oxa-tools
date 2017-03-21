@@ -307,7 +307,7 @@ parse_args()
                 EDXAPP_IMPORT_KITCHENSINK_COURSE="${arg_value}"
                 ;;
              --enable-comprehensive-theming)
-                EDXAPP_ENABLE_COMPREHENSIVE_THEMING="${2,,}"
+                EDXAPP_ENABLE_COMPREHENSIVE_THEMING="${arg_value,,}"
                 ;;
              --comprehensive-theming-directory)
                 EDXAPP_COMPREHENSIVE_THEME_DIR="${arg_value}"
@@ -368,7 +368,7 @@ parse_args()
                 EDXAPP_IMPORT_KITCHENSINK_COURSE="${arg_value}"
                 ;;
              --enable-comprehensive-theming)
-                EDXAPP_ENABLE_COMPREHENSIVE_THEMING="${2,,}"
+                EDXAPP_ENABLE_COMPREHENSIVE_THEMING="${arg_value}"
                 ;;
              --comprehensive-theming-directory)
                 EDXAPP_COMPREHENSIVE_THEME_DIR="${arg_value}"
@@ -377,17 +377,16 @@ parse_args()
                 EDXAPP_DEFAULT_SITE_THEME="${arg_value}"
                 ;;
              --enable-thirdparty-auth)
-                EDXAPP_ENABLE_THIRD_PARTY_AUTH="${arg_value,,}"
+                EDXAPP_ENABLE_THIRD_PARTY_AUTH="${arg_value}"
                 ;;
              --aad-loginbutton-text)
-                EDXAPP_AAD_BUTTON_NAME="${arg_value//_/ }"
-                echo "Option '${1}' reset to '$EDXAPP_AAD_BUTTON_NAME'"
+                EDXAPP_AAD_BUTTON_NAME="${arg_value}"
                 ;;
-             --base-domain-override)
-                DOMAIN_OVERRIDE="${arg_value,,}"
+             --platform-name)
+                PLATFORM_NAME=`echo ${arg_value} | base64 --decode`
                 ;;
-             --domain-separator)
-                DOMAIN_SEPARATOR="${arg_value,,}"
+             --platform-email)
+                PLATFORM_EMAIL="${arg_value}"
                 ;;
             -h|--help)  # Helpful hints
                 help
@@ -421,6 +420,7 @@ persist_deployment_time_values()
     config_file="${OXA_ENV_PATH}/${DEPLOYMENT_ENV}.sh"
 
     log "Overriding cloud configurations with deploy-time parameters"
+
     # Overrides with placeholders
     sed -i "s#{AZURE_ACCOUNT_NAME}#${BACKUP_STORAGEACCOUNT_NAME}#I" $config_file
     sed -i "s#{AZURE_ACCOUNT_KEY}#${BACKUP_STORAGEACCOUNT_KEY}#I" $config_file
@@ -435,14 +435,12 @@ persist_deployment_time_values()
     sed -i "s#{EDXAPP_DEFAULT_SITE_THEME}#${EDXAPP_DEFAULT_SITE_THEME}#I" $config_file
     sed -i "s#{EDXAPP_IMPORT_KITCHENSINK_COURSE}#${EDXAPP_IMPORT_KITCHENSINK_COURSE}#I" $config_file
 
-    sed -i "s#{EDXAPP_PLATFORM_NAME}#${EDXAPP_PLATFORM_NAME}#I" $config_file
-    sed -i "s#{EDXAPP_PLATFORM_EMAIL}#${EDXAPP_PLATFORM_EMAIL}#I" $config_file
-
     # Overrides without placeholders
     
     # Application settings
     sed -i "s#^ADMIN_USER=.*#ADMIN_USER=${OS_ADMIN_USERNAME}#I" $config_file
-    sed -i "s#^PLATFORM_NAME=.*#PLATFORM_NAME=${PLATFORM_NAME}#I" $config_file
+    sed -i "s#^PLATFORM_NAME=.*#PLATFORM_NAME=\"${PLATFORM_NAME}\"#I" $config_file
+    sed -i "s#^PLATFORM_EMAIL=.*#PLATFORM_EMAIL=${PLATFORM_EMAIL}#I" $config_file
     
     sed -i "s#^EDXAPP_EMAIL_HOST=.*#EDXAPP_EMAIL_HOST=${SMTP_SERVER}#I" $config_file
     sed -i "s#^EDXAPP_EMAIL_HOST_USER=.*#EDXAPP_EMAIL_HOST_USER=${SMTP_AUTH_USER}#I" $config_file
@@ -530,6 +528,10 @@ if [ "$CRON_MODE" == "0" ];
 then
     log "Setting up cron job for executing customization from '${HOSTNAME}' for the OXA Stamp"
 
+    # todo: add encoding/decoding for other parameters that support blank spaces in their value
+    # decode the input now that we need to use the variable
+    PLATFORM_NAME=`echo ${PLATFORM_NAME} | base64`
+
     # Setup the repo parameters individually
     OXA_TOOLS_GITHUB_PARAMS="--oxatools-public-github-accountname \"${OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME}\" --oxatools-public-github-projectname \"${OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME}\" --oxatools-public-github-projectbranch \"${OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH}\""
     EDX_CONFIGURATION_GITHUB_PARAMS="--edxconfiguration-public-github-accountname \"${EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME}\" --edxconfiguration-public-github-projectname \"${EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME}\" --edxconfiguration-public-github-projectbranch \"${EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH}\""
@@ -541,7 +543,7 @@ then
     AUTHENTICATION_PARAMS="--enable-thirdparty-auth \"${EDXAPP_ENABLE_THIRD_PARTY_AUTH}\" --aad-loginbutton-text \"${EDXAPP_AAD_BUTTON_NAME// /_}\""
     DOMAIN_PARAMS="--base-domain-override \"${DOMAIN_OVERRIDE}\" --domain-separator \"${DOMAIN_SEPARATOR}\""
     EDXAPP_PARAMS="--edxapp-superuser \"${EDXAPP_SU_USERNAME}\" --edxapp-superuserpassword \"${EDXAPP_SU_PASSWORD}\" --edxapp-superuseremail \"${EDXAPP_SU_EMAIL}\""
-    DATABASE_PARAMS="--mysql-backupuser \"${MYSQL_BACKUP_USER}\" --mysql-backupuserpassword \"${MYSQL_BACKUP_USER_PASSWORD}\" --mysql-repluser \"${MYSQL_REPL_USER}\" --mysql-repluserpassword \"${MYSQL_REPL_USER_PASSWORD}\" --mysql-adminuser \"${MYSQL_ADMIN_USER}\" --mysql-adminuserpassword \"${MYSQL_ADMIN_PASSWORD}\" --mongo-adminuser \"${MONGO_USER}\" --mongo-adminuserpassword \"${MONGO_PASSWORD}\" --mongo-replicasetkey \"${MONGO_REPLICASET_KEY}\""
+    DATABASE_PARAMS="--platform-email \"${PLATFORM_EMAIL}\" --platform-name \"${PLATFORM_NAME}\" --mysql-backupuser \"${MYSQL_BACKUP_USER}\" --mysql-backupuserpassword \"${MYSQL_BACKUP_USER_PASSWORD}\" --mysql-repluser \"${MYSQL_REPL_USER}\" --mysql-repluserpassword \"${MYSQL_REPL_USER_PASSWORD}\" --mysql-adminuser \"${MYSQL_ADMIN_USER}\" --mysql-adminuserpassword \"${MYSQL_ADMIN_PASSWORD}\" --mongo-adminuser \"${MONGO_USER}\" --mongo-adminuserpassword \"${MONGO_PASSWORD}\" --mongo-replicasetkey \"${MONGO_REPLICASET_KEY}\""
 
     # Strip out the spaces for passing it along
     MONGO_BACKUP_FREQUENCY="${MONGO_BACKUP_FREQUENCY// /_}"

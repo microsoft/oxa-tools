@@ -601,6 +601,20 @@
             "metadata": {
                 "description": "Email address for the user with full access to the EDX application"
             }
+        },
+        "edxPlatformName": {
+            "type": "string",
+            "defaultValue": "Contoso Learning",
+            "metadata": {
+                "description": "Name used to identify the application"
+            }
+        },
+        "edxPlatformEmail": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Email address associated with the application"
+            }
         }
     },
     "variables": {

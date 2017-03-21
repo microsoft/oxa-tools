@@ -41,7 +41,7 @@
                         "properties": {
                             "target": "[parameters('customSettings').endpoint1.target]",
                             "endpointStatus": "[parameters('customSettings').endpoint1.status]",
-                            "endpointLocation": "[parameters('customSettings').endpoint1.location]",
+                            "endpointLocation": null,
                             "priority": "[parameters('customSettings').endpoint1.priority]"
                         }
                     },
@@ -51,7 +51,7 @@
                         "properties": {
                             "target": "[parameters('customSettings').endpoint2.target]",
                             "endpointStatus": "[parameters('customSettings').endpoint2.status]",
-                            "endpointLocation": "[parameters('customSettings').endpoint2.location]",
+                            "endpointLocation": null,
                             "priority": "[parameters('customSettings').endpoint2.priority]"
                         }
                     }
