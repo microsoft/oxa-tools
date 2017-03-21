@@ -1,3 +1,14 @@
 ---
 
+- name: Run OXA script
+  sudo: yes
+  shell: bash oxa_configuration.sh "{{ EDXAPP_MYSQL_HOST }}" "{{ EDXAPP_MYSQL_USER_ADMIN }}" "{{ EDXAPP_MYSQL_PASSWORD_ADMIN }}" "{{ EDXAPP_AAD_BUTTON_NAME }}" "{{ EDXAPP_AAD_CLIENT_ID }}" "{{ EDXAPP_AAD_SECURITY_KEY }}" "{{ EDXAPP_AAD_ENABLE }}"
+  args:
+    chdir: "{{ mysql_files_path }}"
+  register: bash
+
+# Print the shell task's stdout and stderr.
+- debug: var="bash.stdout_lines + [ bash.stderr ]"
+
+
 
