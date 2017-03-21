@@ -368,7 +368,7 @@ parse_args()
                 EDXAPP_IMPORT_KITCHENSINK_COURSE="${arg_value}"
                 ;;
              --enable-comprehensive-theming)
-                EDXAPP_ENABLE_COMPREHENSIVE_THEMING="${arg_value}"
+                EDXAPP_ENABLE_COMPREHENSIVE_THEMING="${arg_value,,}"
                 ;;
              --comprehensive-theming-directory)
                 EDXAPP_COMPREHENSIVE_THEME_DIR="${arg_value}"
@@ -377,10 +377,17 @@ parse_args()
                 EDXAPP_DEFAULT_SITE_THEME="${arg_value}"
                 ;;
              --enable-thirdparty-auth)
-                EDXAPP_ENABLE_THIRD_PARTY_AUTH="${arg_value}"
+                EDXAPP_ENABLE_THIRD_PARTY_AUTH="${arg_value,,}"
                 ;;
              --aad-loginbutton-text)
-                EDXAPP_AAD_BUTTON_NAME="${arg_value}"
+                EDXAPP_AAD_BUTTON_NAME="${arg_value//_/ }"
+                echo "Option '${1}' reset to '$EDXAPP_AAD_BUTTON_NAME'"
+                ;;
+             --base-domain-override)
+                DOMAIN_OVERRIDE="${arg_value,,}"
+                ;;
+             --domain-separator)
+                DOMAIN_SEPARATOR="${arg_value}"
                 ;;
              --platform-name)
                 PLATFORM_NAME=`echo ${arg_value} | base64 --decode`
