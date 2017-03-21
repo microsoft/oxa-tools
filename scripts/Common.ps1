@@ -179,6 +179,7 @@ function Update-RuntimeParameters
     $parametersContent = gc $ParametersFile -Encoding UTF8
     foreach($key in $ReplacementHash.Keys)
     {
+        # todo: track cases where search key is not found and provide notification that replacement was skipped
         Log-Message "Replacing '{$key}' with '$($ReplacementHash[ $key ])'"
         $parametersContent = $parametersContent -ireplace "{$key}", $ReplacementHash[ $key ];
     }
