@@ -17,7 +17,7 @@ if [ "$1" == "true" ] || [ "$1" == "True" ]; then
 	sudo git clone https://github.com/microsoft/edx-theme.git themes -b oxa/master.fic
 	
 	for i in `ls -d1 /edx/app/edxapp/themes/*/lms/static/images`; do
-       sudo cp /oxa/oxa-tools-config/env/$2/images/* $i;
+       sudo cp /oxa/oxa-tools-config/env/$2/*.png $i;
     done
 		
 	sudo chown -R edxapp:edxapp /edx/app/edxapp/themes
