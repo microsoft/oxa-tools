@@ -558,8 +558,6 @@ COMMIT;
 /* EDXAPP_CSMH DATABASE CREATION*/
 BEGIN;
 CREATE DATABASE IF NOT EXISTS edxapp_csmh DEFAULT CHARACTER SET utf8;
-GRANT SELECT,INSERT,UPDATE,DELETE on edxapp_csmh.* to 'edxapp001@hosts';
-GRANT SELECT,INSERT,UPDATE,DELETE,ALTER,CREATE,DROP,INDEX on edxapp_csmh.* to 'migrate@hosts';
 USE edxapp_csmh;
 CREATE TABLE `coursewarehistoryextended_studentmodulehistoryextended` (
   `version` varchar(255) DEFAULT NULL,
