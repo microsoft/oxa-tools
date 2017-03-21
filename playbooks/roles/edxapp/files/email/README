@@ -1,7 +1,9 @@
 # Huseyin Koyun
-# I am putting these instructions here for record until we automate this in oxa-tools deployment automation.
 
-You will use these files to update/insert into COURSE_EMAIL_TEMPLATES through the Django LMS admin panel.
+# NOTE: before the changes described below are made, a clean deployment will initialize the database with the content found in /edx-platform/lms/djangoapps/bulk_email/fixtures/
+
+# TODO: automate this via oxa-tools deployment
+For now, we use these files to update/insert into COURSE_EMAIL_TEMPLATES through the Django LMS admin panel.
 This must be done only once when a new platform is created. So that bulk email has the correct template. Instructor's email text message is embedded into this template.
 
 From Django LMS /admin panel
@@ -17,3 +19,7 @@ There must be two records in this table.
    Html template        : Insert the content of noname.template.html
    Plain template       : Insert the content of noname.template.plain
 
+# TODO: img src and current year are currently hardcoded, but we should expand the model (and update the markup) to get those at runtime.
+# NOTE: the required platform changes for this will happen in
+    edx-platform/lms/djangoapps/bulk_email/ and 
+    edx-platform/lms/djangoapps/instructor/views/api.py
