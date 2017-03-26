@@ -125,7 +125,7 @@ if ($Operation -ieq "Upload")
         if ($isCli2)
         {
             # Cli 2.0
-            $response = az keyvault secret set --output json --vault-name "$VaultName" --name "$secretName" --file "$($configItem.FullName)" --encodeing "base64" | Out-String
+            $response = az keyvault secret set --output json --vault-name "$VaultName" --name "$secretName" --file "$($configItem.FullName)" --encoding "base64" | Out-String
         }
         else
         {
