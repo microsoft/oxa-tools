@@ -287,7 +287,8 @@ function Process-SecretName
 ##   Set the cli context to the appropriate azure subscription after login
 ##
 ## Input: 
-##   $AzureSubscriptionId     the azure subscription id to set as current
+##   AzureSubscriptionId      the azure subscription id to set as current
+##   IsCli2                   indicator of whether or not azure cli 2.0 is used
 ##
 ## Output:
 ##   nothing
@@ -295,16 +296,27 @@ function Process-SecretName
 function Set-AzureSubscriptionContext
 {
     param(
-            [Parameter(Mandatory=$true)][string]$AzureSubscriptionId
+            [Parameter(Mandatory=$true)][string]$AzureSubscriptionId,
+            [Parameter(Mandatory=$false)][boolean]$IsCli2=$false
          )
 
     Log-Message "Setting execution context to the '$($AzureSubscriptionId)' azure subscription"
 
-    $results = azure account set  $AzureSubscriptionId  -vv --json | Out-String
-
-    if (!$results.Contains("account set command OK"))
+    if ($IsCli2)
     {
-        throw "Could not set execution context to the '$($AzureSubscriptionId)' azure subscription"
+        $results = az account set --subscription $AzureSubscriptionId --output json | out-string
+        if ($results.Length -gt 0)
+        {
+            throw "Could not set execution context to the '$($AzureSubscriptionId)' azure subscription"
+        }
+    }
+    else
+    {
+        $results = azure account set  $AzureSubscriptionId  -vv --json | Out-String
+        if (!$results.Contains("account set command OK"))
+        {
+            throw "Could not set execution context to the '$($AzureSubscriptionId)' azure subscription"
+        }
     }
 }
 
@@ -317,6 +329,7 @@ function Set-AzureSubscriptionContext
 ##   AadWebClientId           the azure active directory web application client id
 ##   AadWebClientAppKey       the azure active directory web application key
 ##   AadTenantId              the azure active directory tenant id
+##   IsCli2                   indicator of whether or not azure cli 2.0 is used
 ##
 ## Output:
 ##   nothing
@@ -326,12 +339,19 @@ function Authenticate-AzureRmUser
     param(
             [Parameter(Mandatory=$true)][string]$AadWebClientId,
             [Parameter(Mandatory=$true)][string]$AadWebClientAppKey,
-            [Parameter(Mandatory=$true)][string]$AadTenantId
+            [Parameter(Mandatory=$true)][string]$AadTenantId,
+            [Parameter(Mandatory=$false)][boolean]$IsCli2=$false
          )
 
     Log-Message "Logging in as service principal for '$($AadTenantId)'"
-    $results = azure login -u $AadWebClientId --service-principal --tenant $AadTenantId -p $AadWebClientAppKey -vv --json | Out-String
-
+    if ($IsCli2)
+    {
+        $results = azure login -u $AadWebClientId --service-principal --tenant $AadTenantId -p $AadWebClientAppKey -vv --json | Out-String
+    }
+    else
+    {
+        $results = azure login -u $AadWebClientId --service-principal --tenant $AadTenantId -p $AadWebClientAppKey -vv --json | Out-String
+    }
     if (!$results.Contains("login command OK"))
     {
         throw "Login failed"

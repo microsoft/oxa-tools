@@ -15,6 +15,8 @@ ERROR_HYDRATECONFIG_FAILED=5410
 ERROR_BCINSTALL_FAILED=5402
 ERROR_NODEINSTALL_FAILED=6101
 ERROR_AZURECLI_FAILED=6201
+ERROR_AZURECLI_SCRIPT_DOWNLOAD_FAILED=6202
+ERROR_AZURECLI_RESTARTING_SHELL_FAILED=6203
 
 #############################################################################
 # Log a message
@@ -641,6 +643,42 @@ install-azure-cli()
     fi
 
     log "Azure CLI installed"
+}
+
+install_azure-cli-2_0()
+{
+    # Set the base path
+    base_path=`readlink -f ~`
+    log "Established the base path at '${base_path}'"
+
+    # 1. Download the official installer
+    install_script="${base_path}/install-azurecli.sh"
+    log "Downloading official Azure Cli 2.0 installer from '${install_script}'"
+    wget https://aka.ms/InstallAzureCli -O $install_script
+    exit_on_error "Failed downloading azure cli 2.0 installer script on ${HOSTNAME} !" $ERROR_AZURECLI_SCRIPT_DOWNLOAD_FAILED
+
+    # 2. Inject the necessary sed replacement statements to enable non-interactive installation
+    log "Enabling non-interactive installation via script overrides"
+    overrides_file="${base_path}/azurecli2-installation-overrides.sh"
+    echo 'sed -i "s#exec_dir\ =\ None#exec_dir=os.path.realpath(\"/usr/bin/\")#I" $install_script' > $overrides_file
+    echo 'sed -i "s#install_dir\ =\ None#install_dir=os.path.realpath(\"/usr/lib/azure-cli\")#I" $install_script' >> $overrides_file
+    echo 'sed -i "s#ans_yes\ =\ prompt_y_n.*Modify profile.*#ans_yes\=True#I" $install_script' >> $overrides_file
+    echo 'sed -i "s#rc_file_path\ =\ get_rc_file_path()#rc_file_path=os.path.realpath(os.path.expanduser(\"~/.bashrc\"))#I" $install_script' >> $overrides_file
+
+    # inject our place holder & content
+    match='echo \"Running install script.\"'
+    placeholder="#overrides#"
+    sed -i "s/$match/$match\n$placeholder/" $install_script
+    sed -i -e "/^${placeholder}/{r ${overrides_file}" -e "d}" $install_script
+
+    # 3. Run the installation
+    log "Executing the modified Azure Cli 2.0 installation script  at '${install_script}'"
+    bash $install_script
+    exit_on_error "Failed to install azure cli 2.0 on ${HOSTNAME} !" $ERROR_AZURECLI_FAILED
+
+    log "Restarting shell"
+    exec -l $SHELL
+    exit_on_error "Failed restarting the shell during installation of azure cli 2.0 on ${HOSTNAME} !" $ERROR_AZURECLI_RESTARTING_SHELL_FAILED
 }
 
 #############################################################################

@@ -31,6 +31,9 @@ The azure active directory tenant id for authentication
 .PARAMETER AzureSubscriptionId
 The Id of the Azure subscription
 
+.PARAMETER AzureCliVersion
+Version of Azure CLI to use
+
 .INPUTS
 None. You cannot pipe objects to Process-OxaToolsKeyVaultConfiguration.ps1
 
@@ -50,7 +53,8 @@ Param(
         [Parameter(Mandatory=$true)][string]$AadWebClientId,
         [Parameter(Mandatory=$true)][string]$AadWebClientAppKey,
         [Parameter(Mandatory=$true)][string]$AadTenantId,
-        [Parameter(Mandatory=$true)][string]$AzureSubscriptionId
+        [Parameter(Mandatory=$true)][string]$AzureSubscriptionId,
+        [Parameter(Mandatory=$false)][string][ValidateSet("1","2")]$AzureCliVersion="1"
      )
 
 ###########################################
@@ -62,14 +66,14 @@ Param(
 
 trap [Exception]
 {
-    Log-Message -Message $_;
+    Log-Message -Message $_
 
     Capture-ErrorStack -ForceStop
 
     # we expect a calling script to be listening to what we are doing here. 
     # therefore, we will throw a fit here as a signal to them.
     # this should trigger and catch and resume
-    throw "Script execution failed: $($_)";
+    throw "Script execution failed: $($_)"
 }
 
 #########################
@@ -82,12 +86,15 @@ $invocation = (Get-Variable MyInvocation).Value
 $currentPath = Split-Path $invocation.MyCommand.Path 
 Import-Module "$($currentPath)/Common.ps1" -Force
 
+# track version of cli to use
+[bool]$isCli2 = ($AzureCliVersion -eq "2")
+
 # Login First & set context
-Authenticate-AzureRmUser -AadWebClientId $AadWebClientId -AadWebClientAppKey $AadWebClientAppKey -AadTenantId $AadTenantId;
-Set-AzureSubscriptionContext -AzureSubscriptionId $AzureSubscriptionId
+Authenticate-AzureRmUser -AadWebClientId $AadWebClientId -AadWebClientAppKey $AadWebClientAppKey -AadTenantId $AadTenantId -IsCli2 $isCli2
+Set-AzureSubscriptionContext -AzureSubscriptionId $AzureSubscriptionId -IsCli2 $isCli2 
 
 # Get the directory separator
-$directorySeparator = Get-DirectorySeparator;
+$directorySeparator = Get-DirectorySeparator
 
 # Upload
 if ($Operation -ieq "Upload")
@@ -114,17 +121,27 @@ if ($Operation -ieq "Upload")
         $secretName = Process-SecretName -SecretName $configItem.Name -Prefix $ConfigurationPrefix -Operation Encode -ProcessPrefix
         
         Log-Message "Creating secret $($configItem.Name) from $($configItem.FullName)" -Context "Secrets $($Operation)" -NoNewLine
-        $response = azure keyvault secret set --json --vault-name "$VaultName" -s "$secretName" --file "$($configItem.FullName)" --encode-binary "base64" | Out-String
+        
+        if ($isCli2)
+        {
+            # Cli 2.0
+            $response = az keyvault secret set --output json --vault-name "$VaultName" --name "$secretName" --file "$($configItem.FullName)" --encodeing "base64" | Out-String
+        }
+        else
+        {
+            # Cli 1.0
+            $response = azure keyvault secret set --json --vault-name "$VaultName" -s "$secretName" --file "$($configItem.FullName)" --encode-binary "base64" | Out-String
+        }
 
         $responseJson = Parse-Json -jsonString $response
 
         if ($responseJson -and $responseJson[0] -and $responseJson[0].value -and $responseJson[0].value.length -gt 0)
         {
-            Log-Message -Message " [OK]"  -SkipTimestamp -Foregroundcolor Green;
+            Log-Message -Message " [OK]"  -SkipTimestamp -Foregroundcolor Green
         }
         else
         {
-            Log-Message -Message " [FAILED]" -SkipTimestamp -Foregroundcolor Red;
+            Log-Message -Message " [FAILED]" -SkipTimestamp -Foregroundcolor Red
             Log-Message -Message $response
             throw "Failed uploading secret '$secretName'"
         }
@@ -145,10 +162,18 @@ if ($Operation -ieq "Download")
     }
 
     # fetch the keyvault secrets
-    $results = azure keyvault secret list $VaultName --json | Out-string
+    if ($isCli2)
+    {
+        $results = azure keyvault secret list --vault-name $VaultName --output json | Out-string
+    }
+    else
+    {
+        $results = azure keyvault secret list $VaultName --json | Out-string
+    }
+
     $secrets = Parse-Json -jsonString $results
 
-    [array]$secretList = @();
+    [array]$secretList = @()
     foreach($secret in $secrets)
     {
         $secretList += $rawSecretName = $secret.id.Split("/") | select -Last 1
@@ -188,17 +213,26 @@ if ($Operation -ieq "Download")
 
         # TODO: add --decode-binary and replace explicit base64 decode
         # There is a bug in the azure keyvault secret get api regarding the use of --decode-binary. It results in base64 function not found.
+        # Investigation Details: due to a bug in the legacy version of nodejs, the base64 function is broken.
         # In the interim, the approach is: download the file & base64-decode it in place.
+        # This only applies to Azure CLI 1 and doesn't extend to Azure Cli 2.
         
         # download
         Log-Message -Message "Downloading secret: '$secretName' to '$settingFilePath'"
-        azure keyvault secret get -u $VaultName -s $secretName --file $settingFilePath | Out-Null
+        if ($isCli2)
+        {
+            az keyvault secret download --vault-name $VaultName --name $secretName --file $settingFilePath --encoding base64 | Out-Null
+        }
+        else
+        {
+            azure keyvault secret get -u $VaultName -s $secretName --file $settingFilePath | Out-Null
 
-        # decode
-        $content = gc $settingFilePath -Encoding UTF8 -Raw
-        $content =[Convert]::FromBase64String($content)
-        $content = [System.Text.Encoding]::UTF8.GetString($content)
-        [IO.File]::WriteAllText($settingFilePath, $content)
+            # decode 
+            $content = gc $settingFilePath -Encoding UTF8 -Raw
+            $content =[Convert]::FromBase64String($content)
+            $content = [System.Text.Encoding]::UTF8.GetString($content)
+            [IO.File]::WriteAllText($settingFilePath, $content)
+        }
     }
 }
 
@@ -208,12 +242,20 @@ if ($Operation -ieq "Purge" -or $Operation -ieq "List")
     Log-Message "Getting Vault Secrets"  -Context "Secrets $($Operation)"
 
     Log-Message "azure keyvault secret list $VaultName"
-    $results = azure keyvault secret list $VaultName --json | Out-string
-    $secrets = @();
+    if ($isCli2)
+    {
+        $results = az keyvault secret list --vault-name $VaultName --output json | Out-String
+    }
+    else
+    {
+        $results = azure keyvault secret list $VaultName --json | Out-string
+    }
 
-    $secrets = Parse-Json -jsonString $results;
+    $secrets = @()
 
-    [array]$secretList = @();
+    $secrets = Parse-Json -jsonString $results
+
+    [array]$secretList = @()
     foreach($secret in $secrets)
     {
         $secretList += $rawSecretName = $secret.id.Split("/") | select -Last 1
@@ -227,10 +269,18 @@ if ($Operation -ieq "Purge" -or $Operation -ieq "List")
 
         foreach($secret in $secretList)
         {
-            $response = azure keyvault secret delete --vault-name "$VaultName" --secret-name "$secret" -q | Out-String
-            if ($response.Contains("error"))
+            if ($isCli2)
             {
-                Log-Message -Message $response -LogType Error;
+                $response = azure keyvault secret delete --vault-name "$VaultName" --name "$secret" | Out-String
+            }
+            else
+            {
+                $response = azure keyvault secret delete --vault-name "$VaultName" --secret-name "$secret" -q | Out-String
+            }
+
+            if ($response.Contains("error") -or $response.Contains("Secret not found") -or $response.Contains("The vault may not exist"))
+            {
+                Log-Message -Message $response -LogType Error
                 throw "Failed deleting '$VaultName'"
             }
             else
