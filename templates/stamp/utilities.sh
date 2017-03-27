@@ -16,7 +16,8 @@ ERROR_BCINSTALL_FAILED=5402
 ERROR_NODEINSTALL_FAILED=6101
 ERROR_AZURECLI_FAILED=6201
 ERROR_AZURECLI_SCRIPT_DOWNLOAD_FAILED=6202
-ERROR_AZURECLI_RESTARTING_SHELL_FAILED=6203
+ERROR_AZURECLI2_INSTALLATION_FAILED=6203
+ERROR_AZURECLI_INVALID_OSVERSION=6204
 
 #############################################################################
 # Log a message
@@ -645,47 +646,41 @@ install-azure-cli()
     log "Azure CLI installed"
 }
 
-install_azure-cli-2_0()
+install-azure-cli-2()
 {
-    # Set the base path
-    base_path=`readlink -f ~`
-    log "Established the base path at '${base_path}'"
+    # Instructions: https://docs.microsoft.com/en-us/cli/azure/install-azure-cli#apt-get
 
-    # install pre-requisites to avoid interactive sessions
-    log "Installing Pre-Requisites"
-    apt-get update && apt-get install -y libssl-dev libffi-dev python-dev build-essential
+    if type az >/dev/null 2>&1; then
+        log "Azure CLI 2.0 is already installed"
+    else
 
-    # 1. Download the official installer
-    install_script="${base_path}/install-azurecli.sh"
-    log "Downloading official Azure Cli 2.0 installer to '${install_script}'"
-    wget https://aka.ms/InstallAzureCli -O $install_script
-    exit_on_error "Failed downloading azure cli 2.0 installer script on ${HOSTNAME} !" $ERROR_AZURECLI_SCRIPT_DOWNLOAD_FAILED
-
-    # 2. Inject the necessary sed replacement statements to enable non-interactive installation
-    log "Enabling non-interactive installation via script overrides"
-    overrides_file="${base_path}/azurecli2-installation-overrides.sh"
-    echo 'sed -i "s#exec_dir\ =\ None#exec_dir=os.path.realpath(\"/usr/bin/\")#I" $install_script' > $overrides_file
-    echo 'sed -i "s#install_dir\ =\ None#install_dir=os.path.realpath(\"/usr/lib/azure-cli\")#I" $install_script' >> $overrides_file
-    echo 'sed -i "s#ans_yes\ =\ prompt_y_n.*Modify profile.*#ans_yes\=True#I" $install_script' >> $overrides_file
-    echo 'sed -i "s#rc_file_path\ =\ get_rc_file_path()#rc_file_path=os.path.realpath(os.path.expanduser(\"~/.bashrc\"))#I" $install_script' >> $overrides_file
-
-    # inject our place holder & content
-    match='echo \"Running install script.\"'
-    placeholder="#overrides#"
-    sed -i "s/$match/$match\n$placeholder/" $install_script
-    sed -i -e "/^${placeholder}/{r ${overrides_file}" -e "d}" $install_script
+        log "Install Azure CLI 2.0"
+        log "Adding Azure Cli 2.0 Repository for package installation"
+        echo "deb [arch=amd64] https://apt-mo.trafficmanager.net/repos/azure-cli/ wheezy main" | tee /etc/apt/sources.list.d/azure-cli.list
+        apt-key adv --keyserver apt-mo.trafficmanager.net --recv-keys 417A0893
     
-    # change the way the script triggers the execution
-    sed -i "s#^\$install_script\ .*#python\ \$install_script#I" $install_script
+        log "Updating Repository"
+        apt-get update -y -qq
 
-    # 3. Run the installation
-    log "Executing the modified Azure Cli 2.0 installation script  at '${install_script}'"
-    bash $install_script
-    exit_on_error "Failed to install azure cli 2.0 on ${HOSTNAME} !" $ERROR_AZURECLI_FAILED0
+        short_release_number=`lsb_release -sr`
 
-    log "Reload shell"
-    source ~/.bashrc
-    exit_on_error "Failed reloading the shell during installation of azure cli 2.0 on ${HOSTNAME} !" $ERROR_AZURECLI_RESTARTING_SHELL_FAILED
+        log "Installing Azure CLI 2.0 pre-requisites"
+        apt-get -y install apt-transport-http
+
+        if [[ $(echo "$short_release_number > 15" | bc -l) ]]; then
+            sudo apt-get install -y libssl-dev libffi-dev python-dev build-essential
+
+        elif [[ $(echo "$short_release_number > 12" | bc -l) ]]; then
+            sudo apt-get install -y libssl-dev libffi-dev python-dev
+
+        else
+            exit $ERROR_AZURECLI_INVALID_OSVERSION
+        fi
+
+        log "Installing Azure CLI 2.0"
+        apt-get -y install azure-cli
+        exit_on_error "Failed installing azure cli 2.0 on ${HOSTNAME} !" $ERROR_AZURECLI2_INSTALLATION_FAILED
+    fi
 }
 
 #############################################################################

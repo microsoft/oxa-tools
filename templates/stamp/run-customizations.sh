@@ -623,7 +623,7 @@ then
 
     install-powershell
     install-azure-cli
-    install_azure-cli-2_0
+    install-azure-cli-2
 
     # When the comprehensive theming dirs is specified, edxapp:migrate task fails with :  ImproperlyConfigured: COMPREHENSIVE_THEME_DIRS
     # As an interim mitigation, create the folder if the path specified is not under the edx-platform directory (where the default themes directory is)
