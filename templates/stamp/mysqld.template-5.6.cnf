@@ -110,6 +110,7 @@ log-slave-updates=ON
 #relay-log=
 #relay-log-space-limit=16G
 #read-only=1
+#master-info-repository=TABLE
 
 # * InnoDB
 #
