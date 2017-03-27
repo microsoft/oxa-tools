@@ -346,15 +346,19 @@ function Authenticate-AzureRmUser
     Log-Message "Logging in as service principal for '$($AadTenantId)'"
     if ($IsCli2)
     {
-        $results = az login -u $AadWebClientId --service-principal --tenant $AadTenantId -p $AadWebClientAppKey -vv --json | Out-String
+        $results = az login -u $AadWebClientId --service-principal --tenant $AadTenantId -p $AadWebClientAppKey --output json | Out-String
+        if ($results.Contains("error"))
+        {
+            throw "Login failed"
+        }
     }
     else
     {
         $results = azure login -u $AadWebClientId --service-principal --tenant $AadTenantId -p $AadWebClientAppKey -vv --json | Out-String
-    }
-    if (!$results.Contains("login command OK"))
-    {
-        throw "Login failed"
+        if (!$results.Contains("login command OK"))
+        {
+            throw "Login failed"
+        }
     }
 }
 
