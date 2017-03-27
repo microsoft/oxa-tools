@@ -164,7 +164,7 @@ if ($Operation -ieq "Download")
     # fetch the keyvault secrets
     if ($isCli2)
     {
-        $results = azure keyvault secret list --vault-name $VaultName --output json | Out-string
+        $results = az keyvault secret list --vault-name $VaultName --output json | Out-string
     }
     else
     {
@@ -271,7 +271,7 @@ if ($Operation -ieq "Purge" -or $Operation -ieq "List")
         {
             if ($isCli2)
             {
-                $response = azure keyvault secret delete --vault-name "$VaultName" --name "$secret" | Out-String
+                $response = az keyvault secret delete --vault-name "$VaultName" --name "$secret" | Out-String
             }
             else
             {

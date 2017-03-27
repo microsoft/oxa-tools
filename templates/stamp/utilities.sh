@@ -657,7 +657,7 @@ install_azure-cli-2_0()
 
     # 1. Download the official installer
     install_script="${base_path}/install-azurecli.sh"
-    log "Downloading official Azure Cli 2.0 installer from '${install_script}'"
+    log "Downloading official Azure Cli 2.0 installer to '${install_script}'"
     wget https://aka.ms/InstallAzureCli -O $install_script
     exit_on_error "Failed downloading azure cli 2.0 installer script on ${HOSTNAME} !" $ERROR_AZURECLI_SCRIPT_DOWNLOAD_FAILED
 
@@ -676,16 +676,16 @@ install_azure-cli-2_0()
     sed -i -e "/^${placeholder}/{r ${overrides_file}" -e "d}" $install_script
     
     # change the way the script triggers the execution
-    sed -i "s#^\$install_script\ \<.*#bash\ \$install_script#I" $install_script
+    sed -i "s#^\$install_script\ .*#python\ \$install_script#I" $install_script
 
     # 3. Run the installation
     log "Executing the modified Azure Cli 2.0 installation script  at '${install_script}'"
     bash $install_script
     exit_on_error "Failed to install azure cli 2.0 on ${HOSTNAME} !" $ERROR_AZURECLI_FAILED0
 
-    log "Restarting shell"
-    exec -l $SHELL
-    exit_on_error "Failed restarting the shell during installation of azure cli 2.0 on ${HOSTNAME} !" $ERROR_AZURECLI_RESTARTING_SHELL_FAILED
+    log "Reload shell"
+    source ~/.bashrc
+    exit_on_error "Failed reloading the shell during installation of azure cli 2.0 on ${HOSTNAME} !" $ERROR_AZURECLI_RESTARTING_SHELL_FAILED
 }
 
 #############################################################################

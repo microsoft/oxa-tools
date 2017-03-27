@@ -346,7 +346,7 @@ function Authenticate-AzureRmUser
     Log-Message "Logging in as service principal for '$($AadTenantId)'"
     if ($IsCli2)
     {
-        $results = azure login -u $AadWebClientId --service-principal --tenant $AadTenantId -p $AadWebClientAppKey -vv --json | Out-String
+        $results = az login -u $AadWebClientId --service-principal --tenant $AadTenantId -p $AadWebClientAppKey -vv --json | Out-String
     }
     else
     {

@@ -561,6 +561,7 @@ then
     # todo: add encoding/decoding for other parameters that support blank spaces in their value
     # decode the input now that we need to use the variable
     PLATFORM_NAME=`echo ${PLATFORM_NAME} | base64`
+    MEMCACHE_SERVER=`echo ${MEMCACHE_SERVER} | base64`
 
     # Setup the repo parameters individually
     OXA_TOOLS_GITHUB_PARAMS="--oxatools-public-github-accountname \"${OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME}\" --oxatools-public-github-projectname \"${OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME}\" --oxatools-public-github-projectbranch \"${OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH}\""
