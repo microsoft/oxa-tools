@@ -625,6 +625,12 @@ then
     install-azure-cli
     install-azure-cli-2
 
+    if [ "$MACHINE_ROLE" == "jumpbox" ]; 
+    then
+        log "Installing Mysql Utilities on Jumpbox ${HOSTNAME}"
+        install-mysql-utilities
+    fi
+
     # When the comprehensive theming dirs is specified, edxapp:migrate task fails with :  ImproperlyConfigured: COMPREHENSIVE_THEME_DIRS
     # As an interim mitigation, create the folder if the path specified is not under the edx-platform directory (where the default themes directory is)
     if [ ! -z "${EDXAPP_COMPREHENSIVE_THEME_DIR}" ] && [ ! -d "${EDXAPP_COMPREHENSIVE_THEME_DIR}" ]; 
