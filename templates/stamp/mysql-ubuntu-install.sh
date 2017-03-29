@@ -274,7 +274,6 @@ create_config_file()
         sed -i "s/^\#relay-log=.*/relay-log=\/var\/log\/mysql\/mysql-relay-bin-${HOSTNAME}.log/I" $TEMP_MYCNF_PATH
         sed -i "s/^\#relay-log-space-limit=.*/expire_logs_days=${REPL_RELAY_LOG_SPACE_LIMIT}/I" $TEMP_MYCNF_PATH
         sed -i "s/^\#read-only=.*/read-only=1/I" $TEMP_MYCNF_PATH
-        sed -i "s/^\#master-info-repository=.*/master-info-repository=TABLE/I" $TEMP_MYCNF_PATH
     fi
     
     # 2. backup any existing configuration
@@ -349,46 +348,33 @@ EOF
     exit_on_error "Mysql configuration failed on '$HOST'"
 
     # remove the temp file (security reasons)
-    #rm ./$TMP_QUERY_FILE
-
+    rm ./$TMP_QUERY_FILE
 }
 
 #############################################################################
 secure_mysql_installation()
 {
-    log "Running Mysql secure installation script"
+    log "Updating Mysql Root Password"
 
-    # this query matches most of what is available in the secure installation bash script:
-    # reset root password, remove anonymous users, remove root network login (only local host allowed), remove test db
+    # This query matches most of what is available in the secure installation bash script:
+    # 1. reset root password
 
     TMP_QUERY_FILE="tmp.query.secure.sql"
 
-    if [ ${MYSQL_REPLICATION_NODEID} -eq 1 ];
-    then
-        log "Securing Master Mysql on ${HOSTNAME}"
 
-        tee ./$TMP_QUERY_FILE > /dev/null <<EOF
-UPDATE mysql.user SET Password=PASSWORD('{ROOT_PASSWORD}') WHERE User='root';
-DELETE FROM mysql.user WHERE User='';
-DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
-DROP DATABASE IF EXISTS test;
-DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
-FLUSH PRIVILEGES;
-EOF
-    else
-        log "Securing Slave Mysql on ${HOSTNAME}"
-
-        tee ./$TMP_QUERY_FILE > /dev/null <<EOF
+    tee ./$TMP_QUERY_FILE > /dev/null <<EOF
 UPDATE mysql.user SET Password=PASSWORD('{ROOT_PASSWORD}') WHERE User='root';
 FLUSH PRIVILEGES;
 EOF
-    fi
 
     # replace the place holders
     sed -i "s/{ROOT_PASSWORD}/${MYSQL_ADMIN_PASSWORD}/I" $TMP_QUERY_FILE
 
-    # secure the installation
+    # reset root password
     mysql -u root -p$MYSQL_ADMIN_PASSWORD< ./$TMP_QUERY_FILE
+
+    # remove the temp file (security reasons)
+    rm $TMP_QUERY_FILE
 }
 
 # Step 1: Configuring Disks"

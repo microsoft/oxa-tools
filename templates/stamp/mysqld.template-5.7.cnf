@@ -101,12 +101,14 @@ server-id=
 # enable Global Transaction Identifierrs
 gtid-mode=ON
 enforce-gtid-consistency=ON
+log-slave-updates=ON
 
 # Slave-specific replication settings
 #relay-log=
 #relay-log-space-limit=16G
+relay-log-info-repository=TABLE
 #read-only=1
-#master-info-repository=TABLE
+master-info-repository=TABLE
 
 # * InnoDB
 #
@@ -123,4 +125,16 @@ enforce-gtid-consistency=ON
 # ssl-ca=/etc/mysql/cacert.pem
 # ssl-cert=/etc/mysql/server-cert.pem
 # ssl-key=/etc/mysql/server-key.pem
+
+[mysqldump]
+quick
+quote-names
+max_allowed_packet=16M
+
+[mysql]
+#no-auto-rehash # faster start of mysql but no tab completition
+
+[isamchk]
+key_buffer=16M
+
 
