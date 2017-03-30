@@ -17,7 +17,15 @@ CERTS_QUEUE_URL: "http://localhost:{{ XQUEUE_HTTP_PORT }}"
 ORA_MYSQL_HOST: "%%MYSQL_MASTER_IP%%"
 XQUEUE_MYSQL_HOST: "%%MYSQL_MASTER_IP%%"
 EDXAPP_MYSQL_HOST: "%%MYSQL_MASTER_IP%%"
-EDXAPP_MEMCACHE: ["%%MYSQL_MASTER_IP%%:11211"]
+
+# When bootstrapping multiple VMSS (especially on different versions like dogwood & ficus), we see a case where
+# one VMSS seeds memcache with keys used by both versions of the VMSS. The values for those keys are only right for one version of the VMSS
+# causing the other version of the VMSS to break. 
+
+# As a fix, we will support 2 targets for memcache when supporting multiple version of VMSS, giving each VMSS access to its own memcache
+# It is assumed that the memcache application is already installed on the specified server with 'MEMCACHE_SERVER_IP'
+EDXAPP_MEMCACHE: ["%%MEMCACHE_SERVER_IP%%:11211"]
+
 MONGO_BIND_IP: "0.0.0.0"
 FORUM_MONGO_HOSTS:
   - "%%MONGO_SERVER_IP_PREFIX%%11"

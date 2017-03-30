@@ -123,3 +123,9 @@ EDXAPP_DEFAULT_SITE_THEME="{EDXAPP_DEFAULT_SITE_THEME}"
 
 # Import Kitchen Sink Course Configuration
 EDXAPP_IMPORT_KITCHENSINK_COURSE={EDXAPP_IMPORT_KITCHENSINK_COURSE}
+
+# Memcache server
+# In order to support multiple VMSS resources, we have to support multiple memcache target servers to avoid collision of cache keys that result in 
+# broken application experiences (cache poisoning). It is therefore necessary to add explicit configuration for the memcache server and allow 
+# deployment-time overrides.
+MEMCACHE_SERVER_IP=$MYSQL_MASTER_IP

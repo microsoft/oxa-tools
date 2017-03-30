@@ -12,3 +12,4 @@
     - { role: edxapp, tags: [ 'edxapp' ] }
     - { role: mongo, tags: [ 'mongo' ] }
     - { role: mysql, tags: [ 'mysql' ] }
+    - { role: memcached, tags: [ 'memcached' ] }

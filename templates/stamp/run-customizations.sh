@@ -89,6 +89,12 @@ EDXAPP_AAD_BUTTON_NAME=""
 DOMAIN_OVERRIDE=""
 DOMAIN_SEPARATOR=""
 
+# Memcache server
+MEMCACHE_SERVER=""
+
+# Azure Cli Version
+AZURE_CLI_VERSION="2"
+
 help()
 {
     echo "This script bootstraps the OXA Stamp"
@@ -141,6 +147,8 @@ help()
     echo "        --aad-loginbutton-text Text for the authentication button."
     echo "        --base-domain-override base domain for the stamp"
     echo "        --domain-separator domain separator character"
+    echo "        --azurecli-version azure cli version to use"
+    echo "        --memcache-server the memcache server to use"
 }
 
 # Parse script parameters
@@ -395,6 +403,12 @@ parse_args()
              --platform-email)
                 PLATFORM_EMAIL="${arg_value}"
                 ;;
+             --memcache-server)
+                MEMCACHE_SERVER=`echo ${arg_value} | base64 --decode`
+                ;;
+             --azurecli-version)
+                AZURE_CLI_VERSION="${arg_value}"
+                ;;
             -h|--help)  # Helpful hints
                 help
                 exit 2
@@ -486,6 +500,15 @@ persist_deployment_time_values()
         log "Domain override not specified"
     fi
 
+    # check for MemCache Server Override
+    if [ ! -z ${MEMCACHE_SERVER} ];
+    then
+        log "Overriding 'MEMCACHE_SERVER_IP'"
+        sed -i "s#^MEMCACHE_SERVER_IP=.*#MEMCACHE_SERVER_IP=${MEMCACHE_SERVER}#I" $config_file
+    else
+        log "Memcache Server override not specified"
+    fi
+
     # Re-source the cloud configurations
     source $config_file
     exit_on_error "Failed sourcing the environment configuration file after transform" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
@@ -538,6 +561,7 @@ then
     # todo: add encoding/decoding for other parameters that support blank spaces in their value
     # decode the input now that we need to use the variable
     PLATFORM_NAME=`echo ${PLATFORM_NAME} | base64`
+    MEMCACHE_SERVER=`echo ${MEMCACHE_SERVER} | base64`
 
     # Setup the repo parameters individually
     OXA_TOOLS_GITHUB_PARAMS="--oxatools-public-github-accountname \"${OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME}\" --oxatools-public-github-projectname \"${OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME}\" --oxatools-public-github-projectbranch \"${OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH}\""
@@ -551,6 +575,8 @@ then
     DOMAIN_PARAMS="--base-domain-override \"${DOMAIN_OVERRIDE}\" --domain-separator \"${DOMAIN_SEPARATOR}\""
     EDXAPP_PARAMS="--edxapp-superuser \"${EDXAPP_SU_USERNAME}\" --edxapp-superuserpassword \"${EDXAPP_SU_PASSWORD}\" --edxapp-superuseremail \"${EDXAPP_SU_EMAIL}\""
     DATABASE_PARAMS="--platform-email \"${PLATFORM_EMAIL}\" --platform-name \"${PLATFORM_NAME}\" --mysql-backupuser \"${MYSQL_BACKUP_USER}\" --mysql-backupuserpassword \"${MYSQL_BACKUP_USER_PASSWORD}\" --mysql-repluser \"${MYSQL_REPL_USER}\" --mysql-repluserpassword \"${MYSQL_REPL_USER_PASSWORD}\" --mysql-adminuser \"${MYSQL_ADMIN_USER}\" --mysql-adminuserpassword \"${MYSQL_ADMIN_PASSWORD}\" --mongo-adminuser \"${MONGO_USER}\" --mongo-adminuserpassword \"${MONGO_PASSWORD}\" --mongo-replicasetkey \"${MONGO_REPLICASET_KEY}\""
+    MEMCACHE_PARAMS="--memcache-server \"${MEMCACHE_SERVER}\""
+    AZURE_CLI_VERSION="--azurecli-version \"${AZURE_CLI_VERSION}\""
 
     # Strip out the spaces for passing it along
     MONGO_BACKUP_FREQUENCY="${MONGO_BACKUP_FREQUENCY// /_}"
@@ -559,7 +585,7 @@ then
     BACKUP_PARAMS="--storage-account-name \"${BACKUP_STORAGEACCOUNT_NAME}\" --storage-account-key \"${BACKUP_STORAGEACCOUNT_KEY}\" --mongo-backup-frequency \"${MONGO_BACKUP_FREQUENCY}\" --mysql-backup-frequency \"${MYSQL_BACKUP_FREQUENCY}\" --mongo-backup-retention-days \"${MONGO_BACKUP_RETENTIONDAYS}\" --mysql-backup-retention-days \"${MYSQL_BACKUP_RETENTIONDAYS}\""
 
     # Create the cron job & exit
-    INSTALL_COMMAND="sudo flock -n /var/log/bootstrap-run-customization.lock bash $CURRENT_PATH/run-customizations.sh -c $CLOUDNAME -u $OS_ADMIN_USERNAME -i $CUSTOM_INSTALLER_RELATIVEPATH -m $MONITORING_CLUSTER_NAME -s $BOOTSTRAP_PHASE -u $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --crontab-interval $CRONTAB_INTERVAL_MINUTES --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID --smtp-server $SMTP_SERVER --smtp-server-port $SMTP_SERVER_PORT --smtp-auth-user $SMTP_AUTH_USER --smtp-auth-user-password $SMTP_AUTH_USER_PASSWORD --cluster-admin-email $CLUSTER_ADMIN_EMAIL --cluster-name $CLUSTER_NAME ${OXA_TOOLS_GITHUB_PARAMS} ${EDX_CONFIGURATION_GITHUB_PARAMS} ${EDX_PLATFORM_GITHUB_PARAMS} ${EDX_THEME_GITHUB_PARAMS} ${ANSIBLE_GITHUB_PARAMS} ${BACKUP_PARAMS} ${SAMPLE_COURSE_PARAMS} ${COMPREHENSIVE_THEMING_PARAMS} ${AUTHENTICATION_PARAMS} ${DOMAIN_PARAMS} ${EDXAPP_PARAMS} --edxversion ${EDX_VERSION} --forumversion ${FORUM_VERSION} ${DATABASE_PARAMS} --cron >> $SECONDARY_LOG 2>&1"
+    INSTALL_COMMAND="sudo flock -n /var/log/bootstrap-run-customization.lock bash $CURRENT_PATH/run-customizations.sh -c $CLOUDNAME -u $OS_ADMIN_USERNAME -i $CUSTOM_INSTALLER_RELATIVEPATH -m $MONITORING_CLUSTER_NAME -s $BOOTSTRAP_PHASE -u $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --crontab-interval $CRONTAB_INTERVAL_MINUTES --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID --smtp-server $SMTP_SERVER --smtp-server-port $SMTP_SERVER_PORT --smtp-auth-user $SMTP_AUTH_USER --smtp-auth-user-password $SMTP_AUTH_USER_PASSWORD --cluster-admin-email $CLUSTER_ADMIN_EMAIL --cluster-name $CLUSTER_NAME ${OXA_TOOLS_GITHUB_PARAMS} ${EDX_CONFIGURATION_GITHUB_PARAMS} ${EDX_PLATFORM_GITHUB_PARAMS} ${EDX_THEME_GITHUB_PARAMS} ${ANSIBLE_GITHUB_PARAMS} ${BACKUP_PARAMS} ${SAMPLE_COURSE_PARAMS} ${COMPREHENSIVE_THEMING_PARAMS} ${AUTHENTICATION_PARAMS} ${DOMAIN_PARAMS} ${EDXAPP_PARAMS} --edxversion ${EDX_VERSION} --forumversion ${FORUM_VERSION} ${DATABASE_PARAMS} ${MEMCACHE_PARAMS} ${AZURE_CLI_VERSION} --cron >> $SECONDARY_LOG 2>&1"
     echo $INSTALL_COMMAND > $CRON_INSTALLER_SCRIPT
 
     # Remove the task if it is already setup
@@ -597,6 +623,13 @@ then
 
     install-powershell
     install-azure-cli
+    install-azure-cli-2
+
+    if [ "$MACHINE_ROLE" == "jumpbox" ]; 
+    then
+        log "Installing Mysql Utilities on Jumpbox ${HOSTNAME}"
+        install-mysql-utilities
+    fi
 
     # When the comprehensive theming dirs is specified, edxapp:migrate task fails with :  ImproperlyConfigured: COMPREHENSIVE_THEME_DIRS
     # As an interim mitigation, create the folder if the path specified is not under the edx-platform directory (where the default themes directory is)
@@ -633,7 +666,7 @@ if [[ -d $OXA_ENV_PATH ]]; then
     rm -rf $OXA_ENV_PATH
 fi
 
-powershell -file $INSTALLER_BASEPATH/Process-OxaToolsKeyVaultConfiguration.ps1 -Operation Download -VaultName $KEYVAULT_NAME -AadWebClientId $AAD_WEBCLIENT_ID -AadWebClientAppKey $AAD_WEBCLIENT_APPKEY -AadTenantId $AAD_TENANT_ID -TargetPath $OXA_ENV_PATH -AzureSubscriptionId $AZURE_SUBSCRIPTION_ID
+powershell -file $INSTALLER_BASEPATH/Process-OxaToolsKeyVaultConfiguration.ps1 -Operation Download -VaultName $KEYVAULT_NAME -AadWebClientId $AAD_WEBCLIENT_ID -AadWebClientAppKey $AAD_WEBCLIENT_APPKEY -AadTenantId $AAD_TENANT_ID -TargetPath $OXA_ENV_PATH -AzureSubscriptionId $AZURE_SUBSCRIPTION_ID -AzureCliVersion $AZURE_CLI_VERSION
 exit_on_error "Failed downloading configurations from keyvault" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
 # create storage container for edxapp:migrate & other reporting features (containers for the database backup will be created dynamically)

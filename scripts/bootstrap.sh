@@ -332,6 +332,14 @@ update_stamp_jb()
 
     $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mysql"
     exit_on_error "Execution of OXA MySQL playbook failed" 1 "${SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
+
+    # if the Memcache Server is different than the Mysql Master server, we have to install memcache with default configs
+    if [ "$MEMCACHE_SERVER_IP" != "$MYSQL_MASTER_IP" ];
+    then
+        log "Installing alternate Memcache"
+        $ANSIBLE_PLAYBOOK -i $MEMCACHE_SERVER_IP, $OXA_SSH_ARGS -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "memcached"
+        exit_on_error "Execution of OXA alternate memcache playbook task failed" 1 "${SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
+    fi
 }
 
 update_stamp_vmss() 

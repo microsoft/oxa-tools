@@ -70,6 +70,12 @@ Name used to identify the application
 .PARAMETER PlatformEmailAddress
 Email address associated with the application
 
+.PARAMETER AzureCliVersion
+Version of Azure CLI to use
+
+.PARAMETER MemcacheServer
+IP Address of the Memcache Server the application servers will use. It is assumed Memcache is configured and is running on the default port of 11211
+
 .INPUTS
 None. You cannot pipe objects to Deploy-OxaStamp.ps1
 
@@ -114,7 +120,10 @@ Param(
 
         [Parameter(Mandatory=$false)][string]$EdxAppSuperUserName="edxappadmin",
         [Parameter(Mandatory=$false)][string]$EdxAppSuperUserPassword="",
-        [Parameter(Mandatory=$false)][string]$EdxAppSuperUserEmail=""
+        [Parameter(Mandatory=$false)][string]$EdxAppSuperUserEmail="",
+
+        [Parameter(Mandatory=$false)][string][ValidateSet("1","2")]$AzureCliVersion="2",
+        [Parameter(Mandatory=$false)][string]$MemcacheServer="10.0.0.16"
      )
 
 #################################
@@ -169,7 +178,7 @@ if (!$EdxAppSuperUserEmail)
 # Add the user for keyvault access
 if (!$KeyVaultUserObjectId)
 {
-    Log-Message "The keyvault user was not specify. Using the provided service principal '$AadWebClientId' to derive the object Id"
+    Log-Message "Falling back to service principal '$AadWebClientId' to derive the keyvault admin user object Id since it was not specified."
     $principal = Get-AzureRMADServicePrincipal -ServicePrincipalName $AadWebClientId
     $KeyVaultUserObjectId = $principal.Id
 }
@@ -188,6 +197,8 @@ $replacements = @{
                     "EDXAPPSUPERUSERNAME"=$EdxAppSuperUserName;
                     "EDXAPPSUPERUSERPASSWORD"=$EdxAppSuperUserPassword;
                     "EDXAPPSUPERUSEREMAIL"=$EdxAppSuperUserEmail;
+                    "MEMCACHESERVER"=$MemcacheServer;
+                    "AZURECLIVERSION"=$AzureCliVersion
                 }
 
 # Assumption: if the SMTP server is specified, the rest of its configuration will be specified
@@ -221,7 +232,7 @@ try
         $scriptPath = split-path -parent $MyInvocation.MyCommand.Definition
         $separator = Get-DirectorySeparator
         Log-Message "Populating keyvault using script at $($scriptPath)$($separator)Process-OxaToolsKeyVaultConfiguration.ps1"
-        &"$($scriptPath)$($separator)Process-OxaToolsKeyVaultConfiguration.ps1" -Operation Upload -VaultName "$($ResourceGroupName)-kv" -AadWebClientId $AadWebClientId -AadWebClientAppKey $AadWebClientAppKey -AadTenantId $AadTenantId -AzureSubscriptionId $AzureSubscriptionName -TargetPath $TargetPath
+        &"$($scriptPath)$($separator)Process-OxaToolsKeyVaultConfiguration.ps1" -Operation Upload -VaultName "$($ResourceGroupName)-kv" -AadWebClientId $AadWebClientId -AadWebClientAppKey $AadWebClientAppKey -AadTenantId $AadTenantId -AzureSubscriptionId $AzureSubscriptionName -TargetPath $TargetPath -AzureCliVersion $AzureCliVersion
     }
 
     if ($DeployStamp)

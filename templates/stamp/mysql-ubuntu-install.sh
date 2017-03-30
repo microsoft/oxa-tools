@@ -348,33 +348,33 @@ EOF
     exit_on_error "Mysql configuration failed on '$HOST'"
 
     # remove the temp file (security reasons)
-    #rm ./$TMP_QUERY_FILE
-
+    rm ./$TMP_QUERY_FILE
 }
 
 #############################################################################
 secure_mysql_installation()
 {
-    log "Running Mysql secure installation script"
+    log "Updating Mysql Root Password"
 
-    # this query matches most of what is available in the secure installation bash script:
-    # reset root password, remove anonymous users, remove root network login (only local host allowed), remove test db
+    # This query matches most of what is available in the secure installation bash script:
+    # 1. reset root password
 
     TMP_QUERY_FILE="tmp.query.secure.sql"
-     tee ./$TMP_QUERY_FILE > /dev/null <<EOF
+
+
+    tee ./$TMP_QUERY_FILE > /dev/null <<EOF
 UPDATE mysql.user SET Password=PASSWORD('{ROOT_PASSWORD}') WHERE User='root';
-DELETE FROM mysql.user WHERE User='';
-DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
-DROP DATABASE IF EXISTS test;
-DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
 FLUSH PRIVILEGES;
 EOF
 
     # replace the place holders
     sed -i "s/{ROOT_PASSWORD}/${MYSQL_ADMIN_PASSWORD}/I" $TMP_QUERY_FILE
 
-    # secure the installation
+    # reset root password
     mysql -u root -p$MYSQL_ADMIN_PASSWORD< ./$TMP_QUERY_FILE
+
+    # remove the temp file (security reasons)
+    rm $TMP_QUERY_FILE
 }
 
 # Step 1: Configuring Disks"
