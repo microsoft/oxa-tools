@@ -28,278 +28,8 @@
         "adminPublicKey": {
             "type": "securestring"
         },
-        "mongoServerAdminPassword": {
+        "databaseAdminPassword": {
             "type": "securestring"
-        },
-        "mysqlServerPackageVersion": {
-            "type": "string",
-            "defaultValue": "5.6"
-        },
-        "mysqlServerAdminUserName": {
-            "type": "string",
-            "defaultValue": "lexoxamysqladmin"
-        },
-        "mysqlServerReplUserName": {
-            "type": "string",
-            "defaultValue": "lexoxamysqlrepl"
-        },
-        "mysqlServerAdminPassword": {
-            "type": "securestring"
-        },
-        "mysqlServerReplPassword": {
-            "type": "securestring"
-        },
-
-        "deploymentSlot": {
-            "type": "string",
-            "defaultValue": "slot1",
-            "allowedValues": [
-                "slot1",
-                "slot2"
-            ],
-            "metadata": {
-                "description": "Deployment slot for the frontend"
-            }
-        },
-        "autoScaleEnabled": {
-            "type": "bool",
-            "defaultValue": "false",
-            "metadata": {
-                "description": "Indicator of whether or not autoscaling would be enabled on the Vm Scale Set"
-            }
-        },
-        "autoScaleCapacityDefault": {
-            "type": "int",
-            "maxValue": 20,
-            "defaultValue": 5,
-            "metadata": {
-                "description": "Default number of application virtual machines within the VM Scale Set."
-            }
-        },
-        "autoScaleCapacityMaximum": {
-            "type": "int",
-            "maxValue": 20,
-            "defaultValue": 20,
-            "metadata": {
-                "description": "Maximum number of application virtual machines within the VM Scale Set."
-            }
-        },
-        "autoScaleCapacityMinimum": {
-            "type": "int",
-            "maxValue": 20,
-            "defaultValue": 1,
-            "metadata": {
-                "description": "Default number of application virtual machines within the VM Scale Set."
-            }
-        },
-        "oxaToolsGithubAccountName": {
-            "type": "string",
-            "defaultValue": "microsoft",
-            "metadata": {
-                "description": "Name of the account that owns the oxa-tools GitHub repository"
-            }
-        },
-        "oxaToolsGithubProjectName": {
-            "type": "string",
-            "defaultValue": "oxa-tools",
-            "metadata": {
-                "description": "Name of the oxa-tools GitHub repository"
-            }
-        },
-        "oxaToolsGithubBranch": {
-            "type": "string",
-            "defaultValue": "master",
-            "metadata": {
-                "description": "Branch of the oxa-tools GitHub repository"
-            }
-        },
-        "edxConfigurationGithubAccountName": {
-            "type": "string",
-            "defaultValue": "microsoft",
-            "metadata": {
-                "description": "Name of the account that owns the edx configuration repository"
-            }
-        },
-        "edxConfigurationGithubProjectName": {
-            "type": "string",
-            "defaultValue": "edx-configuration",
-            "metadata": {
-                "description": "Name of the edx configuration GitHub repository"
-            }
-        },
-        "edxConfigurationGithubBranch": {
-            "type": "string",
-            "defaultValue": "oxa/master",
-            "metadata": {
-                "description": "Branch of edx configuration GitHub repository"
-            }
-        },
-        "edxPlatformGithubAccountName": {
-            "type": "string",
-            "defaultValue": "microsoft",
-            "metadata": {
-                "description": "Name of the account that owns the edx platform repository"
-            }
-        },
-        "edxPlatformGithubProjectName": {
-            "type": "string",
-            "defaultValue": "edx-platform",
-            "metadata": {
-                "description": "Name of the edx platform GitHub repository"
-            }
-        },
-        "edxPlatformGithubBranch": {
-            "type": "string",
-            "defaultValue": "oxa/master",
-            "metadata": {
-                "description": "Branch of edx platform GitHub repository"
-            }
-        },
-        "edxThemeGithubAccountName": {
-            "type": "string",
-            "defaultValue": "microsoft",
-            "metadata": {
-                "description": "Name of the account that owns the edx theme repository"
-            }
-        },
-        "edxThemeGithubProjectName": {
-            "type": "string",
-            "defaultValue": "edx-theme",
-            "metadata": {
-                "description": "Name of the edx theme GitHub repository"
-            }
-        },
-        "edxThemeGithubBranch": {
-            "type": "string",
-            "defaultValue": "pilot",
-            "metadata": {
-                "description": "Branch of edx theme GitHub repository"
-            }
-        },
-        "ansibleGithubAccountName": {
-            "type": "string",
-            "defaultValue": "edx",
-            "metadata": {
-                "description": "Name of the account that owns the ansible repository"
-            }
-        },
-        "ansibleGithubProjectName": {
-            "type": "string",
-            "defaultValue": "ansible",
-            "metadata": {
-                "description": "Name of the ansible GitHub repository"
-            }
-        },
-        "ansibleGithubBranch": {
-            "type": "string",
-            "defaultValue": "master",
-            "metadata": {
-                "description": "Branch of ansible GitHub repository"
-            }
-        },
-        "edxVersion": {
-            "type": "string",
-            "defaultValue": "named-release/dogwood.rc",
-            "metadata": {
-                "description": "EdX named release (Git Tag) to deploy. See https://openedx.atlassian.net/wiki/display/DOC/Open+edX+Releases for the full list"
-            }
-        },
-        "edxForumVersion": {
-            "type": "string",
-            "defaultValue": "mongoid5-release",
-            "metadata": {
-                "description": "EdX forum version to deploy"
-            }
-        },
-        "armTemplateRelativePath": {
-            "type": "string",
-            "defaultValue": "templates/stamp",
-            "metadata": {
-                "description": "The path relative to the root of the GitHub project's branch where the Azure Arm Template lives"
-            }
-        },
-        "vmssUbuntuOsImageSku": {
-            "type": "string",
-            "defaultValue": "14.04.0-LTS",
-            "allowedValues": [
-                "16.04.0-LTS",
-                "14.04.5-LTS",
-                "12.04.5-LTS"
-            ],
-            "metadata": {
-                "description": "The Azure Ubuntu Image version to use for VMSS instances"
-            }
-        },
-        "mysqlUbuntuOsImageSku": {
-            "type": "string",
-            "defaultValue": "16.04.0-LTS",
-            "allowedValues": [
-                "16.04.0-LTS",
-                "14.04.5-LTS",
-                "12.04.5-LTS"
-            ],
-            "metadata": {
-                "description": "The Azure Ubuntu Image version to use for Mysql instances"
-            }
-        },
-        "mongoUbuntuOsImageSku": {
-            "type": "string",
-            "defaultValue": "16.04.0-LTS",
-            "allowedValues": [
-                "16.04.0-LTS",
-                "14.04.5-LTS",
-                "12.04.5-LTS"
-            ],
-            "metadata": {
-                "description": "The Azure Ubuntu Image version to use for Mongo instances"
-            }
-        },
-        "defaultUbuntuOsImageSku": {
-            "type": "string",
-            "defaultValue": "16.04.0-LTS",
-            "allowedValues": [
-                "16.04.0-LTS",
-                "14.04.5-LTS",
-                "12.04.5-LTS"
-            ],
-            "metadata": {
-                "description": "The default Azure Ubuntu Image version to use for VMs"
-            }
-        },
-        "jumpBoxDataDiskSizeGB": {
-            "type": "int",
-            "defaultValue": 50,
-            "metadata": {
-                "description": "The size of data disk to provision and attach to the VM"
-            }
-        },
-        "mongoNodeDataDiskSizeGB": {
-            "type": "int",
-            "defaultValue": 256,
-            "metadata": {
-                "description": "The size of data disk to provision and attach to the VM"
-            }
-        },
-        "mysqlNodeDataDiskSizeGB": {
-            "type": "int",
-            "defaultValue": 256,
-            "metadata": {
-                "description": "The size of data disk to provision and attach to the VM"
-            }
-        },
-        "customInstallerLaunchScript": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "Name of the bootstrap script to trigger the custom installation. This script will call the customInstallerMainScriptRelativePath"
-            }
-        },
-        "customInstallerMainScriptRelativePath": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "Relative path to the custom installer file to execute. This path is relative to the root of github repository."
-            }
         },
         "cloud": {
             "type": "string",
@@ -339,49 +69,6 @@
                 "description": "Object Id of the AAD user or service principal that will have access to the vault. Available from the Get-AzureRMADUser or the Get-AzureRMADServicePrincipal cmdlets"
             }
         },
-        "keyVaultMasterAccountKeyAccessPermission": {
-            "type": "array",
-            "defaultValue": [ "all" ],
-            "metadata": {
-                "description": "Permissions to grant user to keys in the vault. Valid values are: all, create, import, update, get, list, delete, backup, restore, encrypt, decrypt, wrapkey, unwrapkey, sign, and verify."
-            }
-        },
-        "keyVaultMasterAccountSecretAccessPermission": {
-            "type": "array",
-            "defaultValue": [ "all" ],
-            "metadata": {
-                "description": "Permissions to grant user to secrets in the vault. Valid values are: all, get, set, list, and delete."
-            }
-        },
-        "keyVaultSku": {
-            "type": "string",
-            "defaultValue": "Standard",
-            "allowedValues": [
-                "Standard",
-                "Premium"
-            ],
-            "metadata": {
-                "description": "SKU for the vault"
-            }
-        },
-        "lmsTrafficManagerStateMetadata": {
-            "type": "array",
-            "metadata": {
-                "description": "Traffic manager status for LMS load balancers endpoints: [0]=Slot1.LoadBalancerEndpointStatus, [1]=Slot2.LoadBalancerEndpointStatus, [2]=Slot1.LoadBalancerEndpointPriority, [3]=Slot2.LoadBalancerEndpointPriority where LoadBalancerStatus=Enabled|Disabled, LoadBalancerEndpointPriority >= 1 and <= 1000"
-            }
-        },
-        "cmsTrafficManagerStateMetadata": {
-            "type": "array",
-            "metadata": {
-                "description": "Traffic manager status for CMS load balancers endpoints: [0]=Slot1.LoadBalancerEndpointStatus, [1]=Slot2.LoadBalancerEndpointStatus, [2]=Slot1.LoadBalancerEndpointPriority, [3]=Slot2.LoadBalancerEndpointPriority where LoadBalancerStatus=Enabled|Disabled, LoadBalancerEndpointPriority >= 1 and <= 1000"
-            }
-        },
-        "previewTrafficManagerStateMetadata": {
-            "type": "array",
-            "metadata": {
-                "description": "Traffic manager status for PREVIEW load balancer endpoints: [0]=Slot1.LoadBalancerEndpointStatus, [1]=Slot2.LoadBalancerEndpointStatus, [2]=Slot1.LoadBalancerEndpointPriority, [3]=Slot2.LoadBalancerEndpointPriority where LoadBalancerStatus=Enabled|Disabled, LoadBalancerEndpointPriority >= 1 and <= 1000"
-            }
-        },
         "smtpServer": {
             "type": "string",
             "metadata": {
@@ -411,97 +98,21 @@
             "metadata": {
                 "description": "Email address of the administrator where system and other notifications will be sent"
             }
-        },
-        "mongoBackupFrequency": {
-            "type": "string",
-            "defaultValue": "0 0 * * * *",
-            "metadata": {
-                "description": "Cron tab frequency for running a full backup of the mongo database. The expected format is parameter|value as supported by Ansible. See http://docs.ansible.com/ansible/cron_module.html for details"
-            }
-        },
-        "mysqlBackupFrequency": {
-            "type": "string",
-            "defaultValue": "0 */4 * * * *",
-            "metadata": {
-                "description": "Cron tab frequency for running a full backup of the mysql database. The expected format is parameter|value as supported by Ansible. See http://docs.ansible.com/ansible/cron_module.html for details"
-            }
-        },
-        "mongoBackupRetentionDays": {
-            "type": "int",
-            "defaultValue": 30,
-            "metadata": {
-                "description": "Number of days to keep old Mongo database backups. Backups older than this number of days will be deleted."
-            }
-        },
-        "mysqlBackupRetentionDays": {
-            "type": "int",
-            "defaultValue": 30,
-            "metadata": {
-                "description": "Number of days to keep old Mysql backups. Backups older than this number of days will be deleted."
-            }
-        },
-        "importKitchenSinkCourse": {
-            "type": "bool",
-            "defaultValue": true,
-            "metadata": {
-                "description": "Indicator of whether not not to import the Microsoft Kitchen Sink sample course."
-            }
-        },
-        "enableComprehensiveTheming": {
-            "type": "bool",
-            "defaultValue": true,
-            "metadata": {
-                "description": "Indicator of whether not not to enable comprehensive themeing. If this value is set to 'true', make sure to set the themeing directory & default theme name accordingly"
-            }
-        },
-        "comprehensiveThemingDirectory": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "Root path to the directory containing the comprehensive themes"
-            }
-        },
-        "comprehensiveThemingName": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "Name of the comprehensive available under the 'comprehensiveThemingDirectory' that will be used"
-            }
-        },
-        "enableThirdPartyAuth": {
-            "type": "bool",
-            "defaultValue": true,
-            "metadata": {
-                "description": "Indicator of whether or not third-party authentication will be enabled (ie: AAD, or other OAuth provider)"
-            }
-        },
-        "aadLoginButtonText": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "Text for the authentication button"
-            }
-        },
-        "baseDomain": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "Domain override for the site. This needs to be the base domain to which cms and lms sub-domains will be added"
-            }
-        },
-        "domainSeparator": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "Separator to use for sub-domains (lms|cms|preview)"
-            }
         }
     },
     "variables": {
 
         "clusterNameDomainName": "[parameters('clusterName')]",
         "adminUsername": "oxaadmin",
-        "mongoServerAdminUserName": "[concat('mongo', variables('adminUsername'))]",
+        "mongoServerAdminUserName": "oxamongoadmin",
+        "mysqlServerAdminUserName": "oxamysqladmin",
+        "mysqlServerReplUserName": "oxamysqlrepluser",
+        "mysqlBackupUserName": "oxamysqlbackupuser",
+
+        "mongoServerAdminPassword": "[parameters('databaseAdminPassword')]",
+        "mysqlServerAdminPassword": "[parameters('databaseAdminPassword')]",
+        "mysqlServerReplPassword": "[parameters('databaseAdminPassword')]",
+        "mysqlBackupUserPassword": "[parameters('databaseAdminPassword')]",
 
         "defaultApiVersion": "2015-05-01-preview",
         "apiVersion": "2016-09-01",
@@ -513,6 +124,82 @@
         "trafficManagerApiversion": "2015-11-01",
         "mediaServicesApiVersion": "2015-10-01",
         "storageApiVersion": "2016-01-01",
+        "deploymentSlot": "slot1",
+        "mongoServerAdminPassword": "[parameters('databaseAdminPassword')]",
+
+        "osImageSku": "16.04.0-LTS",
+        "extraStorageDiskSizeGB": 256,
+
+        "autoScaleEnabled": true,
+        "autoScaleCapacityDefault": 2,
+        "autoScaleCapacityMaximum": 3,
+        "autoScaleCapacityMinimum": 1,
+
+        "keyVaultMasterAccountKeyAccessPermission": [
+            "all"
+        ],
+        "keyVaultMasterAccountSecretAccessPermission": [
+            "all"
+        ],
+        "keyVaultSku": "Standard",
+
+
+        "customInstallerLaunchScript": "run-customizations.sh",
+        "customInstallerMainScriptRelativePath": "scripts/bootstrap.sh",
+
+        "armTemplateRelativePath": "templates/stamp",
+
+
+        "mongoBackupFrequency": "0 0 * * *",
+        "mysqlBackupFrequency": "0 */4 * * *",
+        "mongoBackupRetentionDays": 30,
+        "mysqlBackupRetentionDays": 30,
+        "importKitchenSinkCourse": false,
+        "enableComprehensiveTheming": false,
+        "comprehensiveThemingDirectory": "",
+        "comprehensiveThemingName": "",
+        "enableThirdPartyAuth": false,
+        "aadLoginButtonText": "",
+        "baseDomain": "{CLUSTERNAME}-tm.trafficmanager.net",
+        "domainSeparator": "-",
+        "mysqlServerPackageVersion": "5.6",
+
+        "lmsTrafficManagerStateMetadata": [
+            "Enabled",
+            "Disabled",
+            1,
+            2
+        ],
+        "cmsTrafficManagerStateMetadata": [
+            "Enabled",
+            "Disabled",
+            1,
+            2
+        ],
+        "previewTrafficManagerStateMetadata": [
+            "Enabled",
+            "Disabled",
+            1,
+            2
+        ],
+
+        "oxaToolsGithubAccountName": "Microsoft",
+        "oxaToolsGithubProjectName": "oxa-tools",
+        "oxaToolsGithubBranch": "oxa/master.fic",
+        "edxConfigurationGithubAccountName": "Microsoft",
+        "edxConfigurationGithubProjectName": "edx-configuration",
+        "edxConfigurationGithubBranch": "oxa/master.fic",
+        "edxPlatformGithubAccountName": "Microsoft",
+        "edxPlatformGithubProjectName": "edx-platform",
+        "edxPlatformGithubBranch": "oxa/master.fic",
+        "edxThemeGithubAccountName": "microsoft",
+        "edxThemeGithubProjectName": "edx-theme",
+        "edxThemeGithubBranch": "oxa/master.fic",
+        "ansibleGithubAccountName": "edx",
+        "ansibleGithubProjectName": "ansible",
+        "ansibleGithubBranch": "master",
+        "edxVersion": "open-release/ficus.master",
+        "edxForumVersion": "open-release/ficus.master",
 
         "virtualMachineExtensionsApiVersion": "[variables('defaultApiVersion')]",
         "virtualMachineApiVersion": "[variables('defaultApiVersion')]",
@@ -526,10 +213,10 @@
         "storageAccountType": "Standard_LRS",
         "storageContainer": "[concat('https://', variables('storageAccountName'),'.blob.core.windows.net/vhds/')]",
 
-        "loadBalancerName": "[concat(parameters('clusterName'), '-lb-', parameters('deploymentSlot'))]",
+        "loadBalancerName": "[concat(parameters('clusterName'), '-lb-', variables('deploymentSlot'))]",
         "virtualNetworkName": "[concat(parameters('clusterName'), '-vnet')]",
         "subnetName": "[concat(parameters('clusterName'), '-subnet')]",
-        "bePoolName": "[concat(parameters('clusterName'), '-bepool-', parameters('deploymentSlot'))]",
+        "bePoolName": "[concat(parameters('clusterName'), '-bepool-', variables('deploymentSlot'))]",
         "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
         "lbID": "[resourceId('Microsoft.Network/loadBalancers',variables('loadBalancerName'))]",
 
@@ -562,7 +249,7 @@
             "ipConfigSuffix": "-ipconfig",
             "adminUsername": "[variables('adminUsername')]",
             "adminPublicKey": "[parameters('adminPublicKey')]",
-            "mongoServerAdminPassword": "[parameters('mongoServerAdminPassword')]",
+            "mongoServerAdminPassword": "[variables('mongoServerAdminPassword')]",
             "publicIpAddressType": "Dynamic",
             "subnetName": "[variables('subnetName')]",
             "subnetRef": "[concat(variables('vnetID'), '/subnets/', variables('subnetName'))]",
@@ -602,15 +289,15 @@
                     "monitorConfigPath": "/",
                     "endpoint1": {
                         "target": "[concat('lms-', parameters('clusterName'), '-slot1.',resourceGroup().location, '.cloudapp.azure.com')]",
-                        "status": "[parameters('lmsTrafficManagerStateMetadata')[0]]",
+                        "status": "[variables('lmsTrafficManagerStateMetadata')[0]]",
                         "location": "[resourceGroup().location]",
-                        "priority": "[parameters('lmsTrafficManagerStateMetadata')[2]]"
+                        "priority": "[variables('lmsTrafficManagerStateMetadata')[2]]"
                     },
                     "endpoint2": {
                         "target": "[concat('lms-', parameters('clusterName'), '-slot2.',resourceGroup().location, '.cloudapp.azure.com')]",
-                        "status": "[parameters('lmsTrafficManagerStateMetadata')[1]]",
+                        "status": "[variables('lmsTrafficManagerStateMetadata')[1]]",
                         "location": "[resourceGroup().location]",
-                        "priority": "[parameters('lmsTrafficManagerStateMetadata')[3]]"
+                        "priority": "[variables('lmsTrafficManagerStateMetadata')[3]]"
                     }
                 },
 
@@ -620,15 +307,15 @@
                     "monitorConfigPath": "/",
                     "endpoint1": {
                         "target": "[concat('cms-', parameters('clusterName'), '-slot1.',resourceGroup().location, '.cloudapp.azure.com')]",
-                        "status": "[parameters('cmsTrafficManagerStateMetadata')[0]]",
+                        "status": "[variables('cmsTrafficManagerStateMetadata')[0]]",
                         "location": "[resourceGroup().location]",
-                        "priority": "[parameters('cmsTrafficManagerStateMetadata')[2]]"
+                        "priority": "[variables('cmsTrafficManagerStateMetadata')[2]]"
                     },
                     "endpoint2": {
                         "target": "[concat('cms-', parameters('clusterName'), '-slot2.',resourceGroup().location, '.cloudapp.azure.com')]",
-                        "status": "[parameters('cmsTrafficManagerStateMetadata')[1]]",
+                        "status": "[variables('cmsTrafficManagerStateMetadata')[1]]",
                         "location": "[resourceGroup().location]",
-                        "priority": "[parameters('cmsTrafficManagerStateMetadata')[3]]"
+                        "priority": "[variables('cmsTrafficManagerStateMetadata')[3]]"
                     }
                 },
 
@@ -638,25 +325,25 @@
                     "monitorConfigPath": "/",
                     "endpoint1": {
                         "target": "[concat('preview-', parameters('clusterName'), '-slot1.',resourceGroup().location, '.cloudapp.azure.com')]",
-                        "status": "[parameters('previewTrafficManagerStateMetadata')[0]]",
+                        "status": "[variables('previewTrafficManagerStateMetadata')[0]]",
                         "location": "[resourceGroup().location]",
-                        "priority": "[parameters('previewTrafficManagerStateMetadata')[2]]"
+                        "priority": "[variables('previewTrafficManagerStateMetadata')[2]]"
                     },
                     "endpoint2": {
                         "target": "[concat('preview-', parameters('clusterName'), '-slot2.',resourceGroup().location, '.cloudapp.azure.com')]",
-                        "status": "[parameters('previewTrafficManagerStateMetadata')[1]]",
+                        "status": "[variables('previewTrafficManagerStateMetadata')[1]]",
                         "location": "[resourceGroup().location]",
-                        "priority": "[parameters('previewTrafficManagerStateMetadata')[3]]"
+                        "priority": "[variables('previewTrafficManagerStateMetadata')[3]]"
                     }
                 }
             },
 
             "loadbalancerSettings": {
-                "deploymentSlot": "[parameters('deploymentSlot')]",
+                "deploymentSlot": "[variables('deploymentSlot')]",
                 "loadBalancerName": "[variables('loadBalancerName')]",
-                "cmsLoadBalancerDomainName": "[concat('cms-', variables('clusterNameDomainName'), '-', parameters('deploymentSlot'))]",
-                "lmsLoadBalancerDomainName": "[concat('lms-', variables('clusterNameDomainName'), '-', parameters('deploymentSlot'))]",
-                "previewLoadBalancerDomainName": "[concat('preview-', variables('clusterNameDomainName'), '-', parameters('deploymentSlot'))]",
+                "cmsLoadBalancerDomainName": "[concat('cms-', variables('clusterNameDomainName'), '-', variables('deploymentSlot'))]",
+                "lmsLoadBalancerDomainName": "[concat('lms-', variables('clusterNameDomainName'), '-', variables('deploymentSlot'))]",
+                "previewLoadBalancerDomainName": "[concat('preview-', variables('clusterNameDomainName'), '-', variables('deploymentSlot'))]",
                 "natPoolName": "[concat(parameters('clusterName'), '-natpool')]",
 
                 "cmsPublicAddressName": "[variables('cmsPublicAddressName')]",
@@ -688,10 +375,10 @@
                 "natStartPort": 50000,
                 "natEndPort": 50119,
                 "natBackendPort": 22,
-                "AutoscaleEnabled": "[parameters('autoScaleEnabled')]",
-                "AutoscaleCapacityDefault": "[parameters('autoScaleCapacityDefault')]",
-                "AutoscaleCapacityMaximum": "[parameters('autoScaleCapacityMaximum')]",
-                "AutoscaleCapacityMinimum": "[parameters('autoScaleCapacityMinimum')]"
+                "AutoscaleEnabled": "[variables('autoScaleEnabled')]",
+                "AutoscaleCapacityDefault": "[variables('autoScaleCapacityDefault')]",
+                "AutoscaleCapacityMaximum": "[variables('autoScaleCapacityMaximum')]",
+                "AutoscaleCapacityMinimum": "[variables('autoScaleCapacityMinimum')]"
             }
         },
 
@@ -715,20 +402,20 @@
             "osImageReference": {
                 "publisher": "[variables('supportedOSImagePublisher')]",
                 "offer": "[variables('supportedOSImageOffer')]",
-                "sku": "[parameters('defaultUbuntuOsImageSku')]",
+                "sku": "[variables('osImageSku')]",
                 "version": "latest"
             },
-            "dataDiskSize": "[parameters('jumpBoxDataDiskSizeGB')]"
+            "dataDiskSize": "[variables('extraStorageDiskSizeGB')]"
         },
         "mongoMachineSettings": {
             "vmSize": "[parameters('vmSize')]",
             "osImageReference": {
                 "publisher": "[variables('supportedOSImagePublisher')]",
                 "offer": "[variables('supportedOSImageOffer')]",
-                "sku": "[parameters('mongoUbuntuOsImageSku')]",
+                "sku": "[variables('osImageSku')]",
                 "version": "latest"
             },
-            "dataDiskSize": "[parameters('mongoNodeDataDiskSizeGB')]",
+            "dataDiskSize": "[variables('extraStorageDiskSizeGB')]",
             "installerBaseUrl": "http://repo.mongodb.org/apt/ubuntu",
             "installerPackages": "mongodb-org"
         },
@@ -737,17 +424,17 @@
             "osImageReference": {
                 "publisher": "[variables('supportedOSImagePublisher')]",
                 "offer": "[variables('supportedOSImageOffer')]",
-                "sku": "[parameters('mysqlUbuntuOsImageSku')]",
+                "sku": "[variables('osImageSku')]",
                 "version": "latest"
             },
-            "dataDiskSize": "[parameters('mysqlNodeDataDiskSizeGB')]"
+            "dataDiskSize": "[variables('extraStorageDiskSizeGB')]"
         },
         "frontendMachineSettings": {
             "vmSize": "[parameters('vmSize')]",
             "osImageReference": {
                 "publisher": "[variables('supportedOSImagePublisher')]",
                 "offer": "[variables('supportedOSImageOffer')]",
-                "sku": "[parameters('vmssUbuntuOsImageSku')]",
+                "sku": "[variables('osImageSku')]",
                 "version": "latest"
             },
             "capacity": "[parameters('vmSize')]",
@@ -772,35 +459,35 @@
             "enabledForVolumeEncryption": "[variables('keyVaultEnabledForVolumeEncryption')]",
             "tenantId": "[subscription().tenantId]",
             "accessAccount": "[parameters('keyVaultMasterAccountId')]",
-            "tenantKeyAccessPermission": "[parameters('keyVaultMasterAccountKeyAccessPermission')]",
-            "tenantSecretAccessPermission": "[parameters('keyVaultMasterAccountSecretAccessPermission')]",
-            "sku": "[parameters('keyVaultSku')]"
+            "tenantKeyAccessPermission": "[variables('keyVaultMasterAccountKeyAccessPermission')]",
+            "tenantSecretAccessPermission": "[variables('keyVaultMasterAccountSecretAccessPermission')]",
+            "sku": "[variables('keyVaultSku')]"
         },
 
         "azureSharedScriptUrl": "[concat('https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/shared_scripts/', variables('supportedOSName'), '/')]",
-        "templateBaseUrl": "[concat('https://raw.githubusercontent.com/',parameters('oxaToolsGithubAccountName'), '/', parameters('oxaToolsGithubProjectName'), '/', parameters('oxaToolsGithubBranch'), '/', parameters('armTemplateRelativePath'), '/')]",
-        "clusterCustomInstallerScriptFullPath": "[concat( variables('templateBaseUrl'), parameters('customInstallerLaunchScript') )]",
-        "customInstallerOxaToolsGitHubRepositoryParameters": "[concat(' --oxatools-public-github-accountname ', parameters('oxaToolsGithubAccountName'), ' --oxatools-public-github-projectname ', parameters('oxaToolsGithubProjectName'), ' --oxatools-public-github-projectbranch ', parameters('oxaToolsGithubBranch') )]",
-        "customInstallerEdxConfigurationGitHubRepositoryParameters": "[concat(' --edxconfiguration-public-github-accountname ', parameters('edxConfigurationGithubAccountName'), ' --edxconfiguration-public-github-projectname ', parameters('edxConfigurationGithubProjectName'), ' --edxconfiguration-public-github-projectbranch ', parameters('edxConfigurationGithubBranch') )]",
-        "customInstallerEdxPlatformGitHubRepositoryParameters": "[concat(' --edxplatform-public-github-accountname ', parameters('edxPlatformGithubAccountName'), ' --edxplatform-public-github-projectname ', parameters('edxPlatformGithubProjectName'), ' --edxplatform-public-github-projectbranch ', parameters('edxPlatformGithubBranch') )]",
-        "customInstallerEdxThemeGitHubRepositoryParameters": "[concat(' --edxtheme-public-github-accountname ', parameters('edxThemeGithubAccountName'), ' --edxtheme-public-github-projectname ', parameters('edxThemeGithubProjectName'), ' --edxtheme-public-github-projectbranch ', parameters('edxThemeGithubBranch') )]",
-        "customInstallerAnsibleGitHubRepositoryParameters": "[concat(' --ansible-public-github-accountname ', parameters('ansibleGithubAccountName'), ' --ansible-public-github-projectname ', parameters('ansibleGithubProjectName'), ' --ansible-public-github-projectbranch ', parameters('ansibleGithubBranch') )]",
-        "customInstallerMiscRepositoryVersionParameters": "[concat(' --edxversion ', parameters('edxVersion'), ' --forumversion ', parameters('edxForumVersion'), ' --edxtheme-public-github-projectbranch ', parameters('edxThemeGithubBranch') )]",
+        "templateBaseUrl": "[concat('https://raw.githubusercontent.com/',variables('oxaToolsGithubAccountName'), '/', variables('oxaToolsGithubProjectName'), '/', variables('oxaToolsGithubBranch'), '/', variables('armTemplateRelativePath'), '/')]",
+        "clusterCustomInstallerScriptFullPath": "[concat( variables('templateBaseUrl'), variables('customInstallerLaunchScript') )]",
+        "customInstallerOxaToolsGitHubRepositoryParameters": "[concat(' --oxatools-public-github-accountname ', variables('oxaToolsGithubAccountName'), ' --oxatools-public-github-projectname ', variables('oxaToolsGithubProjectName'), ' --oxatools-public-github-projectbranch ', variables('oxaToolsGithubBranch') )]",
+        "customInstallerEdxConfigurationGitHubRepositoryParameters": "[concat(' --edxconfiguration-public-github-accountname ', variables('edxConfigurationGithubAccountName'), ' --edxconfiguration-public-github-projectname ', variables('edxConfigurationGithubProjectName'), ' --edxconfiguration-public-github-projectbranch ', variables('edxConfigurationGithubBranch') )]",
+        "customInstallerEdxPlatformGitHubRepositoryParameters": "[concat(' --edxplatform-public-github-accountname ', variables('edxPlatformGithubAccountName'), ' --edxplatform-public-github-projectname ', variables('edxPlatformGithubProjectName'), ' --edxplatform-public-github-projectbranch ', variables('edxPlatformGithubBranch') )]",
+        "customInstallerEdxThemeGitHubRepositoryParameters": "[concat(' --edxtheme-public-github-accountname ', variables('edxThemeGithubAccountName'), ' --edxtheme-public-github-projectname ', variables('edxThemeGithubProjectName'), ' --edxtheme-public-github-projectbranch ', variables('edxThemeGithubBranch') )]",
+        "customInstallerAnsibleGitHubRepositoryParameters": "[concat(' --ansible-public-github-accountname ', variables('ansibleGithubAccountName'), ' --ansible-public-github-projectname ', variables('ansibleGithubProjectName'), ' --ansible-public-github-projectbranch ', variables('ansibleGithubBranch') )]",
+        "customInstallerMiscRepositoryVersionParameters": "[concat(' --edxversion ', variables('edxVersion'), ' --forumversion ', variables('edxForumVersion'), ' --edxtheme-public-github-projectbranch ', variables('edxThemeGithubBranch') )]",
         "customInstallerKeyVaultParameters": "[concat(' --keyvault-name ', concat(parameters('clusterName'), '-kv'), ' --aad-webclient-id ', parameters('aadWebClientId'), ' --aad-webclient-appkey ', parameters('aadWebClientAppKey'), ' --aad-tenant-id ', parameters('aadTenantId'), ' --azure-subscription-id ', subscription().subscriptionId)]",
-        "customInstallerDomainOverrideParameters": "[concat(' --base-domain-override ', parameters('baseDomain'), ' --domain-separator ', parameters('domainSeparator') )]",
+        "customInstallerDomainOverrideParameters": "[concat(' --base-domain-override ', variables('baseDomain'), ' --domain-separator ', variables('domainSeparator') )]",
 
         "customInstallerOutputRedirect": " >> /var/log/bootstrap.csx.log 2>&1",
         "smtpParameters": "[concat(' --smtp-server ', parameters('smtpServer'), ' --smtp-server-port ', parameters('smtpServerPort'), ' --smtp-auth-user ', parameters('smtpAuthenticationUser'), ' --smtp-auth-user-password ', parameters('smtpAuthenticationUserPassword'), '  --cluster-admin-email ', parameters('clusterAdmininistratorEmailAddress'))]",
 
         "secureGenericStorageAccountId": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/','Microsoft.Storage/storageAccounts/', variables('secureGenericStorageAccountName'))]",
         "secureGenericStorageAccountKey": "PLACEHOLDER_KEY",
-        "backupParameters": "[concat(' --storage-account-key ', variables('secureGenericStorageAccountKey'),' --storage-account-name ', variables('secureGenericStorageAccountName'), ' --mongo-backup-frequency \"', replace(parameters('mongoBackupFrequency'), ' ', '_'), '\" --mysql-backup-frequency \"', replace(parameters('mysqlBackupFrequency'), ' ', '_'), '\" --mongo-backup-retention-days ', parameters('mongoBackupRetentionDays'), ' --mysql-backup-retention-days ', parameters('mysqlBackupRetentionDays'))]",
+        "backupParameters": "[concat(' --storage-account-key ', variables('secureGenericStorageAccountKey'),' --storage-account-name ', variables('secureGenericStorageAccountName'), ' --mongo-backup-frequency \"', replace(variables('mongoBackupFrequency'), ' ', '_'), '\" --mysql-backup-frequency \"', replace(variables('mysqlBackupFrequency'), ' ', '_'), '\" --mongo-backup-retention-days ', variables('mongoBackupRetentionDays'), ' --mysql-backup-retention-days ', variables('mysqlBackupRetentionDays'))]",
 
-        "sampleCourseParameters": "[concat(' --import-kitchensink-course ', parameters('importKitchenSinkCourse'))]",
-        "comprehensiveThemingParameters": "[concat(' --enable-comprehensive-theming ', parameters('enableComprehensiveTheming'), ' --comprehensive-theming-directory ', parameters('comprehensiveThemingDirectory'), ' --comprehensive-theming-name ', parameters('comprehensiveThemingName'))]",
-        "authenticationParameters": "[concat(' --enable-thirdparty-auth ', parameters('enableThirdPartyAuth'), ' --aad-loginbutton-text \"', replace(parameters('aadLoginButtonText'), ' ', '_'), '\"')]",
+        "sampleCourseParameters": "[concat(' --import-kitchensink-course ', variables('importKitchenSinkCourse'))]",
+        "comprehensiveThemingParameters": "[concat(' --enable-comprehensive-theming ', variables('enableComprehensiveTheming'), ' --comprehensive-theming-directory ', variables('comprehensiveThemingDirectory'), ' --comprehensive-theming-name ', variables('comprehensiveThemingName'))]",
+        "authenticationParameters": "[concat(' --enable-thirdparty-auth ', variables('enableThirdPartyAuth'), ' --aad-loginbutton-text \"', replace(variables('aadLoginButtonText'), ' ', '_'), '\"')]",
 
-        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', variables('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'), variables('backupParameters'), variables('sampleCourseParameters'), variables('comprehensiveThemingParameters'), variables('authenticationParameters'), variables('customInstallerDomainOverrideParameters'), variables('customInstallerOutputRedirect') )]",
+        "customInstallerCommand": "[concat('bash ', variables('customInstallerLaunchScript'),' -i ', variables('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', variables('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'), variables('backupParameters'), variables('sampleCourseParameters'), variables('comprehensiveThemingParameters'), variables('authenticationParameters'), variables('customInstallerDomainOverrideParameters'), variables('customInstallerOutputRedirect') )]",
 
         "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources.json')]",
         "jumpboxTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-jumpbox.json')]",
@@ -814,7 +501,7 @@
 
         "installerUtilitiesScript": "utilities.sh",
         "mongoDbInstallerScript": "[concat('mongodb-', variables('supportedOSName'), '-install.sh')]",
-        "mongoDbInstallerCommand": "[concat('bash ', variables('mongoDbInstallerScript'), ' -i ', variables('mongoMachineSettings').installerBaseUrl, ' -b ', variables('mongoMachineSettings').installerPackages, ' -r ', variables('mongoReplicaSetName'), ' -k ', variables('mongoReplicaSetKey'), ' -u ', variables('mongoServerAdminUserName'), ' -p ', base64(parameters('mongoServerAdminPassword')), ' -x ', variables('networkSettings').serverIpPrefix, ' -n ', variables('networkSettings').mongoDataNodeCount)]",
+        "mongoDbInstallerCommand": "[concat('bash ', variables('mongoDbInstallerScript'), ' -i ', variables('mongoMachineSettings').installerBaseUrl, ' -b ', variables('mongoMachineSettings').installerPackages, ' -r ', variables('mongoReplicaSetName'), ' -k ', variables('mongoReplicaSetKey'), ' -u ', variables('mongoServerAdminUserName'), ' -p ', base64(variables('mongoServerAdminPassword')), ' -x ', variables('networkSettings').serverIpPrefix, ' -n ', variables('networkSettings').mongoDataNodeCount)]",
         "mongoDBInstallerSettings": {
             "scriptsToDownload": [
                 "[concat(variables('templateBaseUrl'), variables('mongoDbInstallerScript'))]",
@@ -828,7 +515,7 @@
         },
 
         "mysqlDbInstallerScript": "[concat('mysql-', variables('supportedOSName'), '-install.sh')]",
-        "mysqlDbInstallerCommand": "[concat('bash ', variables('mysqlDbInstallerScript'), ' -r ', parameters('mysqlServerReplUserName'), ' -k ', base64(parameters('mysqlServerReplPassword')), ' -u ', parameters('mysqlServerAdminUserName'), ' -p ', base64(parameters('mysqlServerAdminPassword')), ' -v ', parameters('mysqlServerPackageVersion'), ' -m ', variables('networkSettings').serverIpPrefix, add(int(variables('networkSettings').mysqlServerIpOffset),1) )]",
+        "mysqlDbInstallerCommand": "[concat('bash ', variables('mysqlDbInstallerScript'), ' -r ', variables('mysqlServerReplUserName'), ' -k ', base64(variables('mysqlServerReplPassword')), ' -u ', variables('mysqlServerAdminUserName'), ' -p ', base64(variables('mysqlServerAdminPassword')), ' -v ', variables('mysqlServerPackageVersion'), ' -m ', variables('networkSettings').serverIpPrefix, add(int(variables('networkSettings').mysqlServerIpOffset),1) )]",
         "mysqlDBInstallerSettings": {
             "scriptsToDownload": [
                 "[concat(variables('templateBaseUrl'), variables('mysqlDbInstallerScript'))]",
@@ -1143,6 +830,38 @@
                             "monitorConfigPath": "[variables('networkSettings').trafficManagerSettings.cms.monitorConfigPath]",
                             "endpoint1": "[variables('networkSettings').trafficManagerSettings.cms.endpoint1]",
                             "endpoint2": "[variables('networkSettings').trafficManagerSettings.cms.endpoint2]"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "name": "trafficManagerPreview",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('apiVersion')]",
+            "dependsOn": [
+                "vmss"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('trafficManagerTemplateUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "apiSettings": {
+                        "value": "[variables('apiSettings')]"
+                    },
+                    "customSettings": {
+                        "value": {
+                            "trafficManagerName": "[variables('networkSettings').trafficManagerSettings.preview.name]",
+                            "relativeDnsName": "[variables('networkSettings').trafficManagerSettings.preview.name]",
+                            "dnsTtl": "[variables('networkSettings').trafficManagerSettings.dnsTtlSeconds]",
+                            "monitorConfigProtocol": "[variables('networkSettings').trafficManagerSettings.monitorConfigProtocol]",
+                            "monitorConfigPort": "[variables('networkSettings').trafficManagerSettings.preview.monitorConfigPort]",
+                            "monitorConfigPath": "[variables('networkSettings').trafficManagerSettings.preview.monitorConfigPath]",
+                            "endpoint1": "[variables('networkSettings').trafficManagerSettings.preview.endpoint1]",
+                            "endpoint2": "[variables('networkSettings').trafficManagerSettings.preview.endpoint2]"
                         }
                     }
                 }
