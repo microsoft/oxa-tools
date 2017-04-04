@@ -55,7 +55,7 @@
                     "apiVersion": "[parameters('apiSettings').keyVaultApiversion]",
                     "tags": { "displayName": "[parameters('keyVaultSettings').secrets.CloudConfigSetting.Name]" },
                     "properties": {
-                        "value": "[[parameters('keyVaultSettings').secrets.CloudConfigSetting.Value]]"
+                        "value": "[parameters('keyVaultSettings').secrets.CloudConfigSetting.Value]"
                     },
                     "dependsOn": [
                         "[concat('Microsoft.KeyVault/vaults/', parameters('networkSettings').clusterKeyVaultName)]"
@@ -67,7 +67,7 @@
                     "apiVersion": "[parameters('apiSettings').keyVaultApiversion]",
                     "tags": { "displayName": "[parameters('keyVaultSettings').secrets.SslCertSetting.Name]" },
                     "properties": {
-                        "value": "[[parameters('keyVaultSettings').secrets.SslCertSetting.Value]]"
+                        "value": "[parameters('keyVaultSettings').secrets.SslCertSetting.Value]"
                     },
                     "dependsOn": [
                         "[concat('Microsoft.KeyVault/vaults/', parameters('networkSettings').clusterKeyVaultName)]"
@@ -79,7 +79,7 @@
                     "apiVersion": "[parameters('apiSettings').keyVaultApiversion]",
                     "tags": { "displayName": "[parameters('keyVaultSettings').secrets.SslCertKeySetting.Name]" },
                     "properties": {
-                        "value": "[[parameters('keyVaultSettings').secrets.SslCertKeySetting.Value]]"
+                        "value": "[parameters('keyVaultSettings').secrets.SslCertKeySetting.Value]"
                     },
                     "dependsOn": [
                         "[concat('Microsoft.KeyVault/vaults/', parameters('networkSettings').clusterKeyVaultName)]"
@@ -91,7 +91,7 @@
                     "apiVersion": "[parameters('apiSettings').keyVaultApiversion]",
                     "tags": { "displayName": "[parameters('keyVaultSettings').secrets.SshPrivateKeySetting.Name]" },
                     "properties": {
-                        "value": "[[parameters('keyVaultSettings').secrets.SshPrivateKeySetting.Value]]"
+                        "value": "[parameters('keyVaultSettings').secrets.SshPrivateKeySetting.Value]"
                     },
                     "dependsOn": [
                         "[concat('Microsoft.KeyVault/vaults/', parameters('networkSettings').clusterKeyVaultName)]"
