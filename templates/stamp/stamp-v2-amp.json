@@ -25,15 +25,17 @@
                 "Standard_DS15_v2"
             ]
         },
-        "adminPublicKey": {
-            "type": "securestring"
-        },
         "databaseAdminPassword": {
             "type": "securestring"
         },
         "cloud": {
             "type": "string",
             "defaultValue": "bvt",
+            "allowedValues": [
+                "bvt",
+                "int",
+                "prod"
+            ],
             "metadata": {
                 "description": "The target cloud/environment"
             }
@@ -98,6 +100,33 @@
             "metadata": {
                 "description": "Email address of the administrator where system and other notifications will be sent"
             }
+        },
+        "keyVaultAdminPublicKey": {
+            "type": "securestring"
+        },
+        "keyVaultAdminPrivateKey": {
+            "type": "string",
+            "metadata": {
+                "description": "OXA cloud configuration file"
+            }
+        },
+        "keyVaultSecretCloudConfiguration": {
+            "type": "string",
+            "metadata": {
+                "description": "OXA cloud configuration file"
+            }
+        },
+        "keyVaultSecretSslCertificate": {
+            "type": "string",
+            "metadata": {
+                "description": "Certitficate (.crt ) file used for SSL encryption by the application servers"
+            }
+        },
+        "keyVaultSecretSslCertificateKey": {
+            "type": "string",
+            "metadata": {
+                "description": "Certitficate key (.key ) file used for SSL encryption by the application servers"
+            }
         }
     },
     "variables": {
@@ -135,20 +164,13 @@
         "autoScaleCapacityMaximum": 3,
         "autoScaleCapacityMinimum": 1,
 
-        "keyVaultMasterAccountKeyAccessPermission": [
-            "all"
-        ],
-        "keyVaultMasterAccountSecretAccessPermission": [
-            "all"
-        ],
+        "keyVaultMasterAccountKeyAccessPermission": [ "all" ],
+        "keyVaultMasterAccountSecretAccessPermission": [ "all" ],
         "keyVaultSku": "Standard",
 
-
+        "armTemplateRelativePath": "templates/stamp",
         "customInstallerLaunchScript": "run-customizations.sh",
         "customInstallerMainScriptRelativePath": "scripts/bootstrap.sh",
-
-        "armTemplateRelativePath": "templates/stamp",
-
 
         "mongoBackupFrequency": "0 0 * * *",
         "mysqlBackupFrequency": "0 */4 * * *",
@@ -164,24 +186,9 @@
         "domainSeparator": "-",
         "mysqlServerPackageVersion": "5.6",
 
-        "lmsTrafficManagerStateMetadata": [
-            "Enabled",
-            "Disabled",
-            1,
-            2
-        ],
-        "cmsTrafficManagerStateMetadata": [
-            "Enabled",
-            "Disabled",
-            1,
-            2
-        ],
-        "previewTrafficManagerStateMetadata": [
-            "Enabled",
-            "Disabled",
-            1,
-            2
-        ],
+        "lmsTrafficManagerStateMetadata": [ "Enabled", "Disabled", 1, 2 ],
+        "cmsTrafficManagerStateMetadata": [ "Enabled", "Disabled", 1, 2 ],
+        "previewTrafficManagerStateMetadata": [ "Enabled", "Disabled", 1, 2 ],
 
         "oxaToolsGithubAccountName": "Microsoft",
         "oxaToolsGithubProjectName": "oxa-tools",
@@ -248,7 +255,7 @@
             "availabilitySetNameSuffix": "-as",
             "ipConfigSuffix": "-ipconfig",
             "adminUsername": "[variables('adminUsername')]",
-            "adminPublicKey": "[parameters('adminPublicKey')]",
+            "adminPublicKey": "[parameters('keyVaultAdminPublicKey')]",
             "mongoServerAdminPassword": "[variables('mongoServerAdminPassword')]",
             "publicIpAddressType": "Dynamic",
             "subnetName": "[variables('subnetName')]",
@@ -461,7 +468,29 @@
             "accessAccount": "[parameters('keyVaultMasterAccountId')]",
             "tenantKeyAccessPermission": "[variables('keyVaultMasterAccountKeyAccessPermission')]",
             "tenantSecretAccessPermission": "[variables('keyVaultMasterAccountSecretAccessPermission')]",
-            "sku": "[variables('keyVaultSku')]"
+            "sku": "[variables('keyVaultSku')]",
+            "secrets": {
+                "CloudConfigSetting": {
+                    "name": "[concat('OxaToolsConfigxxx', parameters('cloud'), 'yyysh']",
+                    "value": "[parameters('keyVaultSecretCloudConfiguration')]"
+                },
+                "SslCertSetting": {
+                    "name": "OxaToolsConfigxxxcertyyycrt",
+                    "value": "[parameters('keyVaultSecretSslCertificate')]"
+                },
+                "SslCertKeySetting": {
+                    "name": "OxaToolsConfigxxxcertyyykey",
+                    "value": "[parameters('keyVaultSecretSslCertificateKey')]"
+                },
+                "SshPrivateKeySetting": {
+                    "name": "OxaToolsConfigxxxidzzzrsa",
+                    "value": "[parameters('keyVaultAdminPrivateKey')]"
+                },
+                "SshPublicKeySetting": {
+                    "name": "OxaToolsConfigxxxidzzzrsayyypub",
+                    "value": "[parameters('keyVaultAdminPublicKey')]"
+                }
+            }
         },
 
         "azureSharedScriptUrl": "[concat('https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/shared_scripts/', variables('supportedOSName'), '/')]",
@@ -491,7 +520,7 @@
 
         "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources.json')]",
         "jumpboxTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-jumpbox.json')]",
-        "keyvaultTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-keyvault.json')]",
+        "keyvaultTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-keyvault-amp.json')]",
         "trafficManagerTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-trafficmanager.json')]",
         "mongoNodeTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-mongo.json')]",
         "mysqlNodeTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-mysql.json')]",

@@ -1,0 +1,115 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "apiSettings": {
+            "type": "object",
+            "metadata": {
+                "Description": "API version of the resource type"
+            }
+        },
+        "networkSettings": {
+            "type": "secureObject",
+            "metadata": {
+                "Description": "Network settings object"
+            }
+        },
+        "keyVaultSettings": {
+            "type": "object",
+            "metadata": {
+                "Description": "Key Vault settings object"
+            }
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.KeyVault/vaults",
+            "name": "[parameters('networkSettings').clusterKeyVaultName]",
+            "apiVersion": "[parameters('apiSettings').keyVaultApiversion]",
+            "location": "[resourceGroup().location]",
+            "tags": { },
+            "properties": {
+                "enabledForDeployment": "[parameters('keyVaultSettings').enabledForDeployment]",
+                "enabledForTemplateDeployment": "[parameters('keyVaultSettings').enabledForTemplateDeployment]",
+                "enabledForVolumeEncryption": "[parameters('keyVaultSettings').enabledForVolumeEncryption]",
+                "tenantId": "[parameters('keyVaultSettings').tenantId]",
+                "accessPolicies": [
+                    {
+                        "tenantId": "[parameters('keyVaultSettings').tenantId]",
+                        "objectId": "[parameters('keyVaultSettings').accessAccount]",
+                        "permissions": {
+                            "keys": "[parameters('keyVaultSettings').tenantKeyAccessPermission]",
+                            "secrets": "[parameters('keyVaultSettings').tenantSecretAccessPermission]"
+                        }
+                    }
+                ],
+                "sku": {
+                    "name": "[parameters('keyVaultSettings').sku]",
+                    "family": "A"
+                }
+            },
+            "resources": [
+                {
+                    "type": "secrets",
+                    "name": "[parameters('keyVaultSettings').secrets.CloudConfigSetting.Name]",
+                    "apiVersion": "[parameters('apiSettings').keyVaultApiversion]",
+                    "tags": { "displayName": "[parameters('keyVaultSettings').secrets.CloudConfigSetting.Name]" },
+                    "properties": {
+                        "value": "[[parameters('keyVaultSettings').secrets.CloudConfigSetting.Value]]"
+                    },
+                    "dependsOn": [
+                        "[concat('Microsoft.KeyVault/vaults/', parameters('networkSettings').clusterKeyVaultName)]"
+                    ]
+                },
+                {
+                    "type": "secrets",
+                    "name": "[parameters('keyVaultSettings').secrets.SslCertSetting.Name]",
+                    "apiVersion": "[parameters('apiSettings').keyVaultApiversion]",
+                    "tags": { "displayName": "[parameters('keyVaultSettings').secrets.SslCertSetting.Name]" },
+                    "properties": {
+                        "value": "[[parameters('keyVaultSettings').secrets.SslCertSetting.Value]]"
+                    },
+                    "dependsOn": [
+                        "[concat('Microsoft.KeyVault/vaults/', parameters('networkSettings').clusterKeyVaultName)]"
+                    ]
+                },
+                {
+                    "type": "secrets",
+                    "name": "[parameters('keyVaultSettings').secrets.SslCertKeySetting.Name]",
+                    "apiVersion": "[parameters('apiSettings').keyVaultApiversion]",
+                    "tags": { "displayName": "[parameters('keyVaultSettings').secrets.SslCertKeySetting.Name]" },
+                    "properties": {
+                        "value": "[[parameters('keyVaultSettings').secrets.SslCertKeySetting.Value]]"
+                    },
+                    "dependsOn": [
+                        "[concat('Microsoft.KeyVault/vaults/', parameters('networkSettings').clusterKeyVaultName)]"
+                    ]
+                },
+                {
+                    "type": "secrets",
+                    "name": "[parameters('keyVaultSettings').secrets.SshPrivateKeySetting.Name]",
+                    "apiVersion": "[parameters('apiSettings').keyVaultApiversion]",
+                    "tags": { "displayName": "[parameters('keyVaultSettings').secrets.SshPrivateKeySetting.Name]" },
+                    "properties": {
+                        "value": "[[parameters('keyVaultSettings').secrets.SshPrivateKeySetting.Value]]"
+                    },
+                    "dependsOn": [
+                        "[concat('Microsoft.KeyVault/vaults/', parameters('networkSettings').clusterKeyVaultName)]"
+                    ]
+                },
+                {
+                    "type": "secrets",
+                    "name": "[parameters('keyVaultSettings').secrets.SshPublicKeySetting.Name]",
+                    "apiVersion": "[parameters('apiSettings').keyVaultApiversion]",
+                    "tags": { "displayName": "[parameters('keyVaultSettings').secrets.SshPublicKeySetting.Name]" },
+                    "properties": {
+                        "value": "[[parameters('keyVaultSettings').secrets.SshPublicKeySetting.Value]]"
+                    },
+                    "dependsOn": [
+                        "[concat('Microsoft.KeyVault/vaults/', parameters('networkSettings').clusterKeyVaultName)]"
+                    ]
+                }
+            ]
+        }
+    ]
+}
