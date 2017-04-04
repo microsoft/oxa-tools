@@ -488,7 +488,7 @@
                 },
                 "SshPublicKeySetting": {
                     "name": "OxaToolsConfigxxxidzzzrsayyypub",
-                    "value": "[parameters('keyVaultAdminPublicKey')]"
+                    "value": "[base64(parameters('keyVaultAdminPublicKey'))]"
                 }
             }
         },
