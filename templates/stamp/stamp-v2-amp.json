@@ -471,7 +471,7 @@
             "sku": "[variables('keyVaultSku')]",
             "secrets": {
                 "CloudConfigSetting": {
-                    "name": "[concat('OxaToolsConfigxxx', parameters('cloud'), 'yyysh']",
+                    "name": "[concat('OxaToolsConfigxxx', parameters('cloud'), 'yyysh')]",
                     "value": "[parameters('keyVaultSecretCloudConfiguration')]"
                 },
                 "SslCertSetting": {
