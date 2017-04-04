@@ -15,6 +15,9 @@ ERROR_HYDRATECONFIG_FAILED=5410
 ERROR_BCINSTALL_FAILED=5402
 ERROR_NODEINSTALL_FAILED=6101
 ERROR_AZURECLI_FAILED=6201
+ERROR_AZURECLI_SCRIPT_DOWNLOAD_FAILED=6202
+ERROR_AZURECLI2_INSTALLATION_FAILED=6203
+ERROR_AZURECLI_INVALID_OSVERSION=6204
 
 #############################################################################
 # Log a message
@@ -641,6 +644,43 @@ install-azure-cli()
     fi
 
     log "Azure CLI installed"
+}
+
+install-azure-cli-2()
+{
+    # Instructions: https://docs.microsoft.com/en-us/cli/azure/install-azure-cli#apt-get
+
+    if type az >/dev/null 2>&1; then
+        log "Azure CLI 2.0 is already installed"
+    else
+
+        log "Install Azure CLI 2.0"
+        log "Adding Azure Cli 2.0 Repository for package installation"
+        echo "deb [arch=amd64] https://apt-mo.trafficmanager.net/repos/azure-cli/ wheezy main" | tee /etc/apt/sources.list.d/azure-cli.list
+        apt-key adv --keyserver apt-mo.trafficmanager.net --recv-keys 417A0893
+    
+        log "Updating Repository"
+        apt-get update -y -qq
+
+        short_release_number=`lsb_release -sr`
+
+        log "Installing Azure CLI 2.0 pre-requisites"
+        apt-get -y install apt-transport-http
+
+        if [[ $(echo "$short_release_number > 15" | bc -l) ]]; then
+            sudo apt-get install -y libssl-dev libffi-dev python-dev build-essential
+
+        elif [[ $(echo "$short_release_number > 12" | bc -l) ]]; then
+            sudo apt-get install -y libssl-dev libffi-dev python-dev
+
+        else
+            exit $ERROR_AZURECLI_INVALID_OSVERSION
+        fi
+
+        log "Installing Azure CLI 2.0"
+        apt-get -y install azure-cli
+        exit_on_error "Failed installing azure cli 2.0 on ${HOSTNAME} !" $ERROR_AZURECLI2_INSTALLATION_FAILED
+    fi
 }
 
 #############################################################################

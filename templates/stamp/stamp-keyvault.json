@@ -615,6 +615,24 @@
             "metadata": {
                 "description": "Email address associated with the application"
             }
+        },
+        "memcacheServer": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Memcache server to use for the application servers"
+            }
+        },
+        "azureCliVersion": {
+            "type": "string",
+            "defaultValue": "2",
+            "allowedValues": [
+                "2",
+                "1"
+            ],
+            "metadata": {
+                "description": "Azure Cli version to use"
+            }
         }
     },
     "variables": {
