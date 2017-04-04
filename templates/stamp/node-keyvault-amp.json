@@ -103,7 +103,7 @@
                     "apiVersion": "[parameters('apiSettings').keyVaultApiversion]",
                     "tags": { "displayName": "[parameters('keyVaultSettings').secrets.SshPublicKeySetting.Name]" },
                     "properties": {
-                        "value": "[[parameters('keyVaultSettings').secrets.SshPublicKeySetting.Value]]"
+                        "value": "[parameters('keyVaultSettings').secrets.SshPublicKeySetting.Value]"
                     },
                     "dependsOn": [
                         "[concat('Microsoft.KeyVault/vaults/', parameters('networkSettings').clusterKeyVaultName)]"
