@@ -472,23 +472,23 @@
             "secrets": {
                 "CloudConfigSetting": {
                     "name": "[concat('OxaToolsConfigxxx', parameters('cloud'), 'yyysh')]",
-                    "value": "[parameters('keyVaultSecretCloudConfiguration')]"
+                    "value": "[base64(parameters('keyVaultSecretCloudConfiguration'))]"
                 },
                 "SslCertSetting": {
                     "name": "OxaToolsConfigxxxcertyyycrt",
-                    "value": "[parameters('keyVaultSecretSslCertificate')]"
+                    "value": "[base64(parameters('keyVaultSecretSslCertificate'))]"
                 },
                 "SslCertKeySetting": {
                     "name": "OxaToolsConfigxxxcertyyykey",
-                    "value": "[parameters('keyVaultSecretSslCertificateKey')]"
+                    "value": "[base64(parameters('keyVaultSecretSslCertificateKey'))]"
                 },
                 "SshPrivateKeySetting": {
                     "name": "OxaToolsConfigxxxidzzzrsa",
-                    "value": "[parameters('keyVaultAdminPrivateKey')]"
+                    "value": "[base64(parameters('keyVaultAdminPrivateKey'))]"
                 },
                 "SshPublicKeySetting": {
                     "name": "OxaToolsConfigxxxidzzzrsayyypub",
-                    "value": "[parameters('keyVaultAdminPublicKey')]"
+                    "value": "[base64(parameters('keyVaultAdminPublicKey'))]"
                 }
             }
         },
