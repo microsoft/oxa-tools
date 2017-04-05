@@ -562,7 +562,7 @@ then
     # decode the input now that we need to use the variable
     PLATFORM_NAME=`echo ${PLATFORM_NAME} | base64`
     MEMCACHE_SERVER=`echo ${MEMCACHE_SERVER} | base64`
-    BACKUP_STORAGEACCOUNT_KEY=`echo ${arg_value} | base64`
+    BACKUP_STORAGEACCOUNT_KEY=`echo ${BACKUP_STORAGEACCOUNT_KEY} | base64`
 
     # Setup the repo parameters individually
     OXA_TOOLS_GITHUB_PARAMS="--oxatools-public-github-accountname \"${OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME}\" --oxatools-public-github-projectname \"${OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME}\" --oxatools-public-github-projectbranch \"${OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH}\""
@@ -694,7 +694,7 @@ then
 
     log "Completed fetching key for '$BACKUP_STORAGEACCOUNT_NAME'"
 else
-    log "Backup Storage Account Key is already set. There is no need to fetch its key."
+    log "Backup Storage Account Key is already set to '$BACKUP_STORAGEACCOUNT_KEY'. There is no need to fetch its key."
 fi
 
 # fetch settings from keyvault
