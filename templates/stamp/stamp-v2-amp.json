@@ -181,7 +181,7 @@
         "comprehensiveThemingName": "",
         "enableThirdPartyAuth": false,
         "aadLoginButtonText": "",
-        "baseDomain": "{CLUSTERNAME}-tm.trafficmanager.net",
+        "baseDomain": "",
         "domainSeparator": "-",
         "mysqlServerPackageVersion": "5.6",
 
