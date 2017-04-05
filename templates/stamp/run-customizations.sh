@@ -295,7 +295,7 @@ parse_args()
                 BACKUP_STORAGEACCOUNT_NAME="${arg_value}"
                 ;;
              --storage-account-key)
-                BACKUP_STORAGEACCOUNT_KEY="${arg_value}"
+                BACKUP_STORAGEACCOUNT_KEY=`echo ${arg_value} | base64 --decode`
                 ;;
              --mongo-backup-frequency)
                 MONGO_BACKUP_FREQUENCY="${arg_value//_/ }"
@@ -562,6 +562,7 @@ then
     # decode the input now that we need to use the variable
     PLATFORM_NAME=`echo ${PLATFORM_NAME} | base64`
     MEMCACHE_SERVER=`echo ${MEMCACHE_SERVER} | base64`
+    BACKUP_STORAGEACCOUNT_KEY=`echo ${arg_value} | base64`
 
     # Setup the repo parameters individually
     OXA_TOOLS_GITHUB_PARAMS="--oxatools-public-github-accountname \"${OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME}\" --oxatools-public-github-projectname \"${OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME}\" --oxatools-public-github-projectbranch \"${OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH}\""
@@ -666,6 +667,37 @@ if [[ -d $OXA_ENV_PATH ]]; then
     rm -rf $OXA_ENV_PATH
 fi
 
+# Due to an issue with ARM deployment preventing the use of listKeys, we have to provide a fallback in case the storage account key isn't provided.
+# When $BACKUP_STORAGEACCOUNT_KEY is blank, we will use powershell to fetch a key
+if [[ -z $BACKUP_STORAGEACCOUNT_KEY ]];
+then
+    log "Access key for '$BACKUP_STORAGEACCOUNT_NAME' has not been set. Proceeding with fetching its key via powershell."
+
+    # Create a new key file. If the file already exists, delete it.
+    backup_storageaccount_key_file=/tmp/accountkey
+    if [[ -f $backup_storageaccount_key_file ]]; 
+    then
+        rm $backup_storageaccount_key_file
+    fi
+
+    touch $backup_storageaccount_key_file
+
+    # fetch the key
+    powershell -file $INSTALLER_BASEPATH/Get-StorageAccountKey.ps1 -AadWebClientId $AAD_WEBCLIENT_ID -AadWebClientAppKey $AAD_WEBCLIENT_APPKEY -AadTenantId $AAD_TENANT_ID -AzureSubscriptionId $AZURE_SUBSCRIPTION_ID -StorageAccountName "${BACKUP_STORAGEACCOUNT_NAME}" -ResourceGroupName "${MONITORING_CLUSTER_NAME}" -AzureCliVersion $AZURE_CLI_VERSION -OutputFile $backup_storageaccount_key_file
+    exit_on_error "Failed fetching the backup storage account key for '${BACKUP_STORAGEACCOUNT_NAME}'" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
+
+    # set the key
+    BACKUP_STORAGEACCOUNT_KEY=`cat $backup_storageaccount_key_file`
+
+    # clean up
+    rm $backup_storageaccount_key_file
+
+    log "Completed fetching key for '$BACKUP_STORAGEACCOUNT_NAME'"
+else
+    log "Backup Storage Account Key is already set. There is no need to fetch its key."
+fi
+
+# fetch settings from keyvault
 powershell -file $INSTALLER_BASEPATH/Process-OxaToolsKeyVaultConfiguration.ps1 -Operation Download -VaultName $KEYVAULT_NAME -AadWebClientId $AAD_WEBCLIENT_ID -AadWebClientAppKey $AAD_WEBCLIENT_APPKEY -AadTenantId $AAD_TENANT_ID -TargetPath $OXA_ENV_PATH -AzureSubscriptionId $AZURE_SUBSCRIPTION_ID -AzureCliVersion $AZURE_CLI_VERSION
 exit_on_error "Failed downloading configurations from keyvault" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
