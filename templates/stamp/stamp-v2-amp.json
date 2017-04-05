@@ -782,7 +782,7 @@
                             "commandToExecute": "[variables('vmssInstallerSettings').customInstallerCommand]",
                             "linuxDiagnosticsSettings": "[variables('vmssLinuxDiagnosticsSettings')]",
                             "storageKeyPlaceholder": "[variables('secureGenericStorageAccountKey')]",
-                            "secureGenericStorageAccountKey": "[listKeys(variables('secureGenericStorageAccountId'), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value]"
+                            "secureGenericStorageAccountKey": "[base64('')]"
                         }
                     }
                 }
