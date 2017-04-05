@@ -154,7 +154,6 @@
         "mediaServicesApiVersion": "2015-10-01",
         "storageApiVersion": "2016-01-01",
         "deploymentSlot": "slot1",
-        "mongoServerAdminPassword": "[parameters('databaseAdminPassword')]",
 
         "osImageSku": "16.04.0-LTS",
         "extraStorageDiskSizeGB": 256,
@@ -185,6 +184,14 @@
         "baseDomain": "{CLUSTERNAME}-tm.trafficmanager.net",
         "domainSeparator": "-",
         "mysqlServerPackageVersion": "5.6",
+
+        "edxappSuperUserName": "oxamaster",
+        "edxappSuperUserPassword": "[parameters('databaseAdminPassword')]",
+        "edxappSuperUserEmail": "[parameters('clusterAdmininistratorEmailAddress')]",
+        "edxPlatformName": "Contoso Learning",
+        "edxPlatformEmail": "[parameters('clusterAdmininistratorEmailAddress')]",
+        "memcacheServer": "",
+        "azureCliVersion": "2",
 
         "lmsTrafficManagerStateMetadata": [ "Enabled", "Disabled", 1, 2 ],
         "cmsTrafficManagerStateMetadata": [ "Enabled", "Disabled", 1, 2 ],
@@ -515,8 +522,12 @@
         "sampleCourseParameters": "[concat(' --import-kitchensink-course ', variables('importKitchenSinkCourse'))]",
         "comprehensiveThemingParameters": "[concat(' --enable-comprehensive-theming ', variables('enableComprehensiveTheming'), ' --comprehensive-theming-directory ', variables('comprehensiveThemingDirectory'), ' --comprehensive-theming-name ', variables('comprehensiveThemingName'))]",
         "authenticationParameters": "[concat(' --enable-thirdparty-auth ', variables('enableThirdPartyAuth'), ' --aad-loginbutton-text \"', replace(variables('aadLoginButtonText'), ' ', '_'), '\"')]",
+        "databaseParameters": "[concat(' --mongo-adminuser ', variables('mongoServerAdminUserName'), ' --mongo-adminuserpassword \"', variables('mongoServerAdminPassword'), '\" --mongo-replicasetkey \"', variables('mongoReplicaSetKey'), '\" --mysql-backupuser ', variables('mysqlBackupUserName'), ' --mysql-backupuserpassword \"', variables('mysqlBackupUserPassword'), '\" --mysql-repluser \"', variables('mysqlServerReplUserName'), '\" --mysql-repluserpassword \"', variables('mysqlServerReplPassword'), '\" --mysql-adminuser \"', variables('mysqlServerAdminUserName'), '\" --mysql-adminuserpassword \"', variables('mysqlServerAdminPassword'), '\" --mysql-repluser \"', variables('mysqlServerReplUserName'), '\" --mysql-repluserpassword \"', variables('mysqlServerReplPassword'), '\" --mysql-adminuser \"', variables('mysqlServerAdminUserName'), '\" --mysql-adminuserpassword \"', variables('mysqlServerAdminPassword'), '\"')]",
+        "edxappParameters": "[concat(' --platform-email \"', variables('edxPlatformEmail'), '\" --platform-name \"', base64(variables('edxPlatformName')), '\" --edxapp-superuser \"', variables('edxappSuperUserName'), '\" --edxapp-superuserpassword \"', variables('edxappSuperUserPassword'), '\" --edxapp-superuseremail \"', variables('edxappSuperUserEmail'), '\"')]",
+        "memcacheParameters": "[concat(' --memcache-server \"', base64(variables('memcacheServer')), '\"')]",
+        "azureCliParameters": "[concat(' --azurecli-version \"', variables('azureCliVersion'), '\"')]",
 
-        "customInstallerCommand": "[concat('bash ', variables('customInstallerLaunchScript'),' -i ', variables('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', variables('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'), variables('backupParameters'), variables('sampleCourseParameters'), variables('comprehensiveThemingParameters'), variables('authenticationParameters'), variables('customInstallerDomainOverrideParameters'), variables('customInstallerOutputRedirect') )]",
+        "customInstallerCommand": "[concat('bash ', variables('customInstallerLaunchScript'),' -i ', variables('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', variables('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'), variables('backupParameters'), variables('sampleCourseParameters'), variables('comprehensiveThemingParameters'), variables('authenticationParameters'), variables('customInstallerDomainOverrideParameters'), variables('databaseParameters'), variables('edxappParameters'), variables('memcacheParameters'), variables('azureCliParameters'), variables('customInstallerOutputRedirect') )]",
 
         "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources.json')]",
         "jumpboxTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-jumpbox.json')]",
