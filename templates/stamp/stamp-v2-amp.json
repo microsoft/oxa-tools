@@ -2,11 +2,57 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "clusterName": {
+        "cloud": {
             "type": "string",
-            "maxLength": 12
+            "defaultValue": "bvt",
+            "allowedValues": [
+                "bvt",
+                "int",
+                "prod"
+            ],
+            "metadata": {
+                "description": "The target cloud/environment being bootstrapped."
+            }
         },
-        "vmSize": {
+        "deploymentVersionId": {
+            "type": "string",
+            "defaultValue": "201611211241",
+            "metadata": {
+                "description": "The identifier for versioning bits deployed to VMSS."
+            }
+        },
+        "applicationAdminUserPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Password for the super user account for the application."
+            }
+        },
+        "backendAdminUserPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Password for the administrative users for the application databases."
+            }
+        },
+        "databaseVirtualMachineSku": {
+            "type": "string",
+            "defaultValue": "Standard_D2_v2",
+            "allowedValues": [
+                "Standard_D1_v2",
+                "Standard_D2_v2",
+                "Standard_D3_v2",
+                "Standard_D4_v2",
+                "Standard_DS2_v2",
+                "Standard_DS3_v2",
+                "Standard_DS4_v2",
+                "Standard_DS5_v2",
+                "Standard_DS11_v2",
+                "Standard_DS12_v2",
+                "Standard_DS13_v2",
+                "Standard_DS14_v2",
+                "Standard_DS15_v2"
+            ]
+        },
+        "frontendVirtualMachineSku": {
             "type": "string",
             "defaultValue": "Standard_D1_v2",
             "allowedValues": [
@@ -25,50 +71,22 @@
                 "Standard_DS15_v2"
             ]
         },
-        "databaseAdminPassword": {
-            "type": "securestring"
-        },
-        "cloud": {
-            "type": "string",
-            "defaultValue": "bvt",
-            "allowedValues": [
-                "bvt",
-                "int",
-                "prod"
-            ],
-            "metadata": {
-                "description": "The target cloud/environment"
-            }
-        },
-        "deploymentVersionId": {
-            "type": "string",
-            "defaultValue": "201611211241",
-            "metadata": {
-                "description": "The identifier for versioning bits deployed to VMSS"
-            }
-        },
-        "aadWebClientId": {
+        "azureActiveDirectoryWebClientId": {
             "type": "string",
             "metadata": {
-                "description": "Client Id of the AAD user or web application that will have access to the azure keyvault."
+                "description": "Client Id of the Azure Active Directory (AAD) user or web application that will have access to the azure keyvault."
             }
         },
-        "aadWebClientAppKey": {
+        "azureActiveDirectoryWebClientAppKey": {
             "type": "securestring",
             "metadata": {
-                "description": "Client Key of the AAD user or web application that will have access to the azure keyvault."
+                "description": "Client Key of the Azure Active Directory (AAD) user or web application that will have access to the azure keyvault."
             }
         },
-        "aadTenantId": {
+        "azureActiveDirectoryTenantId": {
             "type": "string",
             "metadata": {
-                "description": "Id of the AAD tenant the user or web application will authenticate against."
-            }
-        },
-        "keyVaultMasterAccountId": {
-            "type": "string",
-            "metadata": {
-                "description": "Object Id of the AAD user or service principal that will have access to the vault. Available from the Get-AzureRMADUser or the Get-AzureRMADServicePrincipal cmdlets"
+                "description": "Id of the Azure Active Directory (AAD) tenant the user or web application will authenticate against."
             }
         },
         "smtpServer": {
@@ -83,7 +101,7 @@
                 "description": "Port of SMTP server used for relaying deployment and other system notifications"
             }
         },
-        "smtpAuthenticationUser": {
+        "smtpAuthenticationUserName": {
             "type": "string",
             "metadata": {
                 "description": "User name for authenticating against the SMTP server used for relaying deployment and other system notifications"
@@ -101,47 +119,57 @@
                 "description": "Email address of the administrator where system and other notifications will be sent"
             }
         },
+        "keyVaultAdminUserObjectId": {
+            "type": "string",
+            "metadata": {
+                "description": "Object Id of the Azure Active Directory user or service principal that will have access to the vault. Available from the Get-AzureRMADUser or the Get-AzureRMADServicePrincipal cmdlets"
+            }
+        },
         "keyVaultAdminPublicKey": {
-            "type": "securestring"
+            "type": "securestring",
+            "metadata": {
+                "description": "SSH public key that will be associated with the cluster administrative userlogin. This SSH key (public & private) will be used instead of a username/password combination to access the cluster for administrative purposes."
+            }
         },
         "keyVaultAdminPrivateKey": {
             "type": "string",
             "metadata": {
-                "description": "OXA cloud configuration file"
+                "description": "SSH private key that will be associated with the cluster administrative userlogin. This SSH key (public & private) will be used instead of a username/password combination to access the cluster for administrative purposes. This file is expected to be base64-encoded before pasting here."
             }
         },
         "keyVaultSecretCloudConfiguration": {
             "type": "string",
             "metadata": {
-                "description": "OXA cloud configuration file"
+                "description": "OXA cloud configuration file. This file is expected to be base64-encoded before pasting here."
             }
         },
         "keyVaultSecretSslCertificate": {
             "type": "string",
             "metadata": {
-                "description": "Certitficate (.crt ) file used for SSL encryption by the application servers"
+                "description": "The certitficate (.crt ) file used for SSL encryption by the application servers. This file is expected to be base64-encoded before pasting here."
             }
         },
         "keyVaultSecretSslCertificateKey": {
             "type": "string",
             "metadata": {
-                "description": "Certitficate key (.key ) file used for SSL encryption by the application servers"
+                "description": "Certitficate key (.key ) file used for SSL encryption by the application servers. This file is expected to be base64-encoded before pasting here."
             }
         }
     },
     "variables": {
 
-        "clusterNameDomainName": "[parameters('clusterName')]",
+        "clusterName": "[resourceGroup().name]",
+        "clusterNameDomainName": "[variables('clusterName')]",
         "adminUsername": "oxaadmin",
         "mongoServerAdminUserName": "oxamongoadmin",
         "mysqlServerAdminUserName": "oxamysqladmin",
         "mysqlServerReplUserName": "oxamysqlrepluser",
         "mysqlBackupUserName": "oxamysqlbackupuser",
 
-        "mongoServerAdminPassword": "[parameters('databaseAdminPassword')]",
-        "mysqlServerAdminPassword": "[parameters('databaseAdminPassword')]",
-        "mysqlServerReplPassword": "[parameters('databaseAdminPassword')]",
-        "mysqlBackupUserPassword": "[parameters('databaseAdminPassword')]",
+        "mongoServerAdminPassword": "[parameters('backendAdminUserPassword')]",
+        "mysqlServerAdminPassword": "[parameters('backendAdminUserPassword')]",
+        "mysqlServerReplPassword": "[parameters('backendAdminUserPassword')]",
+        "mysqlBackupUserPassword": "[parameters('backendAdminUserPassword')]",
 
         "defaultApiVersion": "2015-05-01-preview",
         "apiVersion": "2016-09-01",
@@ -157,6 +185,7 @@
 
         "osImageSku": "16.04.0-LTS",
         "extraStorageDiskSizeGB": 256,
+        "jumpboxVirtualMachineSku": "Standard_D1_v2",
 
         "autoScaleEnabled": true,
         "autoScaleCapacityDefault": 2,
@@ -186,7 +215,7 @@
         "mysqlServerPackageVersion": "5.6",
 
         "edxappSuperUserName": "oxamaster",
-        "edxappSuperUserPassword": "[parameters('databaseAdminPassword')]",
+        "edxappSuperUserPassword": "[parameters('applicationAdminUserPassword')]",
         "edxappSuperUserEmail": "[parameters('clusterAdmininistratorEmailAddress')]",
         "edxPlatformName": "Contoso Learning",
         "edxPlatformEmail": "[parameters('clusterAdmininistratorEmailAddress')]",
@@ -218,25 +247,25 @@
         "virtualMachineExtensionsApiVersion": "[variables('defaultApiVersion')]",
         "virtualMachineApiVersion": "[variables('defaultApiVersion')]",
 
-        "diagnosticStorageAccountName": "[concat(toLower(parameters('clusterName')), 'diagnostics')]",
-        "storageAccountName": "[concat(toLower(parameters('clusterName')), 'vhdsa')]",
-        "secureGenericStorageAccountName": "[concat(toLower(parameters('clusterName')), 'securesa')]",
-        "videoUploadsStorageAccountName": "[concat(toLower(parameters('clusterName')), 'videosa')]",
-        "wamsStorageAccountName": "[concat(toLower(parameters('clusterName')), 'wamssa')]",
-        "mediaServicesAccountName": "[concat(toLower(parameters('clusterName')), 'wamsmedia')]",
+        "diagnosticStorageAccountName": "[concat(toLower(variables('clusterName')), 'diagnostics')]",
+        "storageAccountName": "[concat(toLower(variables('clusterName')), 'vhdsa')]",
+        "secureGenericStorageAccountName": "[concat(toLower(variables('clusterName')), 'securesa')]",
+        "videoUploadsStorageAccountName": "[concat(toLower(variables('clusterName')), 'videosa')]",
+        "wamsStorageAccountName": "[concat(toLower(variables('clusterName')), 'wamssa')]",
+        "mediaServicesAccountName": "[concat(toLower(variables('clusterName')), 'wamsmedia')]",
         "storageAccountType": "Standard_LRS",
         "storageContainer": "[concat('https://', variables('storageAccountName'),'.blob.core.windows.net/vhds/')]",
 
-        "loadBalancerName": "[concat(parameters('clusterName'), '-lb-', variables('deploymentSlot'))]",
-        "virtualNetworkName": "[concat(parameters('clusterName'), '-vnet')]",
-        "subnetName": "[concat(parameters('clusterName'), '-subnet')]",
-        "bePoolName": "[concat(parameters('clusterName'), '-bepool-', variables('deploymentSlot'))]",
+        "loadBalancerName": "[concat(variables('clusterName'), '-lb-', variables('deploymentSlot'))]",
+        "virtualNetworkName": "[concat(variables('clusterName'), '-vnet')]",
+        "subnetName": "[concat(variables('clusterName'), '-subnet')]",
+        "bePoolName": "[concat(variables('clusterName'), '-bepool-', variables('deploymentSlot'))]",
         "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
         "lbID": "[resourceId('Microsoft.Network/loadBalancers',variables('loadBalancerName'))]",
 
         "vmssAutoscaleSettingNameSuffix": "-autoscale",
-        "vmssName": "[concat(parameters('clusterName'), '-vmss-', parameters('deploymentVersionId'))]",
-        "vmssAutoScaleSettingsName": "[concat(parameters('clusterName'), '-autoscale-', parameters('deploymentVersionId'))]",
+        "vmssName": "[concat(variables('clusterName'), '-vmss-', parameters('deploymentVersionId'))]",
+        "vmssAutoScaleSettingsName": "[concat(variables('clusterName'), '-autoscale-', parameters('deploymentVersionId'))]",
 
         "cmsPublicAddressName": "cmsPublicAddress",
         "lmsPublicAddressName": "lmsPublicAddress",
@@ -255,7 +284,7 @@
 
         "networkSettings": {
             "virtualNetworkName": "[variables('virtualNetworkName')]",
-            "clusterName": "[parameters('clusterName')]",
+            "clusterName": "[variables('clusterName')]",
             "networkInterfaceNameSuffix": "-nic",
             "publicIPAddressNameSuffix": "-ip",
             "osDiskSuffix": "-osDisk",
@@ -272,19 +301,19 @@
             "serverIpPrefix": "10.0.0.",
             "mongoServerIpOffset": 10,
             "mysqlServerIpOffset": 15,
-            "jbNetworkSecurityGroupName": "[concat(parameters('clusterName'),'-jb-', 'nsg')]",
-            "vmssNetworkSecurityGroupName": "[concat(parameters('clusterName'), '-vmss-', 'nsg')]",
-            "mongoNetworkSecurityGroupName": "[concat(parameters('clusterName'), '-mongo-', 'nsg')]",
-            "mysqlNetworkSecurityGroupName": "[concat(parameters('clusterName'), '-mysql-', 'nsg')]",
-            "clusterKeyVaultName": "[concat(parameters('clusterName'), '-kv')]",
-            "clusterJumpBoxName": "[concat(parameters('clusterName'), '-jb')]",
-            "clusterJumpBoxDomainName": "[concat(parameters('clusterName'), 'jb')]",
-            "clusterMongoDataNodeName": "[concat(parameters('clusterName'), '-mongo')]",
-            "clusterMongoDataNodeDomainName": "[concat(parameters('clusterName'), 'mongo')]",
-            "clusterMysqlDataNodeName": "[concat(parameters('clusterName'), '-mysql')]",
-            "clusterMysqlDataNodeDomainName": "[concat(parameters('clusterName'), 'mysql')]",
+            "jbNetworkSecurityGroupName": "[concat(variables('clusterName'),'-jb-', 'nsg')]",
+            "vmssNetworkSecurityGroupName": "[concat(variables('clusterName'), '-vmss-', 'nsg')]",
+            "mongoNetworkSecurityGroupName": "[concat(variables('clusterName'), '-mongo-', 'nsg')]",
+            "mysqlNetworkSecurityGroupName": "[concat(variables('clusterName'), '-mysql-', 'nsg')]",
+            "clusterKeyVaultName": "[concat(variables('clusterName'), '-kv')]",
+            "clusterJumpBoxName": "[concat(variables('clusterName'), '-jb')]",
+            "clusterJumpBoxDomainName": "[concat(variables('clusterName'), 'jb')]",
+            "clusterMongoDataNodeName": "[concat(variables('clusterName'), '-mongo')]",
+            "clusterMongoDataNodeDomainName": "[concat(variables('clusterName'), 'mongo')]",
+            "clusterMysqlDataNodeName": "[concat(variables('clusterName'), '-mysql')]",
+            "clusterMysqlDataNodeDomainName": "[concat(variables('clusterName'), 'mysql')]",
             "clusterVirtualMachineScaleSetName": "[variables('vmssName')]",
-            "clusterVirtualMachineScaleSetDomainName": "[concat(parameters('clusterName'), 'vmss')]",
+            "clusterVirtualMachineScaleSetDomainName": "[concat(variables('clusterName'), 'vmss')]",
             "clusterVirtualMachineScaleSetSettingsName": "[variables('vmssAutoScaleSettingsName')]",
             "jumpBoxAvailabilitySetFaultDomainCount": "1",
             "jumpBoxNodeCount": "1",
@@ -298,17 +327,17 @@
                 "monitorConfigProtocol": "https",
 
                 "lms": {
-                    "name": "[concat('lms-', parameters('clusterName'), '-tm')]",
+                    "name": "[concat('lms-', variables('clusterName'), '-tm')]",
                     "monitorConfigPort": 443,
                     "monitorConfigPath": "/",
                     "endpoint1": {
-                        "target": "[concat('lms-', parameters('clusterName'), '-slot1.',resourceGroup().location, '.cloudapp.azure.com')]",
+                        "target": "[concat('lms-', variables('clusterName'), '-slot1.',resourceGroup().location, '.cloudapp.azure.com')]",
                         "status": "[variables('lmsTrafficManagerStateMetadata')[0]]",
                         "location": "[resourceGroup().location]",
                         "priority": "[variables('lmsTrafficManagerStateMetadata')[2]]"
                     },
                     "endpoint2": {
-                        "target": "[concat('lms-', parameters('clusterName'), '-slot2.',resourceGroup().location, '.cloudapp.azure.com')]",
+                        "target": "[concat('lms-', variables('clusterName'), '-slot2.',resourceGroup().location, '.cloudapp.azure.com')]",
                         "status": "[variables('lmsTrafficManagerStateMetadata')[1]]",
                         "location": "[resourceGroup().location]",
                         "priority": "[variables('lmsTrafficManagerStateMetadata')[3]]"
@@ -316,17 +345,17 @@
                 },
 
                 "cms": {
-                    "name": "[concat('cms-', parameters('clusterName'), '-tm')]",
+                    "name": "[concat('cms-', variables('clusterName'), '-tm')]",
                     "monitorConfigPort": 443,
                     "monitorConfigPath": "/",
                     "endpoint1": {
-                        "target": "[concat('cms-', parameters('clusterName'), '-slot1.',resourceGroup().location, '.cloudapp.azure.com')]",
+                        "target": "[concat('cms-', variables('clusterName'), '-slot1.',resourceGroup().location, '.cloudapp.azure.com')]",
                         "status": "[variables('cmsTrafficManagerStateMetadata')[0]]",
                         "location": "[resourceGroup().location]",
                         "priority": "[variables('cmsTrafficManagerStateMetadata')[2]]"
                     },
                     "endpoint2": {
-                        "target": "[concat('cms-', parameters('clusterName'), '-slot2.',resourceGroup().location, '.cloudapp.azure.com')]",
+                        "target": "[concat('cms-', variables('clusterName'), '-slot2.',resourceGroup().location, '.cloudapp.azure.com')]",
                         "status": "[variables('cmsTrafficManagerStateMetadata')[1]]",
                         "location": "[resourceGroup().location]",
                         "priority": "[variables('cmsTrafficManagerStateMetadata')[3]]"
@@ -334,17 +363,17 @@
                 },
 
                 "preview": {
-                    "name": "[concat('preview-', parameters('clusterName'), '-tm')]",
+                    "name": "[concat('preview-', variables('clusterName'), '-tm')]",
                     "monitorConfigPort": 443,
                     "monitorConfigPath": "/",
                     "endpoint1": {
-                        "target": "[concat('preview-', parameters('clusterName'), '-slot1.',resourceGroup().location, '.cloudapp.azure.com')]",
+                        "target": "[concat('preview-', variables('clusterName'), '-slot1.',resourceGroup().location, '.cloudapp.azure.com')]",
                         "status": "[variables('previewTrafficManagerStateMetadata')[0]]",
                         "location": "[resourceGroup().location]",
                         "priority": "[variables('previewTrafficManagerStateMetadata')[2]]"
                     },
                     "endpoint2": {
-                        "target": "[concat('preview-', parameters('clusterName'), '-slot2.',resourceGroup().location, '.cloudapp.azure.com')]",
+                        "target": "[concat('preview-', variables('clusterName'), '-slot2.',resourceGroup().location, '.cloudapp.azure.com')]",
                         "status": "[variables('previewTrafficManagerStateMetadata')[1]]",
                         "location": "[resourceGroup().location]",
                         "priority": "[variables('previewTrafficManagerStateMetadata')[3]]"
@@ -358,7 +387,7 @@
                 "cmsLoadBalancerDomainName": "[concat('cms-', variables('clusterNameDomainName'), '-', variables('deploymentSlot'))]",
                 "lmsLoadBalancerDomainName": "[concat('lms-', variables('clusterNameDomainName'), '-', variables('deploymentSlot'))]",
                 "previewLoadBalancerDomainName": "[concat('preview-', variables('clusterNameDomainName'), '-', variables('deploymentSlot'))]",
-                "natPoolName": "[concat(parameters('clusterName'), '-natpool')]",
+                "natPoolName": "[concat(variables('clusterName'), '-natpool')]",
 
                 "cmsPublicAddressName": "[variables('cmsPublicAddressName')]",
                 "lmsPublicAddressName": "[variables('lmsPublicAddressName')]",
@@ -412,17 +441,17 @@
             "mediaServicesAccountName": "[variables('mediaServicesAccountName')]"
         },
         "jumpboxMachineSettings": {
-            "vmSize": "[parameters('vmSize')]",
+            "vmSize": "[variables('jumpboxVirtualMachineSku')]",
             "osImageReference": {
                 "publisher": "[variables('supportedOSImagePublisher')]",
                 "offer": "[variables('supportedOSImageOffer')]",
                 "sku": "[variables('osImageSku')]",
                 "version": "latest"
             },
-            "dataDiskSize": "[variables('extraStorageDiskSizeGB')]"
+            "dataDiskSize": "[div(int(variables('extraStorageDiskSizeGB')), 2)]"
         },
         "mongoMachineSettings": {
-            "vmSize": "[parameters('vmSize')]",
+            "vmSize": "[parameters('databaseVirtualMachineSku')]",
             "osImageReference": {
                 "publisher": "[variables('supportedOSImagePublisher')]",
                 "offer": "[variables('supportedOSImageOffer')]",
@@ -434,7 +463,7 @@
             "installerPackages": "mongodb-org"
         },
         "mysqlMachineSettings": {
-            "vmSize": "[parameters('vmSize')]",
+            "vmSize": "[parameters('databaseVirtualMachineSku')]",
             "osImageReference": {
                 "publisher": "[variables('supportedOSImagePublisher')]",
                 "offer": "[variables('supportedOSImageOffer')]",
@@ -444,15 +473,15 @@
             "dataDiskSize": "[variables('extraStorageDiskSizeGB')]"
         },
         "frontendMachineSettings": {
-            "vmSize": "[parameters('vmSize')]",
+            "vmSize": "[parameters('frontendVirtualMachineSku')]",
             "osImageReference": {
                 "publisher": "[variables('supportedOSImagePublisher')]",
                 "offer": "[variables('supportedOSImageOffer')]",
                 "sku": "[variables('osImageSku')]",
                 "version": "latest"
             },
-            "capacity": "[parameters('vmSize')]",
-            "dataDiskSize": 256
+            "capacity": "[parameters('frontendVirtualMachineSku')]",
+            "dataDiskSize": "[variables('extraStorageDiskSizeGB')]"
         },
         "apiSettings": {
             "apiVersion": "[variables('apiVersion')]",
@@ -472,7 +501,7 @@
             "enabledForTemplateDeployment": "[variables('keyVaultEnabledForTemplateDeployment')]",
             "enabledForVolumeEncryption": "[variables('keyVaultEnabledForVolumeEncryption')]",
             "tenantId": "[subscription().tenantId]",
-            "accessAccount": "[parameters('keyVaultMasterAccountId')]",
+            "accessAccount": "[parameters('keyVaultAdminUserObjectId')]",
             "tenantKeyAccessPermission": "[variables('keyVaultMasterAccountKeyAccessPermission')]",
             "tenantSecretAccessPermission": "[variables('keyVaultMasterAccountSecretAccessPermission')]",
             "sku": "[variables('keyVaultSku')]",
@@ -509,11 +538,11 @@
         "customInstallerEdxThemeGitHubRepositoryParameters": "[concat(' --edxtheme-public-github-accountname ', variables('edxThemeGithubAccountName'), ' --edxtheme-public-github-projectname ', variables('edxThemeGithubProjectName'), ' --edxtheme-public-github-projectbranch ', variables('edxThemeGithubBranch') )]",
         "customInstallerAnsibleGitHubRepositoryParameters": "[concat(' --ansible-public-github-accountname ', variables('ansibleGithubAccountName'), ' --ansible-public-github-projectname ', variables('ansibleGithubProjectName'), ' --ansible-public-github-projectbranch ', variables('ansibleGithubBranch') )]",
         "customInstallerMiscRepositoryVersionParameters": "[concat(' --edxversion ', variables('edxVersion'), ' --forumversion ', variables('edxForumVersion'), ' --edxtheme-public-github-projectbranch ', variables('edxThemeGithubBranch') )]",
-        "customInstallerKeyVaultParameters": "[concat(' --keyvault-name ', concat(parameters('clusterName'), '-kv'), ' --aad-webclient-id ', parameters('aadWebClientId'), ' --aad-webclient-appkey ', parameters('aadWebClientAppKey'), ' --aad-tenant-id ', parameters('aadTenantId'), ' --azure-subscription-id ', subscription().subscriptionId)]",
+        "customInstallerKeyVaultParameters": "[concat(' --keyvault-name ', concat(variables('clusterName'), '-kv'), ' --aad-webclient-id ', parameters('azureActiveDirectoryWebClientId'), ' --aad-webclient-appkey ', parameters('azureActiveDirectoryWebClientAppKey'), ' --aad-tenant-id ', parameters('azureActiveDirectoryTenantId'), ' --azure-subscription-id ', subscription().subscriptionId)]",
         "customInstallerDomainOverrideParameters": "[concat(' --base-domain-override ', variables('baseDomain'), ' --domain-separator ', variables('domainSeparator') )]",
 
         "customInstallerOutputRedirect": " >> /var/log/bootstrap.csx.log 2>&1",
-        "smtpParameters": "[concat(' --smtp-server ', parameters('smtpServer'), ' --smtp-server-port ', parameters('smtpServerPort'), ' --smtp-auth-user ', parameters('smtpAuthenticationUser'), ' --smtp-auth-user-password ', parameters('smtpAuthenticationUserPassword'), '  --cluster-admin-email ', parameters('clusterAdmininistratorEmailAddress'))]",
+        "smtpParameters": "[concat(' --smtp-server ', parameters('smtpServer'), ' --smtp-server-port ', parameters('smtpServerPort'), ' --smtp-auth-user ', parameters('smtpAuthenticationUserName'), ' --smtp-auth-user-password ', parameters('smtpAuthenticationUserPassword'), '  --cluster-admin-email ', parameters('clusterAdmininistratorEmailAddress'))]",
 
         "secureGenericStorageAccountId": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/','Microsoft.Storage/storageAccounts/', variables('secureGenericStorageAccountName'))]",
         "secureGenericStorageAccountKey": "PLACEHOLDER_KEY",
@@ -527,7 +556,7 @@
         "memcacheParameters": "[concat(' --memcache-server \"', base64(variables('memcacheServer')), '\"')]",
         "azureCliParameters": "[concat(' --azurecli-version \"', variables('azureCliVersion'), '\"')]",
 
-        "customInstallerCommand": "[concat('bash ', variables('customInstallerLaunchScript'),' -i ', variables('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', variables('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'), variables('backupParameters'), variables('sampleCourseParameters'), variables('comprehensiveThemingParameters'), variables('authenticationParameters'), variables('customInstallerDomainOverrideParameters'), variables('databaseParameters'), variables('edxappParameters'), variables('memcacheParameters'), variables('azureCliParameters'), variables('customInstallerOutputRedirect') )]",
+        "customInstallerCommand": "[concat('bash ', variables('customInstallerLaunchScript'),' -i ', variables('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', variables('clusterName'), ' -u ', variables('adminUsername'), ' --cluster-name ', variables('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'), variables('backupParameters'), variables('sampleCourseParameters'), variables('comprehensiveThemingParameters'), variables('authenticationParameters'), variables('customInstallerDomainOverrideParameters'), variables('databaseParameters'), variables('edxappParameters'), variables('memcacheParameters'), variables('azureCliParameters'), variables('customInstallerOutputRedirect') )]",
 
         "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources.json')]",
         "jumpboxTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-jumpbox.json')]",
@@ -536,7 +565,7 @@
         "mongoNodeTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-mongo.json')]",
         "mysqlNodeTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-mysql.json')]",
         "vmssTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-vmss.json')]",
-        "mongoReplicaSetName": "[concat(parameters('clusterName'), 'rs1')]",
+        "mongoReplicaSetName": "[concat(variables('clusterName'), 'rs1')]",
         "mongoReplicaSetKey": "[uniqueString(resourceGroup().id)]",
 
         "installerUtilitiesScript": "utilities.sh",
