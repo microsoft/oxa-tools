@@ -692,7 +692,7 @@ then
     # clean up
     rm $backup_storageaccount_key_file
 
-    log "Completed fetching key for '$BACKUP_STORAGEACCOUNT_NAME'"
+    log "Completed fetching key for '$BACKUP_STORAGEACCOUNT_NAME' | '$BACKUP_STORAGEACCOUNT_KEY'"
 else
     log "Backup Storage Account Key is already set to '$BACKUP_STORAGEACCOUNT_KEY'. There is no need to fetch its key."
 fi
