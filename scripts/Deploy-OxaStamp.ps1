@@ -122,7 +122,7 @@ Param(
         [Parameter(Mandatory=$false)][string]$EdxAppSuperUserPassword="",
         [Parameter(Mandatory=$false)][string]$EdxAppSuperUserEmail="",
 
-        [Parameter(Mandatory=$false)][string][ValidateSet("1","2")]$AzureCliVersion="2",
+        [Parameter(Mandatory=$false)][string][ValidateSet("1","2")]$AzureCliVersion="1",
         [Parameter(Mandatory=$false)][string]$MemcacheServer="10.0.0.16"
      )
 
