@@ -11,7 +11,7 @@
                 "prod"
             ],
             "metadata": {
-                "description": "The target cloud/environment being bootstrapped."
+                "description": "The target environment being provisioned."
             }
         },
         "deploymentVersionId": {
@@ -50,7 +50,10 @@
                 "Standard_DS13_v2",
                 "Standard_DS14_v2",
                 "Standard_DS15_v2"
-            ]
+            ],
+            "metadata": {
+                "description": "The size of virtual machine to use for database servers (mongo & mysql). See https://azure.microsoft.com/en-us/pricing/details/virtual-machines/linux/ for the specifics of the various options"
+            }
         },
         "frontendVirtualMachineSku": {
             "type": "string",
@@ -69,7 +72,10 @@
                 "Standard_DS13_v2",
                 "Standard_DS14_v2",
                 "Standard_DS15_v2"
-            ]
+            ],
+            "metadata": {
+                "description": "The size of virtual machine to use for frontend application servers. See https://azure.microsoft.com/en-us/pricing/details/virtual-machines/linux/ for the specifics of the various options"
+            }
         },
         "frontendVirtualMachineCount": {
             "type": "string",
@@ -120,7 +126,7 @@
                 "description": "Password for authenticating against the SMTP server used for relaying deployment and other system notifications"
             }
         },
-        "clusterAdmininistratorEmailAddress": {
+        "clusterAdminEmailAddress": {
             "type": "string",
             "metadata": {
                 "description": "Email address of the administrator where system and other notifications will be sent"
@@ -141,25 +147,25 @@
         "keyVaultAdminPrivateKey": {
             "type": "string",
             "metadata": {
-                "description": "SSH private key that will be associated with the cluster administrative userlogin. This SSH key (public & private) will be used instead of a username/password combination to access the cluster for administrative purposes. This file is expected to be base64-encoded before pasting here."
+                "description": "SSH private key that will be associated with the cluster administrative userlogin. This SSH key (public & private) will be used instead of a username/password combination to access the cluster for administrative purposes. This file is expected to be base64-encoded before pasting its contents here."
             }
         },
         "keyVaultSecretCloudConfiguration": {
             "type": "string",
             "metadata": {
-                "description": "OXA cloud configuration file. This file is expected to be base64-encoded before pasting here."
+                "description": "OXA cloud configuration file. This file is expected to be base64-encoded before pasting its contents here."
             }
         },
         "keyVaultSecretSslCertificate": {
             "type": "string",
             "metadata": {
-                "description": "The certitficate (.crt ) file used for SSL encryption by the application servers. This file is expected to be base64-encoded before pasting here."
+                "description": "The certitficate (.crt ) file used for SSL encryption by the application servers. This file is expected to be base64-encoded before pasting its contents here."
             }
         },
         "keyVaultSecretSslCertificateKey": {
             "type": "string",
             "metadata": {
-                "description": "Certitficate key (.key ) file used for SSL encryption by the application servers. This file is expected to be base64-encoded before pasting here."
+                "description": "Certitficate key (.key ) file used for SSL encryption by the application servers. This file is expected to be base64-encoded before pasting its contents here."
             }
         }
     },
@@ -223,9 +229,9 @@
 
         "edxappSuperUserName": "oxamaster",
         "edxappSuperUserPassword": "[parameters('applicationAdminUserPassword')]",
-        "edxappSuperUserEmail": "[parameters('clusterAdmininistratorEmailAddress')]",
+        "edxappSuperUserEmail": "[parameters('clusterAdminEmailAddress')]",
         "edxPlatformName": "Contoso Learning",
-        "edxPlatformEmail": "[parameters('clusterAdmininistratorEmailAddress')]",
+        "edxPlatformEmail": "[parameters('clusterAdminEmailAddress')]",
         "memcacheServer": "",
         "azureCliVersion": "2",
 
@@ -549,7 +555,7 @@
         "customInstallerDomainOverrideParameters": "[concat(' --base-domain-override ', variables('baseDomain'), ' --domain-separator ', variables('domainSeparator') )]",
 
         "customInstallerOutputRedirect": " >> /var/log/bootstrap.csx.log 2>&1",
-        "smtpParameters": "[concat(' --smtp-server ', parameters('smtpServer'), ' --smtp-server-port ', parameters('smtpServerPort'), ' --smtp-auth-user ', parameters('smtpAuthenticationUserName'), ' --smtp-auth-user-password ', parameters('smtpAuthenticationUserPassword'), '  --cluster-admin-email ', parameters('clusterAdmininistratorEmailAddress'))]",
+        "smtpParameters": "[concat(' --smtp-server ', parameters('smtpServer'), ' --smtp-server-port ', parameters('smtpServerPort'), ' --smtp-auth-user ', parameters('smtpAuthenticationUserName'), ' --smtp-auth-user-password ', parameters('smtpAuthenticationUserPassword'), '  --cluster-admin-email ', parameters('clusterAdminEmailAddress'))]",
 
         "secureGenericStorageAccountId": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/','Microsoft.Storage/storageAccounts/', variables('secureGenericStorageAccountName'))]",
         "secureGenericStorageAccountKey": "PLACEHOLDER_KEY",
