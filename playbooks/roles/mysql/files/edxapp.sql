@@ -80,6 +80,29 @@ VALUES
 );
 
 /*
+  Insert an entry so that grades are persisted for LTI Labs on the platform.
+
+  In the grades_persistentgradesenabledflag table we can have only one row defined so first delete any existing ones
+  and then insert the persistentgradesenabledflag configuration.  It is inserted as enabled for all courses.
+
+  It is safe to run this multiple times.
+*/
+DELETE FROM grades_persistentgradesenabledflag;
+
+INSERT INTO grades_persistentgradesenabledflag 
+(
+  change_date,
+  enabled,
+  enabled_for_all_courses
+) 
+VALUES
+(
+  NOW(),
+  1,
+  1
+);
+
+/*
  Whenever a new course is created from CMS a row is inserted into course_overviews_courseoverview table.
  We are defining this trigger so that course_mode for honor is inserted automatically which is required for certification.
 
