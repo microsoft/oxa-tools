@@ -105,7 +105,7 @@ validate_db_type()
 validate_all_settings()
 {
     validate_db_type
-    #todo: validate MYSQL_SERVER_LIST and BACKUP_RETENTIONDAYS
+    #todo: MYSQL_SERVER_LIST and BACKUP_RETENTIONDAYS
 }
 
 use_env_values()
@@ -301,8 +301,9 @@ db_operations()
 
 db_operations
 
-exit #exit until repair the query below.
-# The mongo db is too large for convient processing. Let's export a smaller version.
+exit #todo: Craft query below. Exit for now.
+
+# The full mongo dump is too large for convient processing. Let's export a smaller version.
 mongoVer=`mongodump --version | head -1 | grep -o '[0-9].*'`
 if [[ "$DATABASE_TYPE" == "mongo" ]] && [[ "$mongoVer" > 3 ]]; then
     db_operations ".smaller" "todo:queryParam"
