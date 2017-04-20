@@ -33,7 +33,7 @@ SETTINGS_FILE=
     #MYSQL_BACKUP_RETENTIONDAYS=
 
 # Paths and file names.
-    DESTINATION_FOLDER="/var/tmp"
+    DESTINATION_FOLDER="/datadisks/disk1/var/tmp"
     TMP_QUERY_ADD="query.add.sql"
     TMP_QUERY_REMOVE="query.remove.sql"
     CURRENT_SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -42,6 +42,10 @@ SETTINGS_FILE=
     CONTAINER_NAME=
     COMPRESSED_FILE=
     BACKUP_PATH=
+
+if [[ ! -d $DESTINATION_FOLDER ]]; then
+    mkdir -p $DESTINATION_FOLDER
+fi
 
 help()
 {
@@ -248,6 +252,9 @@ cleanup_local_copies()
     rm -rf $COMPRESSED_FILE
     rm -rf $BACKUP_PATH
 
+    # And any other backups.
+    rm -rf *${CONTAINER_NAME}*
+
     rm -rf $TMP_QUERY_ADD
     rm -rf $TMP_QUERY_REMOVE
 
@@ -274,8 +281,12 @@ validate_all_settings
 
 use_env_values
 
+# Cleanup previous runs.
+cleanup_local_copies
+
 create_compressed_db_dump
 
 copy_db_to_azure_storage
 
+# Cleanup this run.
 cleanup_local_copies
