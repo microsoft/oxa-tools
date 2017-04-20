@@ -3,10 +3,6 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
-#todo: finish testing on Ubunt14Euc and Ubuntu16Fic fullstack
-#   (fyi: all new or changed installation helpers in
-#    utilities.sh have been verified on ubuntu 14,16)
-
 set -x
 
 # Path to settings file provided as an argument to this script.
@@ -25,12 +21,10 @@ SETTINGS_FILE=
     TEMP_DATABASE_PASSWORD=
 
     # Writing to storage
-    AZURE_STORAGE_ACCOUNT= # from BACKUP_STORAGEACCOUNT_NAME
+    AZURE_STORAGE_ACCOUNT=    # from BACKUP_STORAGEACCOUNT_NAME
     AZURE_STORAGE_ACCESS_KEY= # from BACKUP_STORAGEACCOUNT_KEY
 
-    #todo: enforce retention policy
-    #MONGO_BACKUP_RETENTIONDAYS=
-    #MYSQL_BACKUP_RETENTIONDAYS=
+    BACKUP_RETENTIONDAYS=
 
 # Paths and file names.
     DESTINATION_FOLDER="/datadisks/disk1/var/tmp"
@@ -111,18 +105,24 @@ validate_db_type()
 validate_all_settings()
 {
     validate_db_type
-    #todo: validate all values
+    #todo: validate MYSQL_SERVER_LIST and BACKUP_RETENTIONDAYS
 }
 
 use_env_values()
 {
+    optionalSuffix=$1
+
     # Exporting for Azure CLI
     export AZURE_STORAGE_ACCOUNT=$BACKUP_STORAGEACCOUNT_NAME # in <env>.sh AZURE_ACCOUNT_NAME
     export AZURE_STORAGE_ACCESS_KEY=$BACKUP_STORAGEACCOUNT_KEY # in <env>.sh AZURE_ACCOUNT_KEY
+    if [ -z $AZURE_STORAGE_ACCOUNT ] || [ -z $AZURE_STORAGE_ACCESS_KEY ]; then
+        log "Azure storage credentials are required"
+        exit 4
+    fi
 
     # Container names cannot contain underscores or uppercase characters
     CONTAINER_NAME="${DATABASE_TYPE}-backup"
-    TIME_STAMPED=${CONTAINER_NAME}_$(date +"%Y-%m-%d_%Hh-%Mm-%Ss")
+    TIME_STAMPED=${CONTAINER_NAME}_$(date +"%Y-%m-%d_%Hh-%Mm-%Ss")${optionalSuffix}
     COMPRESSED_FILE="$TIME_STAMPED.tar.gz"
 
     if [ "$DATABASE_TYPE" == "mysql" ]
@@ -138,44 +138,48 @@ use_env_values()
 
 add_temp_mysql_user()
 {
-    #todo: conditionalize based on whether temp credentials have been provided
-    log "Adding ${TEMP_DATABASE_USER} to db"
-    touch $TMP_QUERY_ADD
-    chmod 700 $TMP_QUERY_ADD
+    if [ ! -z $TEMP_DATABASE_USER ] && [ ! -z $TEMP_DATABASE_PASSWORD ]; then
+        log "Adding ${TEMP_DATABASE_USER} to db"
+        touch $TMP_QUERY_ADD
+        chmod 700 $TMP_QUERY_ADD
 
-    tee ./$TMP_QUERY_ADD > /dev/null <<EOF
+        tee ./$TMP_QUERY_ADD > /dev/null <<EOF
 GRANT ALL PRIVILEGES ON *.* TO '{TEMP_DATABASE_USER}'@'%' IDENTIFIED BY '{TEMP_DATABASE_PASSWORD}' WITH GRANT OPTION;
 FLUSH PRIVILEGES;
 EOF
 
-    sed -i "s/{TEMP_DATABASE_USER}/${TEMP_DATABASE_USER}/I" $TMP_QUERY_ADD
-    sed -i "s/{TEMP_DATABASE_PASSWORD}/${TEMP_DATABASE_PASSWORD}/I" $TMP_QUERY_ADD
+        sed -i "s/{TEMP_DATABASE_USER}/${TEMP_DATABASE_USER}/I" $TMP_QUERY_ADD
+        sed -i "s/{TEMP_DATABASE_PASSWORD}/${TEMP_DATABASE_PASSWORD}/I" $TMP_QUERY_ADD
 
-    install-mysql-client
-    mysql -u $DATABASE_USER -p$DATABASE_PASSWORD -h $1 < $TMP_QUERY_ADD
+        install-mysql-client
+        mysql -u $DATABASE_USER -p$DATABASE_PASSWORD -h $1 < $TMP_QUERY_ADD
+    fi
 }
 
 remove_temp_mysql_user()
 {
-    #todo: conditionalize based on whether temp credentials have been provided
-    log "Removing ${TEMP_DATABASE_USER} from db"
+    if [ ! -z $TEMP_DATABASE_USER ] && [ ! -z $TEMP_DATABASE_PASSWORD ]; then
+        log "Removing ${TEMP_DATABASE_USER} from db"
 
-    touch $TMP_QUERY_REMOVE
-    chmod 700 $TMP_QUERY_REMOVE
+        touch $TMP_QUERY_REMOVE
+        chmod 700 $TMP_QUERY_REMOVE
 
-    tee ./$TMP_QUERY_REMOVE > /dev/null <<EOF
+        tee ./$TMP_QUERY_REMOVE > /dev/null <<EOF
 DELETE FROM mysql.user WHERE User='{TEMP_DATABASE_USER}';
 FLUSH PRIVILEGES;
 EOF
 
-    sed -i "s/{TEMP_DATABASE_USER}/${TEMP_DATABASE_USER}/I" $TMP_QUERY_REMOVE
+        sed -i "s/{TEMP_DATABASE_USER}/${TEMP_DATABASE_USER}/I" $TMP_QUERY_REMOVE
 
-    install-mysql-client
-    mysql -u $DATABASE_USER -p$DATABASE_PASSWORD -h $1 < $TMP_QUERY_REMOVE
+        install-mysql-client
+        mysql -u $DATABASE_USER -p$DATABASE_PASSWORD -h $1 < $TMP_QUERY_REMOVE
+    fi
 }
 
 create_compressed_db_dump()
 {
+    optionalArguments=$1
+
     pushd $DESTINATION_FOLDER
 
     log "Copying entire $DATABASE_TYPE database to local file system"
@@ -197,7 +201,7 @@ create_compressed_db_dump()
     elif [ "$DATABASE_TYPE" == "mongo" ]
     then
         install-mongodb-tools
-        mongodump -u $DATABASE_USER -p $DATABASE_PASSWORD --host $MONGO_REPLICASET_CONNECTIONSTRING --db edxapp --authenticationDatabase master -o $BACKUP_PATH
+        mongodump -u $DATABASE_USER -p $DATABASE_PASSWORD --host $MONGO_REPLICASET_CONNECTIONSTRING --db edxapp $optionalArguments --authenticationDatabase master -o $BACKUP_PATH
 
     fi
 
@@ -279,14 +283,27 @@ source_wrapper $SETTINGS_FILE
 exit_if_limited_user
 validate_all_settings
 
-use_env_values
+# Operations
+db_operations()
+{
+    use_env_values $1
 
-# Cleanup previous runs.
-cleanup_local_copies
+    # Cleanup previous runs.
+    cleanup_local_copies
 
-create_compressed_db_dump
+    create_compressed_db_dump $2
 
-copy_db_to_azure_storage
+    copy_db_to_azure_storage
 
-# Cleanup this run.
-cleanup_local_copies
+    # Cleanup this run.
+    cleanup_local_copies
+}
+
+db_operations
+
+exit #exit until repair the query below.
+# The mongo db is too large for convient processing. Let's export a smaller version.
+mongoVer=`mongodump --version | head -1 | grep -o '[0-9].*'`
+if [[ "$DATABASE_TYPE" == "mongo" ]] && [[ "$mongoVer" > 3 ]]; then
+    db_operations ".smaller" "todo:queryParam"
+fi
