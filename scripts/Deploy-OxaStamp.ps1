@@ -113,7 +113,7 @@ Param(
         [Parameter(Mandatory=$false)][string]$SmtpAuthenticationUser="",
         [Parameter(Mandatory=$false)][string]$SmtpAuthenticationUserPassword="",
 
-        [Parameter(Mandatory=$false)][string]$ServiceAccountPassword="=crq+4L5QFrMCIKJaVazBWisd0fMJR",
+        [Parameter(Mandatory=$false)][string]$ServiceAccountPassword="5QFrMCIKJaVazBWisd0fMJR",
 
         [Parameter(Mandatory=$false)][string]$PlatformName="Contoso Learning",
         [Parameter(Mandatory=$false)][string]$PlatformEmailAddress="",
