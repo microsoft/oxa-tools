@@ -102,18 +102,10 @@ validate_db_type()
     fi
 }
 
-validate_all_settings()
+validate_remote_storage()
 {
-    validate_db_type
-    #todo: MYSQL_SERVER_LIST and BACKUP_RETENTIONDAYS
-}
-
-use_env_values()
-{
-    optionalSuffix=$1
-
     # Exporting for Azure CLI
-    export AZURE_STORAGE_ACCOUNT=$BACKUP_STORAGEACCOUNT_NAME # in <env>.sh AZURE_ACCOUNT_NAME
+    export AZURE_STORAGE_ACCOUNT=$BACKUP_STORAGEACCOUNT_NAME   # in <env>.sh AZURE_ACCOUNT_NAME
     export AZURE_STORAGE_ACCESS_KEY=$BACKUP_STORAGEACCOUNT_KEY # in <env>.sh AZURE_ACCOUNT_KEY
     if [ -z $AZURE_STORAGE_ACCOUNT ] || [ -z $AZURE_STORAGE_ACCESS_KEY ]; then
         log "Azure storage credentials are required"
@@ -122,6 +114,19 @@ use_env_values()
 
     # Container names cannot contain underscores or uppercase characters
     CONTAINER_NAME="${DATABASE_TYPE}-backup"
+}
+
+validate_settings()
+{
+    validate_db_type
+    validate_remote_storage
+    #todo: MYSQL_SERVER_LIST and BACKUP_RETENTIONDAYS
+}
+
+set_path_names()
+{
+    optionalSuffix=$1
+
     TIME_STAMPED=${CONTAINER_NAME}_$(date +"%Y-%m-%d_%Hh-%Mm-%Ss")${optionalSuffix}
     COMPRESSED_FILE="$TIME_STAMPED.tar.gz"
 
@@ -222,7 +227,7 @@ copy_db_to_azure_storage()
     # AZURE_STORAGE_ACCOUNT and AZURE_STORAGE_ACCESS_KEY are already exported for azure cli's use.
     # FYI, we could use AZURE_STORAGE_CONNECTION_STRING instead.
 
-    sc=$(azure storage container show $CONTAINER_NAME --json)
+    sc=$(azure storage container show  $CONTAINER_NAME --json)
     if [[ -z $sc ]]; then
         log "Creating the container... $CONTAINER_NAME"
         azure storage container create $CONTAINER_NAME
@@ -265,6 +270,41 @@ cleanup_local_copies()
     popd
 }
 
+cleanup_old_remote_files()
+{
+    # This is very noisy. We'll use log communicate status.
+    set +x
+
+    log "Getting list of files and extracting their age"
+
+    # Get file list with lots of meta-data. We'll use this to extract dates.
+    verboseDetails=`azure storage blob list $CONTAINER_NAME --json`
+
+    # List formatted like this:
+    #   2017-04-20_03h-00m-01s.
+    # and convert it to
+    #   2017-04-20 03:00:01
+    terminater="s\."
+    fileNames=`echo "$verboseDetails" | jq 'map(.name)' | grep -o "[0-9].*$terminater" | sed "s/$terminater//g" | sed "s/h-\|m-/:/g" | tr '_' ' '`
+
+    cutoff="2017-04-20 04:53:01" #todo: calculate
+    log "files older than $cutoff will be removed"
+    cutoffInSeconds=`date --date="$cutoff" +%s`
+
+    while read timeString; do
+        fileTimeInSeconds=`date --date="$timeString" +%s`
+        azure storage blob delete -q $CONTAINER_NAME mysql-backup_2017-04-20_03h-06m-02s.tar.gz
+    done <<< "$fileNames"
+
+    # FYI, Another approach is to use the file's timestamp.
+    # List formatted like this:
+    #   Thu, 20 Apr 2017 03:00:01 GMT
+    #terminater="\""
+    #fileStamp=`echo "$verboseDetails" | jq 'map(.lastModified)' | grep -o "$terminater.*$terminater" | tr -d $terminater`
+
+    set -x
+}
+
 # Parse script argument(s)
 parse_args $@
 
@@ -281,12 +321,17 @@ source_wrapper $SETTINGS_FILE
 
 # Pre-conditionals
 exit_if_limited_user
-validate_all_settings
+validate_settings
+
+# Cleanup old remote files
+cleanup_old_remote_files #todo. should be last operation
+
+exit #todo:
 
 # Operations
 db_operations()
 {
-    use_env_values $1
+    set_path_names $1
 
     # Cleanup previous runs.
     cleanup_local_copies
@@ -295,13 +340,11 @@ db_operations()
 
     copy_db_to_azure_storage
 
-    # Cleanup this run.
+    # Cleanup residue from this run.
     cleanup_local_copies
 }
 
 db_operations
-
-exit #todo: Craft query below. Exit for now.
 
 # The full mongo dump is too large for convient processing. Let's export a smaller version.
 mongoVer=`mongodump --version | head -1 | grep -o '[0-9].*'`
