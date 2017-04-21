@@ -280,27 +280,35 @@ cleanup_old_remote_files()
     # Get file list with lots of meta-data. We'll use this to extract dates.
     verboseDetails=`azure storage blob list $CONTAINER_NAME --json`
 
-    # List formatted like this:
-    #   2017-04-20_03h-00m-01s.
-    # and convert it to
-    #   2017-04-20 03:00:01
-    terminater="s\."
-    fileNames=`echo "$verboseDetails" | jq 'map(.name)' | grep -o "[0-9].*$terminater" | sed "s/$terminater//g" | sed "s/h-\|m-/:/g" | tr '_' ' '`
+    # List of files like this:
+    #   mysql-backup_2017-04-20_03h-00m-01s.tar.gz
+    terminater="\"" # quote
+    fileNames=`echo "$verboseDetails" | jq 'map(.name)' | grep -oE "$terminater.*$terminater" | tr -d $terminater`
 
     cutoff="2017-04-20 04:53:01" #todo: calculate
     log "files older than $cutoff will be removed"
+
     cutoffInSeconds=`date --date="$cutoff" +%s`
 
-    while read timeString; do
-        fileTimeInSeconds=`date --date="$timeString" +%s`
-        azure storage blob delete -q $CONTAINER_NAME mysql-backup_2017-04-20_03h-06m-02s.tar.gz
+    while read fileName; do
+        # Parse time from file
+        #   2017-04-20_03h-00m-01s.
+        # and convert it to
+        #   2017-04-20 03:00:01
+        terminater="s\." # s.
+        fileDateString=`echo "$fileName" | grep -o "[0-9].*$terminater" | sed "s/$terminater//g" | sed "s/h-\|m-/:/g" | tr '_' ' '`
+        fileDateInSeconds=`date --date="$fileDateString" +%s`
+
+        if [ $cutoffInSeconds -ge $fileDateInSeconds ]; then
+            log "deleting $fileName"
+            azure storage blob delete -q $CONTAINER_NAME $fileName
+        else
+            log "keeping $fileName"
+        fi
     done <<< "$fileNames"
 
-    # FYI, Another approach is to use the file's timestamp.
-    # List formatted like this:
-    #   Thu, 20 Apr 2017 03:00:01 GMT
-    #terminater="\""
-    #fileStamp=`echo "$verboseDetails" | jq 'map(.lastModified)' | grep -o "$terminater.*$terminater" | tr -d $terminater`
+    # FYI, another approach is to use the file's timestamp which /bin/date can handle natively. Thu, 20 Apr 2017 03:00:01 GMT
+    #fileStamp=`echo "$verboseDetails" | jq 'map(.lastModified)'`
 
     set -x
 }
