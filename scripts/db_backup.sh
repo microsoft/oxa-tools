@@ -284,6 +284,8 @@ cleanup_old_remote_files()
     #   mysql-backup_2017-04-20_03h-00m-01s.tar.gz
     terminater="\"" # quote
     fileNames=`echo "$verboseDetails" | jq 'map(.name)' | grep -oE "$terminater.*$terminater" | tr -d $terminater`
+    # FYI, another approach is to use the file's timestamp which /bin/date can handle natively
+    #fileStamp=`echo "$verboseDetails" | jq 'map(.lastModified)'`
 
     cutoff="2017-04-20 04:53:01" #todo: calculate
     log "files older than $cutoff will be removed"
@@ -307,9 +309,6 @@ cleanup_old_remote_files()
         fi
     done <<< "$fileNames"
 
-    # FYI, another approach is to use the file's timestamp which /bin/date can handle natively. Thu, 20 Apr 2017 03:00:01 GMT
-    #fileStamp=`echo "$verboseDetails" | jq 'map(.lastModified)'`
-
     set -x
 }
 
@@ -331,11 +330,6 @@ source_wrapper $SETTINGS_FILE
 exit_if_limited_user
 validate_settings
 
-# Cleanup old remote files
-cleanup_old_remote_files #todo. should be last operation
-
-exit #todo:
-
 # Operations
 db_operations()
 {
@@ -353,6 +347,9 @@ db_operations()
 }
 
 db_operations
+
+# Cleanup old remote files
+cleanup_old_remote_files
 
 # The full mongo dump is too large for convient processing. Let's export a smaller version.
 mongoVer=`mongodump --version | head -1 | grep -o '[0-9].*'`
