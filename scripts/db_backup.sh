@@ -26,10 +26,8 @@ SETTINGS_FILE=
 
     BACKUP_RETENTIONDAYS=
 
-    #todo: make configurable
-    DESTINATION_FOLDER="/datadisks/disk1/var/tmp"
-
 # Paths and file names.
+    BACKUP_LOCAL_PATH=
     TMP_QUERY_ADD="query.add.sql"
     TMP_QUERY_REMOVE="query.remove.sql"
     CURRENT_SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -38,10 +36,6 @@ SETTINGS_FILE=
     CONTAINER_NAME=
     COMPRESSED_FILE=
     BACKUP_PATH=
-
-if [[ ! -d $DESTINATION_FOLDER ]]; then
-    mkdir -p $DESTINATION_FOLDER
-fi
 
 help()
 {
@@ -123,6 +117,10 @@ validate_settings()
     validate_db_type
     validate_remote_storage
     #todo: MYSQL_SERVER_LIST
+
+    if [[ ! -d $BACKUP_LOCAL_PATH ]]; then
+        mkdir -p $BACKUP_LOCAL_PATH
+    fi
 }
 
 set_path_names()
@@ -187,7 +185,7 @@ create_compressed_db_dump()
 {
     optionalArguments=$1
 
-    pushd $DESTINATION_FOLDER
+    pushd $BACKUP_LOCAL_PATH
 
     log "Copying entire $DATABASE_TYPE database to local file system"
     if [ "$DATABASE_TYPE" == "mysql" ]
@@ -224,6 +222,8 @@ copy_db_to_azure_storage()
 {
     install-azure-cli
 
+    pushd $BACKUP_LOCAL_PATH
+
     log "Upload the backup $DATABASE_TYPE file to azure blob storage"
 
     # AZURE_STORAGE_ACCOUNT and AZURE_STORAGE_ACCESS_KEY are already exported for azure cli's use.
@@ -234,8 +234,6 @@ copy_db_to_azure_storage()
         log "Creating the container... $CONTAINER_NAME"
         azure storage container create $CONTAINER_NAME
     fi
-
-    pushd $DESTINATION_FOLDER
 
     log "Uploading...Please wait..."
     echo
@@ -257,7 +255,7 @@ copy_db_to_azure_storage()
 
 cleanup_local_copies()
 {
-    pushd $DESTINATION_FOLDER
+    pushd $BACKUP_LOCAL_PATH
 
     log "Deleting local copies of $DATABASE_TYPE database"
     rm -rf $COMPRESSED_FILE
@@ -276,7 +274,7 @@ cleanup_old_remote_files()
 {
     cutoffInSeconds=$1
 
-    # This is very noisy. We'll use log communicate status.
+    # This is very noisy. We'll use log to communicate status.
     set +x
 
     log "Getting list of files and extracting their age"

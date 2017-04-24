@@ -849,13 +849,15 @@ setup_backup()
     databaseType="${10}";                                   # Database Type : mysql|mongo
 
     databaseUser="${11}"; databasePassword="${12}";         # Credentials for accessing the database for backup purposes
-    tempDatabaseUser="${13}"; tempDatabasePassword="${14}"; # Temporary credentials for accessing the backup (optional)
+    backupLocalPath="${13}";                                # Database Type : mysql|mongo
+    # Optional.
+    tempDatabaseUser="${14}"; tempDatabasePassword="${15}"; # Temporary credentials for accessing the backup (optional)
 
     log "Setting up database backup for '${databaseType}' database(s)"
 
-    # For simplicity, we require all parameters are set
-    if [ "$#" -lt 12 ]; then
-        echo "Not all required backup configuration parameters have been set"
+    # For simplicity, we require all required parameters are set
+    if [ "$#" -lt 13 ]; then
+        echo "Some required backup configuration parameters are missing"
         exit 1;
     fi
 
@@ -871,6 +873,7 @@ DATABASE_PASSWORD=${databasePassword}
 TEMP_DATABASE_USER=${tempDatabaseUser}
 TEMP_DATABASE_PASSWORD=${tempDatabasePassword}
 DATABASE_TYPE=${databaseType}
+BACKUP_LOCAL_PATH=${backupLocalPath}
 EOF"
 
     # this file contains secrets (like storage account key). Secure it
