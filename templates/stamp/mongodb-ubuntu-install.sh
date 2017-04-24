@@ -9,8 +9,12 @@ PACKAGE_NAME=mongodb-org
 REPLICA_SET_KEY_DATA=""
 REPLICA_SET_NAME=""
 REPLICA_SET_KEY_FILE="/etc/mongo-replicaset-key"
+
+#todo: make this configurable. lots of invocations to cleanup though
+#       grep -i -I -r 'mongo.*install.*script'
 DATA_DISKS="/datadisks"
 DATA_MOUNTPOINT="$DATA_DISKS/disk1"
+
 MONGODB_DATA="$DATA_MOUNTPOINT/mongodb"
 MONGODB_DATA_INTERIM_ROOTPATH="/mongo"
 MONGODB_PORT=27017

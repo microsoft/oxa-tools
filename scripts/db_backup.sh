@@ -26,8 +26,10 @@ SETTINGS_FILE=
 
     BACKUP_RETENTIONDAYS=
 
-# Paths and file names.
+    #todo: make configurable
     DESTINATION_FOLDER="/datadisks/disk1/var/tmp"
+
+# Paths and file names.
     TMP_QUERY_ADD="query.add.sql"
     TMP_QUERY_REMOVE="query.remove.sql"
     CURRENT_SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -120,7 +122,7 @@ validate_settings()
 {
     validate_db_type
     validate_remote_storage
-    #todo: MYSQL_SERVER_LIST and BACKUP_RETENTIONDAYS
+    #todo: MYSQL_SERVER_LIST
 }
 
 set_path_names()
@@ -272,31 +274,26 @@ cleanup_local_copies()
 
 cleanup_old_remote_files()
 {
+    cutoffInSeconds=$1
+
     # This is very noisy. We'll use log communicate status.
     set +x
 
     log "Getting list of files and extracting their age"
+    log "files older than $BACKUP_RETENTIONDAYS days will be removed"
 
     # Get file list with lots of meta-data. We'll use this to extract dates.
     verboseDetails=`azure storage blob list $CONTAINER_NAME --json`
 
-    # List of files like this:
-    #   mysql-backup_2017-04-20_03h-00m-01s.tar.gz
+    # List of files (generally formatted like this: mysql-backup_2017-04-20_03h-00m-01s.tar.gz)
     terminater="\"" # quote
     fileNames=`echo "$verboseDetails" | jq 'map(.name)' | grep -oE "$terminater.*$terminater" | tr -d $terminater`
     # FYI, another approach is to use the file's timestamp which /bin/date can handle natively
     #fileStamp=`echo "$verboseDetails" | jq 'map(.lastModified)'`
 
-    cutoff="2017-04-20 04:53:01" #todo: calculate
-    log "files older than $cutoff will be removed"
-
-    cutoffInSeconds=`date --date="$cutoff" +%s`
-
     while read fileName; do
-        # Parse time from file
-        #   2017-04-20_03h-00m-01s.
-        # and convert it to
-        #   2017-04-20 03:00:01
+        # Parse time from file. Something like  2017-04-20_03h-00m-01s
+        #   and convert it to somethign like    2017-04-20 03:00:01
         terminater="s\." # s.
         fileDateString=`echo "$fileName" | grep -o "[0-9].*$terminater" | sed "s/$terminater//g" | sed "s/h-\|m-/:/g" | tr '_' ' '`
         fileDateInSeconds=`date --date="$fileDateString" +%s`
@@ -349,10 +346,15 @@ db_operations()
 db_operations
 
 # Cleanup old remote files
-cleanup_old_remote_files
+if [ ! -z $BACKUP_RETENTIONDAYS ]; then
+    currentSeconds=$(date --date="`date`" +%s)
+    retentionPeriod=$(( $BACKUP_RETENTIONDAYS * 24 * 60 * 60 ))
+    cutoff=$(( $currentSeconds - $retentionPeriod ))
+    cleanup_old_remote_files $cutoff
+fi
 
 # The full mongo dump is too large for convient processing. Let's export a smaller version.
 mongoVer=`mongodump --version | head -1 | grep -o '[0-9].*'`
 if [[ "$DATABASE_TYPE" == "mongo" ]] && [[ "$mongoVer" > 3 ]]; then
-    db_operations ".smaller" "todo:queryParam"
+    db_operations ".smaller" # "todo:queryParam"
 fi
