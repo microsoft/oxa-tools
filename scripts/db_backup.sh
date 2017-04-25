@@ -351,6 +351,7 @@ if [ ! -z $BACKUP_RETENTIONDAYS ]; then
     cleanup_old_remote_files $cutoff
 fi
 
+exit 0 #todo:queryParam
 # The full mongo dump is too large for convient processing. Let's export a smaller version.
 mongoVer=`mongodump --version | head -1 | grep -o '[0-9].*'`
 if [[ "$DATABASE_TYPE" == "mongo" ]] && [[ "$mongoVer" > 3 ]]; then
