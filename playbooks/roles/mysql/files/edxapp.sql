@@ -102,53 +102,20 @@ VALUES
   1
 );
 
-/*
- Whenever a new course is created from CMS a row is inserted into course_overviews_courseoverview table.
- We are defining this trigger so that course_mode for honor is inserted automatically which is required for certification.
+/* Insert an entry so that new site is enabled with a domain name */
 
- DROP TRIGGER IF EXISTS course_overviews_coursesoverview_after_insert;
-DELIMITER $$
-CREATE TRIGGER course_overviews_coursesoverview_after_insert
-AFTER INSERT ON 
-course_overviews_courseoverview
-FOR EACH ROW
-BEGIN
-	INSERT INTO course_modes_coursemode
-	(
-course_id, mode_slug, mode_display_name, min_price, currency, expiration_datetime,
-expiration_date, suggested_prices, description, sku, expiration_datetime_is_explicit		
-	)
-	VALUES
-(
-NEW.id, 
-'honor', 
-'honor',
- 0, 
-'usd', 
-NULL, 
-NULL, 
-0, 
-NULL, 
-NULL,
-0
-);
-END$$
-DELIMITER ;
+INSERT INTO django_site (domain,name) VALUES ('courses.microsoft.com','courses');
 
+/* Updating the siteconfigurations for the existing site */
 
- Whenever a course is deleted from SYSADMIN menu it is deleted from course_overviews_courseoverview table as well. 
- We are defining this trigger so that course_mode for honor is deleted automatically which is not needed anymore.
+UPDATE site_configuration_siteconfiguration SET `values` = '{"course_org_filter":"Microsoft","ENABLE_THIRD_PARTY_AUTH":false}' WHERE `site_id` = 1;
 
-DROP TRIGGER IF EXISTS course_overviews_courseoverview_after_delete;
-DELIMITER $$
-CREATE TRIGGER course_overviews_courseoverview_after_delete 
-AFTER DELETE ON 
-course_overviews_courseoverview
-FOR EACH ROW
-BEGIN
-	DELETE FROM course_modes_coursemode 
-	WHERE course_modes_coursemode.course_id = old.id;
-END$$
-DELIMITER  ;
- */
+/*Insert siteconfigurations for courses site */
+
+INSERT INTO `site_configuration_siteconfiguration` (`site_id`, `values`,`enabled`) VALUES (2,'{"course_org_filter":"ELMS","ENABLE_THIRD_PARTY_AUTH":"true","ENFORCE_PASSWORD_POLICY":"false","SITE_NAME":"courses.microsoft.com"}',1); 
+
+/*Insert an entry so that courses site uses different theming */
+
+INSERT INTO theming_sitetheme (theme_dir_name,site_id) VALUES ('courses',2);
+
 commit;
