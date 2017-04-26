@@ -711,6 +711,9 @@ install-mailer()
 {
     SMTP_SERVER=$1; SMTP_SERVER_PORT=$2; SMTP_AUTH_USER=$3; SMTP_AUTH_USER_PASSWORD=$4; CLUSTER_ADMIN_EMAIL=$5;
 
+    # support forwarding emails sent to the OS admin user to the cluster admin email address
+    os_admin_username=$6
+
     if [ "$#" -lt 5 ]; then
         echo "Install Mailer: invalid number of arguments" && exit 1
     fi
@@ -738,13 +741,15 @@ install-mailer()
     fi
 
     log "Creating new SMTP configuration template"
-    tee /etc/ssmtp/ssmtp.conf > /dev/null <<EOF
+    tee $SMTP_CONFIG_FILE > /dev/null <<EOF
 root={CLUSTER_ADMIN_EMAIL}
 mailhub={SMTP_SERVER}:{SMTP_SERVER_PORT}
 AuthUser={SMTP_AUTH_USER}
 AuthPass={SMTP_AUTH_USER_PASSWORD}
+TLS_CA_File=/etc/ssl/certs/ca-certificates.crt
 UseTLS=YES
 UseSTARTTLS=YES
+hostname=localhost
 EOF
 
     # replace the place holders
@@ -754,6 +759,27 @@ EOF
     sed -i "s/{SMTP_SERVER_PORT}/${SMTP_SERVER_PORT}/I" $SMTP_CONFIG_FILE
     sed -i "s/{SMTP_AUTH_USER}/${SMTP_AUTH_USER}/I" $SMTP_CONFIG_FILE
     sed -i "s/{SMTP_AUTH_USER_PASSWORD}/${SMTP_AUTH_USER_PASSWORD}/I" $SMTP_CONFIG_FILE
+
+    # Configure ALIASES
+    ALIAS_CONFIG_FILE="/etc/ssmtp/revaliases"
+
+    if [[ -f $ALIAS_CONFIG_FILE ]]; then
+        log "Removing existing ALIAS configuration"
+        rm $ALIAS_CONFIG_FILE
+    fi
+
+    log "Creating new ALIAS configuration file"
+    tee $ALIAS_CONFIG_FILE > /dev/null <<EOF
+root:{CLUSTER_ADMIN_EMAIL}:{SMTP_SERVER}:{SMTP_SERVER_PORT}
+postmaster:{CLUSTER_ADMIN_EMAIL}:{SMTP_SERVER}:{SMTP_SERVER_PORT}
+{OSADMIN_USERNAME}:{CLUSTER_ADMIN_EMAIL}:{SMTP_SERVER}:{SMTP_SERVER_PORT}
+EOF
+    # replace the place holders
+    log "Populating Aliases with appropriate values"
+    sed -i "s/{CLUSTER_ADMIN_EMAIL}/${CLUSTER_ADMIN_EMAIL}/I" $ALIAS_CONFIG_FILE
+    sed -i "s/{SMTP_SERVER}/${SMTP_SERVER}/I" $ALIAS_CONFIG_FILE
+    sed -i "s/{SMTP_SERVER_PORT}/${SMTP_SERVER_PORT}/I" $ALIAS_CONFIG_FILE
+    sed -i "s/{OSADMIN_USERNAME}/${os_admin_username}/I" $ALIAS_CONFIG_FILE
 
     log "Completed configuring the mailer"
 }
