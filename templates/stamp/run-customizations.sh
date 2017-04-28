@@ -174,7 +174,7 @@ parse_args()
             -c) # Cloud Name
                 CLOUDNAME="${arg_value}"
                 ;;
-            -u) # OS Admin User Name
+            -u| --admin-user) # OS Admin User Name
                 OS_ADMIN_USERNAME="${arg_value}"
                 ;;
             -i) # Custom script relative path
@@ -191,9 +191,6 @@ parse_args()
                     help
                     exit 2
                 fi
-                ;;
-            -u|--admin-user)
-                OS_ADMIN_USERNAME="${arg_value}"
                 ;;
             --monitoring-cluster)
                 MONITORING_CLUSTER_NAME="${arg_value}"
@@ -607,7 +604,7 @@ MACHINE_ROLE=$(get_machine_role)
 log "${HOSTNAME} has been identified as a member of the '${MACHINE_ROLE}' role"
 
 # Pre-Requisite: Setup Mailer (this is necessary for notification)
-install-mailer $SMTP_SERVER $SMTP_SERVER_PORT $SMTP_AUTH_USER $SMTP_AUTH_USER_PASSWORD $CLUSTER_ADMIN_EMAIL
+install-mailer $SMTP_SERVER $SMTP_SERVER_PORT $SMTP_AUTH_USER $SMTP_AUTH_USER_PASSWORD $CLUSTER_ADMIN_EMAIL $OS_ADMIN_USERNAME
 exit_on_error "Configuring the mailer failed"
 
 # 1. Setup Tools
