@@ -772,14 +772,14 @@ EOF
     tee $ALIAS_CONFIG_FILE > /dev/null <<EOF
 root:{CLUSTER_ADMIN_EMAIL}:{SMTP_SERVER}:{SMTP_SERVER_PORT}
 postmaster:{CLUSTER_ADMIN_EMAIL}:{SMTP_SERVER}:{SMTP_SERVER_PORT}
-{OSADMIN_USERNAME}:{CLUSTER_ADMIN_EMAIL}:{SMTP_SERVER}:{SMTP_SERVER_PORT}
+{OS_ADMIN_USERNAME}:{CLUSTER_ADMIN_EMAIL}:{SMTP_SERVER}:{SMTP_SERVER_PORT}
 EOF
     # replace the place holders
     log "Populating Aliases with appropriate values"
     sed -i "s/{CLUSTER_ADMIN_EMAIL}/${CLUSTER_ADMIN_EMAIL}/I" $ALIAS_CONFIG_FILE
     sed -i "s/{SMTP_SERVER}/${SMTP_SERVER}/I" $ALIAS_CONFIG_FILE
     sed -i "s/{SMTP_SERVER_PORT}/${SMTP_SERVER_PORT}/I" $ALIAS_CONFIG_FILE
-    sed -i "s/{OSADMIN_USERNAME}/${os_admin_username}/I" $ALIAS_CONFIG_FILE
+    sed -i "s/{OS_ADMIN_USERNAME}/${os_admin_username}/I" $ALIAS_CONFIG_FILE
 
     log "Completed configuring the mailer"
 }
