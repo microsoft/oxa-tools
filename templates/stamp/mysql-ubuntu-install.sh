@@ -20,8 +20,7 @@ MYSQL_ADMIN_USER=lexoxamysqladmin
 MYSQL_ADMIN_PASSWORD=
 MYSQL_PORT=3306
 
-#todo: make this configurable. lots of invocations to cleanup though
-#       grep -i -I -r 'mysql.*install.*script'
+#todo: bug95044 make this configurable. lots of invocations to cleanup though grep -i -I -r "mysql.*install.*\(script\|sh\)"
 DATA_DISKS="/datadisks"
 DATA_MOUNTPOINT="$DATA_DISKS/disk1"
 

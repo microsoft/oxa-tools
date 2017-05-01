@@ -10,8 +10,7 @@ REPLICA_SET_KEY_DATA=""
 REPLICA_SET_NAME=""
 REPLICA_SET_KEY_FILE="/etc/mongo-replicaset-key"
 
-#todo: make this configurable. lots of invocations to cleanup though
-#       grep -i -I -r 'mongo.*install.*script'
+#todo: bug95044 make this configurable. lots of invocations to cleanup though grep -i -I -r "mongo.*install.*\(script\|sh\)"
 DATA_DISKS="/datadisks"
 DATA_MOUNTPOINT="$DATA_DISKS/disk1"
 
