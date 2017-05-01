@@ -297,16 +297,16 @@ cleanup_old_remote_files()
     verboseDetails=`azure storage blob list $CONTAINER_NAME --json`
 
     # List of files (generally formatted like this: mysql-backup_2017-04-20_03h-00m-01s.tar.gz)
-    terminater="\"" # quote
-    fileNames=`echo "$verboseDetails" | jq 'map(.name)' | grep -oE "$terminater.*$terminater" | tr -d $terminater`
+    terminator="\"" # quote
+    fileNames=`echo "$verboseDetails" | jq 'map(.name)' | grep -oE "$terminator.*$terminator" | tr -d $terminator`
     # FYI, another approach is to use the file's timestamp which /bin/date can handle natively
     #fileStamp=`echo "$verboseDetails" | jq 'map(.lastModified)'`
 
     while read fileName; do
         # Parse time from file. Something like  2017-04-20_03h-00m-01s
         #   and convert it to somethign like    2017-04-20 03:00:01
-        terminater="s\." # s.
-        fileDateString=`echo "$fileName" | grep -o "[0-9].*$terminater" | sed "s/$terminater//g" | sed "s/h-\|m-/:/g" | tr '_' ' '`
+        terminator="s\." # s.
+        fileDateString=`echo "$fileName" | grep -o "[0-9].*$terminator" | sed "s/$terminator//g" | sed "s/h-\|m-/:/g" | tr '_' ' '`
         fileDateInSeconds=`date --date="$fileDateString" +%s`
 
         if [ $cutoffInSeconds -ge $fileDateInSeconds ]; then
