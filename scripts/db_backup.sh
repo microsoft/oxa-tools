@@ -125,9 +125,7 @@ validate_settings()
 
 set_path_names()
 {
-    optionalSuffix=$1
-
-    TIME_STAMPED=${CONTAINER_NAME}_$(date +"%Y-%m-%d_%Hh-%Mm-%Ss")${optionalSuffix}
+    TIME_STAMPED=${CONTAINER_NAME}_$(date +"%Y-%m-%d_%Hh-%Mm-%Ss")
     COMPRESSED_FILE="$TIME_STAMPED.tar.gz"
 
     if [ "$DATABASE_TYPE" == "mysql" ]
@@ -183,8 +181,6 @@ EOF
 
 create_compressed_db_dump()
 {
-    optionalArguments=$1
-
     pushd $BACKUP_LOCAL_PATH
 
     log "Copying entire $DATABASE_TYPE database to local file system"
@@ -206,7 +202,7 @@ create_compressed_db_dump()
     elif [ "$DATABASE_TYPE" == "mongo" ]
     then
         install-mongodb-tools
-        mongodump -u $DATABASE_USER -p $DATABASE_PASSWORD --host $MONGO_REPLICASET_CONNECTIONSTRING --db edxapp $optionalArguments --authenticationDatabase master -o $BACKUP_PATH
+        mongodump -u $DATABASE_USER -p $DATABASE_PASSWORD --host $MONGO_REPLICASET_CONNECTIONSTRING --db edxapp --authenticationDatabase master -o $BACKUP_PATH
 
     fi
 
@@ -325,23 +321,17 @@ source_wrapper $SETTINGS_FILE
 exit_if_limited_user
 validate_settings
 
-# Operations
-db_operations()
-{
-    set_path_names $1
+set_path_names
 
-    # Cleanup previous runs.
-    cleanup_local_copies
+# Cleanup previous runs.
+cleanup_local_copies
 
-    create_compressed_db_dump $2
+create_compressed_db_dump
 
-    copy_db_to_azure_storage
+copy_db_to_azure_storage
 
-    # Cleanup residue from this run.
-    cleanup_local_copies
-}
-
-db_operations
+# Cleanup residue from this run.
+cleanup_local_copies
 
 # Cleanup old remote files
 if [ ! -z $BACKUP_RETENTIONDAYS ]; then
@@ -349,11 +339,4 @@ if [ ! -z $BACKUP_RETENTIONDAYS ]; then
     retentionPeriod=$(( $BACKUP_RETENTIONDAYS * 24 * 60 * 60 ))
     cutoff=$(( $currentSeconds - $retentionPeriod ))
     cleanup_old_remote_files $cutoff
-fi
-
-exit 0 #todo:queryParam
-# The full mongo dump is too large for convient processing. Let's export a smaller version.
-mongoVer=`mongodump --version | head -1 | grep -o '[0-9].*'`
-if [[ "$DATABASE_TYPE" == "mongo" ]] && [[ "$mongoVer" > 3 ]]; then
-    db_operations ".smaller" # "todo:queryParam"
 fi
