@@ -40,10 +40,11 @@ SETTINGS_FILE=
 help()
 {
     SCRIPT_NAME=`basename "$0"`
-
+    echo
     echo "This script $SCRIPT_NAME will backup the database"
     echo "Options:"
     echo "  -s|--settings-file  Path to settings"
+    echo
 }
 
 # Parse script parameters
@@ -77,11 +78,13 @@ parse_args()
 
 source_wrapper()
 {
-    if [ -f $1 ]
+    if [ -f "$1" ]
     then
-        source $1
+        echo "Sourcing file $1"
+        source "$1"
     else
         echo "Cannot find file at $1"
+        help
         exit 1
     fi
 }
@@ -91,9 +94,9 @@ validate_db_type()
     # validate argument
     if [ "$DATABASE_TYPE" != "mongo" ] && [ "$DATABASE_TYPE" != "mysql" ];
     then
+        log "$DATABASE_TYPE is not supported"
         log "Databse type must be mongo or mysql"
         help
-        log "exiting script"
         exit 3
     fi
 }
@@ -105,6 +108,7 @@ validate_remote_storage()
     export AZURE_STORAGE_ACCESS_KEY=$BACKUP_STORAGEACCOUNT_KEY # in <env>.sh AZURE_ACCOUNT_KEY
     if [ -z $AZURE_STORAGE_ACCOUNT ] || [ -z $AZURE_STORAGE_ACCESS_KEY ]; then
         log "Azure storage credentials are required"
+        help
         exit 4
     fi
 
@@ -116,10 +120,9 @@ validate_settings()
 {
     validate_db_type
     validate_remote_storage
-    #todo: MYSQL_SERVER_LIST
 
-    if [[ ! -d $BACKUP_LOCAL_PATH ]]; then
-        mkdir -p $BACKUP_LOCAL_PATH
+    if [[ ! -d "$BACKUP_LOCAL_PATH" ]]; then
+        mkdir -p "$BACKUP_LOCAL_PATH"
     fi
 }
 
@@ -141,8 +144,10 @@ set_path_names()
 
 add_temp_mysql_user()
 {
-    if [ ! -z $TEMP_DATABASE_USER ] && [ ! -z $TEMP_DATABASE_PASSWORD ]; then
-        log "Adding ${TEMP_DATABASE_USER} to db"
+    if [ -z $TEMP_DATABASE_USER ] || [ -z $TEMP_DATABASE_PASSWORD ]; then
+        log "We aren't ADDING additional credentials to ${DATABASE_TYPE} db because none were provided."
+    else
+        log "ADDING ${TEMP_DATABASE_USER} user to ${DATABASE_TYPE} db"
         touch $TMP_QUERY_ADD
         chmod 700 $TMP_QUERY_ADD
 
@@ -161,8 +166,10 @@ EOF
 
 remove_temp_mysql_user()
 {
-    if [ ! -z $TEMP_DATABASE_USER ] && [ ! -z $TEMP_DATABASE_PASSWORD ]; then
-        log "Removing ${TEMP_DATABASE_USER} from db"
+    if [ -z $TEMP_DATABASE_USER ] || [ -z $TEMP_DATABASE_PASSWORD ]; then
+        log "We aren't REMOVING additional credentials to ${DATABASE_TYPE} db because none were provided."
+    else
+        log "REMOVING ${TEMP_DATABASE_USER} user from ${DATABASE_TYPE} db"
 
         touch $TMP_QUERY_REMOVE
         chmod 700 $TMP_QUERY_REMOVE
@@ -229,11 +236,12 @@ copy_db_to_azure_storage()
     if [[ -z $sc ]]; then
         log "Creating the container... $CONTAINER_NAME"
         azure storage container create $CONTAINER_NAME
+    else
+        log "The container $CONTAINER_NAME already exists."
     fi
 
-    log "Uploading...Please wait..."
+    log "Uploading file... Please wait..."
     echo
-
     result=$(azure storage blob upload $COMPRESSED_FILE $CONTAINER_NAME $COMPRESSED_FILE --json)
 
     install-json-processor
@@ -268,7 +276,16 @@ cleanup_local_copies()
 
 cleanup_old_remote_files()
 {
-    cutoffInSeconds=$1
+    cutoffInSeconds=0
+
+    if [-z $BACKUP_RETENTIONDAYS ]; then
+        log "No database retention length provided."
+        return
+    else
+        currentSeconds=$(date --date="`date`" +%s)
+        retentionPeriod=$(( $BACKUP_RETENTIONDAYS * 24 * 60 * 60 ))
+        cutoffInSeconds=$(( $currentSeconds - $retentionPeriod ))
+    fi
 
     # This is very noisy. We'll use log to communicate status.
     set +x
@@ -334,9 +351,4 @@ copy_db_to_azure_storage
 cleanup_local_copies
 
 # Cleanup old remote files
-if [ ! -z $BACKUP_RETENTIONDAYS ]; then
-    currentSeconds=$(date --date="`date`" +%s)
-    retentionPeriod=$(( $BACKUP_RETENTIONDAYS * 24 * 60 * 60 ))
-    cutoff=$(( $currentSeconds - $retentionPeriod ))
-    cleanup_old_remote_files $cutoff
-fi
+cleanup_old_remote_files
