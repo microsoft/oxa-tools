@@ -276,15 +276,9 @@ cleanup_local_copies()
 
 cleanup_old_remote_files()
 {
-    cutoffInSeconds=0
-
     if [-z $BACKUP_RETENTIONDAYS ]; then
         log "No database retention length provided."
         return
-    else
-        currentSeconds=$(date --date="`date`" +%s)
-        retentionPeriod=$(( $BACKUP_RETENTIONDAYS * 24 * 60 * 60 ))
-        cutoffInSeconds=$(( $currentSeconds - $retentionPeriod ))
     fi
 
     # This is very noisy. We'll use log to communicate status.
@@ -292,6 +286,11 @@ cleanup_old_remote_files()
 
     log "Getting list of files and extracting their age"
     log "files older than $BACKUP_RETENTIONDAYS days will be removed"
+
+    # Calculate cutoff time.
+    currentSeconds=$(date --date="`date`" +%s)
+    retentionPeriod=$(( $BACKUP_RETENTIONDAYS * 24 * 60 * 60 ))
+    cutoffInSeconds=$(( $currentSeconds - $retentionPeriod ))
 
     # Get file list with lots of meta-data. We'll use this to extract dates.
     verboseDetails=`azure storage blob list $CONTAINER_NAME --json`
