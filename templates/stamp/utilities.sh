@@ -632,10 +632,23 @@ install-azure-cli()
         apt-get -y -qq update
 
         # Note: nodejs-legacy is required for Ubuntu14 and above.
-        log "Installing nodejs-legacy, npm, and azure cli"
-        apt-get install -y nodejs-legacy npm
-        exit_on_error "Failed to install nodejs-legacy and/or npm on ${HOSTNAME} !" $ERROR_NODEINSTALL_FAILED
+        short_release_number=`lsb_release -sr`
+        if [[ "$short_release_number" > 13 ]]; then
+            log "Installing nodejs-legacy"
+            apt-get install -y nodejs-legacy
+            exit_on_error "Failed to install nodejs-legacy on ${HOSTNAME} !" $ERROR_NODEINSTALL_FAILED
+        fi
 
+        if type npm >/dev/null 2>&1; then
+            log "npm is already installed"
+        else
+            log "Installing npm"
+            # aptitude install npm -y
+            apt-get install -y npm
+            exit_on_error "Failed to install npm on ${HOSTNAME} !" $ERROR_NODEINSTALL_FAILED
+        fi
+
+        log "Installing azure cli"
         npm install -g azure-cli
         exit_on_error "Failed to install azure cli on ${HOSTNAME} !" $ERROR_AZURECLI_FAILED
 
@@ -862,44 +875,34 @@ setup_backup()
     databaseType="${10}";                                   # Database Type : mysql|mongo
 
     databaseUser="${11}"; databasePassword="${12}";         # Credentials for accessing the database for backup purposes
-    tempDatabaseUser="${13}"; tempDatabasePassword="${14}"; # Temporary credentials for accessing the backup (optional)
+    backupLocalPath="${13}";                                # Database Type : mysql|mongo
+    # Optional.
+    tempDatabaseUser="${14}"; tempDatabasePassword="${15}"; # Temporary credentials for accessing the backup (optional)
 
     log "Setting up database backup for '${databaseType}' database(s)"
 
-    # For simplicity, we require all parameters are set
-    if [ "$#" -lt 12 ]; then
-        echo "Not all required backup configuration parameters have been set"
+    # For simplicity, we require all required parameters are set
+    if [ "$#" -lt 13 ]; then
+        echo "Some required backup configuration parameters are missing"
         exit 1;
     fi
 
     # persist the settings
-    tee "${backup_configuration}" > /dev/null <<EOF
-BACKUP_STORAGEACCOUNT_NAME={BACKUP_STORAGEACCOUNT_NAME}
-BACKUP_STORAGEACCOUNT_KEY={BACKUP_STORAGEACCOUNT_KEY}
-BACKUP_RETENTIONDAYS={BACKUP_RETENTIONDAYS}
-MONGO_REPLICASET_CONNECTIONSTRING={MONGO_REPLICASET_CONNECTIONSTRING}
-MYSQL_SERVER_LIST={MYSQL_SERVER_LIST}
-DATABASE_USER={DATABASE_USER}
-DATABASE_PASSWORD={DATABASE_PASSWORD}
-TEMP_DATABASE_USER={TEMP_DATABASE_USER}
-TEMP_DATABASE_PASSWORD={TEMP_DATABASE_PASSWORD}
-DATABASE_TYPE={DATABASE_TYPE}
-EOF
+    bash -c "cat <<EOF >${backup_configuration}
+BACKUP_STORAGEACCOUNT_NAME=${account_name}
+BACKUP_STORAGEACCOUNT_KEY=${account_key}
+BACKUP_RETENTIONDAYS=${backupRententionDays}
+MONGO_REPLICASET_CONNECTIONSTRING=${mongoReplicaSetConnectionString}
+MYSQL_SERVER_LIST=${mysqlServerList}
+DATABASE_USER=${databaseUser}
+DATABASE_PASSWORD=${databasePassword}
+TEMP_DATABASE_USER=${tempDatabaseUser}
+TEMP_DATABASE_PASSWORD=${tempDatabasePassword}
+DATABASE_TYPE=${databaseType}
+BACKUP_LOCAL_PATH=${backupLocalPath}
+EOF"
 
-    # replace the place holders (using # since the repo path will have forward slashes)
-    log "Populating backup configuration file with appropriate values"
-    sed -i "s#{BACKUP_STORAGEACCOUNT_NAME}#${account_name}#I" $backup_configuration
-    sed -i "s#{BACKUP_STORAGEACCOUNT_KEY}#${account_key}#I" $backup_configuration
-    sed -i "s#{BACKUP_RETENTIONDAYS}#${backupRententionDays}#I" $backup_configuration
-    sed -i "s#{MONGO_REPLICASET_CONNECTIONSTRING}#${mongoReplicaSetConnectionString}#I" $backup_configuration
-    sed -i "s#{MYSQL_SERVER_LIST}#${mysqlServerList}#I" $backup_configuration
-    sed -i "s#{DATABASE_USER}#${databaseUser}#I" $backup_configuration
-    sed -i "s#{DATABASE_PASSWORD}#${databasePassword}#I" $backup_configuration
-    sed -i "s#{TEMP_DATABASE_USER}#${tempDatabaseUser}#I" $backup_configuration
-    sed -i "s#{TEMP_DATABASE_PASSWORD}#${tempDatabasePassword}#I" $backup_configuration
-    sed -i "s#{DATABASE_TYPE}#${databaseType}#I" $backup_configuration
-
-    # this file contains secrets (storage account key). Secure it
+    # this file contains secrets (like storage account key). Secure it
     chmod 600 $backup_configuration
 
     # create the cron job
