@@ -15,7 +15,7 @@ TARGET_FILE=""
 # Settings for the OXA-Tools public repository 
 OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
 OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME="oxa-tools"
-OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master.fic.search"
+OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master.fic"
 
 # this is the operational branch for the OXA_TOOLS public git project
 OXA_TOOLS_VERSION=""
@@ -24,7 +24,7 @@ OXA_TOOLS_VERSION=""
 # There are cases where we want to override the edx-configuration repository itself
 EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
 EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME="edx-configuration"
-EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master.search"
+EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master.fic"
 
 # this is the operational branch for the EDX_CONFIGURATION public git project
 CONFIGURATION_VERSION=""
