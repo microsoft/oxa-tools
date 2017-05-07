@@ -36,7 +36,7 @@ PLATFORM_EMAIL=
 
 # config/versions.yml
 CONFIGURATION_REPO=https://github.com/Microsoft/edx-configuration.git
-CONFIGURATION_VERSION=oxa/master.fic
+CONFIGURATION_VERSION=oxa/master.search
 PLATFORM_REPO=https://github.com/Microsoft/edx-platform.git
 PLATFORM_VERSION=oxa/master.fic
 THEME_REPO=https://github.com/Microsoft/edx-theme.git
