@@ -44,9 +44,6 @@ Path to the deployment parameters file for the keyvault arm deployment
 E-mail address of the cluster administrator. Notification email during bootstrap will be sent here. OS notifications will also be sent to this address
 
 .PARAMETER FullDeploymentArmTemplateFile
-Path to the arm template for bootstrapping keyvault
-
-.PARAMETER FullDeploymentArmTemplateFile
 Path to the deployment parameters file for the keyvault arm deployment
 
 .PARAMETER SmtpServer
