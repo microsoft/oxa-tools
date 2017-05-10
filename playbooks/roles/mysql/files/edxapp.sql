@@ -112,7 +112,7 @@ UPDATE site_configuration_siteconfiguration SET `values` = '{"course_org_filter"
 
 /*Insert siteconfigurations for courses site */
 
-INSERT INTO `site_configuration_siteconfiguration` (`site_id`, `values`,`enabled`) VALUES (2,'{"course_org_filter":"ELMS","ENABLE_THIRD_PARTY_AUTH":"true","ENFORCE_PASSWORD_POLICY":"false","SITE_NAME":"courses.microsoft.com"}',1); 
+INSERT INTO `site_configuration_siteconfiguration` (`site_id`, `values`,`enabled`) VALUES (2,'{"course_org_filter":"ELMS","ENABLE_THIRD_PARTY_AUTH":true,"ENFORCE_PASSWORD_POLICY":false,"RESTRICT_SITE_TO_LOGGED_IN_USERS":true,"SITE_NAME":"courses.microsoft.com"}',1); 
 
 /*Insert an entry so that courses site uses different theming */
 
