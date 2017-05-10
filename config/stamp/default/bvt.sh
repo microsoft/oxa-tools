@@ -27,7 +27,7 @@ PREVIEW_URL=preview.$BASE_URL
 TEMPLATE_TYPE=stamp # stamp|scalable|fullstack|devstack
 CLUSTERNAME={CLUSTERNAME}
 ADMIN_USER=oxaadmin
-OXA_TOOLS_VERSION=oxa/master.fic
+OXA_TOOLS_VERSION=oxa/master.fic.search
 
 # config/server-vars.yml
 #YOUTUBE_API_KEY=todo
