@@ -25,6 +25,7 @@ EDXAPP_MYSQL_HOST: "%%MYSQL_MASTER_IP%%"
 # As a fix, we will support 2 targets for memcache when supporting multiple version of VMSS, giving each VMSS access to its own memcache
 # It is assumed that the memcache application is already installed on the specified server with 'MEMCACHE_SERVER_IP'
 EDXAPP_MEMCACHE: ["%%MEMCACHE_SERVER_IP%%:11211"]
+EDXAPP_ELASTICSEARCH_HOST: ["%%MEMCACHE_SERVER_IP%%:11211"]
 
 MONGO_BIND_IP: "0.0.0.0"
 FORUM_MONGO_HOSTS:
