@@ -113,7 +113,7 @@ Param(
         [Parameter(Mandatory=$false)][string]$SmtpAuthenticationUser="",
         [Parameter(Mandatory=$false)][string]$SmtpAuthenticationUserPassword="",
 
-        [Parameter(Mandatory=$false)][string]$ServiceAccountPassword="=crq+4L5QFrMCIKJaVazBWisd0fMJR",
+        [Parameter(Mandatory=$false)][string]$ServiceAccountPassword="5QFrMCIKJaVazBWisd0fMJR",
 
         [Parameter(Mandatory=$false)][string]$PlatformName="Contoso Learning",
         [Parameter(Mandatory=$false)][string]$PlatformEmailAddress="",
@@ -122,7 +122,7 @@ Param(
         [Parameter(Mandatory=$false)][string]$EdxAppSuperUserPassword="",
         [Parameter(Mandatory=$false)][string]$EdxAppSuperUserEmail="",
 
-        [Parameter(Mandatory=$false)][string][ValidateSet("1","2")]$AzureCliVersion="2",
+        [Parameter(Mandatory=$false)][string][ValidateSet("1","2")]$AzureCliVersion="1",
         [Parameter(Mandatory=$false)][string]$MemcacheServer="10.0.0.16"
      )
 

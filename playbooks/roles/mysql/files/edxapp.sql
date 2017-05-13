@@ -80,52 +80,42 @@ VALUES
 );
 
 /*
- Whenever a new course is created from CMS a row is inserted into course_overviews_courseoverview table.
- We are defining this trigger so that course_mode for honor is inserted automatically which is required for certification.
+  Insert an entry so that grades are persisted for LTI Labs on the platform.
 
- DROP TRIGGER IF EXISTS course_overviews_coursesoverview_after_insert;
-DELIMITER $$
-CREATE TRIGGER course_overviews_coursesoverview_after_insert
-AFTER INSERT ON 
-course_overviews_courseoverview
-FOR EACH ROW
-BEGIN
-	INSERT INTO course_modes_coursemode
-	(
-course_id, mode_slug, mode_display_name, min_price, currency, expiration_datetime,
-expiration_date, suggested_prices, description, sku, expiration_datetime_is_explicit		
-	)
-	VALUES
+  In the grades_persistentgradesenabledflag table we can have only one row defined so first delete any existing ones
+  and then insert the persistentgradesenabledflag configuration.  It is inserted as enabled for all courses.
+
+  It is safe to run this multiple times.
+*/
+DELETE FROM grades_persistentgradesenabledflag;
+
+INSERT INTO grades_persistentgradesenabledflag 
 (
-NEW.id, 
-'honor', 
-'honor',
- 0, 
-'usd', 
-NULL, 
-NULL, 
-0, 
-NULL, 
-NULL,
-0
+  change_date,
+  enabled,
+  enabled_for_all_courses
+) 
+VALUES
+(
+  NOW(),
+  1,
+  1
 );
-END$$
-DELIMITER ;
 
+/* Insert an entry so that new site is enabled with a domain name */
 
- Whenever a course is deleted from SYSADMIN menu it is deleted from course_overviews_courseoverview table as well. 
- We are defining this trigger so that course_mode for honor is deleted automatically which is not needed anymore.
+INSERT INTO django_site (domain,name) VALUES ('courses.microsoft.com','courses');
 
-DROP TRIGGER IF EXISTS course_overviews_courseoverview_after_delete;
-DELIMITER $$
-CREATE TRIGGER course_overviews_courseoverview_after_delete 
-AFTER DELETE ON 
-course_overviews_courseoverview
-FOR EACH ROW
-BEGIN
-	DELETE FROM course_modes_coursemode 
-	WHERE course_modes_coursemode.course_id = old.id;
-END$$
-DELIMITER  ;
- */
+/* Updating the siteconfigurations for the existing site */
+
+UPDATE site_configuration_siteconfiguration SET `values` = '{"course_org_filter":"Microsoft","ENABLE_THIRD_PARTY_AUTH":false}' WHERE `site_id` = 1;
+
+/*Insert siteconfigurations for courses site */
+
+INSERT INTO `site_configuration_siteconfiguration` (`site_id`, `values`,`enabled`) VALUES (2,'{"course_org_filter":"ELMS","ENABLE_THIRD_PARTY_AUTH":"true","ENFORCE_PASSWORD_POLICY":"false","SITE_NAME":"courses.microsoft.com"}',1); 
+
+/*Insert an entry so that courses site uses different theming */
+
+INSERT INTO theming_sitetheme (theme_dir_name,site_id) VALUES ('courses',2);
+
 commit;

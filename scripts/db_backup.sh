@@ -3,10 +3,6 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
-#todo: finish testing on Ubunt14Euc and Ubuntu16Fic fullstack
-#   (fyi: all new or changed installation helpers in
-#    utilities.sh have been verified on ubuntu 14,16)
-
 set -x
 
 # Path to settings file provided as an argument to this script.
@@ -25,15 +21,13 @@ SETTINGS_FILE=
     TEMP_DATABASE_PASSWORD=
 
     # Writing to storage
-    AZURE_STORAGE_ACCOUNT= # from BACKUP_STORAGEACCOUNT_NAME
+    AZURE_STORAGE_ACCOUNT=    # from BACKUP_STORAGEACCOUNT_NAME
     AZURE_STORAGE_ACCESS_KEY= # from BACKUP_STORAGEACCOUNT_KEY
 
-    #todo: enforce retention policy
-    #MONGO_BACKUP_RETENTIONDAYS=
-    #MYSQL_BACKUP_RETENTIONDAYS=
+    BACKUP_RETENTIONDAYS=
 
 # Paths and file names.
-    DESTINATION_FOLDER="/var/tmp"
+    BACKUP_LOCAL_PATH=
     TMP_QUERY_ADD="query.add.sql"
     TMP_QUERY_REMOVE="query.remove.sql"
     CURRENT_SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -46,10 +40,11 @@ SETTINGS_FILE=
 help()
 {
     SCRIPT_NAME=`basename "$0"`
-
+    echo
     echo "This script $SCRIPT_NAME will backup the database"
     echo "Options:"
     echo "  -s|--settings-file  Path to settings"
+    echo
 }
 
 # Parse script parameters
@@ -83,11 +78,13 @@ parse_args()
 
 source_wrapper()
 {
-    if [ -f $1 ]
+    if [ -f "$1" ]
     then
-        source $1
+        echo "Sourcing file $1"
+        source "$1"
     else
         echo "Cannot find file at $1"
+        help
         exit 1
     fi
 }
@@ -97,27 +94,40 @@ validate_db_type()
     # validate argument
     if [ "$DATABASE_TYPE" != "mongo" ] && [ "$DATABASE_TYPE" != "mysql" ];
     then
+        log "$DATABASE_TYPE is not supported"
         log "Databse type must be mongo or mysql"
         help
-        log "exiting script"
         exit 3
     fi
 }
 
-validate_all_settings()
-{
-    validate_db_type
-    #todo: validate all values
-}
-
-use_env_values()
+validate_remote_storage()
 {
     # Exporting for Azure CLI
-    export AZURE_STORAGE_ACCOUNT=$BACKUP_STORAGEACCOUNT_NAME # in <env>.sh AZURE_ACCOUNT_NAME
+    export AZURE_STORAGE_ACCOUNT=$BACKUP_STORAGEACCOUNT_NAME   # in <env>.sh AZURE_ACCOUNT_NAME
     export AZURE_STORAGE_ACCESS_KEY=$BACKUP_STORAGEACCOUNT_KEY # in <env>.sh AZURE_ACCOUNT_KEY
+    if [ -z $AZURE_STORAGE_ACCOUNT ] || [ -z $AZURE_STORAGE_ACCESS_KEY ]; then
+        log "Azure storage credentials are required"
+        help
+        exit 4
+    fi
 
     # Container names cannot contain underscores or uppercase characters
     CONTAINER_NAME="${DATABASE_TYPE}-backup"
+}
+
+validate_settings()
+{
+    validate_db_type
+    validate_remote_storage
+
+    if [[ ! -d "$BACKUP_LOCAL_PATH" ]]; then
+        mkdir -p "$BACKUP_LOCAL_PATH"
+    fi
+}
+
+set_path_names()
+{
     TIME_STAMPED=${CONTAINER_NAME}_$(date +"%Y-%m-%d_%Hh-%Mm-%Ss")
     COMPRESSED_FILE="$TIME_STAMPED.tar.gz"
 
@@ -134,45 +144,51 @@ use_env_values()
 
 add_temp_mysql_user()
 {
-    #todo: conditionalize based on whether temp credentials have been provided
-    log "Adding ${TEMP_DATABASE_USER} to db"
-    touch $TMP_QUERY_ADD
-    chmod 700 $TMP_QUERY_ADD
+    if [ -z $TEMP_DATABASE_USER ] || [ -z $TEMP_DATABASE_PASSWORD ]; then
+        log "We aren't ADDING additional credentials to ${DATABASE_TYPE} db because none were provided."
+    else
+        log "ADDING ${TEMP_DATABASE_USER} user to ${DATABASE_TYPE} db"
+        touch $TMP_QUERY_ADD
+        chmod 700 $TMP_QUERY_ADD
 
-    tee ./$TMP_QUERY_ADD > /dev/null <<EOF
+        tee ./$TMP_QUERY_ADD > /dev/null <<EOF
 GRANT ALL PRIVILEGES ON *.* TO '{TEMP_DATABASE_USER}'@'%' IDENTIFIED BY '{TEMP_DATABASE_PASSWORD}' WITH GRANT OPTION;
 FLUSH PRIVILEGES;
 EOF
 
-    sed -i "s/{TEMP_DATABASE_USER}/${TEMP_DATABASE_USER}/I" $TMP_QUERY_ADD
-    sed -i "s/{TEMP_DATABASE_PASSWORD}/${TEMP_DATABASE_PASSWORD}/I" $TMP_QUERY_ADD
+        sed -i "s/{TEMP_DATABASE_USER}/${TEMP_DATABASE_USER}/I" $TMP_QUERY_ADD
+        sed -i "s/{TEMP_DATABASE_PASSWORD}/${TEMP_DATABASE_PASSWORD}/I" $TMP_QUERY_ADD
 
-    install-mysql-client
-    mysql -u $DATABASE_USER -p$DATABASE_PASSWORD -h $1 < $TMP_QUERY_ADD
+        install-mysql-client
+        mysql -u $DATABASE_USER -p$DATABASE_PASSWORD -h $1 < $TMP_QUERY_ADD
+    fi
 }
 
 remove_temp_mysql_user()
 {
-    #todo: conditionalize based on whether temp credentials have been provided
-    log "Removing ${TEMP_DATABASE_USER} from db"
+    if [ -z $TEMP_DATABASE_USER ] || [ -z $TEMP_DATABASE_PASSWORD ]; then
+        log "We aren't REMOVING additional credentials to ${DATABASE_TYPE} db because none were provided."
+    else
+        log "REMOVING ${TEMP_DATABASE_USER} user from ${DATABASE_TYPE} db"
 
-    touch $TMP_QUERY_REMOVE
-    chmod 700 $TMP_QUERY_REMOVE
+        touch $TMP_QUERY_REMOVE
+        chmod 700 $TMP_QUERY_REMOVE
 
-    tee ./$TMP_QUERY_REMOVE > /dev/null <<EOF
+        tee ./$TMP_QUERY_REMOVE > /dev/null <<EOF
 DELETE FROM mysql.user WHERE User='{TEMP_DATABASE_USER}';
 FLUSH PRIVILEGES;
 EOF
 
-    sed -i "s/{TEMP_DATABASE_USER}/${TEMP_DATABASE_USER}/I" $TMP_QUERY_REMOVE
+        sed -i "s/{TEMP_DATABASE_USER}/${TEMP_DATABASE_USER}/I" $TMP_QUERY_REMOVE
 
-    install-mysql-client
-    mysql -u $DATABASE_USER -p$DATABASE_PASSWORD -h $1 < $TMP_QUERY_REMOVE
+        install-mysql-client
+        mysql -u $DATABASE_USER -p$DATABASE_PASSWORD -h $1 < $TMP_QUERY_REMOVE
+    fi
 }
 
 create_compressed_db_dump()
 {
-    pushd $DESTINATION_FOLDER
+    pushd $BACKUP_LOCAL_PATH
 
     log "Copying entire $DATABASE_TYPE database to local file system"
     if [ "$DATABASE_TYPE" == "mysql" ]
@@ -209,22 +225,23 @@ copy_db_to_azure_storage()
 {
     install-azure-cli
 
+    pushd $BACKUP_LOCAL_PATH
+
     log "Upload the backup $DATABASE_TYPE file to azure blob storage"
 
     # AZURE_STORAGE_ACCOUNT and AZURE_STORAGE_ACCESS_KEY are already exported for azure cli's use.
     # FYI, we could use AZURE_STORAGE_CONNECTION_STRING instead.
 
-    sc=$(azure storage container show $CONTAINER_NAME --json)
+    sc=$(azure storage container show  $CONTAINER_NAME --json)
     if [[ -z $sc ]]; then
         log "Creating the container... $CONTAINER_NAME"
         azure storage container create $CONTAINER_NAME
+    else
+        log "The container $CONTAINER_NAME already exists."
     fi
 
-    pushd $DESTINATION_FOLDER
-
-    log "Uploading...Please wait..."
+    log "Uploading file... Please wait..."
     echo
-
     result=$(azure storage blob upload $COMPRESSED_FILE $CONTAINER_NAME $COMPRESSED_FILE --json)
 
     install-json-processor
@@ -242,16 +259,64 @@ copy_db_to_azure_storage()
 
 cleanup_local_copies()
 {
-    pushd $DESTINATION_FOLDER
+    pushd $BACKUP_LOCAL_PATH
 
     log "Deleting local copies of $DATABASE_TYPE database"
     rm -rf $COMPRESSED_FILE
     rm -rf $BACKUP_PATH
 
+    # And any other backups.
+    rm -rf *${CONTAINER_NAME}*
+
     rm -rf $TMP_QUERY_ADD
     rm -rf $TMP_QUERY_REMOVE
 
     popd
+}
+
+cleanup_old_remote_files()
+{
+    if [-z $BACKUP_RETENTIONDAYS ]; then
+        log "No database retention length provided."
+        return
+    fi
+
+    # This is very noisy. We'll use log to communicate status.
+    set +x
+
+    log "Getting list of files and extracting their age"
+    log "files older than $BACKUP_RETENTIONDAYS days will be removed"
+
+    # Calculate cutoff time.
+    currentSeconds=$(date --date="`date`" +%s)
+    retentionPeriod=$(( $BACKUP_RETENTIONDAYS * 24 * 60 * 60 ))
+    cutoffInSeconds=$(( $currentSeconds - $retentionPeriod ))
+
+    # Get file list with lots of meta-data. We'll use this to extract dates.
+    verboseDetails=`azure storage blob list $CONTAINER_NAME --json`
+
+    # List of files (generally formatted like this: mysql-backup_2017-04-20_03h-00m-01s.tar.gz)
+    terminator="\"" # quote
+    fileNames=`echo "$verboseDetails" | jq 'map(.name)' | grep -oE "$terminator.*$terminator" | tr -d $terminator`
+    # FYI, another approach is to use the file's timestamp which /bin/date can handle natively
+    #fileStamp=`echo "$verboseDetails" | jq 'map(.lastModified)'`
+
+    while read fileName; do
+        # Parse time from file. Something like  2017-04-20_03h-00m-01s
+        #   and convert it to somethign like    2017-04-20 03:00:01
+        terminator="s\." # s.
+        fileDateString=`echo "$fileName" | grep -o "[0-9].*$terminator" | sed "s/$terminator//g" | sed "s/h-\|m-/:/g" | tr '_' ' '`
+        fileDateInSeconds=`date --date="$fileDateString" +%s`
+
+        if [ $cutoffInSeconds -ge $fileDateInSeconds ]; then
+            log "deleting $fileName"
+            azure storage blob delete -q $CONTAINER_NAME $fileName
+        else
+            log "keeping $fileName"
+        fi
+    done <<< "$fileNames"
+
+    set -x
 }
 
 # Parse script argument(s)
@@ -270,12 +335,19 @@ source_wrapper $SETTINGS_FILE
 
 # Pre-conditionals
 exit_if_limited_user
-validate_all_settings
+validate_settings
 
-use_env_values
+set_path_names
+
+# Cleanup previous runs.
+cleanup_local_copies
 
 create_compressed_db_dump
 
 copy_db_to_azure_storage
 
+# Cleanup residue from this run.
 cleanup_local_copies
+
+# Cleanup old remote files
+cleanup_old_remote_files
