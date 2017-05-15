@@ -250,7 +250,7 @@
         "edxConfigurationGithubBranch": "oxa/master.fic",
         "edxPlatformGithubAccountName": "Microsoft",
         "edxPlatformGithubProjectName": "edx-platform",
-        "edxPlatformGithubBranch": "oxa/master.fic",
+        "edxPlatformGithubBranch": "oxa/master.fic.numpyfix",
         "edxThemeGithubAccountName": "microsoft",
         "edxThemeGithubProjectName": "edx-theme",
         "edxThemeGithubBranch": "oxa/master.fic",
