@@ -99,7 +99,7 @@
             "value": "edx-platform"
         },
         "edxPlatformGithubBranch": {
-            "value": "oxa/master.fic"
+            "value": "oxa/master.fic.numpyfix"
         },
         "edxThemeGithubAccountName": {
             "value": "microsoft"
