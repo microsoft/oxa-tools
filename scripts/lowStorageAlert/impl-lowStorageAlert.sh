@@ -4,7 +4,7 @@
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
 #todo:inputParam
-USAGE_THRESHOLD=0; #todo
+USAGE_THRESHOLD_PERCENT=33; #todo, 33% for now.
 
 #todo:sourceUtilities then change echo to log. then change log to email
 
@@ -41,7 +41,7 @@ while read diskUsage; do
     fi
 
     # Alert when threshold is exceeded.
-    if (( $(echo "$percentUsed > $USAGE_THRESHOLD" | bc -l) )); then
+    if (( $(echo "$percentUsed > $USAGE_THRESHOLD_PERCENT" | bc -l) )); then
 
         # Help clarify messaging by appending trailing slash to directory.
         if [[ $directoryPath != '/' ]]; then
@@ -52,6 +52,7 @@ while read diskUsage; do
         echo "Directory $directoryPath on machine $HOSTNAME is using $percentUsed percent of available space"
         echo "Please cleanup this directory at your earliest convenience."
         echo "The top subfolders or subfiles in $directoryPath are:"
+        # Get list of subitems and filesize, sort them, grab top five, indent, newline.
         printf "`du -sh $directoryPath* 2> /dev/null | sort -h -r | head -n 5 | sed -e 's/^/  /'`"
         echo
 
