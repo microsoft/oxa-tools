@@ -113,7 +113,11 @@ EDXAPP_GRADE_STORAGE_CLASS: "openedx.core.storage.AzureStorageExtended"
 EDXAPP_GRADE_STORAGE_KWARGS:
   container: "reports"
 EDXAPP_GRADE_STORAGE_CONTAINER: "reports"
-  
+# overriding the default value from 5 to 50. we don't want to stop the retry's at any point.  
+EDXAPP_RETRY_ACTIVATION_EMAIL_MAX_ATTEMPTS: 50
+# overriding the default value from 0.5 to 2. 
+EDXAPP_RETRY_ACTIVATION_EMAIL_TIMEOUT: 2
+
 # Configure email addresses
 EDXAPP_BUGS_EMAIL: "microsoftlearning-bugs@microsoft.com"
 EDXAPP_BULK_EMAIL_DEFAULT_FROM_EMAIL: "microsoftlearning-noreply@microsoft.com"
