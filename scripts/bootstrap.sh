@@ -64,7 +64,7 @@ SECONDARY_LOG="/var/log/bootstrap.csx.log"
 PRIMARY_LOG="/var/log/bootstrap.log"
 
 display_usage() {
-  echo "Usage: $0 -a|--access_token {access token} -v|--version {oxa-tools-config version} [-r|--role {jb|vmss|mongo|mysql|edxapp|fullstack}] [-e|--environment {dev|bvt|int|prod}] [--cron] --keyvault-name {azure keyvault name} --aad-webclient-id {AAD web application client id} --aad-webclient-appkey {AAD web application client key} --aad-tenant-id {AAD Tenant to authenticate against} --azure-subscription-id {Azure subscription Id}"
+  echo "Usage: $0 -a|--access_token {access token} -v|--version {oxa-tools-config version} [-r|--role {jb|vmss|mongo|mysql|edxapp|fullstack|devstack}] [-e|--environment {dev|bvt|int|prod}] [--cron] --keyvault-name {azure keyvault name} --aad-webclient-id {AAD web application client id} --aad-webclient-appkey {AAD web application client key} --aad-tenant-id {AAD Tenant to authenticate against} --azure-subscription-id {Azure subscription Id}"
   exit 1
 }
 
@@ -87,7 +87,7 @@ parse_args()
         case "$1" in
           -r|--role)
             EDX_ROLE="${arg_value,,}" # convert to lowercase
-            if ! is_valid_arg "jb vmss mongo mysql edxapp fullstack" $EDX_ROLE; then
+            if ! is_valid_arg "jb vmss mongo mysql edxapp fullstack devstack" $EDX_ROLE; then
               echo "Invalid role specified\n"
               display_usage
             fi
@@ -99,7 +99,7 @@ parse_args()
               display_usage
             fi
             ;;
-          # For fullstack deployments
+          # For devstack and fullstack deployments
           -a|--access_token)
             ACCESS_TOKEN="${arg_value}"
             ;;
