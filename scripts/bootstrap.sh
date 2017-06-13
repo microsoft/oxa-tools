@@ -86,7 +86,7 @@ parse_args()
         case "$1" in
           -r|--role)
             EDX_ROLE="${arg_value,,}" # convert to lowercase
-            if ! is_valid_arg "jb vmss mongo mysql edxapp fullstack" $EDX_ROLE; then
+            if ! is_valid_arg "jb vmss mongo mysql edxapp fullstack devstack" $EDX_ROLE; then
               echo "Invalid role specified\n"
               display_usage
             fi
