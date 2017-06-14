@@ -3,8 +3,7 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
-# ERROR CODES: 
-# TODO: move to common script
+# ERROR CODES:
 ERROR_CRONTAB_FAILED=4101
 ERROR_GITINSTALL_FAILED=5101
 ERROR_MONGOCLIENTINSTALL_FAILED=5201
@@ -295,8 +294,26 @@ install-mysql-utilities()
 # Setup SSH
 #############################################################################
 
+install-ssh()
+{
+    if [ -f "/etc/ssh/sshd_config" ]; then
+        log "SSH already instealled"
+    else
+        log "Updating Repository"
+        apt-get update -y -qq
+
+        log "installing ssh..."
+        apt-get install ssh -y -qq
+        exit_on_error "Installing SSH Failed on $HOST"
+    fi
+
+    log "SSH installed"
+}
+
 setup-ssh()
 {
+    install-ssh
+
     log "Setting up SSH"
 
     # implicit assumptions: private repository with secrets has been cloned and certificates live at /{repository_root}/env/{cloud}/id_rsa*
@@ -558,41 +575,28 @@ exit_on_error()
 
 install-powershell()
 {
-    log "Installing Powershell"
 
-    wget https://raw.githubusercontent.com/PowerShell/PowerShell/v6.0.0-alpha.15/tools/download.sh  -O ~/powershell_installer.sh
-
-    # make sure we have the downloaded file
-    if [ -f ~/powershell_installer.sh ]; then
-        exit_on_error "The powershell installation script could not be downloaded" $ERROR_POWERSHELLINSTALL_FAILED
-    fi
-
-    # the installer script requires a prompt/confirmation to install the powershell package.
-    # this needs to be disabled for automation purposes
-    sed -i "s/sudo apt-get install -f.*/sudo apt-get install -y -f/I" ~/powershell_installer.sh
-
-    # execute the installer
-    bash ~/powershell_installer.sh
-
-    # validate powershell is installed
     if [ -f /usr/bin/powershell ]; then
+        log "Powershell is already installed"
+    else
+        log "Installing Powershell"
+
+        wget https://raw.githubusercontent.com/PowerShell/PowerShell/v6.0.0-alpha.15/tools/download.sh  -O ~/powershell_installer.sh
+
+        # make sure we have the downloaded file
+        if [ -f ~/powershell_installer.sh ]; then
+            exit_on_error "The powershell installation script could not be downloaded" $ERROR_POWERSHELLINSTALL_FAILED
+        fi
+
+        # the installer script requires a prompt/confirmation to install the powershell package.
+        # this needs to be disabled for automation purposes
+        sed -i "s/sudo apt-get install -f.*/sudo apt-get install -y -f/I" ~/powershell_installer.sh
+
+        # execute the installer
+        bash ~/powershell_installer.sh
         exit_on_error "Powershell installation failed ${HOSTNAME} !" $ERROR_POWERSHELLINSTALL_FAILED
+
     fi
-}
-
-install-azurepowershellcmdlets()
-{
-    log "Installing Azure Powershell Cmdlets"
-
-    # set the PSGallery as a trusted
-    log "Trusting PSGallery"
-    Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
-
-    log "Installing Azure RM cmdlets"
-    Install-Module AzureRM
-
-    log "Installing Azure cmdlets"
-    Install-Module Azure
 }
 
 #############################################################################

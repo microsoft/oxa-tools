@@ -49,7 +49,7 @@ ANSIBLE_PUBLIC_GITHUB_PROJECTNAME="ansible"
 ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH="master"
 
 # MISC
-EDX_VERSION="master"
+EDX_VERSION="open-release/ficus.master"
 #FORUM_VERSION="mongoid5-release"
 FORUM_VERSION="open-release/ficus.master"
 
@@ -378,9 +378,29 @@ update_scalable_mysql() {
 }
 
 update_fullstack() {
+  install-ssh
+
   # edx playbooks - fullstack (single VM)
-  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG vagrant-fullstack.yml
-  exit_on_error "Execution of edX fullstack playbook failed"
+
+  # We've begun experiencing intermittent failures on ficus. Simply retrying
+  # mitigates the problem, but we should solve the underlying cause(s) soon.
+  # todo:move this to a loop utility function that takes command, count, optional description
+  for (( a=1; a<=11; a++ )); do
+    log "STARTING attempt number: $a ..."
+    $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG vagrant-fullstack.yml
+    if [ $? -eq 0 ]; then
+        log "SUCCEEDED attempt number: $a !"
+        break
+    else
+        log "FAILED attempt number: $a "
+
+        # Last loop iteration?
+        if [ $a -eq 11 ]; then
+            log "Execution of edX fullstack playbook failed"
+            exit 1
+        fi
+    fi
+  done
 
   # oxa playbooks - all (single VM)
   $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK
@@ -388,6 +408,8 @@ update_fullstack() {
 }
 
 update_devstack() {
+  install-ssh
+
   if ! id -u vagrant > /dev/null 2>&1; then
   # create required vagrant user account to avoid fatal error
     sudo adduser --disabled-password --gecos "" vagrant
