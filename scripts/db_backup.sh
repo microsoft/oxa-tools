@@ -78,7 +78,7 @@ parse_args()
 
 source_wrapper()
 {
-    if [[ -f "$1" ]]
+    if [ -f "$1" ]
     then
         echo "Sourcing file $1"
         source "$1"
@@ -92,7 +92,7 @@ source_wrapper()
 validate_db_type()
 {
     # validate argument
-    if [[ "$DATABASE_TYPE" != "mongo" ]] && [[ "$DATABASE_TYPE" != "mysql" ]];
+    if [ "$DATABASE_TYPE" != "mongo" ] && [ "$DATABASE_TYPE" != "mysql" ];
     then
         log "$DATABASE_TYPE is not supported"
         log "Databse type must be mongo or mysql"
@@ -106,7 +106,7 @@ validate_remote_storage()
     # Exporting for Azure CLI
     export AZURE_STORAGE_ACCOUNT=$BACKUP_STORAGEACCOUNT_NAME   # in <env>.sh AZURE_ACCOUNT_NAME
     export AZURE_STORAGE_ACCESS_KEY=$BACKUP_STORAGEACCOUNT_KEY # in <env>.sh AZURE_ACCOUNT_KEY
-    if [[ -z $AZURE_STORAGE_ACCOUNT ]] || [[ -z $AZURE_STORAGE_ACCESS_KEY ]]; then
+    if [ -z $AZURE_STORAGE_ACCOUNT ] || [ -z $AZURE_STORAGE_ACCESS_KEY ]; then
         log "Azure storage credentials are required"
         help
         exit 4
@@ -131,11 +131,11 @@ set_path_names()
     TIME_STAMPED=${CONTAINER_NAME}_$(date +"%Y-%m-%d_%Hh-%Mm-%Ss")
     COMPRESSED_FILE="$TIME_STAMPED.tar.gz"
 
-    if [[ "$DATABASE_TYPE" == "mysql" ]]
+    if [ "$DATABASE_TYPE" == "mysql" ]
     then
         # File
         BACKUP_PATH="$TIME_STAMPED.sql"
-    elif [[ "$DATABASE_TYPE" == "mongo" ]]
+    elif [ "$DATABASE_TYPE" == "mongo" ]
     then
         # Directory
         BACKUP_PATH="$TIME_STAMPED"
@@ -144,7 +144,7 @@ set_path_names()
 
 add_temp_mysql_user()
 {
-    if [[ -z $TEMP_DATABASE_USER ]] || [[ -z $TEMP_DATABASE_PASSWORD ]]; then
+    if [ -z $TEMP_DATABASE_USER ] || [ -z $TEMP_DATABASE_PASSWORD ]; then
         log "We aren't ADDING additional credentials to ${DATABASE_TYPE} db because none were provided."
     else
         log "ADDING ${TEMP_DATABASE_USER} user to ${DATABASE_TYPE} db"
@@ -166,7 +166,7 @@ EOF
 
 remove_temp_mysql_user()
 {
-    if [[ -z $TEMP_DATABASE_USER ]] || [[ -z $TEMP_DATABASE_PASSWORD ]]; then
+    if [ -z $TEMP_DATABASE_USER ] || [ -z $TEMP_DATABASE_PASSWORD ]; then
         log "We aren't REMOVING additional credentials to ${DATABASE_TYPE} db because none were provided."
     else
         log "REMOVING ${TEMP_DATABASE_USER} user from ${DATABASE_TYPE} db"
@@ -191,7 +191,7 @@ create_compressed_db_dump()
     pushd $BACKUP_LOCAL_PATH
 
     log "Copying entire $DATABASE_TYPE database to local file system"
-    if [[ "$DATABASE_TYPE" == "mysql" ]]
+    if [ "$DATABASE_TYPE" == "mysql" ]
     then
         #todo: add error conditioning to loop. we're currently just using the first one and assuming success
         mysql_servers=(`echo $MYSQL_SERVER_LIST | tr , ' ' `)
@@ -206,7 +206,7 @@ create_compressed_db_dump()
             break;
         done
 
-    elif [[ "$DATABASE_TYPE" == "mongo" ]]
+    elif [ "$DATABASE_TYPE" == "mongo" ]
     then
         install-mongodb-tools
         mongodump -u $DATABASE_USER -p $DATABASE_PASSWORD --host $MONGO_REPLICASET_CONNECTIONSTRING --db edxapp --authenticationDatabase master -o $BACKUP_PATH
@@ -247,7 +247,7 @@ copy_db_to_azure_storage()
     install-json-processor
     fileName=$(echo $result | jq '.name')
     fileSize=$(echo $result | jq '.transferSummary.totalSize')    
-    if [[ $fileName != "" ]] && [[ $fileName != null ]]
+    if [ $fileName != "" ] && [ $fileName != null ]
     then
         log "$fileName blob file uploaded successfully. Size: $fileSize"
     else
@@ -276,7 +276,7 @@ cleanup_local_copies()
 
 cleanup_old_remote_files()
 {
-    if [[ -z $BACKUP_RETENTIONDAYS ]]; then
+    if [-z $BACKUP_RETENTIONDAYS ]; then
         log "No database retention length provided."
         return
     fi
@@ -308,7 +308,7 @@ cleanup_old_remote_files()
         fileDateString=`echo "$fileName" | grep -o "[0-9].*$terminator" | sed "s/$terminator//g" | sed "s/h-\|m-/:/g" | tr '_' ' '`
         fileDateInSeconds=`date --date="$fileDateString" +%s`
 
-        if [[ $cutoffInSeconds -ge $fileDateInSeconds ]]; then
+        if [ $cutoffInSeconds -ge $fileDateInSeconds ]; then
             log "deleting $fileName"
             azure storage blob delete -q $CONTAINER_NAME $fileName
         else
