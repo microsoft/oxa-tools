@@ -3,7 +3,7 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
-# ERROR CODES:
+# ERROR CODES: 
 # TODO: move to common script
 ERROR_CRONTAB_FAILED=4101
 ERROR_GITINSTALL_FAILED=5101
@@ -576,7 +576,6 @@ exit_on_error()
 
 install-powershell()
 {
-
     if [ -f /usr/bin/powershell ]; then
         log "Powershell is already installed"
         return
@@ -597,7 +596,7 @@ install-powershell()
 
     # execute the installer
     bash ~/powershell_installer.sh
-    exit_on_error "Powershell installation failed ${HOSTNAME} !" $ERROR_POWERSHELLINSTALL_FAILED
+        exit_on_error "Powershell installation failed ${HOSTNAME} !" $ERROR_POWERSHELLINSTALL_FAILED
 }
 
 #############################################################################
