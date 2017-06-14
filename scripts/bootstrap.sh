@@ -387,7 +387,7 @@ update_fullstack() {
   # todo:move this to a loop utility function that takes command, count, optional description
   for (( a=1; a<=11; a++ )); do
     log "STARTING attempt number: $a ..."
-    $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG vagrant-fullstack.yml
+  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG vagrant-fullstack.yml
     if [ $? -eq 0 ]; then
         log "SUCCEEDED attempt number: $a !"
         break
