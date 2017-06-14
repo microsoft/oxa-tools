@@ -5,14 +5,16 @@
 
 set -x
 
-#todo:inputParam
-SIZE_THRESHOLD=700000000; #todo, 700 megabytes for now.
-DATABASE_USER=root #todo
-DATABASE_PASSWORD=
-PATH_PREFIX=/datadisks/disk1
-PATH_SUFFIX=$(date +"%Y-%m-%d_%Hh-%Mm-%Ss").tar.gz
+# Path to settings file provided as an argument to this script.
+SETTINGS_FILE=
 
-#todo:sourceUtilities then change echo to log. then change log to email
+# From settings file
+    SIZE_THRESHOLD=700000000 #todo, 700 megabytes for now.
+    DATABASE_USER=root #todo
+    DATABASE_PASSWORD=
+    PATH_PREFIX=/datadisks/disk1
+
+PATH_SUFFIX=$(date +"%Y-%m-%d_%Hh-%Mm-%Ss").tar.gz
 
 mysql_command()
 {

@@ -20,14 +20,15 @@ SETTINGS_FILE=
     TEMP_DATABASE_USER=
     TEMP_DATABASE_PASSWORD=
 
-    # Writing to storage
+    # Writing to local storage
+    BACKUP_LOCAL_PATH=
+
+    # Writing to remote storage
     AZURE_STORAGE_ACCOUNT=    # from BACKUP_STORAGEACCOUNT_NAME
     AZURE_STORAGE_ACCESS_KEY= # from BACKUP_STORAGEACCOUNT_KEY
-
     BACKUP_RETENTIONDAYS=
 
 # Paths and file names.
-    BACKUP_LOCAL_PATH=
     TMP_QUERY_ADD="query.add.sql"
     TMP_QUERY_REMOVE="query.remove.sql"
     CURRENT_SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"

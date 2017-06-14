@@ -3,12 +3,15 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
-#todo:inputParam
-USAGE_THRESHOLD_PERCENT=33; #todo, 33% for now.
+set -x
 
-#todo:sourceUtilities then change echo to log. then change log to email
+# Path to settings file provided as an argument to this script.
+SETTINGS_FILE=
 
-# List of <usage>$<path>
+# From settings file
+    USAGE_THRESHOLD_PERCENT=33
+
+# List of <usage>%<path>
 # for example:
 #   "4%/"
 #   "1%/datadisks/disk1"
@@ -29,7 +32,7 @@ while read diskUsage; do
         echo "For path: $directoryPath"
         echo "Extraneous value: ${diskUsageArray[2]}"
 
-        continue;
+        continue
     fi
     if [[ -z $percentUsed ]] || [[ -z $directoryPath ]]; then
         echo "Error in script lowStorageAlert. Missing partition usage or file system path"
