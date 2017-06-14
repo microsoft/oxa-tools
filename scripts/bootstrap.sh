@@ -391,14 +391,14 @@ update_fullstack() {
     if [ $? -eq 0 ]; then
         log "SUCCEEDED attempt number: $a !"
         break
-    else
-        log "FAILED attempt number: $a "
+    fi
 
-        # Last loop iteration?
-        if [ $a -eq 11 ]; then
-            log "Execution of edX fullstack playbook failed"
-            exit 1
-        fi
+    log "FAILED attempt number: $a "
+
+    # Last loop iteration?
+    if [ $a -eq 11 ]; then
+        log "Execution of edX fullstack playbook failed"
+        exit 1
     fi
   done
 
