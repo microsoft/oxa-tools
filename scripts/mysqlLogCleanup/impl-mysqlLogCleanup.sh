@@ -9,10 +9,10 @@ set -x
 SETTINGS_FILE=
 
 # From settings file
-    SIZE_THRESHOLD=700000000 #todo, 700 megabytes for now.
-    DATABASE_USER=root #todo
+    SIZE_THRESHOLD=700000000     # Default to 700 megabytes, but updated later on
+    DATABASE_USER=root           # Default, but updated later on
     DATABASE_PASSWORD=
-    PATH_PREFIX=/datadisks/disk1
+    PATH_PREFIX=/datadisks/disk1 # Default, but updated later on
 # Paths and file names.
     CURRENT_SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
     UTILITIES_FILE=$CURRENT_SCRIPT_PATH/../../templates/stamp/utilities.sh

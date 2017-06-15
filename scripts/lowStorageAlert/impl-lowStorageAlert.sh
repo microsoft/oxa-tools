@@ -9,7 +9,7 @@ set -x
 SETTINGS_FILE=
 
 # From settings file
-    USAGE_THRESHOLD_PERCENT=33
+    USAGE_THRESHOLD_PERCENT=33 # Default, but updated later on.
 # Paths and file names.
     CURRENT_SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
     UTILITIES_FILE=$CURRENT_SCRIPT_PATH/../../templates/stamp/utilities.sh
@@ -83,21 +83,17 @@ check_usage_threshold()
         percentUsed=${diskUsageArray[0]}
         directoryPath=${diskUsageArray[1]}
 
-        # Alert for unexpected values (indicative of possible errors in script)
+        log "Directory $directoryPath on machine $HOSTNAME is using $percentUsed percent of available space"
+
+        # Alert for unexpected values (indicative of possible errors in script and/or unexpected cases)
         if [[ -n ${diskUsageArray[2]} ]]; then
-            log "Error in script lowStorageAlert. Too many values"
-            log "Original string before split: $diskUsage"
-            log "Percentage used: $percentUsed"
-            log "For path: $directoryPath"
+            log "Error in script $SCRIPT_NAME. Too many values"
             log "Extraneous value: ${diskUsageArray[2]}"
 
             continue
         fi
         if [[ -z $percentUsed ]] || [[ -z $directoryPath ]]; then
-            log "Error in script lowStorageAlert. Missing partition usage or file system path"
-            log "Original string before split: $diskUsage"
-            log "Percentage used: $percentUsed"
-            log "For path: $directoryPath"
+            log "Error in script $SCRIPT_NAME. Missing disk usage percentage or file system path"
 
             continue
         fi
@@ -111,7 +107,7 @@ check_usage_threshold()
             fi
 
             # Message
-            log "Directory $directoryPath on machine $HOSTNAME is using $percentUsed percent of available space"
+            
             log "Please cleanup this directory at your earliest convenience."
             log "The top subfolders or subfiles in $directoryPath are:"
             # Get list of subitems and filesize, sort them, grab top five, indent, newline.
@@ -137,7 +133,7 @@ print_script_header
 
 log "Checking for low disk space"
 
-# Settings
+# Settings. Will update $USAGE_THRESHOLD_PERCENT
 source_wrapper $SETTINGS_FILE
 
 # Pre-conditionals
