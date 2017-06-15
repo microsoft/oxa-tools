@@ -292,21 +292,61 @@ install-mysql-utilities()
 }
 
 #############################################################################
+# Wrapper functions
+#############################################################################
+
+apt-wrapper()
+{
+    log "$1 package(s)..."
+    sudo apt-get $1 -y -qq --fix-missing
+}
+
+retry-command()
+{
+    command="$1"
+    retry_count="$2"
+    optionalDescription="$3"
+    fix_packages="$4"
+
+    for (( a=1; a<=$retry_count; a++ )) ; do
+        message="$optionalDescription attempt number: $a"
+
+        # Some failures can be resolved by fixing packages.
+        if [[ -n "$fix_packages" ]] ; then
+            apt-wrapper "update"
+            apt-wrapper "install -f"
+            apt-wrapper "upgrade -f"
+        fi
+
+        log "STARTING $message ..."
+
+        `$command`
+        if [ $? -eq 0 ]; then
+            log "SUCCEEDED $message !"
+            break
+        fi
+
+        log "FAILED $message "
+    done
+}
+
+#############################################################################
 # Setup SSH
 #############################################################################
 
 install-ssh()
 {
-    if [ -f "/etc/ssh/sshd_config" ]; then
+    if [[ -f "/etc/ssh/sshd_config" ]] ; then
         log "SSH already instealled"
-    else
-        log "Updating Repository"
-        apt-get update -y -qq
-
-        log "installing ssh..."
-        apt-get install ssh -y -qq
-        exit_on_error "Installing SSH Failed on $HOST"
+        return
     fi
+
+    log "Updating Repository"
+    apt-wrapper "update"
+
+    log "installing ssh..."
+    apt-wrapper "install ssh"
+    exit_on_error "Installing SSH Failed on $HOST"
 
     log "SSH installed"
 }

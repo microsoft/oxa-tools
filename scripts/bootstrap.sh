@@ -377,30 +377,22 @@ update_scalable_mysql() {
   exit_on_error "Execution of OXA MySQL playbook failed"
 }
 
+edx_installation_playbook()
+{
+  type=$1 # full|dev
+
+  command="$ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG vagrant-${type}stack.yml"
+
+  # We've been experiencing intermittent failures on ficus. Simply retrying
+  # mitigates the problem, but we should solve the underlying cause(s) soon.
+  retry-command "$command" "5" "${type}stack installation playbooks" "fixPackages"
+}
+
 update_fullstack() {
   install-ssh
 
   # edx playbooks - fullstack (single VM)
-
-  # We've begun experiencing intermittent failures on ficus. Simply retrying
-  # mitigates the problem, but we should solve the underlying cause(s) soon.
-  # todo:move this to a loop utility function that takes command, count, optional description
-  for (( a=1; a<=11; a++ )); do
-    log "STARTING attempt number: $a ..."
-  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG vagrant-fullstack.yml
-    if [ $? -eq 0 ]; then
-        log "SUCCEEDED attempt number: $a !"
-        break
-    fi
-
-    log "FAILED attempt number: $a "
-
-    # Last loop iteration?
-    if [ $a -eq 11 ]; then
-        log "Execution of edX fullstack playbook failed"
-        exit 1
-    fi
-  done
+  edx_installation_playbook "full"
 
   # oxa playbooks - all (single VM)
   $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK
@@ -411,7 +403,7 @@ update_devstack() {
   install-ssh
 
   if ! id -u vagrant > /dev/null 2>&1; then
-  # create required vagrant user account to avoid fatal error
+    # create required vagrant user account to avoid fatal error
     sudo adduser --disabled-password --gecos "" vagrant
 
     # set the vagrant password
@@ -419,21 +411,21 @@ update_devstack() {
   fi
 
   # create some required directories to avoid fatal errors
-  if [ ! -d /edx/app/ecomworker ]; then
-  sudo mkdir -p /edx/app/ecomworker
+  if [[ ! -d /edx/app/ecomworker ]] ; then
+    sudo mkdir -p /edx/app/ecomworker
   fi
 
-  if [ ! -d /home/vagrant/share_x11 ]; then
-  sudo mkdir -p /home/vagrant/share_x11
+  if [[ ! -d /home/vagrant/share_x11 ]] ; then
+    sudo mkdir -p /home/vagrant/share_x11
   fi
 
-  if [ ! -d /edx/app/ecommerce ]; then
+  if [[ ! -d /edx/app/ecommerce ]] ; then
     sudo mkdir -p /edx/app/ecommerce
   fi
 
-  if [ ! -f /home/vagrant/.bashrc ]; then
-  # create empty .bashrc file to avoid fatal error
-  sudo touch /home/vagrant/.bashrc
+  if [[ ! -f /home/vagrant/.bashrc ]] ; then
+    # create empty .bashrc file to avoid fatal error
+    sudo touch /home/vagrant/.bashrc
   fi
 
   if $(stat -c "%U" /home/vagrant) != "vagrant"; then
@@ -444,9 +436,7 @@ update_devstack() {
   fi
 
   # edx playbooks - devstack (single VM)
-  # Skip ecommerce for now since it isn't used and requires debugging
-  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG vagrant-devstack.yml --skip-tags="ecommerce,ecomworker"
-  exit_on_error "Execution of edX devstack playbook failed"
+  edx_installation_playbook "dev"
 
   # oxa playbooks - all (single VM)
   $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK -e "edxrole=$EDX_ROLE"
