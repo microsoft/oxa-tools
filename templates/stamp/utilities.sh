@@ -320,11 +320,8 @@ retry-command()
 
         log "STARTING $message ... Please wait..."
 
-        echo "`$command`"
-        if [ $? -eq 0 ]; then
-            log "SUCCEEDED $message !"
-            break
-        fi
+        # If succcess then break out of loop.
+        echo "`$command && log "SUCCEEDED $message !" && break`"
 
         log "FAILED $message "
     done
