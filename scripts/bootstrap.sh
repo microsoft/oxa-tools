@@ -397,6 +397,9 @@ update_fullstack() {
   # oxa playbooks - all (single VM)
   $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK
   exit_on_error "Execution of OXA playbook failed"
+
+  # get status of edx services
+  /edx/bin/supervisorctl status
 }
 
 update_devstack() {
