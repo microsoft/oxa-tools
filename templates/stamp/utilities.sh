@@ -318,9 +318,9 @@ retry-command()
             apt-wrapper "upgrade -f"
         fi
 
-        log "STARTING $message ..."
+        log "STARTING $message ... Please wait..."
 
-        `$command`
+        echo "`$command`"
         if [ $? -eq 0 ]; then
             log "SUCCEEDED $message !"
             break

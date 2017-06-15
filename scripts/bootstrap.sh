@@ -385,7 +385,7 @@ edx_installation_playbook()
 
   # We've been experiencing intermittent failures on ficus. Simply retrying
   # mitigates the problem, but we should solve the underlying cause(s) soon.
-  retry-command "$command" "5" "${type}stack installation playbooks" "fixPackages"
+  retry-command "$command" "5" "${type}stack installation" "fixPackages"
 }
 
 update_fullstack() {
