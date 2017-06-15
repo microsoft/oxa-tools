@@ -341,10 +341,8 @@ install-ssh()
         return
     fi
 
-    log "Updating Repository"
     apt-wrapper "update"
 
-    log "installing ssh..."
     apt-wrapper "install ssh"
     exit_on_error "Installing SSH Failed on $HOST"
 

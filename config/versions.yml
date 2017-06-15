@@ -6,6 +6,7 @@ configuration_version: "%%CONFIGURATION_VERSION%%"
 certs_version: "%%EDX_VERSION%%"
 forum_version: "%%FORUM_VERSION%%"
 xqueue_version: "%%EDX_VERSION%%"
+
 PROGRAMS_VERSION: "%%EDX_VERSION%%"
 demo_version: "%%$EDX_VERSION%%"
 ECOMMERCE_VERSION: "%%$EDX_VERSION%%"
