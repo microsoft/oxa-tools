@@ -318,15 +318,15 @@ retry-command()
             apt-wrapper "upgrade -f"
         fi
 
-        log "STARTING $message ... Please wait..."
+        log "STARTING ${message}..."
 
-        "`$command`"
+        eval "$command"
         if [[ $? -eq 0 ]] ; then
-            log "SUCCEEDED $message !"
+            log "SUCCEEDED ${message}!"
             break
         fi
 
-        log "FAILED $message "
+        log "FAILED ${message}"
     done
 }
 
