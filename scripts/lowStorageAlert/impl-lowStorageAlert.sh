@@ -10,58 +10,137 @@ SETTINGS_FILE=
 
 # From settings file
     USAGE_THRESHOLD_PERCENT=33
+# Paths and file names.
+    CURRENT_SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+    UTILITIES_FILE=$CURRENT_SCRIPT_PATH/../../templates/stamp/utilities.sh
+    SCRIPT_NAME=`basename "$0"`
 
-# List of <usage>%<path>
-# for example:
-#   "4%/"
-#   "1%/datadisks/disk1"
-diskUsages=`df --output=ipcent,target | grep -v -i "use%\|mounted on" | tr -d ' '`
+help()
+{
+    echo
+    echo "This script $SCRIPT_NAME will alert when a partition\'s"
+    echo "usage percentage exceeds a threshold"
+    echo
+    echo "Options:"
+    echo "  -s|--settings-file  Path to settings"
+    echo
+}
 
-# Iterate over list of <usage>$<path> pairs.
-while read diskUsage; do
-    # Split usage and path
-    diskUsageArray=(`echo "$diskUsage" | tr '%' ' '`)
-    percentUsed=${diskUsageArray[0]}
-    directoryPath=${diskUsageArray[1]}
+# Parse script parameters
+parse_args()
+{
+    while [[ "$#" -gt 0 ]]
+        do
 
-    # Alert for unexpected values (indicative of possible errors in script)
-    if [[ -n ${diskUsageArray[2]} ]]; then
-        echo "Error in script lowStorageAlert. Too many values"
-        echo "Original string before split: $diskUsage"
-        echo "Percentage used: $percentUsed"
-        echo "For path: $directoryPath"
-        echo "Extraneous value: ${diskUsageArray[2]}"
+        # Output parameters to facilitate troubleshooting
+        echo "Option $1 set with value $2"
 
-        continue
+        case "$1" in
+            -s|--settings-file)
+                SETTINGS_FILE=$2
+                shift # argument
+                ;;
+            -h|--help)
+                help
+                exit 2
+                ;;
+            *) # unknown option
+                echo "ERROR. Option -${BOLD}$2${NORM} not allowed."
+                help
+                exit 2
+                ;;
+        esac
+
+        shift # argument
+    done
+}
+
+source_wrapper()
+{
+    if [ -f "$1" ]
+    then
+        echo "Sourcing file $1"
+        source "$1"
+    else
+        echo "Cannot find file at $1"
+        help
+        exit 1
     fi
-    if [[ -z $percentUsed ]] || [[ -z $directoryPath ]]; then
-        echo "Error in script lowStorageAlert. Missing partition usage or file system path"
-        echo "Original string before split: $diskUsage"
-        echo "Percentage used: $percentUsed"
-        echo "For path: $directoryPath"
+}
 
-        continue
-    fi
+check_usage_threshold()
+{
+    # List of <usage>%<path>
+    # for example:
+    #   "4%/"
+    #   "1%/datadisks/disk1"
+    diskUsages=`df --output=ipcent,target | grep -v -i "use%\|mounted on" | tr -d ' '`
 
-    # Alert when threshold is exceeded.
-    if (( $(echo "$percentUsed > $USAGE_THRESHOLD_PERCENT" | bc -l) )); then
+    # Iterate over list of <usage>$<path> pairs.
+    while read diskUsage; do
+        # Split usage and path
+        diskUsageArray=(`echo "$diskUsage" | tr '%' ' '`)
+        percentUsed=${diskUsageArray[0]}
+        directoryPath=${diskUsageArray[1]}
 
-        # Help clarify messaging by appending trailing slash to directory.
-        if [[ $directoryPath != '/' ]]; then
-            directoryPath="${directoryPath}/"
+        # Alert for unexpected values (indicative of possible errors in script)
+        if [[ -n ${diskUsageArray[2]} ]]; then
+            log "Error in script lowStorageAlert. Too many values"
+            log "Original string before split: $diskUsage"
+            log "Percentage used: $percentUsed"
+            log "For path: $directoryPath"
+            log "Extraneous value: ${diskUsageArray[2]}"
+
+            continue
+        fi
+        if [[ -z $percentUsed ]] || [[ -z $directoryPath ]]; then
+            log "Error in script lowStorageAlert. Missing partition usage or file system path"
+            log "Original string before split: $diskUsage"
+            log "Percentage used: $percentUsed"
+            log "For path: $directoryPath"
+
+            continue
         fi
 
-        # Message
-        echo "Directory $directoryPath on machine $HOSTNAME is using $percentUsed percent of available space"
-        echo "Please cleanup this directory at your earliest convenience."
-        echo "The top subfolders or subfiles in $directoryPath are:"
-        # Get list of subitems and filesize, sort them, grab top five, indent, newline.
-        printf "`du -sh $directoryPath* 2> /dev/null | sort -h -r | head -n 5 | sed -e 's/^/  /'`"
+        # Alert when threshold is exceeded.
+        if (( $(echo "$percentUsed > $USAGE_THRESHOLD_PERCENT" | bc -l) )); then
+
+            # Help clarify messaging by appending trailing slash to directory.
+            if [[ $directoryPath != '/' ]] ; then
+                directoryPath="${directoryPath}/"
+            fi
+
+            # Message
+            log "Directory $directoryPath on machine $HOSTNAME is using $percentUsed percent of available space"
+            log "Please cleanup this directory at your earliest convenience."
+            log "The top subfolders or subfiles in $directoryPath are:"
+            # Get list of subitems and filesize, sort them, grab top five, indent, newline.
+            printf "`du -sh $directoryPath* 2> /dev/null | sort -h -r | head -n 5 | sed -e 's/^/  /'`"
+            echo
+
+        fi
+
+        # Newline between exections
         echo
 
-    fi
+    done <<< "$diskUsages"
+}
 
-    # Newline between exections
-    echo
+# Parse script argument(s)
+parse_args $@
 
-done <<< "$diskUsages"
+# log() and other functions
+source_wrapper $UTILITIES_FILE
+
+# Script self-idenfitication
+print_script_header
+
+log "Checking for low disk space"
+
+# Settings
+source_wrapper $SETTINGS_FILE
+
+# Pre-conditionals
+exit_if_limited_user
+
+check_usage_threshold

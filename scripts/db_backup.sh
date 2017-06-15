@@ -43,6 +43,7 @@ help()
     SCRIPT_NAME=`basename "$0"`
     echo
     echo "This script $SCRIPT_NAME will backup the database"
+    echo
     echo "Options:"
     echo "  -s|--settings-file  Path to settings"
     echo
