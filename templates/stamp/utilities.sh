@@ -316,6 +316,7 @@ retry-command()
             apt-wrapper "update"
             apt-wrapper "install -f"
             apt-wrapper "upgrade -f"
+            dpkg --configure -a
         fi
 
         log "STARTING ${message}..."
