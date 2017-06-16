@@ -104,48 +104,6 @@ fi
 MYSQL_SERVER_PACKAGE_NAME="${PACKAGE_NAME}-${PACKAGE_VERSION}"
 
 #############################################################################
-start_mysql()
-{
-    log "Starting Mysql Server"
-
-    if (( $(echo "$OS_VER > 16" | bc -l) ))
-    then
-        systemctl start mysqld
-        # enable mysqld on startup
-        systemctl enable mysqld
-    else
-        service mysql start
-    fi
-
-    # Wait for Mysql daemon to start and initialize for the first time (this may take up to a minute or so)
-    while ! timeout 1 bash -c "echo > /dev/tcp/localhost/$MYSQL_PORT"; do sleep 10; done
-
-    log "${MYSQL_SERVER_PACKAGE_NAME} has been started"
-}
-
-stop_mysql()
-{
-    # Find out what PID the Mysql instance is running as (if any)
-    MYSQLPID=`ps -ef | grep '/usr/sbin/mysqld' | grep -v grep | awk '{print $2}'`
-    
-    if [ ! -z "$MYSQLPID" ]; then
-        log "Stopping Mysql Server (PID $MYSQLPID)"
-        
-        kill -15 $MYSQLPID
-
-        # Important not to attempt to start the daemon immediately after it was stopped as unclean shutdown may be wrongly perceived
-        sleep 15s
-    fi
-}
-
-# restart mysql server (stop and start)
-restart_mysql()
-{
-    stop_mysql
-    start_mysql
-}
-
-#############################################################################
 install_mysql_server()
 {
     log "Installing Mysql packages: $MYSQL_SERVER_PACKAGE_NAME"
@@ -390,7 +348,7 @@ tune_system
 install-bc
 install_mysql_server
 create_config_file
-restart_mysql
+restart_mysql $MYSQL_PORT
 
 # Step 4 - Configurations
 secure_mysql_installation
