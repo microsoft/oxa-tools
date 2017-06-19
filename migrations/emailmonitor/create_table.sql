@@ -2,9 +2,9 @@ BEGIN;
 CREATE DATABASE oxa;
 CREATE TABLE `oxa.oxa_activationfailed` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `xyear` int(11) NOT NULL,
-  `xmonth` int(11) NOT NULL,
-  `xday` int(11) NOT NULL,
+  `activation_year` int(11) NOT NULL,
+  `activation_month` int(11) NOT NULL,
+  `activation_day` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `email` varchar(254) NOT NULL,
   `activation_key` varchar(32) NOT NULL,
@@ -14,7 +14,7 @@ CREATE TABLE `oxa.oxa_activationfailed` (
   `date_processed` datetime(6) DEFAULT NULL,
   `hostvmip` varchar(15) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `oxa_ymd_2` (`xyear`,`xmonth`,`xday`),
+  KEY `oxa_ymd_2` (`activation_year`,`activation_month`,`activation_day`),
   KEY `oxa_userid_2` (`user_id`),
   KEY `oxa_email_2` (`email`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
@@ -22,9 +22,9 @@ CREATE TABLE `oxa.oxa_activationfailed` (
 
  CREATE TABLE `oxa.oxa_activationsummary` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `xyear` int(11) NOT NULL,
-  `xmonth` int(11) NOT NULL,
-  `xday` int(11) NOT NULL,
+  `activation_year` int(11) NOT NULL,
+  `activation_month` int(11) NOT NULL,
+  `activation_day` int(11) NOT NULL,
   `newaccount` int(11) DEFAULT '0',
   `activated` int(11) DEFAULT '0',
   `notactivated` int(11) DEFAULT '0',
@@ -33,7 +33,7 @@ CREATE TABLE `oxa.oxa_activationfailed` (
   `resend` int(11) DEFAULT '0',
   `maxuserid` int(11) DEFAULT '0',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `u_oxa_ymd_1` (`xyear`,`xmonth`,`xday`),
-  KEY `oxa_ymd_1` (`xyear`,`xmonth`,`xday`)
+  UNIQUE KEY `u_oxa_ymd_1` (`activation_year`,`activation_month`,`activation_day`),
+  KEY `oxa_ymd_1` (`activation_year`,`activation_month`,`activation_day`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 ;
 COMMIT;
