@@ -1,3 +1,6 @@
+# This python script reads the data in MySQL and sends summary emails
+# This script also sends activation emails to users that failed in the first time
+
 import MySQLdb
 import collections
 import os
@@ -7,7 +10,13 @@ from smtplib import SMTP
 from email.MIMEMultipart import MIMEMultipart
 from email.MIMEText import MIMEText
 
-def OutputMonthlySummary( f ):
+# Sample output:
+# YEAR-MONTH ACTIVATION STATISTICS:
+# =================================
+# YEAR     MONTH  NEW ACCOUNTS    ACTIVATED       NOT ACTIVATED   ACTIVATION EMAIL FAILED   RESENT EMAIL   
+# 2016     11     173             152             21              0                         0              
+# 2016     12     22552           19648           2904            0                         0     
+def output_monthly_summary( f ):
     
     db = MySQLdb.connect(IP,User,Password,Database)
     cursor = db.cursor()
@@ -35,8 +44,14 @@ def OutputMonthlySummary( f ):
     cursor.close()
     db.close()
 
-
-def OutputCurrentMonthSummary( f ):
+# Sample output:
+# 2017 JUNE ACTIVATION STATISTICS:
+# =====================================
+# DAY    NEW ACCOUNTS    ACTIVATED       NOT ACTIVATED   ACTIVATION EMAIL FAILED   RESENT EMAIL   
+# 1      448             377             71              0                         0              
+# 2      432             333             99              1                         1              	
+#  someuser@domain.com | 99c6f6fc0a23458888e88537e034fd99 | 2017-06-07 02:57:41 | 2017-06-07 02:57:43 | 10.0.0.21 | Resent on 2017-06-12 15:27:32
+def output_current_month_summary( f ):
     db = MySQLdb.connect(IP,User,Password,Database)
     cursor = db.cursor()
 
@@ -76,7 +91,14 @@ def OutputCurrentMonthSummary( f ):
     cursor.close()
     db.close()
 
-def OutputAllFailedEmailActivation( f ):
+# Sample output:
+# OUTSTANDING FAILED ACTIVATION EMAILS:
+#
+# =============================
+# YEAR     MONTH  DAY    EMAIL                                              ACTIVATION KEY                       DATE JOINED              DATE FAILED              VM IP               
+# 2017     5      2      kenneth.masterfox@gmail.com                        Not Found!!!                         2017-05-03 04:37:20      2017-05-03 04:37:20      10.0.0.21           
+# 2017     5      18     villanuevachrisallen@gmail.com                     Not Found!!!                         2017-05-19 02:29:41      2017-05-19 02:29:41      10.0.0.5   	
+def output_all_failed_email_activation( f ):
     db = MySQLdb.connect(IP,User,Password,Database)
     cursor = db.cursor()
 
@@ -102,7 +124,7 @@ def OutputAllFailedEmailActivation( f ):
     cursor.close()
     db.close()
 
-def GetNotProcessedEmailActivationFailures():
+def get_not_processed_email_activation_failures():
     db = MySQLdb.connect(IP,User,Password,Database)
     cursor = db.cursor()
 
@@ -118,13 +140,15 @@ def GetNotProcessedEmailActivationFailures():
 
     return results
 
-def GetMailServerConnection():
-    mailserver = SMTP("smtp-server",port)
+# Using the SMTP credentials and server and port get mailserver object
+def get_mail_server_connection():
+    mailserver = SMTP("smtp-server???",port???)
     mailserver.starttls()
-    mailserver.login("UserName", "Password")
+    mailserver.login("UserName???", "Password???")
     return mailserver
 
-def SendMail(mailserver, message, toMail, subject, attachment=None):
+# Send the email to mailserver
+def send_mail(mailserver, message, toMail, subject, attachment=None):
     from_addr = ""
     msg = MIMEMultipart()
     msg['From'] = ""
@@ -142,18 +166,22 @@ def SendMail(mailserver, message, toMail, subject, attachment=None):
 
     mailserver.sendmail(from_addr,toMail,msg.as_string())
 
-def WriteLog( log, error=None ):
+# Write info or error log to log file /oxa/oxa_email_notify.log
+def write_log( log, error=None ):
     if error == None:
         os.system("echo '"+str(datetime.now())+" "+ log + "' >> /oxa/oxa_email_notify.log")
     else:
         os.system("echo '"+str(datetime.now())+" "+ log + ": "+str(error)+"' >> /oxa/oxa_email_notify.log")
 
-def GetActivationEmailForUser( activation_key ):
+# Create the activation email body for the given activation key (GUID)
+def get_activation_email_for_user( activation_key ):
     msg = "\r\nThank you for creating an account with Microsoft Learning!\r\n\r\nThere's just one more step before you can enroll in a course: you need to activate your Microsoft Learning account. To activate your account, click the following link. If that doesn't work, copy and paste the link into your browser's address bar.\r\n\r\n  https://openedx.microsoft.com/activate/"+activation_key+"\r\n\r\nIf you didn't create an account, you don't need to do anything. If you need assistance, please do not reply to this email message. Check the Support link at the bottom of the Microsoft Learning website.\r\n\r\n\r\n----\r\nMicrosoft respects your privacy. Please read our online Privacy Statement: http://go.microsoft.com/fwlink/?LinkId=521839\r\n\r\nThis is a mandatory service communication. To set your contact preferences for other communications, visit the Promotional Communications Manager: http://go.microsoft.com/fwlink/?LinkId=243191\r\n\r\nMicrosoft Corporation\r\nOne Microsoft Way\r\nRedmond, WA 98052 USA\r\n"
 
     return msg
 
-def MarkDatabaseActivationEMailSent( row ):
+# After sending activation email to user successfully, mark database table raw as email sent with timestamp. 
+# Also update the RESEND statistic for the corresponding YYYY,MM,DD
+def mark_database_activation_email_sent( row ):
     db = MySQLdb.connect(IP,User,Password,Database)
     cursor = db.cursor()
 
@@ -167,72 +195,78 @@ def MarkDatabaseActivationEMailSent( row ):
     cursor.close()
     db.close()
 
-email_monitor_receivers_eng = ""
-email_monitor_receivers_sup = ""
+# Engineering team mail address. You can put multiple email addresses by separating with semicolumn
+email_monitor_receivers_eng = "???;???;???"
 
-WriteLog("Started running process")
-dt = datetime.now()
-subject = dt.strftime("%Y-%m-%d %H:%M:%S")
-filename = dt.strftime("%Y%m%d%H%M%S") + ".mail.txt"
-f = open("/oxa/"+filename,"w")
+# Support team mail address. You can put multiple email addresses by separating with semicolumn
+email_monitor_receivers_sup = "???;???;???"
 
-OutputMonthlySummary(f)
-OutputCurrentMonthSummary(f)
-OutputAllFailedEmailActivation(f)
-f.close()
+write_log("Started running process")
 
+# Create the SMTP mail server object and send the summary email with proper exception handling and error and info logging
+# Also send activation emails to failed users and log this and update database and statistics
 mailserver = None
 try:
-    mailserver = GetMailServerConnection()
+    mailserver = get_mail_server_connection()
 except Exception, ex:
-    WriteLog("Email Server Connection Error",ex)
+    write_log("Email Server Connection Error",ex)
 
 if mailserver != None:
     try:
-        results = GetNotProcessedEmailActivationFailures() 
+        results = get_not_processed_email_activation_failures() 
         activated_emails = "Activation email sent to these users:\r\n\r\n"
         activated_emails_keys = "Activation email sent to these users:\r\n\r\n"
         activated_count = 0
         for row in results:
-            msg = GetActivationEmailForUser(row[6])
+            msg = get_activation_email_for_user(row[6])
             try:
-                SendMail(mailserver,msg,row[5],"Activate Your Microsoft Learning Account")
-                MarkDatabaseActivationEMailSent(row)
-                WriteLog("Activation email is sent to user "+row[5]+" with key "+row[6])
+			    # Send activation emails to failed users and log this and update database and statistics
+                send_mail(mailserver,msg,row[5],"Activate Your Microsoft Learning Account")
+                mark_database_activation_email_sent(row)
+                write_log("Activation email is sent to user "+row[5]+" with key "+row[6])
                 activated_count = activated_count + 1
                 activated_emails = activated_emails + row[5]+"\r\n"
                 activated_emails_keys = activated_emails_keys + '{:50s} {:36s}'.format(row[5],row[6])+"\r\n"
 
             except Exception, ex:
-                WriteLog("Failed to send activation key to user "+row[5] + " with key " + row[6],ex) 
+                write_log("Failed to send activation key to user "+row[5] + " with key " + row[6],ex) 
         
+		# Create the timestamp string for summary email subject and also for temp file
         dt = datetime.now()
         subject = dt.strftime("%Y-%m-%d %H:%M:%S")
         filename = dt.strftime("%Y%m%d%H%M%S") + ".mail.txt"
+		# Create the temp email file and with the functions below fill in the sections.
         f = open("/oxa/"+filename,"w")
 
-        OutputMonthlySummary(f)
-        OutputCurrentMonthSummary(f)
-        OutputAllFailedEmailActivation(f)
+		# YYYY, MM statistics summary section
+        output_monthly_summary(f)
+		
+		# YYYY, MM, DD  statistics summary section for current month
+        output_current_month_summary(f)
+		
+		# All failed activation emails that not resent yet
+        output_all_failed_email_activation(f)
 
         if activated_count > 0:
             f.write(activated_emails_keys)
+		# Close file 	
         f.close()
         
+		# Send the summary email with report attachment
         body_msg = "Please see the attachment for summary."
         if activated_count > 0:
             body_msg = body_msg + "\r\n\r\n" + activated_emails
-        SendMail(mailserver,body_msg,email_monitor_receivers_eng,"OXA Activation EMail Monitoring : ["+ subject+"]",[filename])
-        WriteLog("Sent summary email to " + email_monitor_receivers_eng) 
+        send_mail(mailserver,body_msg,email_monitor_receivers_eng,"OXA Activation EMail Monitoring : ["+ subject+"]",[filename])
+        write_log("Sent summary email to " + email_monitor_receivers_eng) 
          
         if activated_count > 0:
-            SendMail(mailserver,"To the attention of Microsoft Azure Training T2 Support Team.\r\n\r\n"+activated_emails,email_monitor_receivers_sup,"OXA Activation EMail Monitoring : ["+ subject+"]")          
-            WriteLog("Sent summary email to " + email_monitor_receivers_sup)
+            send_mail(mailserver,"To the attention of Microsoft Azure Training T2 Support Team.\r\n\r\n"+activated_emails,email_monitor_receivers_sup,"OXA Activation EMail Monitoring : ["+ subject+"]")          
+            write_log("Sent summary email to " + email_monitor_receivers_sup)
 
     except Exception, ex:
-        WriteLog("Failed to send email",ex)
+        write_log("Failed to send email",ex)
 
-WriteLog("Finished running process")
+write_log("Finished running process")
 
 if mailserver != None:
     mailserver.quit()
