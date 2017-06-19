@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation. All Rights Reserved.
+# Licensed under the MIT license. See LICENSE file on the project webpage for details.
+
 # This python script determines the failed activation email sends and also creates daily statistics in database
 # This summary data and email failures used in another script for sending status reports and also for sending activation emails again
 

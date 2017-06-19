@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation. All Rights Reserved.
+# Licensed under the MIT license. See LICENSE file on the project webpage for details.
+
 # This python script reads the data in MySQL and sends summary emails
 # This script also sends activation emails to users that failed in the first time
 
