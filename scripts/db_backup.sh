@@ -80,7 +80,7 @@ parse_args()
 
 source_wrapper()
 {
-    if [ -f "$1" ]
+    if [[ -f "$1" ]]
     then
         echo "Sourcing file $1"
         source "$1"

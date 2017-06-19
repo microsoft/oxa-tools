@@ -57,7 +57,7 @@ parse_args()
 
 source_wrapper()
 {
-    if [ -f "$1" ]
+    if [[ -f "$1" ]]
     then
         echo "Sourcing file $1"
         source "$1"
@@ -76,7 +76,7 @@ check_usage_threshold()
     #   "1%/datadisks/disk1"
     diskUsages=`df --output=ipcent,target | grep -v -i "use%\|mounted on" | tr -d ' '`
 
-    # Iterate over list of <usage>$<path> pairs.
+    # Iterate over list of <usage>%<path> pairs.
     while read diskUsage; do
         # Split usage and path
         diskUsageArray=(`echo "$diskUsage" | tr '%' ' '`)
