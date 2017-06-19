@@ -15,7 +15,7 @@ def write_log( log, error=None ):
         os.system("echo '"+str(datetime.now())+" "+ log + ": "+str(error)+"' >> /oxa/oxa_email_monitor.log")
 		
 # This function creates the YYYY,MM,DD statistics raw in oxa.oxa_activationsummary table if it doesn't exists. This is rerunnable
-def create_year_month_day():
+def generate_activation_daily_summary():
     db = MySQLdb.connect(IP,User,Password,Database)
     cursor = db.cursor()
 
@@ -195,7 +195,7 @@ def fetch_and_grep_log_files():
 write_log("Started running process")
 
 # Create new YYYY, MM, DD statistic raws
-create_year_month_day()
+generate_activation_daily_summary()
 
 #Update the created account numbers for each day
 update_accounts_created()
