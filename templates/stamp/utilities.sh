@@ -883,7 +883,7 @@ setup_backup()
 
     # For simplicity, we require all required parameters are set
     if [ "$#" -lt 13 ]; then
-        log "Some required backup configuration parameters are missing"
+        echo "Some required backup configuration parameters are missing"
         exit 1;
     fi
 
