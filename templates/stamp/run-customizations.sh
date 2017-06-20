@@ -609,25 +609,10 @@ install-mailer $SMTP_SERVER $SMTP_SERVER_PORT $SMTP_AUTH_USER $SMTP_AUTH_USER_PA
 exit_on_error "Configuring the mailer failed"
 
 # 1. Setup Tools
-install-git
-install-gettext # required for envsubst command
-set_timezone
+install-tools
 
 if [ "$MACHINE_ROLE" == "jumpbox" ] || [ "$MACHINE_ROLE" == "vmss" ];
 then
-    install-bc
-    install-mongodb-shell
-    install-mysql-client
-
-    install-powershell
-    install-azure-cli
-    install-azure-cli-2
-
-    if [ "$MACHINE_ROLE" == "jumpbox" ]; 
-    then
-        log "Installing Mysql Utilities on Jumpbox ${HOSTNAME}"
-        install-mysql-utilities
-    fi
 
     # When the comprehensive theming dirs is specified, edxapp:migrate task fails with :  ImproperlyConfigured: COMPREHENSIVE_THEME_DIRS
     # As an interim mitigation, create the folder if the path specified is not under the edx-platform directory (where the default themes directory is)
