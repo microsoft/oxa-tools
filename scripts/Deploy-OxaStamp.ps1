@@ -76,6 +76,9 @@ Version of Azure CLI to use
 .PARAMETER MemcacheServer
 IP Address of the Memcache Server the application servers will use. It is assumed Memcache is configured and is running on the default port of 11211
 
+.PARAMETER DeploymentVersionId
+A timestamp or other identifier to associate with the VMSS being deployed.
+
 .INPUTS
 None. You cannot pipe objects to Deploy-OxaStamp.ps1
 
@@ -123,7 +126,9 @@ Param(
         [Parameter(Mandatory=$false)][string]$EdxAppSuperUserEmail="",
 
         [Parameter(Mandatory=$false)][string][ValidateSet("1","2")]$AzureCliVersion="1",
-        [Parameter(Mandatory=$false)][string]$MemcacheServer="10.0.0.16"
+        [Parameter(Mandatory=$false)][string]$MemcacheServer="10.0.0.16",
+
+        [Parameter(Mandatory=$false)][string]$DeploymentVersionId=""
      )
 
 #################################
@@ -183,6 +188,12 @@ if (!$KeyVaultUserObjectId)
     $KeyVaultUserObjectId = $principal.Id
 }
 
+# check for the DeploymentVersionId
+if ($DeploymentVersionId -eq "")
+{
+    $DeploymentVersionId=$(get-date -f "yyyyMMddHms")
+}
+
 # Prep the variables we want to use for replacement
 $replacements = @{ 
                     "CLUSTERNAME"=$ResourceGroupName;  
@@ -198,7 +209,8 @@ $replacements = @{
                     "EDXAPPSUPERUSERPASSWORD"=$EdxAppSuperUserPassword;
                     "EDXAPPSUPERUSEREMAIL"=$EdxAppSuperUserEmail;
                     "MEMCACHESERVER"=$MemcacheServer;
-                    "AZURECLIVERSION"=$AzureCliVersion
+                    "AZURECLIVERSION"=$AzureCliVersion;
+                    "DEPLOYMENTVERSIONID"=$DeploymentVersionId
                 }
 
 # Assumption: if the SMTP server is specified, the rest of its configuration will be specified
