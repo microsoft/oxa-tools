@@ -197,20 +197,35 @@ def fetch_and_grep_log_files():
 
 write_log("Started running process")
 
-# Create new YYYY, MM, DD statistic raws
-generate_activation_daily_summary()
+try:
+    # Create new YYYY, MM, DD statistic raws
+    generate_activation_daily_summary()
+except Exception, ex:
+    write_log("[generate_activation_daily_summary] MySQL database connection error",ex)
 
-#Update the created account numbers for each day
-update_accounts_created()
+try:
+    #Update the created account numbers for each day
+    update_accounts_created()
+except Exception, ex:
+    write_log("[update_accounts_created] MySQL database connection error",ex)
 
-#Update the activated account numbers for each day
-update_accounts_activated()
+try:
+    #Update the activated account numbers for each day
+    update_accounts_activated()
+except Exception, ex:
+    write_log("[update_accounts_activated] MySQL database connection error",ex)
 
-#Update the non-activated account numbers for each day
-update_accounts_notactivated()
+try:
+    #Update the non-activated account numbers for each day
+    update_accounts_notactivated()
+except Exception, ex:
+    write_log("[update_accounts_notactivated] MySQL database connection error",ex)
 
-#Fetch the log files from edxapp VMs and determine activation email failures and update daily statistics
-fetch_and_grep_log_files()
+try:
+    #Fetch the log files from edxapp VMs and determine activation email failures and update daily statistics
+    fetch_and_grep_log_files()
+except Exception, ex:
+    write_log("[fetch_and_grep_log_files] Log files processing error",ex)
 
 write_log("Finished running process")
 

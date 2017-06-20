@@ -225,7 +225,11 @@ if mailserver != None:
             try:
 			    # Send activation emails to failed users and log this and update database and statistics
                 send_mail(mailserver,msg,row[5],"Activate Your Microsoft Learning Account")
-                mark_database_activation_email_sent(row)
+                try:
+				    mark_database_activation_email_sent(row)
+			    except Exception, ex:
+                    write_log("[mark_database_activation_email_sent] MySQL database connection error",ex)
+					
                 write_log("Activation email is sent to user "+row[5]+" with key "+row[6])
                 activated_count = activated_count + 1
                 activated_emails = activated_emails + row[5]+"\r\n"
@@ -241,14 +245,23 @@ if mailserver != None:
 		# Create the temp email file and with the functions below fill in the sections.
         f = open("/oxa/"+filename,"w")
 
-		# YYYY, MM statistics summary section
-        output_monthly_summary(f)
+		try:
+		    # YYYY, MM statistics summary section
+            output_monthly_summary(f)
+		except Exception, ex:
+            write_log("[output_monthly_summary] MySQL database connection error",ex)
 		
-		# YYYY, MM, DD  statistics summary section for current month
-        output_current_month_summary(f)
+		try:
+		    # YYYY, MM, DD  statistics summary section for current month
+            output_current_month_summary(f)
+		except Exception, ex:
+            write_log("[output_current_month_summary] MySQL database connection error",ex)
 		
-		# All failed activation emails that not resent yet
-        output_all_failed_email_activation(f)
+		try:
+		    # All failed activation emails that not resent yet
+            output_all_failed_email_activation(f)
+	    except Exception, ex:
+            write_log("[output_all_failed_email_activation] MySQL database connection error",ex)
 
         if activated_count > 0:
             f.write(activated_emails_keys)
