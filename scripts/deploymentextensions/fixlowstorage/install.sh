@@ -3,7 +3,13 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
-parse_args() 
+low_storage_configuration=""    # Settings file
+low_storage_script=""           # Backup script (actually implementation)
+low_storage_log=""              # Log file for storage job
+low_storage_frequency=""        # Backup Frequency
+usage_threshold_percent=""      # Threshold for alerting
+
+parse_args()
 {
     while [[ "$#" -gt 0 ]]
     do
@@ -20,15 +26,21 @@ parse_args()
         log "Option '${1}' set with value '"${arg_value}"'"
 
         case "$1" in
-          --target-user)
-            target_user="${arg_value}"
-            ;;
-          --private-key)
-            private_key=`echo ${arg_value} | base64 --decode`
-            ;;
-          --public-key)
-            public_key=`echo ${arg_value} | base64 --decode`
-            ;;
+          --low-storage-configuration)
+              low_storage_configuration="${arg_value}"
+              ;;
+          --low-storage-script)
+              low_storage_script="${arg_value}"
+              ;;
+          --low-storage-log)
+              low_storage_log="${arg_value}"
+              ;;
+          --low-storage-frequency)
+              low_storage_frequency="${arg_value}"
+              ;;
+          --usage-threshold-percent)
+              usage_threshold_percent="${arg_value}"
+              ;;
         esac
 
         shift # past argument or value
@@ -47,13 +59,6 @@ parse_args()
 
 setup_low_storage_test()
 {
-    # collect the parameters
-    low_stroage_configuration="${1}"    # Settings file
-    low_stroage_script="${2}"           # Backup script (actually implementation)
-    low_stroage_log="${3}"              # Log file for storage job
-    low_stroage_frequency="${4}"        # Backup Frequency
-    usage_threshold_percent="${5}"      # Threshold for alerting
-
     log "Setting up recurring test for low disk space"
 
     # For simplicity, we require all parameters are set
@@ -63,19 +68,20 @@ setup_low_storage_test()
     fi
 
     # persist the settings
-    bash -c "cat <<EOF >${low_stroage_configuration}
+    bash -c "cat <<EOF >${low_storage_configuration}
 USAGE_THRESHOLD_PERCENT=${usage_threshold_percent}
 EOF"
 
-    # todo:consider factor the remaining part of this into its own function
+    # todo: factor common code into generic function when we transition the
+    #   db backup cron creation into the deploymentextensions pattern.
 
     # this file contains secrets (like storage account key). Secure it
-    chmod 600 $low_stroage_configuration
+    chmod 600 $low_storage_configuration
 
     # create the cron job
-    cron_installer_script="${low_stroage_script}"
+    cron_installer_script="${low_storage_script}"
     lock_file="${cron_installer_script}.lock"
-    install_command="sudo flock -n ${lock_file} bash ${low_stroage_script} -s ${low_stroage_configuration} >> ${low_stroage_log} 2>&1"
+    install_command="sudo flock -n ${lock_file} bash ${low_storage_script} -s ${low_storage_configuration} >> ${low_storage_log} 2>&1"
     echo $install_command > $cron_installer_script
 
     # secure the file and make it executable
@@ -87,7 +93,7 @@ EOF"
 
     # Setup the background job
     log "Install job that tests for low remaining disk space"
-    crontab -l | { cat; echo "${low_stroage_frequency} sudo bash ${cron_installer_script}"; } | crontab -
+    crontab -l | { cat; echo "${low_storage_frequency} sudo bash ${cron_installer_script}"; } | crontab -
     exit_on_error "Failed setting up low remaining dis space job." $ERROR_CRONTAB_FAILED
 
     # setup the cron job
