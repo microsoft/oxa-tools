@@ -167,8 +167,18 @@ def process_error_line( cursor, line ):
             cursor.execute("UPDATE oxa.oxa_activationsummary SET failed=failed+1 WHERE  xyear="+y+" and xmonth="+mo+" and xday="+d)    
              
         
-
-    
+# Get the IP list of edxapp VMs dynamically
+def get_list_of_vm_ips():
+    ip_list = []
+	os.system('nmap -sP 10.0.0.1-255 | grep -oE "10.0.0.([0-9]{1,3})" > vm_ip_list.txt')
+    with open('vm_ip_list.txt') as f:
+        for line in f:
+		    line = line.strip()
+		    # Below IPs are jumpbox and backend 
+            if line not in ["10.0.0.4","10.0.0.11","10.0.0.12","10.0.0.13","10.0.0.16","10.0.0.17","10.0.0.18"]:
+                ip_list.append(line)
+    return ip_list				
+	
 # Fetch the error log files for the specified IP VMs and process them in order to determine activation email failures
 def fetch_and_grep_log_files():
     # Remove if exists and create the folder for fethcing error log files from edxapp VMs
@@ -176,7 +186,7 @@ def fetch_and_grep_log_files():
     os.system('mkdir /tmp/oxa_log_files')
 
 	# For each VM, create folder with its IP and copy log files with scp 
-    vms = ('10.0.0.?','10.0.0.?','10.0.0.?','10.0.0.?','10.0.0.?')
+    vms = get_list_of_vm_ips()
     for ip in vms:
         os.system('mkdir /tmp/oxa_log_files/'+ip)    
         os.system('scp '+ip+':/edx/var/log/supervisor/*default* /tmp/oxa_log_files/'+ip+'/')
