@@ -13,15 +13,25 @@ from smtplib import SMTP
 from email.MIMEMultipart import MIMEMultipart
 from email.MIMEText import MIMEText
 
+
+def read_app_config():
+    config = {}
+	with open('oxa_email_config.cfg') as f:
+        for line in f:
+		    line = line.strip()
+	        (key, _, value) = line.partition("=")
+			config[key]=value
+			
+	return config
+	
 # Sample output:
 # YEAR-MONTH ACTIVATION STATISTICS:
 # =================================
 # YEAR     MONTH  NEW ACCOUNTS    ACTIVATED       NOT ACTIVATED   ACTIVATION EMAIL FAILED   RESENT EMAIL   
 # 2016     11     173             152             21              0                         0              
 # 2016     12     22552           19648           2904            0                         0     
-def output_monthly_summary( f ):
-    
-    db = MySQLdb.connect(IP,User,Password,Database)
+def output_monthly_summary( f, config ):
+    db = MySQLdb.connect(config[mysql_host],config[mysql_user],config[mysql_password],config[mysql_database])
     cursor = db.cursor()
 
     sql = "SELECT xyear, xmonth, SUM(newaccount),SUM(activated),SUM(notactivated),SUM(failed),SUM(resend) FROM oxa.oxa_activationsummary \
@@ -54,8 +64,8 @@ def output_monthly_summary( f ):
 # 1      448             377             71              0                         0              
 # 2      432             333             99              1                         1              	
 #  someuser@domain.com | 99c6f6fc0a23458888e88537e034fd99 | 2017-06-07 02:57:41 | 2017-06-07 02:57:43 | 10.0.0.21 | Resent on 2017-06-12 15:27:32
-def output_current_month_summary( f ):
-    db = MySQLdb.connect(IP,User,Password,Database)
+def output_current_month_summary( f , config):
+    db = MySQLdb.connect(config[mysql_host],config[mysql_user],config[mysql_password],config[mysql_database])
     cursor = db.cursor()
 
     dt = datetime.now()
@@ -101,8 +111,8 @@ def output_current_month_summary( f ):
 # YEAR     MONTH  DAY    EMAIL                                              ACTIVATION KEY                       DATE JOINED              DATE FAILED              VM IP               
 # 2017     5      2      kenneth.masterfox@gmail.com                        Not Found!!!                         2017-05-03 04:37:20      2017-05-03 04:37:20      10.0.0.21           
 # 2017     5      18     villanuevachrisallen@gmail.com                     Not Found!!!                         2017-05-19 02:29:41      2017-05-19 02:29:41      10.0.0.5   	
-def output_all_failed_email_activation( f ):
-    db = MySQLdb.connect(IP,User,Password,Database)
+def output_all_failed_email_activation( f , config ):
+    db = MySQLdb.connect(config[mysql_host],config[mysql_user],config[mysql_password],config[mysql_database])
     cursor = db.cursor()
 
     dt = datetime.now()
@@ -127,8 +137,8 @@ def output_all_failed_email_activation( f ):
     cursor.close()
     db.close()
 
-def get_not_processed_email_activation_failures():
-    db = MySQLdb.connect(IP,User,Password,Database)
+def get_not_processed_email_activation_failures( config ):
+    db = MySQLdb.connect(config[mysql_host],config[mysql_user],config[mysql_password],config[mysql_database])
     cursor = db.cursor()
 
 
@@ -144,10 +154,10 @@ def get_not_processed_email_activation_failures():
     return results
 
 # Using the SMTP credentials and server and port get mailserver object
-def get_mail_server_connection():
-    mailserver = SMTP("smtp-server???",port???)
+def get_mail_server_connection( config ):
+    mailserver = SMTP(config[smtp_host],int(config[smtp_port]))
     mailserver.starttls()
-    mailserver.login("UserName???", "Password???")
+    mailserver.login(config[smtp_user], config[smtp_password])
     return mailserver
 
 # Send the email to mailserver
@@ -170,11 +180,11 @@ def send_mail(mailserver, message, toMail, subject, attachment=None):
     mailserver.sendmail(from_addr,toMail,msg.as_string())
 
 # Write info or error log to log file /oxa/oxa_email_notify.log
-def write_log( log, error=None ):
+def write_log(config, log, error=None ):
     if error == None:
-        os.system("echo '"+str(datetime.now())+" "+ log + "' >> /oxa/oxa_email_notify.log")
+        os.system("echo '"+str(datetime.now())+" "+ log + "' >> "+config[log_path]+"/oxa_email_notify.log")
     else:
-        os.system("echo '"+str(datetime.now())+" "+ log + ": "+str(error)+"' >> /oxa/oxa_email_notify.log")
+        os.system("echo '"+str(datetime.now())+" "+ log + ": "+str(error)+"' >> "+config[log_path]+"/oxa_email_notify.log")
 
 # Create the activation email body for the given activation key (GUID)
 def get_activation_email_for_user( activation_key ):
@@ -184,8 +194,8 @@ def get_activation_email_for_user( activation_key ):
 
 # After sending activation email to user successfully, mark database table raw as email sent with timestamp. 
 # Also update the RESEND statistic for the corresponding YYYY,MM,DD
-def mark_database_activation_email_sent( row ):
-    db = MySQLdb.connect(IP,User,Password,Database)
+def mark_database_activation_email_sent( row , config ):
+    db = MySQLdb.connect(config[mysql_host],config[mysql_user],config[mysql_password],config[mysql_database])
     cursor = db.cursor()
 
     dt = datetime.now()
@@ -198,25 +208,25 @@ def mark_database_activation_email_sent( row ):
     cursor.close()
     db.close()
 
+config = read_app_config()
 # Engineering team mail address. You can put multiple email addresses by separating with semicolumn
-email_monitor_receivers_eng = "???;???;???"
-
+email_monitor_receivers_eng = config[mail_list_eng]
 # Support team mail address. You can put multiple email addresses by separating with semicolumn
-email_monitor_receivers_sup = "???;???;???"
+email_monitor_receivers_sup = config[mail_list_sup]
 
-write_log("Started running process")
+write_log(config, "Started running process")
 
 # Create the SMTP mail server object and send the summary email with proper exception handling and error and info logging
 # Also send activation emails to failed users and log this and update database and statistics
 mailserver = None
 try:
-    mailserver = get_mail_server_connection()
+    mailserver = get_mail_server_connection(config)
 except Exception, ex:
-    write_log("Email Server Connection Error",ex)
+    write_log(config, "Email Server Connection Error",ex)
 
 if mailserver != None:
     try:
-        results = get_not_processed_email_activation_failures() 
+        results = get_not_processed_email_activation_failures(config) 
         activated_emails = "Activation email sent to these users:\r\n\r\n"
         activated_emails_keys = "Activation email sent to these users:\r\n\r\n"
         activated_count = 0
@@ -226,17 +236,17 @@ if mailserver != None:
 			    # Send activation emails to failed users and log this and update database and statistics
                 send_mail(mailserver,msg,row[5],"Activate Your Microsoft Learning Account")
                 try:
-				    mark_database_activation_email_sent(row)
+				    mark_database_activation_email_sent(row,config)
 			    except Exception, ex:
-                    write_log("[mark_database_activation_email_sent] MySQL database connection error",ex)
+                    write_log(config, "[mark_database_activation_email_sent] MySQL database connection error",ex)
 					
-                write_log("Activation email is sent to user "+row[5]+" with key "+row[6])
+                write_log(config, "Activation email is sent to user "+row[5]+" with key "+row[6])
                 activated_count = activated_count + 1
                 activated_emails = activated_emails + row[5]+"\r\n"
                 activated_emails_keys = activated_emails_keys + '{:50s} {:36s}'.format(row[5],row[6])+"\r\n"
 
             except Exception, ex:
-                write_log("Failed to send activation key to user "+row[5] + " with key " + row[6],ex) 
+                write_log(config, "Failed to send activation key to user "+row[5] + " with key " + row[6],ex) 
         
 		# Create the timestamp string for summary email subject and also for temp file
         dt = datetime.now()
@@ -247,21 +257,21 @@ if mailserver != None:
 
 		try:
 		    # YYYY, MM statistics summary section
-            output_monthly_summary(f)
+            output_monthly_summary(f,config)
 		except Exception, ex:
-            write_log("[output_monthly_summary] MySQL database connection error",ex)
+            write_log(config, "[output_monthly_summary] MySQL database connection error",ex)
 		
 		try:
 		    # YYYY, MM, DD  statistics summary section for current month
-            output_current_month_summary(f)
+            output_current_month_summary(f,config)
 		except Exception, ex:
-            write_log("[output_current_month_summary] MySQL database connection error",ex)
+            write_log(config, "[output_current_month_summary] MySQL database connection error",ex)
 		
 		try:
 		    # All failed activation emails that not resent yet
-            output_all_failed_email_activation(f)
+            output_all_failed_email_activation(f,config)
 	    except Exception, ex:
-            write_log("[output_all_failed_email_activation] MySQL database connection error",ex)
+            write_log(config, "[output_all_failed_email_activation] MySQL database connection error",ex)
 
         if activated_count > 0:
             f.write(activated_emails_keys)
@@ -273,16 +283,16 @@ if mailserver != None:
         if activated_count > 0:
             body_msg = body_msg + "\r\n\r\n" + activated_emails
         send_mail(mailserver,body_msg,email_monitor_receivers_eng,"OXA Activation EMail Monitoring : ["+ subject+"]",[filename])
-        write_log("Sent summary email to " + email_monitor_receivers_eng) 
+        write_log(config, "Sent summary email to " + email_monitor_receivers_eng) 
          
         if activated_count > 0:
             send_mail(mailserver,"To the attention of Microsoft Azure Training T2 Support Team.\r\n\r\n"+activated_emails,email_monitor_receivers_sup,"OXA Activation EMail Monitoring : ["+ subject+"]")          
-            write_log("Sent summary email to " + email_monitor_receivers_sup)
+            write_log(config, "Sent summary email to " + email_monitor_receivers_sup)
 
     except Exception, ex:
-        write_log("Failed to send email",ex)
+        write_log(config, "Failed to send email",ex)
 
-write_log("Finished running process")
+write_log(config, "Finished running process")
 
 if mailserver != None:
     mailserver.quit()

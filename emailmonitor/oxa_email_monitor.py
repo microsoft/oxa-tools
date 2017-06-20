@@ -11,15 +11,16 @@ import re
 from datetime import datetime,timedelta
 
 # Write an error or info log line with timestamp to the application log file /oxa/oxa_mail_monitor.log
-def write_log( log, error=None ):
+def write_log(config, log, error=None ):
     if error == None:
-        os.system("echo '"+str(datetime.now())+" "+ log + "' >> /oxa/oxa_email_monitor.log")
+        os.system("echo '"+str(datetime.now())+" "+ log + "' >> "+config[log_path]+"/oxa_email_notify.log")
     else:
-        os.system("echo '"+str(datetime.now())+" "+ log + ": "+str(error)+"' >> /oxa/oxa_email_monitor.log")
+        os.system("echo '"+str(datetime.now())+" "+ log + ": "+str(error)+"' >> "+config[log_path]+"/oxa_email_notify.log")
+
 		
 # This function creates the YYYY,MM,DD statistics raw in oxa.oxa_activationsummary table if it doesn't exists. This is rerunnable
-def generate_activation_daily_summary():
-    db = MySQLdb.connect(IP,User,Password,Database)
+def generate_activation_daily_summary(config):
+    db = MySQLdb.connect(config[mysql_host],config[mysql_user],config[mysql_password],config[mysql_database])
     cursor = db.cursor()
 
     sql = "SELECT YEAR(date_joined), MONTH(date_joined), DAY(date_joined), COUNT(*) FROM edxapp.auth_user \
@@ -45,8 +46,8 @@ def generate_activation_daily_summary():
     db.close()
 
 # For each YYYY,MM,DD statistics raw in oxa.oxa_activationsummary table, this function updates the created accounts statistics based on edxapp.auth_user table. This is rerunnable
-def update_accounts_created():
-    db = MySQLdb.connect(IP,User,Password,Database)
+def update_accounts_created(config):
+    db = MySQLdb.connect(config[mysql_host],config[mysql_user],config[mysql_password],config[mysql_database])
     cursor = db.cursor()
 
     sql = "SELECT YEAR(date_joined), MONTH(date_joined), DAY(date_joined), COUNT(*) FROM edxapp.auth_user \
@@ -71,8 +72,8 @@ def update_accounts_created():
     db.close()
 
 # For each YYYY,MM,DD statistics raw in oxa.oxa_activationsummary table, this function updates the activated accounts statistics based on edxapp.auth_user table. This is rerunnable
-def update_accounts_activated():
-    db = MySQLdb.connect(IP,User,Password,Database)
+def update_accounts_activated(config):
+    db = MySQLdb.connect(config[mysql_host],config[mysql_user],config[mysql_password],config[mysql_database])
     cursor = db.cursor()
 
     sql = "SELECT YEAR(date_joined), MONTH(date_joined), DAY(date_joined), COUNT(*) FROM edxapp.auth_user \
@@ -98,8 +99,8 @@ def update_accounts_activated():
     db.close()
 
 # For each YYYY,MM,DD statistics raw in oxa.oxa_activationsummary table, this function updates the non-activated accounts statistics based on edxapp.auth_user table. This is rerunnable
-def update_accounts_notactivated():
-    db = MySQLdb.connect(IP,User,Password,Database)
+def update_accounts_notactivated(config):
+    db = MySQLdb.connect(config[mysql_host],config[mysql_user],config[mysql_password],config[mysql_database])
     cursor = db.cursor()
 
     sql = "SELECT YEAR(date_joined), MONTH(date_joined), DAY(date_joined), COUNT(*) FROM edxapp.auth_user \
@@ -179,8 +180,18 @@ def get_list_of_vm_ips():
                 ip_list.append(line)
     return ip_list				
 	
+def read_app_config():
+    config = {}
+	with open('oxa_email_config.cfg') as f:
+        for line in f:
+		    line = line.strip()
+	        (key, _, value) = line.partition("=")
+			config[key]=value
+			
+	return config
+
 # Fetch the error log files for the specified IP VMs and process them in order to determine activation email failures
-def fetch_and_grep_log_files():
+def fetch_and_grep_log_files(config):
     # Remove if exists and create the folder for fethcing error log files from edxapp VMs
 	os.system('rm -fr /tmp/oxa_log_files')
     os.system('mkdir /tmp/oxa_log_files')
@@ -195,7 +206,7 @@ def fetch_and_grep_log_files():
     os.system("grep 'Unable to send activation email' /tmp/oxa_log_files/*/* > /tmp/oxa_log_files/notsentemails.txt")
     
 	# Now read each line from /tmp/oxa_log_files/notsentemails.txt and if it is not processed already process it and insert to table and update statistics for the corersponding YYYY,MM,DD 
-	db = MySQLdb.connect(IP,User,Password,Database)
+	db = MySQLdb.connect(config[mysql_host],config[mysql_user],config[mysql_password],config[mysql_database])
     cursor = db.cursor()
     with open('/tmp/oxa_log_files/notsentemails.txt') as f:
         for line in f:
@@ -204,40 +215,42 @@ def fetch_and_grep_log_files():
     db.commit()
     cursor.close() 
     db.close()
+config = read_app_config()
+write_log(config, "Started running process")
+# Get the config parameters from oxa_email_config.cfg
 
-write_log("Started running process")
 
 try:
     # Create new YYYY, MM, DD statistic raws
-    generate_activation_daily_summary()
+    generate_activation_daily_summary(config)
 except Exception, ex:
-    write_log("[generate_activation_daily_summary] MySQL database connection error",ex)
+    write_log(config, "[generate_activation_daily_summary] MySQL database connection error",ex)
 
 try:
     #Update the created account numbers for each day
-    update_accounts_created()
+    update_accounts_created(config)
 except Exception, ex:
-    write_log("[update_accounts_created] MySQL database connection error",ex)
+    write_log(config, "[update_accounts_created] MySQL database connection error",ex)
 
 try:
     #Update the activated account numbers for each day
-    update_accounts_activated()
+    update_accounts_activated(config)
 except Exception, ex:
-    write_log("[update_accounts_activated] MySQL database connection error",ex)
+    write_log(config, "[update_accounts_activated] MySQL database connection error",ex)
 
 try:
     #Update the non-activated account numbers for each day
-    update_accounts_notactivated()
+    update_accounts_notactivated(config)
 except Exception, ex:
-    write_log("[update_accounts_notactivated] MySQL database connection error",ex)
+    write_log(config, "[update_accounts_notactivated] MySQL database connection error",ex)
 
 try:
     #Fetch the log files from edxapp VMs and determine activation email failures and update daily statistics
-    fetch_and_grep_log_files()
+    fetch_and_grep_log_files(config)
 except Exception, ex:
-    write_log("[fetch_and_grep_log_files] Log files processing error",ex)
+    write_log(config, "[fetch_and_grep_log_files] Log files processing error",ex)
 
-write_log("Finished running process")
+write_log(config, "Finished running process")
 
 print "Done"
 
