@@ -45,7 +45,7 @@ parse_args()
 
         shift # past argument or value
 
-        if [ $shift_once -eq 0 ]; 
+        if [[ $shift_once -eq 0 ]]; 
         then
             shift # past argument or value
         fi
