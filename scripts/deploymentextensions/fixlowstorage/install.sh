@@ -57,23 +57,17 @@ parse_args()
 # Setup Low Storage Test Parameters
 #############################################################################
 
+# todo: factor common code into generic function when we transition the
+#   db backup cron creation into the deployment extension pattern.
+
 setup_low_storage_test()
 {
     log "Setting up recurring test for low disk space"
-
-    # For simplicity, we require all parameters are set
-    if [ "$#" -lt 5 ]; then
-        log "Some required parameters are missing"
-        exit 1;
-    fi
 
     # persist the settings
     bash -c "cat <<EOF >${low_storage_configuration}
 USAGE_THRESHOLD_PERCENT=${usage_threshold_percent}
 EOF"
-
-    # todo: factor common code into generic function when we transition the
-    #   db backup cron creation into the deploymentextensions pattern.
 
     # this file contains secrets (like storage account key). Secure it
     chmod 600 $low_storage_configuration
