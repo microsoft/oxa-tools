@@ -13,14 +13,14 @@ from datetime import datetime,timedelta
 # Write an error or info log line with timestamp to the application log file /oxa/oxa_mail_monitor.log
 def write_log(config, log, error=None ):
     if error == None:
-        os.system("echo '"+str(datetime.now())+" "+ log + "' >> "+config[log_path]+"/oxa_email_notify.log")
+        os.system("echo '"+str(datetime.now())+" "+ log + "' >> "+config["log_path"]+"/oxa_email_notify.log")
     else:
-        os.system("echo '"+str(datetime.now())+" "+ log + ": "+str(error)+"' >> "+config[log_path]+"/oxa_email_notify.log")
+        os.system("echo '"+str(datetime.now())+" "+ log + ": "+str(error)+"' >> "+config["log_path"]+"/oxa_email_notify.log")
 
 		
 # This function creates the YYYY,MM,DD statistics raw in oxa.oxa_activationsummary table if it doesn't exists. This is rerunnable
 def generate_activation_daily_summary(config):
-    db = MySQLdb.connect(config[mysql_host],config[mysql_user],config[mysql_password],config[mysql_database])
+    db = MySQLdb.connect(config["mysql_host"],config["mysql_user"],config["mysql_password"],config["mysql_database"])
     cursor = db.cursor()
 
     sql = "SELECT YEAR(date_joined), MONTH(date_joined), DAY(date_joined), COUNT(*) FROM edxapp.auth_user \
@@ -47,7 +47,7 @@ def generate_activation_daily_summary(config):
 
 # For each YYYY,MM,DD statistics raw in oxa.oxa_activationsummary table, this function updates the created accounts statistics based on edxapp.auth_user table. This is rerunnable
 def update_accounts_created(config):
-    db = MySQLdb.connect(config[mysql_host],config[mysql_user],config[mysql_password],config[mysql_database])
+    db = MySQLdb.connect(config["mysql_host"],config["mysql_user"],config["mysql_password"],config["mysql_database"])
     cursor = db.cursor()
 
     sql = "SELECT YEAR(date_joined), MONTH(date_joined), DAY(date_joined), COUNT(*) FROM edxapp.auth_user \
@@ -73,7 +73,7 @@ def update_accounts_created(config):
 
 # For each YYYY,MM,DD statistics raw in oxa.oxa_activationsummary table, this function updates the activated accounts statistics based on edxapp.auth_user table. This is rerunnable
 def update_accounts_activated(config):
-    db = MySQLdb.connect(config[mysql_host],config[mysql_user],config[mysql_password],config[mysql_database])
+    db = MySQLdb.connect(config["mysql_host"],config["mysql_user"],config["mysql_password"],config["mysql_database"])
     cursor = db.cursor()
 
     sql = "SELECT YEAR(date_joined), MONTH(date_joined), DAY(date_joined), COUNT(*) FROM edxapp.auth_user \
@@ -100,7 +100,7 @@ def update_accounts_activated(config):
 
 # For each YYYY,MM,DD statistics raw in oxa.oxa_activationsummary table, this function updates the non-activated accounts statistics based on edxapp.auth_user table. This is rerunnable
 def update_accounts_notactivated(config):
-    db = MySQLdb.connect(config[mysql_host],config[mysql_user],config[mysql_password],config[mysql_database])
+    db = MySQLdb.connect(config["mysql_host"],config["mysql_user"],config["mysql_password"],config["mysql_database"])
     cursor = db.cursor()
 
     sql = "SELECT YEAR(date_joined), MONTH(date_joined), DAY(date_joined), COUNT(*) FROM edxapp.auth_user \
@@ -206,7 +206,7 @@ def fetch_and_grep_log_files(config):
     os.system("grep 'Unable to send activation email' /tmp/oxa_log_files/*/* > /tmp/oxa_log_files/notsentemails.txt")
     
 	# Now read each line from /tmp/oxa_log_files/notsentemails.txt and if it is not processed already process it and insert to table and update statistics for the corersponding YYYY,MM,DD 
-	db = MySQLdb.connect(config[mysql_host],config[mysql_user],config[mysql_password],config[mysql_database])
+	db = MySQLdb.connect(config["mysql_host"],config["mysql_user"],config["mysql_password"],config["mysql_database"])
     cursor = db.cursor()
     with open('/tmp/oxa_log_files/notsentemails.txt') as f:
         for line in f:

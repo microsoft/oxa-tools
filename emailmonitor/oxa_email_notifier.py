@@ -31,7 +31,7 @@ def read_app_config():
 # 2016     11     173             152             21              0                         0              
 # 2016     12     22552           19648           2904            0                         0     
 def output_monthly_summary( f, config ):
-    db = MySQLdb.connect(config[mysql_host],config[mysql_user],config[mysql_password],config[mysql_database])
+    db = MySQLdb.connect(config["mysql_host"],config["mysql_user"],config["mysql_password"],config["mysql_database"])
     cursor = db.cursor()
 
     sql = "SELECT xyear, xmonth, SUM(newaccount),SUM(activated),SUM(notactivated),SUM(failed),SUM(resend) FROM oxa.oxa_activationsummary \
@@ -65,7 +65,7 @@ def output_monthly_summary( f, config ):
 # 2      432             333             99              1                         1              	
 #  someuser@domain.com | 99c6f6fc0a23458888e88537e034fd99 | 2017-06-07 02:57:41 | 2017-06-07 02:57:43 | 10.0.0.21 | Resent on 2017-06-12 15:27:32
 def output_current_month_summary( f , config):
-    db = MySQLdb.connect(config[mysql_host],config[mysql_user],config[mysql_password],config[mysql_database])
+    db = MySQLdb.connect(config["mysql_host"],config["mysql_user"],config["mysql_password"],config["mysql_database"])
     cursor = db.cursor()
 
     dt = datetime.now()
@@ -112,7 +112,7 @@ def output_current_month_summary( f , config):
 # 2017     5      2      kenneth.masterfox@gmail.com                        Not Found!!!                         2017-05-03 04:37:20      2017-05-03 04:37:20      10.0.0.21           
 # 2017     5      18     villanuevachrisallen@gmail.com                     Not Found!!!                         2017-05-19 02:29:41      2017-05-19 02:29:41      10.0.0.5   	
 def output_all_failed_email_activation( f , config ):
-    db = MySQLdb.connect(config[mysql_host],config[mysql_user],config[mysql_password],config[mysql_database])
+    db = MySQLdb.connect(config["mysql_host"],config["mysql_user"],config["mysql_password"],config["mysql_database"])
     cursor = db.cursor()
 
     dt = datetime.now()
@@ -138,7 +138,7 @@ def output_all_failed_email_activation( f , config ):
     db.close()
 
 def get_not_processed_email_activation_failures( config ):
-    db = MySQLdb.connect(config[mysql_host],config[mysql_user],config[mysql_password],config[mysql_database])
+    db = MySQLdb.connect(config["mysql_host"],config["mysql_user"],config["mysql_password"],config["mysql_database"])
     cursor = db.cursor()
 
 
@@ -155,9 +155,9 @@ def get_not_processed_email_activation_failures( config ):
 
 # Using the SMTP credentials and server and port get mailserver object
 def get_mail_server_connection( config ):
-    mailserver = SMTP(config[smtp_host],int(config[smtp_port]))
+    mailserver = SMTP(config["smtp_host"],int(config["smtp_port"]))
     mailserver.starttls()
-    mailserver.login(config[smtp_user], config[smtp_password])
+    mailserver.login(config["smtp_user"], config["smtp_password"])
     return mailserver
 
 # Send the email to mailserver
@@ -182,9 +182,9 @@ def send_mail(mailserver, message, toMail, subject, attachment=None):
 # Write info or error log to log file /oxa/oxa_email_notify.log
 def write_log(config, log, error=None ):
     if error == None:
-        os.system("echo '"+str(datetime.now())+" "+ log + "' >> "+config[log_path]+"/oxa_email_notify.log")
+        os.system("echo '"+str(datetime.now())+" "+ log + "' >> "+config["log_path"]+"/oxa_email_notify.log")
     else:
-        os.system("echo '"+str(datetime.now())+" "+ log + ": "+str(error)+"' >> "+config[log_path]+"/oxa_email_notify.log")
+        os.system("echo '"+str(datetime.now())+" "+ log + ": "+str(error)+"' >> "+config["log_path"]+"/oxa_email_notify.log")
 
 # Create the activation email body for the given activation key (GUID)
 def get_activation_email_for_user( activation_key ):
@@ -195,7 +195,7 @@ def get_activation_email_for_user( activation_key ):
 # After sending activation email to user successfully, mark database table raw as email sent with timestamp. 
 # Also update the RESEND statistic for the corresponding YYYY,MM,DD
 def mark_database_activation_email_sent( row , config ):
-    db = MySQLdb.connect(config[mysql_host],config[mysql_user],config[mysql_password],config[mysql_database])
+    db = MySQLdb.connect(config["mysql_host"],config["mysql_user"],config["mysql_password"],config["mysql_database"])
     cursor = db.cursor()
 
     dt = datetime.now()
@@ -210,9 +210,9 @@ def mark_database_activation_email_sent( row , config ):
 
 config = read_app_config()
 # Engineering team mail address. You can put multiple email addresses by separating with semicolumn
-email_monitor_receivers_eng = config[mail_list_eng]
+email_monitor_receivers_eng = config["mail_list_eng"]
 # Support team mail address. You can put multiple email addresses by separating with semicolumn
-email_monitor_receivers_sup = config[mail_list_sup]
+email_monitor_receivers_sup = config["mail_list_sup"]
 
 write_log(config, "Started running process")
 
