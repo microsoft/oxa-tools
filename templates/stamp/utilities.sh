@@ -311,11 +311,68 @@ install-mysql-utilities()
 }
 
 #############################################################################
+# Wrapper functions
+#############################################################################
+
+apt-wrapper()
+{
+    log "$1 package(s)..."
+    sudo apt-get $1 -y -qq --fix-missing
+}
+
+retry-command()
+{
+    command="$1"
+    retry_count="$2"
+    optionalDescription="$3"
+    fix_packages="$4"
+
+    for (( a=1; a<=$retry_count; a++ )) ; do
+        message="$optionalDescription attempt number: $a"
+
+        # Some failures can be resolved by fixing packages.
+        if [[ -n "$fix_packages" ]] ; then
+            apt-wrapper "update"
+            apt-wrapper "install -f"
+            apt-wrapper "upgrade -f"
+            sudo dpkg --configure -a
+        fi
+
+        log "STARTING ${message}..."
+
+        eval "$command"
+        if [[ $? -eq 0 ]] ; then
+            log "SUCCEEDED ${message}!"
+            break
+        fi
+
+        log "FAILED ${message}"
+    done
+}
+
+#############################################################################
 # Setup SSH
 #############################################################################
 
+install-ssh()
+{
+    if [[ -f "/etc/ssh/sshd_config" ]] ; then
+        log "SSH already instealled"
+        return
+    fi
+
+    apt-wrapper "update"
+
+    apt-wrapper "install ssh"
+    exit_on_error "Installing SSH Failed on $HOST"
+
+    log "SSH installed"
+}
+
 setup-ssh()
 {
+    install-ssh
+
     log "Setting up SSH"
 
     # implicit assumptions: private repository with secrets has been cloned and certificates live at /{repository_root}/env/{cloud}/id_rsa*
@@ -596,6 +653,11 @@ exit_on_error()
 
 install-powershell()
 {
+    if [[ -f /usr/bin/powershell ]] ; then
+        log "Powershell is already installed"
+        return
+    fi
+
     log "Installing Powershell"
 
     wget https://raw.githubusercontent.com/PowerShell/PowerShell/v6.0.0-alpha.15/tools/download.sh  -O ~/powershell_installer.sh
@@ -611,26 +673,7 @@ install-powershell()
 
     # execute the installer
     bash ~/powershell_installer.sh
-
-    # validate powershell is installed
-    if [ -f /usr/bin/powershell ]; then
         exit_on_error "Powershell installation failed ${HOSTNAME} !" $ERROR_POWERSHELLINSTALL_FAILED
-    fi
-}
-
-install-azurepowershellcmdlets()
-{
-    log "Installing Azure Powershell Cmdlets"
-
-    # set the PSGallery as a trusted
-    log "Trusting PSGallery"
-    Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
-
-    log "Installing Azure RM cmdlets"
-    Install-Module AzureRM
-
-    log "Installing Azure cmdlets"
-    Install-Module Azure
 }
 
 #############################################################################
