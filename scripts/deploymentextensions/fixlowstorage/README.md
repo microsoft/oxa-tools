@@ -16,6 +16,6 @@ We want to:
    * persists settings for the cron job
 1. The cron job invokes `../remoteCommands.sh` on the "jump box." This will:
    * read the persisted settings which includes a list of machines (private IPs)
-   * copy (via scp) a set of bash files to the each machine in the list (like `utilities.sh`, `notify.sh`, `rotateLog.sh`, and `sharedOperations.sh`)
+   * copy (via scp) a set of bash files to each machine in the list (like `utilities.sh`, `notify.sh`, `rotateLog.sh`, and `sharedOperations.sh`)
    * remotely invoke `notify.sh` (over ssh) which will immediately invoke `rotateLog.sh` before checking for low disk space.
    * NOTE: `../remoteCommands.sh` will NOT copy the persisted settings file. The SSH command itself will include necessary values in the argument list. This minimizes duplication AND follows the pattern extablished in /scripts/bootstrap-db.sh which installs our database backends
