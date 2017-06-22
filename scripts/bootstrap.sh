@@ -9,6 +9,7 @@ EDX_ROLE=""
 DEPLOYMENT_ENV="dev"
 ACCESS_TOKEN=""
 CRON_MODE=0
+RETRY_COUNT=5
 TARGET_FILE=""
 
 # Oxa Tools
@@ -91,6 +92,9 @@ parse_args()
               echo "Invalid role specified\n"
               display_usage
             fi
+            ;;
+          --retry-count)
+            RETRY_COUNT="${arg_value}"
             ;;
           -e|--environment)
             DEPLOYMENT_ENV="${arg_value,,}" # convert to lowercase
@@ -379,20 +383,18 @@ update_scalable_mysql() {
 
 edx_installation_playbook()
 {
-  type=$1 # full|dev
-
-  command="$ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG vagrant-${type}stack.yml"
+  command="$ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG vagrant-${EDX_ROLE}.yml"
 
   # We've been experiencing intermittent failures on ficus. Simply retrying
   # mitigates the problem, but we should solve the underlying cause(s) soon.
-  retry-command "$command" "5" "${type}stack installation" "fixPackages"
+  retry-command "$command" "5" "${EDX_ROLE} installation" "fixPackages"
 }
 
 update_fullstack() {
   install-ssh
 
   # edx playbooks - fullstack (single VM)
-  edx_installation_playbook "full"
+  edx_installation_playbook
 
   # oxa playbooks - all (single VM)
   $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK
@@ -439,7 +441,7 @@ update_devstack() {
   fi
 
   # edx playbooks - devstack (single VM)
-  edx_installation_playbook "dev"
+  edx_installation_playbook
 
   # oxa playbooks - all (single VM)
   $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK -e "edxrole=$EDX_ROLE"

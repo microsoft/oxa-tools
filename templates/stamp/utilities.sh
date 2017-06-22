@@ -316,7 +316,7 @@ retry-command()
             apt-wrapper "update"
             apt-wrapper "install -f"
             apt-wrapper "upgrade -f"
-            dpkg --configure -a
+            sudo dpkg --configure -a
         fi
 
         log "STARTING ${message}..."
@@ -615,7 +615,7 @@ exit_on_error()
 
 install-powershell()
 {
-    if [ -f /usr/bin/powershell ]; then
+    if [[ -f /usr/bin/powershell ]] ; then
         log "Powershell is already installed"
         return
     fi
