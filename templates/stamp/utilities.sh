@@ -352,7 +352,7 @@ retry-command()
 install-sudo()
 {
     if type sudo >/dev/null 2>&1 ; then
-        log "sudo already instealled"
+        log "sudo already installed"
         return
     fi
 
@@ -370,7 +370,7 @@ install-sudo()
 install-ssh()
 {
     if [[ -f "/etc/ssh/sshd_config" ]] ; then
-        log "SSH already instealled"
+        log "SSH already installed"
         return
     fi
 
