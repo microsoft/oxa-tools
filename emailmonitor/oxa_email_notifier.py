@@ -16,13 +16,13 @@ from email.MIMEText import MIMEText
 
 def read_app_config():
     config = {}
-	with open('oxa_email_config.cfg') as f:
+    with open('oxa_email_config.cfg') as f:
         for line in f:
-		    line = line.strip()
+            line = line.strip()
 	        (key, _, value) = line.partition("=")
-			config[key]=value
+            config[key]=value
 			
-	return config
+    return config
 	
 # Sample output:
 # YEAR-MONTH ACTIVATION STATISTICS:
@@ -233,7 +233,7 @@ if mailserver != None:
         for row in results:
             msg = get_activation_email_for_user(row[6])
             try:
-			    # Send activation emails to failed users and log this and update database and statistics
+                # Send activation emails to failed users and log this and update database and statistics
                 send_mail(mailserver,msg,row[5],"Activate Your Microsoft Learning Account")
                 try:
 				    mark_database_activation_email_sent(row,config)
@@ -255,19 +255,18 @@ if mailserver != None:
 		# Create the temp email file and with the functions below fill in the sections.
         f = open("/oxa/"+filename,"w")
 
-		try:
+        try:
 		    # YYYY, MM statistics summary section
             output_monthly_summary(f,config)
-		except Exception, ex:
+        except Exception, ex:
             write_log(config, "[output_monthly_summary] MySQL database connection error",ex)
 		
-		try:
+        try:
 		    # YYYY, MM, DD  statistics summary section for current month
             output_current_month_summary(f,config)
-		except Exception, ex:
+        except Exception, ex:
             write_log(config, "[output_current_month_summary] MySQL database connection error",ex)
-		
-		try:
+        try:
 		    # All failed activation emails that not resent yet
             output_all_failed_email_activation(f,config)
 	    except Exception, ex:
