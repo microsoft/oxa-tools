@@ -135,15 +135,11 @@ configure_datadisks()
 
 install-git()
 {
-    if type git >/dev/null 2>&1; then
+    if type git >/dev/null 2>&1 ; then
         log "Git already installed"
     else
-        log "Installing Git Client"
-
-        log "Updating Repository"
-        apt-get update
-
-        apt-get install -y git
+        apt-wrapper "update"
+        apt-wrapper "install git"
         exit_on_error "Failed to install the GIT client on ${HOSTNAME} !" $ERROR_GITINSTALL_FAILED
     fi
 
@@ -157,10 +153,9 @@ install-git()
 install-gettext()
 {
     # Ensure that gettext (which includes envsubst) is installed
-    if [ $(dpkg-query -W -f='${Status}' gettext 2>/dev/null | grep -c "ok installed") -eq 0 ];
-    then
-        log "Installing Get Text"
-        apt-get install -y gettext;
+    if [[ $(dpkg-query -W -f='${Status}' gettext 2>/dev/null | grep -c "ok installed") -eq 0 ]] ; then
+        apt-wrapper "update"
+        apt-wrapper "install gettext"
         exit_on_error "Failed to install the GetText package on ${HOSTNAME} !"
     else
         log "Get Text is already installed"
@@ -348,6 +343,25 @@ retry-command()
 
         log "FAILED ${message}"
     done
+}
+
+#############################################################################
+# Setup Sudo
+#############################################################################
+
+install-sudo()
+{
+    if type sudo >/dev/null 2>&1 ; then
+        log "sudo already instealled"
+        return
+    fi
+
+    apt-wrapper "update"
+
+    apt-wrapper "install sudo"
+    exit_on_error "Installing sudo Failed on $HOST"
+
+    log "sudo installed"
 }
 
 #############################################################################
@@ -631,7 +645,7 @@ exit_on_error()
     if [[ $? -ne 0 ]]; then
         log "${1}" 1
 
-        if [ "$#" -gt 3 ]; 
+        if [[ "$#" -gt 3 ]] ; 
         then
             # send a notification (if possible)
             MESSAGE="${1}"; SUBJECT="${3}"; TO="${4}"; MAIN_LOGFILE="${5}"; SECONDARY_LOGFILE="${6}"
@@ -639,10 +653,10 @@ exit_on_error()
         fi
 
         # exit with a custom error code (if one is specified)
-        if [ ! -z $2 ]; then
-            exit 1
-        else
+        if [[ -n $2 ]] ; then
             exit $2
+        else
+            exit 1
         fi
     fi
 }
@@ -1017,7 +1031,7 @@ set_timezone()
 {
     timezone="America/Los_Angeles"
 
-    if [ "$#" -ge 1 ]; then
+    if [[ "$#" -ge 1 ]] ; then
         $timezone="${1}"
     fi
 
