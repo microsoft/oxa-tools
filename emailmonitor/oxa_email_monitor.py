@@ -44,11 +44,10 @@ def get_failed_activation_emails( config ):
 	
     cursor.close()
     db.close()
-	
-    return failed_emails
+    
+	return failed_emails
 
-	
-def summary_day_already_created( created_days, new_day ):
+	def summary_day_already_created( created_days, new_day ):
     for existing_day in created_days:
 	    #existing_day[0] is id
         if new_day[0] == existing_day[1] and new_day[1] == existing_day[2] and new_day[2] == existing_day[3]:
