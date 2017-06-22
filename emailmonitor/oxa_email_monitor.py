@@ -17,109 +17,160 @@ def write_log(config, log, error=None ):
     else:
         os.system("echo '"+str(datetime.now())+" "+ log + ": "+str(error)+"' >> "+config["log_path"]+"/oxa_email_notify.log")
 
-		
-# This function creates the YYYY,MM,DD statistics raw in oxa.oxa_activationsummary table if it doesn't exists. This is rerunnable
-def generate_activation_daily_summary(config):
+# Get the list of already created YYYY-MM-DD rows in oxa.oxa_activationsummary table
+# This will be used to check if a new date is created or not
+def get_created_summary_days( config ):
     db = MySQLdb.connect(config["mysql_host"],config["mysql_user"],config["mysql_password"],config["mysql_database"])
     cursor = db.cursor()
 
+	sql = "SELECT * FROM oxa.oxa_activationsummary"
+	cursor.execute(sql)
+	created_days = cursor.fetchall()
+	
+	cursor.close()
+    db.close()
+	
+	return created_days
+
+# Get the list of failed activation emails from oxa.oxa_activationfailed table
+# This will be used to check if a failed email address from log file is already processed or not
+def get_failed_activation_emails( config ):
+    db = MySQLdb.connect(config["mysql_host"],config["mysql_user"],config["mysql_password"],config["mysql_database"])
+    cursor = db.cursor()
+
+	sql = "SELECT email FROM oxa.oxa_activationfailed"
+	cursor.execute(sql)
+	failed_emails = cursor.fetchall()
+	
+	cursor.close()
+    db.close()
+	
+	return failed_emails
+
+	
+def summary_day_already_created( created_days, new_day ):
+    for existing_day in created_days:
+	    #existing_day[0] is id
+        if new_day[0] == existing_day[1] and new_day[1] == existing_day[2] and new_day[2] == existing_day[3]:
+            return True
+    
+	return False
+
+def failed_activation_email_already_exists( failed_emails, email ):
+    for existing_email in failed_emails:	    
+        if existing_email[0] == email:
+            return True
+    
+	return False
+	
+def summary_day_has_same_count( created_days, new_day, created_day_index ):
+    for existing_day in created_days:
+        if new_day[0] == existing_day[1] and new_day[1] == existing_day[2] and new_day[2] == existing_day[3]:
+            if new_day[3] == existing_day[created_day_index]:
+			    return True
+			else:
+			    return False
+    
+	return False
+	
+# This function creates the YYYY,MM,DD statistics raw in oxa.oxa_activationsummary table if it doesn't exists. This is rerunnable
+def generate_activation_daily_summary(config,created_days):
+    db = MySQLdb.connect(config["mysql_host"],config["mysql_user"],config["mysql_password"],config["mysql_database"])
+    cursor = db.cursor()
+	
     sql = "SELECT YEAR(date_joined), MONTH(date_joined), DAY(date_joined), COUNT(*) FROM edxapp.auth_user \
-          GROUP BY DATE(date_joined) \
-          ORDER BY DATE(date_joined)"
+          GROUP BY DATE(date_joined)"
 
     cursor.execute(sql)
     results = cursor.fetchall()
     
     for row in results:
-        y = str(row[0])
-        m = str(row[1])
-        d = str(row[2])
-        sql2 = "SELECT id FROM oxa.oxa_activationsummary WHERE xyear="+y+" and xmonth="+m+" and xday="+d
-        cursor.execute(sql2)
-        if cursor.rowcount < 1: 
-            sql3 = "INSERT INTO oxa.oxa_activationsummary (xyear, xmonth, xday) \
+        if False == summary_day_already_created(created_days,row) : 
+		    y = str(row[0])
+            m = str(row[1])
+            d = str(row[2])
+            sql2 = "INSERT INTO oxa.oxa_activationsummary (activation_year, activation_month, activation_day) \
                    VALUES ("+y+","+m+","+d+")"
-            cursor.execute(sql3) 
+            cursor.execute(sql2) 
 
     db.commit()
     cursor.close()
     db.close()
 
+	
 # For each YYYY,MM,DD statistics raw in oxa.oxa_activationsummary table, this function updates the created accounts statistics based on edxapp.auth_user table. This is rerunnable
-def update_accounts_created(config):
+def update_accounts_created(config,created_days):
     db = MySQLdb.connect(config["mysql_host"],config["mysql_user"],config["mysql_password"],config["mysql_database"])
     cursor = db.cursor()
 
     sql = "SELECT YEAR(date_joined), MONTH(date_joined), DAY(date_joined), COUNT(*) FROM edxapp.auth_user \
-          GROUP BY DATE(date_joined) \
-          ORDER BY DATE(date_joined)"
-
+          GROUP BY DATE(date_joined)"
+          
     cursor.execute(sql)
     results = cursor.fetchall()
 
     for row in results:
-        y = str(row[0])
-        m = str(row[1])
-        d = str(row[2])
-        c = str(row[3])
-        sql2 = "UPDATE oxa.oxa_activationsummary SET newaccount="+c+" \
-               WHERE xyear="+y+" and xmonth="+m+" and xday="+d
-             
-        cursor.execute(sql2)
+        if False == summary_day_has_same_count(created_days,row,4):
+		    y = str(row[0])
+            m = str(row[1])
+            d = str(row[2])
+            c = str(row[3])
+            sql2 = "UPDATE oxa.oxa_activationsummary SET newaccount="+c+" \
+                   WHERE activation_year="+y+" and activation_month="+m+" and activation_day="+d             
+            cursor.execute(sql2)
 
     db.commit()
     cursor.close()
     db.close()
 
 # For each YYYY,MM,DD statistics raw in oxa.oxa_activationsummary table, this function updates the activated accounts statistics based on edxapp.auth_user table. This is rerunnable
-def update_accounts_activated(config):
+def update_accounts_activated(config,created_days):
     db = MySQLdb.connect(config["mysql_host"],config["mysql_user"],config["mysql_password"],config["mysql_database"])
     cursor = db.cursor()
 
     sql = "SELECT YEAR(date_joined), MONTH(date_joined), DAY(date_joined), COUNT(*) FROM edxapp.auth_user \
           WHERE is_active=1 \
-          GROUP BY DATE(date_joined) \
-          ORDER BY DATE(date_joined)"
+          GROUP BY DATE(date_joined)"          
 
     cursor.execute(sql)
     results = cursor.fetchall()
 
     for row in results:
-        y = str(row[0])
-        m = str(row[1])
-        d = str(row[2])
-        c = str(row[3])
-        sql2 = "UPDATE oxa.oxa_activationsummary SET activated="+c+" \
-               WHERE xyear="+y+" and xmonth="+m+" and xday="+d
-
-        cursor.execute(sql2)
+        if False == summary_day_has_same_count(created_days,row,5):
+		    y = str(row[0])
+            m = str(row[1])
+            d = str(row[2])
+            c = str(row[3])
+            sql2 = "UPDATE oxa.oxa_activationsummary SET activated="+c+" \
+                   WHERE activation_year="+y+" and activation_month="+m+" and activation_day="+d
+            cursor.execute(sql2)
 
     db.commit()
     cursor.close()
     db.close()
 
 # For each YYYY,MM,DD statistics raw in oxa.oxa_activationsummary table, this function updates the non-activated accounts statistics based on edxapp.auth_user table. This is rerunnable
-def update_accounts_notactivated(config):
+def update_accounts_notactivated(config,created_days):
     db = MySQLdb.connect(config["mysql_host"],config["mysql_user"],config["mysql_password"],config["mysql_database"])
     cursor = db.cursor()
 
     sql = "SELECT YEAR(date_joined), MONTH(date_joined), DAY(date_joined), COUNT(*) FROM edxapp.auth_user \
           WHERE is_active=0 \
-          GROUP BY DATE(date_joined) \
-          ORDER BY DATE(date_joined)"
+          GROUP BY DATE(date_joined)"
+          
 
     cursor.execute(sql)
     results = cursor.fetchall()
 
     for row in results:
-        y = str(row[0])
-        m = str(row[1])
-        d = str(row[2])
-        c = str(row[3])
-        sql2 = "UPDATE oxa.oxa_activationsummary SET notactivated="+c+" \
-               WHERE xyear="+y+" and xmonth="+m+" and xday="+d
-
-        cursor.execute(sql2)
+        if False == summary_day_has_same_count(created_days,row,6):	
+            y = str(row[0])
+            m = str(row[1])
+            d = str(row[2])
+            c = str(row[3])
+            sql2 = "UPDATE oxa.oxa_activationsummary SET notactivated="+c+" \
+                   WHERE activation_year="+y+" and activation_month="+m+" and activation_day="+d
+            cursor.execute(sql2)
 
     db.commit()
     cursor.close()
@@ -127,7 +178,7 @@ def update_accounts_notactivated(config):
 
 # For the given failed activation email line which has timestamp and user email address, update oxa database if it is not already processed
 # This is rerunnable for logs and it process a line only once in database
-def process_error_line( cursor, line ):
+def process_error_line( cursor, line, failed_emails ):
 
     # From the activation email error line, with regular expression fetch IP, year, month, day, hour, minute, second, and email    
     m = re.search('/tmp/oxa_log_files/(.+?)/.+:([0-9]{4}?)-([0-9]{2}?)-([0-9]{2}?)\s([0-9]{2}?):([0-9]{2}?):([0-9]{2}?),.+to\s"(.+?)"',line)
@@ -144,7 +195,7 @@ def process_error_line( cursor, line ):
                 
 	    # If this error line is not already processed (not in MySQL) , process it otherwise skip 		
         cursor.execute("SELECT id from oxa.oxa_activationfailed where email='"+email+"'")
-        if cursor.rowcount <= 0: 
+        if False == failed_activation_email_already_exists(failed_emails,email):
 		    # Find user_id from email 
             cursor.execute("SELECT id,date_joined from edxapp.auth_user WHERE email='"+email+"'")
             user_id = 0
@@ -164,8 +215,8 @@ def process_error_line( cursor, line ):
                     activation_key = result[0][0]
             
 			# Insert this new activation email failure to oxa.oxa_activationfailed table and update activation_failed statistics for corresponding day in oxa.oxa_activationsummary table
-            cursor.execute("INSERT INTO oxa.oxa_activationfailed (xyear,xmonth,xday,user_id,email,activation_key,date_joined,date_failed,hostvmip) VALUES("+y+","+mo+","+d+","+str(user_id)+",'"+email+"','"+activation_key+"','"+str(date_joined)+"','"+str(date_failed)+"','"+ip+"')")
-            cursor.execute("UPDATE oxa.oxa_activationsummary SET failed=failed+1 WHERE  xyear="+y+" and xmonth="+mo+" and xday="+d)    
+            cursor.execute("INSERT INTO oxa.oxa_activationfailed (activation_year,activation_month,activation_day,user_id,email,activation_key,date_joined,date_failed,hostvmip) VALUES("+y+","+mo+","+d+","+str(user_id)+",'"+email+"','"+activation_key+"','"+str(date_joined)+"','"+str(date_failed)+"','"+ip+"')")
+            cursor.execute("UPDATE oxa.oxa_activationsummary SET failed=failed+1 WHERE  activation_year="+y+" and activation_month="+mo+" and activation_day="+d)    
              
         
 # Get the IP list of edxapp VMs dynamically
@@ -191,7 +242,7 @@ def read_app_config():
 	return config
 
 # Fetch the error log files for the specified IP VMs and process them in order to determine activation email failures
-def fetch_and_grep_log_files(config):
+def fetch_and_grep_log_files(config,failed_emails):
     # Remove if exists and create the folder for fethcing error log files from edxapp VMs
 	os.system('rm -fr /tmp/oxa_log_files')
     os.system('mkdir /tmp/oxa_log_files')
@@ -210,43 +261,49 @@ def fetch_and_grep_log_files(config):
     cursor = db.cursor()
     with open('/tmp/oxa_log_files/notsentemails.txt') as f:
         for line in f:
-            process_error_line(cursor,line)
+            process_error_line(cursor,line,failed_emails)
 
     db.commit()
     cursor.close() 
     db.close()
+
+# Get the config parameters from oxa_email_config.cfg
 config = read_app_config()
 write_log(config, "Started running process")
-# Get the config parameters from oxa_email_config.cfg
 
+# Get the already created summary date rows for each YYYY-MM-DD
+created_days = get_created_summary_days(config)
+
+#Get the failed activation email list
+failed_emails = get_failed_activation_emails(config)
 
 try:
     # Create new YYYY, MM, DD statistic raws
-    generate_activation_daily_summary(config)
+    generate_activation_daily_summary(config,created_days)
 except Exception, ex:
     write_log(config, "[generate_activation_daily_summary] MySQL database connection error",ex)
 
 try:
     #Update the created account numbers for each day
-    update_accounts_created(config)
+    update_accounts_created(config,created_days)
 except Exception, ex:
     write_log(config, "[update_accounts_created] MySQL database connection error",ex)
 
 try:
     #Update the activated account numbers for each day
-    update_accounts_activated(config)
+    update_accounts_activated(config.created_days)
 except Exception, ex:
     write_log(config, "[update_accounts_activated] MySQL database connection error",ex)
 
 try:
     #Update the non-activated account numbers for each day
-    update_accounts_notactivated(config)
+    update_accounts_notactivated(config,created_days)
 except Exception, ex:
     write_log(config, "[update_accounts_notactivated] MySQL database connection error",ex)
 
 try:
     #Fetch the log files from edxapp VMs and determine activation email failures and update daily statistics
-    fetch_and_grep_log_files(config)
+    fetch_and_grep_log_files(config,failed_emails)
 except Exception, ex:
     write_log(config, "[fetch_and_grep_log_files] Log files processing error",ex)
 

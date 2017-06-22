@@ -34,9 +34,9 @@ def output_monthly_summary( f, config ):
     db = MySQLdb.connect(config["mysql_host"],config["mysql_user"],config["mysql_password"],config["mysql_database"])
     cursor = db.cursor()
 
-    sql = "SELECT xyear, xmonth, SUM(newaccount),SUM(activated),SUM(notactivated),SUM(failed),SUM(resend) FROM oxa.oxa_activationsummary \
-          GROUP BY xyear,xmonth \
-          ORDER BY xyear,xmonth"
+    sql = "SELECT activation_year, activation_month, SUM(newaccount),SUM(activated),SUM(notactivated),SUM(failed),SUM(resend) FROM oxa.oxa_activationsummary \
+          GROUP BY activation_year,activation_month \
+          ORDER BY activation_year,activation_month"
 
     cursor.execute(sql)
     results = cursor.fetchall()
@@ -70,10 +70,10 @@ def output_current_month_summary( f , config):
 
     dt = datetime.now()
     
-    sql = "SELECT xyear, xmonth, xday, SUM(newaccount),SUM(activated),SUM(notactivated),SUM(failed),SUM(resend) FROM oxa.oxa_activationsummary \
-          WHERE xyear = "+str(dt.year)+" and xmonth = "+ str(dt.month) +"\
-          GROUP BY xyear,xmonth,xday \
-          ORDER BY xyear,xmonth,xday"
+    sql = "SELECT activation_year, activation_month, activation_day, SUM(newaccount),SUM(activated),SUM(notactivated),SUM(failed),SUM(resend) FROM oxa.oxa_activationsummary \
+          WHERE activation_year = "+str(dt.year)+" and activation_month = "+ str(dt.month) +"\
+          GROUP BY activation_year,activation_month,activation_day \
+          ORDER BY activation_year,activation_month,activation_day"
 
     cursor.execute(sql)
     results = cursor.fetchall()
@@ -91,7 +91,7 @@ def output_current_month_summary( f , config):
         rs = str(row[7])
         f.write('{:6s} {:15s} {:15s} {:15s} {:25s} {:15s}'.format(d,n,a,na,fl,rs)+"\r\n")
         if ( fl > 0 ):
-            cursor.execute("SELECT * FROM oxa.oxa_activationfailed WHERE xyear="+y+" and xmonth="+m+" and xday="+d)
+            cursor.execute("SELECT * FROM oxa.oxa_activationfailed WHERE activation_year="+y+" and activation_month="+m+" and activation_day="+d)
             results = cursor.fetchall()
             for row in  results:
                 resent = ""
@@ -119,7 +119,7 @@ def output_all_failed_email_activation( f , config ):
 
     sql = "SELECT * FROM oxa.oxa_activationfailed \
           WHERE is_processed=0 \
-          ORDER BY xyear,xmonth,xday,hostvmip"
+          ORDER BY activation_year,activation_month,activation_day,hostvmip"
 
     cursor.execute(sql)
     results = cursor.fetchall()
@@ -144,7 +144,7 @@ def get_not_processed_email_activation_failures( config ):
 
     sql = "SELECT * FROM oxa.oxa_activationfailed \
           WHERE user_id > 0 and is_processed=0 \
-          ORDER BY xyear,xmonth,xday,hostvmip"
+          ORDER BY activation_year,activation_month,activation_day,hostvmip"
 
     cursor.execute(sql)
     results = cursor.fetchall()
@@ -201,7 +201,7 @@ def mark_database_activation_email_sent( row , config ):
     dt = datetime.now()
     sql = "UPDATE oxa.oxa_activationfailed SET is_processed = 1, date_processed = '"+str(dt)+"' WHERE id="+str(row[0])
     cursor.execute(sql)
-    sql = "UPDATE oxa.oxa_activationsummary SET resend = resend+1 WHERE xyear="+str(row[1])+" and xmonth="+str(row[2])+" and xday="+str(row[3])    
+    sql = "UPDATE oxa.oxa_activationsummary SET resend = resend+1 WHERE activation_year="+str(row[1])+" and activation_month="+str(row[2])+" and activation_day="+str(row[3])    
     cursor.execute(sql)
 
     db.commit()
