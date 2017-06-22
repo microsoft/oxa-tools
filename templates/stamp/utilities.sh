@@ -357,7 +357,6 @@ install-sudo()
     fi
 
     apt-wrapper "update"
-
     apt-wrapper "install sudo"
     exit_on_error "Installing sudo Failed on $HOST"
 
@@ -376,7 +375,6 @@ install-ssh()
     fi
 
     apt-wrapper "update"
-
     apt-wrapper "install ssh"
     exit_on_error "Installing SSH Failed on $HOST"
 
@@ -1280,10 +1278,10 @@ install-tools()
 
     # 1. Setup Tools
     install-git
-    install-gettext # required for envsubst command
+    install-gettext # required for envsubst
     set_timezone
 
-    if [[ "$machine_role" == "jumpbox" ]] || [[ "$machine_role" == "vmss" ]];
+    if [[ "$machine_role" == "jumpbox" ]] || [[ "$machine_role" == "vmss" ]] ;
     then
         install-bc
         install-mongodb-shell
@@ -1293,7 +1291,7 @@ install-tools()
         install-azure-cli
         install-azure-cli-2
 
-        if [[ "$machine_role" == "jumpbox" ]]; 
+        if [[ "$machine_role" == "jumpbox" ]] ; 
         then
             log "Installing Mysql Utilities on Jumpbox ${HOSTNAME}"
             install-mysql-utilities
