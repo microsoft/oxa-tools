@@ -378,11 +378,20 @@ update_scalable_mysql() {
 
 edx_installation_playbook()
 {
+  systemctl >/dev/null 2>&1
+  exit_on_error "Single VM instance of EDX has a hard requirement on systemd and its systemctl functionality"
+
+  # Most docker containers don't have sudo pre-installed
+  install-sudo
+
+  # git, gettext
+  install-tools
+
   command="$ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG vagrant-${EDX_ROLE}.yml"
 
   # We've been experiencing intermittent failures on ficus. Simply retrying
   # mitigates the problem, but we should solve the underlying cause(s) soon.
-  retry-command "$command" "5" "${EDX_ROLE} installation" "fixPackages"
+  retry-command "$command" "$RETRY_COUNT" "${EDX_ROLE} installation" "fixPackages"
 }
 
 update_fullstack() {
