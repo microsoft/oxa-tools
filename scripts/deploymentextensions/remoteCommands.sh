@@ -3,11 +3,8 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
-# Convenient wrappers for executing SCP or SSH across a collections of machines sequentially.
-# This file can be used in at least three different ways.
-#   1. Callers can "bash" execute the script itself providing a parameter settings files. This is the best technique for cron.
-#   2. Callers can "export" the required variables and then "bash" execute OR "source" this file.
-#   3. Callers can ensure "source" this file, assign the required variables, then invoke desired methods directly. Callers should first ensure that REMOTE_USER is either not set or an empty string before using this method. A simple REMOTE_USER= assignment OR [[ -z REMOTE_USER ]] precondition should be sufficient.
+# Convenient wrappers for executing SCP and/or SSH across a collections of machines sequentially.
+# See help() for further details.
 
 # BOTH SCP AND SSH
     DESTINATION_MACHINES_LIST="()"
@@ -21,21 +18,88 @@
     REMOTE_COMMAND=""
     REMOTE_ARGUMENTS=""
 
-#todo:
 # Path to settings file provided as an argument to this script.
     SETTINGS_FILE=
 
+# Usage messaging
+help_both()
+{
+    echo "Cannot batch $1 until the following variables are assigned"
+    echo "DESTINATION_MACHINES_LIST: Array of remote machines"
+    todo:
+}
 help_scp()
 {
-    echo "Cannot batch scp until the following variables are assigned"
-    echo "DESTINATION_MACHINES_LIST: Array of remote machines"
+    help_both "scp"
     #todo:
 }
 help_ssh()
 {
-    echo "Cannot batch scp until the following variables are assigned"
-    echo "DESTINATION_MACHINES_LIST: Array of remote machines"
+    help_both "ssh"
     #todo:
+}
+help()
+{
+    echo
+    echo "This script $SCRIPT_NAME will executing SCP and/or SSH across a collections of machines sequentially"
+    echo
+    echo "Options:"
+    echo "  -s|--settings-file  Path to settings"
+    echo
+    echo
+    echo "This script can be used in at least three different ways."
+    echo "  1. Callers can 'bash' execute the script itself providing a parameter settings files."
+    echo "      This is the best technique for cron."
+    echo
+    echo "  2. Callers can 'export' the required vars and then 'bash' execute OR 'source' this."
+    echo
+    echo "  3. Callers can 'source' this file, assign the required variables, then invoke desired"
+    echo "      methods directly. Callers should first ensure that REMOTE_USER is either not set"
+    echo "      or an empty string before using this method. A simple REMOTE_USER= assignment OR"
+    echo "      a [[ -z REMOTE_USER ]] precondition should be sufficient."
+    echo
+}
+
+# Parse script parameters
+parse_args()
+{
+    while [[ "$#" -gt 0 ]]
+        do
+
+        # Output parameters to facilitate troubleshooting
+        echo "Option $1 set with value $2"
+
+        case "$1" in
+            -s|--settings-file)
+                SETTINGS_FILE=$2
+                shift # argument
+                ;;
+            -h|--help)
+                help
+                exit 2
+                ;;
+            *) # unknown option
+                echo "ERROR. Option -${BOLD}$2${NORM} not allowed."
+                help
+                exit 2
+                ;;
+        esac
+
+        shift # argument
+    done
+}
+
+source_wrapper()
+{
+    if [[ -f "$1" ]]
+    then
+        echo "Sourcing file $1"
+        source "$1"
+    else
+        echo "Cannot find file at $1"
+        help
+        exit 1
+    fi
 }
 
 # These functions "return" the first "false" response via $? by immediately exiting the function.
@@ -102,7 +166,7 @@ ssh_cmd_wrapper()
     fi
 }
 
-#source settings files
+#todo:
 
 scp_wrapper
 
