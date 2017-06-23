@@ -96,6 +96,9 @@ MEMCACHE_SERVER=""
 # Azure Cli Version
 AZURE_CLI_VERSION="2"
 
+# Mobile rest api 
+EDXAPP_ENABLE_MOBILE_REST_API="false"
+
 help()
 {
     echo "This script bootstraps the OXA Stamp"
@@ -150,6 +153,7 @@ help()
     echo "        --domain-separator domain separator character"
     echo "        --azurecli-version azure cli version to use"
     echo "        --memcache-server the memcache server to use"
+    echo "        --enable-mobile-rest-api indicator of whether or not the mobile rest api will be enabled"
 }
 
 # Parse script parameters
@@ -407,6 +411,15 @@ parse_args()
              --azurecli-version)
                 AZURE_CLI_VERSION="${arg_value}"
                 ;;
+             --enable-mobile-rest-api)
+                EDXAPP_ENABLE_MOBILE_REST_API="${arg_value,,}"
+                if [[ ! is_valid_arg "true false" $EDXAPP_ENABLE_MOBILE_REST_API ]]; 
+                then
+                  echo "Invalid state specified for mobile rest api"
+                  help
+                  exit 2
+                fi
+                ;;
             -h|--help)  # Helpful hints
                 help
                 exit 2
@@ -499,12 +512,23 @@ persist_deployment_time_values()
     fi
 
     # check for MemCache Server Override
-    if [ ! -z ${MEMCACHE_SERVER} ];
+    if [[ ! -z ${MEMCACHE_SERVER} ]];
     then
         log "Overriding 'MEMCACHE_SERVER_IP'"
         sed -i "s#^MEMCACHE_SERVER_IP=.*#MEMCACHE_SERVER_IP=${MEMCACHE_SERVER}#I" $config_file
     else
         log "Memcache Server override not specified"
+    fi
+
+    # check for Mobile Rest Api override
+    if [[ ! -z ${EDXAPP_ENABLE_MOBILE_REST_API} ]];
+    then
+        # if EDXAPP_ENABLE_MOBILE_REST_API & EDXAPP_ENABLE_OAUTH2_PROVIDER must have the same value (dependency)
+        log "Overriding 'EDXAPP_ENABLE_MOBILE_REST_API'"
+        sed -i "s#^EDXAPP_ENABLE_MOBILE_REST_API=.*#EDXAPP_ENABLE_MOBILE_REST_API=${EDXAPP_ENABLE_MOBILE_REST_API}#I" $config_file
+        sed -i "s#^EDXAPP_ENABLE_OAUTH2_PROVIDER=.*#EDXAPP_ENABLE_OAUTH2_PROVIDER=${EDXAPP_ENABLE_MOBILE_REST_API}#I" $config_file
+    else
+        log "Mobile Rest API override not specified"
     fi
 
     # Re-source the cloud configurations
@@ -575,6 +599,9 @@ then
     DATABASE_PARAMS="--platform-email \"${PLATFORM_EMAIL}\" --platform-name \"${PLATFORM_NAME}\" --mysql-backupuser \"${MYSQL_BACKUP_USER}\" --mysql-backupuserpassword \"${MYSQL_BACKUP_USER_PASSWORD}\" --mysql-repluser \"${MYSQL_REPL_USER}\" --mysql-repluserpassword \"${MYSQL_REPL_USER_PASSWORD}\" --mysql-adminuser \"${MYSQL_ADMIN_USER}\" --mysql-adminuserpassword \"${MYSQL_ADMIN_PASSWORD}\" --mongo-adminuser \"${MONGO_USER}\" --mongo-adminuserpassword \"${MONGO_PASSWORD}\" --mongo-replicasetkey \"${MONGO_REPLICASET_KEY}\""
     MEMCACHE_PARAMS="--memcache-server \"${MEMCACHE_SERVER}\""
     AZURE_CLI_VERSION="--azurecli-version \"${AZURE_CLI_VERSION}\""
+
+    # Mobile rest api parameter
+    MOBILE_REST_API_PARAMS="--enable-mobile-rest-api \"${EDXAPP_ENABLE_MOBILE_REST_API}\""
 
     # Strip out the spaces for passing it along
     MONGO_BACKUP_FREQUENCY="${MONGO_BACKUP_FREQUENCY// /_}"

@@ -128,7 +128,9 @@ Param(
         [Parameter(Mandatory=$false)][string][ValidateSet("1","2")]$AzureCliVersion="1",
         [Parameter(Mandatory=$false)][string]$MemcacheServer="10.0.0.16",
 
-        [Parameter(Mandatory=$false)][string]$DeploymentVersionId=""
+        [Parameter(Mandatory=$false)][string]$DeploymentVersionId="",
+
+        [Parameter(Mandatory=$false)][switch]$EnableMobileRestApi=$false
      )
 
 #################################

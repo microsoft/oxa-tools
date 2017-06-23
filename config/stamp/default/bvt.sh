@@ -129,3 +129,7 @@ EDXAPP_IMPORT_KITCHENSINK_COURSE={EDXAPP_IMPORT_KITCHENSINK_COURSE}
 # broken application experiences (cache poisoning). It is therefore necessary to add explicit configuration for the memcache server and allow 
 # deployment-time overrides.
 MEMCACHE_SERVER_IP=$MYSQL_MASTER_IP
+
+# Conditionally enabling Mobile Rest Api in support of MPP integration scenarios
+EDXAPP_ENABLE_OAUTH2_PROVIDER=false
+EDXAPP_ENABLE_MOBILE_REST_API=false
