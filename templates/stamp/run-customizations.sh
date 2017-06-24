@@ -413,7 +413,7 @@ parse_args()
                 ;;
              --enable-mobile-rest-api)
                 EDXAPP_ENABLE_MOBILE_REST_API="${arg_value,,}"
-                if [[ ! is_valid_arg "true false" $EDXAPP_ENABLE_MOBILE_REST_API ]]; 
+                if ( ! is_valid_arg "true false" $EDXAPP_ENABLE_MOBILE_REST_API ) ; 
                 then
                   echo "Invalid state specified for mobile rest api"
                   help

@@ -79,6 +79,9 @@ IP Address of the Memcache Server the application servers will use. It is assume
 .PARAMETER DeploymentVersionId
 A timestamp or other identifier to associate with the VMSS being deployed.
 
+.PARAMETER EnableMobileRestApi
+An switch to indicate whether or not mobile rest api is turned on
+
 .INPUTS
 None. You cannot pipe objects to Deploy-OxaStamp.ps1
 
@@ -222,6 +225,13 @@ if ($smtpServer)
     $replacements["SMTPSERVERPORT"]=$smtpServerPort
     $replacements["SMTPAUTHENTICATIONUSER"]=$smtpAuthenticationUser
     $replacements["SMTPAUTHENTICATIONUSERPASSWORD"]=$smtpAuthenticationUserPassword
+}
+
+# Enabling Mobile API
+$replacements["ENABLEMOBILERESTAPI"]="false"
+if ($EnableMobileRestApi -eq $true)
+{
+    $replacements["ENABLEMOBILERESTAPI"]="true"
 }
 
 # Update the deployment parameters
