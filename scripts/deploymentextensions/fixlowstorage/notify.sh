@@ -55,19 +55,6 @@ parse_args()
     done
 }
 
-source_wrapper()
-{
-    if [[ -f "$1" ]]
-    then
-        echo "Sourcing file $1"
-        source "$1"
-    else
-        echo "Cannot find file at $1"
-        help
-        exit 1
-    fi
-}
-
 check_usage_threshold()
 {
     # List of <usage>%<path>

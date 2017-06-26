@@ -8,7 +8,7 @@
 
 # BOTH SCP AND SSH
     DESTINATION_MACHINES_LIST="()"
-    REMOTE_USER=""
+    target_user=""
 
 # SCP ONLY
     PATHS_TO_COPY_LIST="()"
@@ -54,9 +54,9 @@ help()
     echo "  2. Callers can 'export' the required vars and then 'bash' execute OR 'source' this."
     echo
     echo "  3. Callers can 'source' this file, assign the required variables, then invoke desired"
-    echo "      methods directly. Callers should first ensure that REMOTE_USER is either not set"
-    echo "      or an empty string before using this method. A simple REMOTE_USER= assignment OR"
-    echo "      a [[ -z REMOTE_USER ]] precondition should be sufficient."
+    echo "      methods directly. Callers should first ensure that target_user is either not set"
+    echo "      or an empty string before using this method. A simple target_user= assignment OR"
+    echo "      a [[ -z target_user ]] precondition should be sufficient."
     echo
 }
 
@@ -111,7 +111,7 @@ valid_scp_settings()
     [[ -n $PATHS_TO_COPY_LIST ]] || return
     (( ${#PATHS_TO_COPY_LIST[@]} > 0 )) || return
 
-    [[ -n $REMOTE_USER ]] || return
+    [[ -n $target_user ]] || return
     [[ -n $DESTINATION_DIRECTORY ]] || return
 
     true
@@ -121,7 +121,7 @@ valid_ssh_settings()
     [[ -n $DESTINATION_MACHINES_LIST ]] || return
     (( ${#DESTINATION_MACHINES_LIST[@]} > 0 )) || return
 
-    [[ -n $REMOTE_USER ]] || return
+    [[ -n $target_user ]] || return
     [[ -n $REMOTE_COMMAND ]] || return
     [[ -n $REMOTE_ARGUMENTS ]] || return
 
@@ -137,7 +137,7 @@ scp_wrapper()
             for pathToCopy in "${PATHS_TO_COPY_LIST[@]}" ; do
                 scp -r -o "StrictHostKeyChecking=no" \
                     $pathToCopy \
-                    $REMOTE_USER@$destinationHost:$DESTINATION_DIRECTORY
+                    $target_user@$destinationHost:$DESTINATION_DIRECTORY
             done
         done
     else
@@ -158,7 +158,7 @@ ssh_cmd_wrapper()
 
         for destinationHost in "${DESTINATION_MACHINES_LIST[@]}" ; do
             ssh -o "StrictHostKeyChecking=no" \
-                $REMOTE_USER@$destinationHost \
+                $target_user@$destinationHost \
                 "$preCommand $REMOTE_COMMAND $REMOTE_ARGUMENTS"
         done
     else
