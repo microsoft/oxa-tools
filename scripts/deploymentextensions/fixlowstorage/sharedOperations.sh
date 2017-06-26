@@ -7,8 +7,11 @@
     script_file=""
     settings_file=""
 
-# Settings file.
+# Settings file (scp and ssh)
+    backend_server_list=()
     target_user=""
+    paths_to_copy_list=()
+    destination_path="~"
 
     low_storage_log=""              # Log file for storage job
     low_storage_frequency=""        # Backup Frequency
@@ -63,24 +66,33 @@ parse_args()
         log "Option '${1}' set with value '"${arg_value}"'"
 
         case "$1" in
-          --settings-file)
-              settings_file="${arg_value}"
-              ;;
           --script-file)
-              script_file="${arg_value}"
-              ;;
+            script_file="${arg_value}"
+            ;;
+          --settings-file)
+            settings_file="${arg_value}"
+            ;;
+          --backend-server-list)
+            backend_server_list=(`echo ${arg_value} | base64 --decode`)
+            ;;
           --target-user)
             target_user="${arg_value}"
             ;;
+          --paths-to-copy-list)
+            paths_to_copy_list=(`echo ${arg_value} | base64 --decode`)
+            ;;
+          --destination-path)
+            destination_path="${arg_value}"
+            ;;
           --low-storage-log)
-              low_storage_log="${arg_value}"
-              ;;
+            low_storage_log="${arg_value}"
+            ;;
           --low-storage-frequency)
-              low_storage_frequency="${arg_value}"
-              ;;
+            low_storage_frequency="${arg_value}"
+            ;;
           --usage-threshold-percent)
-              usage_threshold_percent="${arg_value}"
-              ;;
+            usage_threshold_percent="${arg_value}"
+            ;;
         esac
 
         shift # past argument or value
@@ -93,26 +105,21 @@ parse_args()
     done
 }
 
-write_args()
-{
-    #todo
-}
-
 persist_settings_for_cron()
 {
 # persist the settings
     bash -c "cat <<EOF >${settings_file}
-DESTINATION_MACHINES_LIST=
+backend_server_list=\"$backend_server_list\"
 target_user=$target_user
-PATHS_TO_COPY_LIST=
-DESTINATION_DIRECTORY=
+paths_to_copy_list=\"$paths_to_copy_list\"
+destination_path=$destination_path
+
 REMOTE_COMMAND=
-REMOTE_ARGUMENTS=\"`write_args`\"
+REMOTE_ARGUMENTS=\"$@\"
 EOF"
 
-    # this file contains secrets (like storage account key). Secure it
+    # this file contains important information (like db info). Secure it
     chmod 600 $settings_file
-
 }
 
 ###############################################

@@ -3,6 +3,8 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
+set -x
+
 # Update working directory
 current_script_path="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 pushd $current_script_path
@@ -13,7 +15,7 @@ source sharedOperations.sh || exit 1
 # todo: factor common code into generic function when we transition the
 #   db backup cron creation into the deployment extension pattern.
 
-persist_args_for_cron
+persist_settings_for_cron
 
 # create the cron job
 cron_installer_script="${script_file}"

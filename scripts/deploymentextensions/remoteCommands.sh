@@ -7,12 +7,12 @@
 # See help() for further details.
 
 # BOTH SCP AND SSH
-    DESTINATION_MACHINES_LIST="()"
+    backend_server_list=()
     target_user=""
 
 # SCP ONLY
-    PATHS_TO_COPY_LIST="()"
-    DESTINATION_DIRECTORY="~"
+    paths_to_copy_list=()
+    destination_path="~"
 
 # SSH ONLY
     REMOTE_COMMAND=""
@@ -25,7 +25,7 @@
 help_both()
 {
     echo "Cannot batch $1 until the following variables are assigned"
-    echo "DESTINATION_MACHINES_LIST: Array of remote machines"
+    echo "backend_server_list: Array of remote machines"
     #todo:
 }
 help_scp()
@@ -105,21 +105,21 @@ source_wrapper()
 # These functions "return" the first "false" response via $? by immediately exiting the function.
 valid_scp_settings()
 {
-    [[ -n $DESTINATION_MACHINES_LIST ]] || return
-    (( ${#DESTINATION_MACHINES_LIST[@]} > 0 )) || return
+    [[ -n $backend_server_list ]] || return
+    (( ${#backend_server_list[@]} > 0 )) || return
 
-    [[ -n $PATHS_TO_COPY_LIST ]] || return
-    (( ${#PATHS_TO_COPY_LIST[@]} > 0 )) || return
+    [[ -n $paths_to_copy_list ]] || return
+    (( ${#paths_to_copy_list[@]} > 0 )) || return
 
     [[ -n $target_user ]] || return
-    [[ -n $DESTINATION_DIRECTORY ]] || return
+    [[ -n $destination_path ]] || return
 
     true
 }
 valid_ssh_settings()
 {
-    [[ -n $DESTINATION_MACHINES_LIST ]] || return
-    (( ${#DESTINATION_MACHINES_LIST[@]} > 0 )) || return
+    [[ -n $backend_server_list ]] || return
+    (( ${#backend_server_list[@]} > 0 )) || return
 
     [[ -n $target_user ]] || return
     [[ -n $REMOTE_COMMAND ]] || return
@@ -132,12 +132,12 @@ scp_wrapper()
 {
     if valid_scp_settings ; then
         # Iterate over target machines
-        for destinationHost in "${DESTINATION_MACHINES_LIST[@]}" ; do
+        for destinationHost in "${backend_server_list[@]}" ; do
             # Iterate over source path for copy
-            for pathToCopy in "${PATHS_TO_COPY_LIST[@]}" ; do
+            for pathToCopy in "${paths_to_copy_list[@]}" ; do
                 scp -r -o "StrictHostKeyChecking=no" \
                     $pathToCopy \
-                    $target_user@$destinationHost:$DESTINATION_DIRECTORY
+                    $target_user@$destinationHost:$destination_path
             done
         done
     else
@@ -156,7 +156,7 @@ ssh_cmd_wrapper()
             preCommand="cd $parentPath && sudo chmod 755 $REMOTE_COMMAND && "
         fi
 
-        for destinationHost in "${DESTINATION_MACHINES_LIST[@]}" ; do
+        for destinationHost in "${backend_server_list[@]}" ; do
             ssh -o "StrictHostKeyChecking=no" \
                 $target_user@$destinationHost \
                 "$preCommand $REMOTE_COMMAND $REMOTE_ARGUMENTS"
