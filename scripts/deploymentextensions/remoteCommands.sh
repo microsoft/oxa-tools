@@ -26,7 +26,7 @@ help_both()
 {
     echo "Cannot batch $1 until the following variables are assigned"
     echo "DESTINATION_MACHINES_LIST: Array of remote machines"
-    todo:
+    #todo:
 }
 help_scp()
 {

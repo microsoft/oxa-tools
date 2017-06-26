@@ -194,7 +194,7 @@ setup()
         
         if [[ ! -e $TARGET_FILE ]] ;
         then
-            #todo: use deploymentextensions/remoteCommands.sh instead
+            #todo: consider using deploymentextensions/remoteCommands.sh instead
 
             # Setup each mongo server
             count=1
