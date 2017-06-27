@@ -192,8 +192,10 @@ setup()
     then
         # check if this is already done
         
-        if [ ! -e $TARGET_FILE ];
+        if [[ ! -e $TARGET_FILE ]] ;
         then
+            #todo: consider using deploymentextensions/remoteCommands.sh instead
+
             # Setup each mongo server
             count=1
             mongo_servers=(`echo $MONGO_SERVER_LIST | tr , ' ' `)
