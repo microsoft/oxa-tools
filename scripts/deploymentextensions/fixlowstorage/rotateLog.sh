@@ -5,70 +5,14 @@
 
 set -x
 
-# Path to settings file provided as an argument to this script.
-SETTINGS_FILE=
-
-# From settings file
+# Settings
     SIZE_THRESHOLD=700000000     # Default to 700 megabytes, but updated later on
     DATABASE_USER=root           # Default, but updated later on
     DATABASE_PASSWORD=
     PATH_PREFIX=/datadisks/disk1 # Default, but updated later on
 # Paths and file names.
-    CURRENT_SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-    UTILITIES_FILE=$CURRENT_SCRIPT_PATH/../../templates/stamp/utilities.sh
+    current_script_path="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
     SCRIPT_NAME=`basename "$0"`
-
-help()
-{
-    echo
-    echo "This script $SCRIPT_NAME will rotate mysql\'s slow log"
-    echo
-    echo "Options:"
-    echo "  -s|--settings-file  Path to settings"
-    echo
-}
-
-# Parse script parameters
-parse_args()
-{
-    while [[ "$#" -gt 0 ]]
-        do
-
-        # Output parameters to facilitate troubleshooting
-        echo "Option $1 set with value $2"
-
-        case "$1" in
-            -s|--settings-file)
-                SETTINGS_FILE=$2
-                shift # argument
-                ;;
-            -h|--help)
-                help
-                exit 2
-                ;;
-            *) # unknown option
-                echo "ERROR. Option -${BOLD}$2${NORM} not allowed."
-                help
-                exit 2
-                ;;
-        esac
-
-        shift # argument
-    done
-}
-
-source_wrapper()
-{
-    if [[ -f "$1" ]]
-    then
-        echo "Sourcing file $1"
-        source "$1"
-    else
-        echo "Cannot find file at $1"
-        help
-        exit 1
-    fi
-}
 
 mysql_command()
 {
@@ -112,21 +56,22 @@ rotate_mysql_slow_log()
     fi
 }
 
-# Parse script argument(s)
-parse_args $@
-
-# log() and other functions
-source_wrapper $UTILITIES_FILE
-
-# Script self-idenfitication
-print_script_header
+###############################################
+# START CORE EXECUTION
+###############################################
 
 log "Starting mysql slow logs rotation."
 
-# Settings
-source_wrapper $SETTINGS_FILE
+# Update working directory
+pushd $current_script_path
+
+# Parse commandline argument, source utilities. Exit on failure.
+source sharedOperations.sh || exit 1
 
 # Pre-conditionals
 exit_if_limited_user
 
 rotate_mysql_slow_log
+
+# Restore working directory
+popd

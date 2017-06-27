@@ -3,6 +3,8 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
+set -x
+
 # Cron Job Setup/Execution
     script_file=""
     settings_file=""
@@ -14,6 +16,9 @@
     target_user=""
     paths_to_copy_list=()
     destination_path="~"
+
+# Disk usage alert AND Log rotation
+
 
     usage_threshold_percent=""      # Threshold for alerting
 
