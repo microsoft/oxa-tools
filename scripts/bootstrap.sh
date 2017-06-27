@@ -15,7 +15,7 @@ TARGET_FILE=""
 # Settings for the OXA-Tools public repository 
 OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
 OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME="oxa-tools"
-OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master.fic"
+OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master.fic.restrict"
 
 # this is the operational branch for the OXA_TOOLS public git project
 OXA_TOOLS_VERSION=""

@@ -27,7 +27,7 @@ PREVIEW_URL=preview.$BASE_URL
 TEMPLATE_TYPE=stamp # stamp|scalable|fullstack|devstack
 CLUSTERNAME={CLUSTERNAME}
 ADMIN_USER=oxaadmin
-OXA_TOOLS_VERSION=oxa/master.fic
+OXA_TOOLS_VERSION=oxa/master.fic.restrict
 
 # config/server-vars.yml
 #YOUTUBE_API_KEY=todo
@@ -38,7 +38,7 @@ PLATFORM_EMAIL=
 CONFIGURATION_REPO=https://github.com/Microsoft/edx-configuration.git
 CONFIGURATION_VERSION=oxa/master.fic
 PLATFORM_REPO=https://github.com/Microsoft/edx-platform.git
-PLATFORM_VERSION=oxa/master.fic
+PLATFORM_VERSION=oxa/master.fic.restrict
 THEME_REPO=https://github.com/Microsoft/edx-theme.git
 THEME_VERSION=oxa/master.fic
 EDX_VERSION=open-release/ficus.master
