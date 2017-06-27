@@ -33,7 +33,7 @@ CONFIGURATION_VERSION=""
 # There are cases where we want to override the edx-platform repository itself
 EDX_PLATFORM_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
 EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME="edx-platform"
-EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master.fic"
+EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master.fic.restrict"
 
 # EdX Theme
 # There are cases where we want to override the edx-platform repository itself
