@@ -18,9 +18,11 @@ set -x
     destination_path="~"
 
 # Disk usage alert AND Log rotation
-
-
-    usage_threshold_percent=""      # Threshold for alerting
+    usage_threshold_percent=""
+    file_size_threshold=700000000     # Default to 700 megabytes
+    mysql_user=root
+    mysql_pass=
+    large_partition=/datadisks/disk1
 
 current_script_path="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
@@ -97,6 +99,18 @@ parse_args()
             ;;
           --usage-threshold-percent)
             usage_threshold_percent="${arg_value}"
+            ;;
+          --file-size-threshold)
+            file_size_threshold="${arg_value}"
+            ;;
+          --mysql-user)
+            mysql_user="${arg_value}"
+            ;;
+          --mysql-pass)
+            mysql_pass="${arg_value}"
+            ;;
+          --large-partition)
+            large_partition="${arg_value}"
             ;;
         esac
 
