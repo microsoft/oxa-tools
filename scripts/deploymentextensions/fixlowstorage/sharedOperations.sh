@@ -6,6 +6,8 @@
 # Cron Job Setup/Execution
     script_file=""
     settings_file=""
+    low_storage_log=""
+    low_storage_frequency=""
 
 # Settings file (scp and ssh)
     backend_server_list=()
@@ -13,16 +15,13 @@
     paths_to_copy_list=()
     destination_path="~"
 
-    low_storage_log=""              # Log file for storage job
-    low_storage_frequency=""        # Backup Frequency
     usage_threshold_percent=""      # Threshold for alerting
 
 current_script_path="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 source_wrapper()
 {
-    if [[ -f "$1" ]]
-    then
+    if [[ -f "$1" ]] ; then
         echo "Sourcing file $1"
         source "$1"
 
@@ -51,13 +50,11 @@ source_utilities()
 
 parse_args()
 {
-    while [[ "$#" -gt 0 ]]
-    do
+    while [[ "$#" -gt 0 ]] ; do
         arg_value="${2}"
         shift_once=0
 
-        if [[ "${arg_value}" =~ "--" ]]; 
-        then
+        if [[ "${arg_value}" =~ "--" ]] ; then
             arg_value=""
             shift_once=1
         fi
@@ -84,6 +81,9 @@ parse_args()
           --destination-path)
             destination_path="${arg_value}"
             ;;
+          --remote-command)
+            remote_command="${arg_value}"
+            ;;
           --low-storage-log)
             low_storage_log="${arg_value}"
             ;;
@@ -97,14 +97,16 @@ parse_args()
 
         shift # past argument or value
 
-        if [[ $shift_once -eq 0 ]]; 
-        then
+        if [[ $shift_once -eq 0 ]] ; then
             shift # past argument or value
         fi
 
     done
 }
 
+###############################################
+# INVOKED EXTERNALLY
+###############################################
 persist_settings_for_cron()
 {
 # persist the settings
@@ -113,13 +115,35 @@ backend_server_list=\"$backend_server_list\"
 target_user=$target_user
 paths_to_copy_list=\"$paths_to_copy_list\"
 destination_path=$destination_path
-
-REMOTE_COMMAND=
-REMOTE_ARGUMENTS=\"$@\"
+remote_command=$remote_command
+remote_arguments=\"$@\"
 EOF"
 
     # this file contains important information (like db info). Secure it
     chmod 600 $settings_file
+}
+create_or_update_cron_job()
+{
+    # create the cron job
+    cron_installer_script="${script_file}.cron"
+    lock_file="${cron_installer_script}.lock"
+    install_command="sudo flock -n ${lock_file} bash ${script_file} -s ${settings_file} >> ${low_storage_log} 2>&1"
+    echo $install_command > $cron_installer_script
+
+    # secure the file and make it executable
+    chmod 700 $cron_installer_script
+
+    # Remove the task if it is already setup
+    log "Uninstalling existing job that tests for low remaining disk space"
+    crontab -l | grep -v "sudo bash ${cron_installer_script}" | crontab -
+
+    # Setup the background job
+    log "Install job that tests for low remaining disk space"
+    crontab -l | { cat; echo "${low_storage_frequency} sudo bash ${cron_installer_script}"; } | crontab -
+    exit_on_error "Failed setting up low remaining dis space job." $ERROR_CRONTAB_FAILED
+
+    # setup the cron job
+    log "Completed job that tests for and partially mitigates low remaining disk space"
 }
 
 ###############################################
@@ -136,8 +160,7 @@ source_utilities || exit 1
 print_script_header
 
 # pass existing command line arguments
-parse_args $@
-# validate_args todo:
+parse_args "$@"
 
 # Restore working directory
 popd

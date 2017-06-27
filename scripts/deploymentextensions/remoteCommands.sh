@@ -4,7 +4,7 @@
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
 # Convenient wrappers for executing SCP and/or SSH across a collections of machines sequentially.
-# See help() for further details.
+# See help() or invoke with -h for further details
 
 # BOTH SCP AND SSH
     backend_server_list=()
@@ -15,28 +15,35 @@
     destination_path="~"
 
 # SSH ONLY
-    REMOTE_COMMAND=""
-    REMOTE_ARGUMENTS=""
+    remote_command=""
+    remote_arguments=""
 
 # Path to settings file provided as an argument to this script.
-    SETTINGS_FILE=
+    settings_file=
+
+set -x
 
 # Usage messaging
 help_both()
 {
+    echo
     echo "Cannot batch $1 until the following variables are assigned"
     echo "backend_server_list: Array of remote machines"
-    #todo:
+    echo "target_user:         User on remote machine"
 }
 help_scp()
 {
     help_both "scp"
-    #todo:
+    echo "paths_to_copy_list: List of paths to local files that will be copied to remote machines"
+    echo "destination_path:   Remote target folder path for copies (the destination directory)"
+    echo
 }
 help_ssh()
 {
     help_both "ssh"
-    #todo:
+    echo "remote_command:     Command to execute on remote machines"
+    echo "remote_arguments:   Parameters for remote command"
+    echo
 }
 help()
 {
@@ -44,7 +51,7 @@ help()
     echo "This script $SCRIPT_NAME will executing SCP and/or SSH across a collections of machines sequentially"
     echo
     echo "Options:"
-    echo "  -s|--settings-file  Path to settings"
+    echo "  -s|--settings-file  Path to settings."
     echo
     echo
     echo "This script can be used in at least three different ways."
@@ -71,7 +78,7 @@ parse_args()
 
         case "$1" in
             -s|--settings-file)
-                SETTINGS_FILE=$2
+                settings_file=$2
                 shift # argument
                 ;;
             -h|--help)
@@ -87,19 +94,6 @@ parse_args()
 
         shift # argument
     done
-}
-
-source_wrapper()
-{
-    if [[ -f "$1" ]]
-    then
-        echo "Sourcing file $1"
-        source "$1"
-    else
-        echo "Cannot find file at $1"
-        help
-        exit 1
-    fi
 }
 
 # These functions "return" the first "false" response via $? by immediately exiting the function.
@@ -122,8 +116,8 @@ valid_ssh_settings()
     (( ${#backend_server_list[@]} > 0 )) || return
 
     [[ -n $target_user ]] || return
-    [[ -n $REMOTE_COMMAND ]] || return
-    [[ -n $REMOTE_ARGUMENTS ]] || return
+    [[ -n $remote_command ]] || return
+    [[ -n $remote_arguments ]] || return
 
     true
 }
@@ -149,24 +143,25 @@ ssh_cmd_wrapper()
 {
     if valid_ssh_settings ; then
         preCommand=""
-        parentPath=`dirname $REMOTE_COMMAND`
+        parentPath=`dirname $remote_command`
         if [[ "$parentPath" != "." ]] ; then
             # The command is a path to a script.
             # Let's update working directory and configure permissions accordingly.
-            preCommand="cd $parentPath && sudo chmod 755 $REMOTE_COMMAND && "
+            preCommand="cd $parentPath && sudo chmod 755 $remote_command && "
         fi
 
         for destinationHost in "${backend_server_list[@]}" ; do
             ssh -o "StrictHostKeyChecking=no" \
                 $target_user@$destinationHost \
-                "$preCommand $REMOTE_COMMAND $REMOTE_ARGUMENTS"
+                "$preCommand $remote_command $remote_arguments"
         done
     else
         help_ssh
     fi
 }
 
-#todo:
+# Get settings. Exit on failure.
+source $settings_file || exit 1
 
 scp_wrapper
 
