@@ -357,7 +357,7 @@ done
 # We need to push the correctly updated cloud config back to keyvault
 log "The targeted VMs have been updated successfully. Now updating keyvault settings"
 cloud_config_basepath="/oxa/oxa-tools-config/env/${cloud}"
-cloud_config_filepath="${cloudConfigBasePath}/${cloud}.sh"
+cloud_config_filepath="${cloud_config_basepath}/${cloud}.sh"
 
 # check if the relevant settings are available or not and update them appropriately
 mobile_rest_api_settings=(`echo "EDXAPP_ENABLE_OAUTH2_PROVIDER EDXAPP_ENABLE_MOBILE_REST_API OAUTH_ENFORCE_SECURE"`)
