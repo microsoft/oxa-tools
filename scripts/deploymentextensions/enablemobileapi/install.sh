@@ -44,6 +44,9 @@ wait_interval_seconds=10
 # allow the user to specify which vmss instances to update. the expected value is the VMSS deployment id
 vmss_deployment_id=""
 
+# cloud being deployed
+cloud="bvt"
+
 #############################################################################
 # parse the command line arguments
 
@@ -105,6 +108,9 @@ parse_args()
             ;;
           --vmss-deployment-id)
             vmss_deployment_id="${arg_value}"
+            ;;
+          --cloud)
+            cloud="${arg_value}"
             ;;
           --remote)
             remote_mode=1
@@ -181,6 +187,12 @@ validate_args()
     if [[ -z $azure_subscription_id ]] || [[ -z $azure_resource_group ]]; 
     then
         log "You must specify a valid Azure Subscription Id and Resource group representing the stamp cluster."
+        exit $error_mobilerestapi_update_failed
+    fi
+
+    if [[ -z $cloud ]]; 
+    then
+        log "You must specify a target cloud for this deployment to ensure it cloud configuration gets updated"
         exit $error_mobilerestapi_update_failed
     fi
 
@@ -340,5 +352,19 @@ do
     # Execute the component deployment
     execute_remote_command $vmssInstanceIp $target_user
 done
+
+# TODO: finally, persist the setting in keyvault
+# We need to push the correctly updated cloud config back to keyvault
+log "The targeted VMs have been updated successfully. Now updating keyvault settings"
+cloudConfigBasePath="/oxa/oxa-tools-config/env/${cloud}"
+cloudConfigFilePath="${cloudConfigBasePath}/${cloud}.sh"
+
+# check the cloud config file for the values we are interested in
+# EDXAPP_ENABLE_OAUTH2_PROVIDER=false
+# EDXAPP_ENABLE_MOBILE_REST_API=false
+ 
+keyvault_name="${azure_resource_group}-kv"
+powershell -file ${oxa_tools_repository_path}/scripts/Process-OxaToolsKeyVaultConfiguration.ps1 -Operation "Upload" -VaultName "${keyvault_name}" -AadWebClientId "${aad_webclient_id}" -AadWebClientAppKey "${aad_webclient_appkey}" -AadTenantId "${aad_tenant_id}" -TargetPath "${cloudConfigBasePath}" -AzureSubscriptionId "${azure_subscription_id}" -AzureCliVersion 2
+exit_on_error "Failed downloading configurations from keyvault" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
 log "Completed the enabling of Mobile Rest Api ${target_user}"
