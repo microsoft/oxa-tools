@@ -527,6 +527,7 @@ persist_deployment_time_values()
         log "Overriding 'EDXAPP_ENABLE_MOBILE_REST_API'"
         sed -i "s#^EDXAPP_ENABLE_MOBILE_REST_API=.*#EDXAPP_ENABLE_MOBILE_REST_API=${EDXAPP_ENABLE_MOBILE_REST_API}#I" $config_file
         sed -i "s#^EDXAPP_ENABLE_OAUTH2_PROVIDER=.*#EDXAPP_ENABLE_OAUTH2_PROVIDER=${EDXAPP_ENABLE_MOBILE_REST_API}#I" $config_file
+        sed -i "s#^OAUTH_ENFORCE_SECURE=.*#OAUTH_ENFORCE_SECURE=${EDXAPP_ENABLE_MOBILE_REST_API}#I" $config_file
     else
         log "Mobile Rest API override not specified"
     fi

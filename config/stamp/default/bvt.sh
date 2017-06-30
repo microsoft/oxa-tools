@@ -133,3 +133,4 @@ MEMCACHE_SERVER_IP=$MYSQL_MASTER_IP
 # Conditionally enabling Mobile Rest Api in support of MPP integration scenarios
 EDXAPP_ENABLE_OAUTH2_PROVIDER=false
 EDXAPP_ENABLE_MOBILE_REST_API=false
+OAUTH_ENFORCE_SECURE=false
