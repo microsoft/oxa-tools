@@ -384,7 +384,11 @@ done
 
 log "Pushing the current settings to keyvault"
 keyvault_name="${azure_resource_group}-kv"
-powershell -file ${oxa_tools_repository_path}/scripts/Process-OxaToolsKeyVaultConfiguration.ps1 -Operation "Upload" -VaultName "${keyvault_name}" -AadWebClientId "${aad_webclient_id}" -AadWebClientAppKey "${aad_webclient_appkey}" -AadTenantId "${aad_tenant_id}" -TargetPath "${cloud_config_basepath}" -AzureSubscriptionId "${azure_subscription_id}" -AzureCliVersion 2
+
+# set the home path 
+export HOME=~/
+
+powershell -file "${oxa_tools_repository_path}/scripts/Process-OxaToolsKeyVaultConfiguration.ps1" -Operation "Upload" -VaultName "${keyvault_name}" -AadWebClientId "${aad_webclient_id}" -AadWebClientAppKey "${aad_webclient_appkey}" -AadTenantId "${aad_tenant_id}" -TargetPath "${cloud_config_basepath}" -AzureSubscriptionId "${azure_subscription_id}" -AzureCliVersion 2
 exit_on_error "Failed downloading configurations from keyvault" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
 log "Completed the enabling of Mobile Rest Api ${target_user}"
