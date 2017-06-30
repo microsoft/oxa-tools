@@ -336,7 +336,7 @@ do
     vmssIpsMasterList="${vmssIpsMasterList} ${vmssIpsList}"
 done
 
-# The master list will have duplicates. Prune it
+# The master list will have duplicates. Prune it.
 vmssIpsArray=(`echo $vmssIpsMasterList | tr ' ' '\n' | sort -u`)
 log "${#vmssIpsArray[@]} IP(s) discovered. Iterating each instance to enable the Mobile Rest Api."
 
@@ -353,16 +353,36 @@ do
     execute_remote_command $vmssInstanceIp $target_user
 done
 
-# TODO: finally, persist the setting in keyvault
+# Finally, persist the setting in keyvault
 # We need to push the correctly updated cloud config back to keyvault
 log "The targeted VMs have been updated successfully. Now updating keyvault settings"
-cloudConfigBasePath="/oxa/oxa-tools-config/env/${cloud}"
-cloudConfigFilePath="${cloudConfigBasePath}/${cloud}.sh"
+cloud_config_basepath="/oxa/oxa-tools-config/env/${cloud}"
+cloud_config_filepath="${cloudConfigBasePath}/${cloud}.sh"
 
-# check the cloud config file for the values we are interested in
-# EDXAPP_ENABLE_OAUTH2_PROVIDER=false
-# EDXAPP_ENABLE_MOBILE_REST_API=false
- 
+# check if the relevant settings are available or not and update them appropriately
+mobile_rest_api_settings=(`echo "EDXAPP_ENABLE_OAUTH2_PROVIDER EDXAPP_ENABLE_MOBILE_REST_API OAUTH_ENFORCE_SECURE"`)
+for setting in "${mobile_rest_api_settings[@]}"
+do
+    log "Processing '${setting}' setting"
+
+    setting_regex="^${setting}=.*"
+    setting_replacement="${setting}=true"
+
+    setting_exists=`grep "${setting_regex}" "${cloudConfigFilePath}"`
+
+    if [[ -z $setting_exists ]];
+    then
+        # Setting doesn't exist. Add it
+        log "Injecting new '${setting}' setting"
+        echo "${setting_replacement}" >> $cloud_config_filepath
+    else
+        # Setting exists. Update it
+        log "Updating existing value for '${setting}' setting"
+        sed -i "s#${setting_regex}#${setting_replacement}#I" $cloud_config_filepath
+    fi
+done
+
+log "Pushing the current settings to keyvault"
 keyvault_name="${azure_resource_group}-kv"
 powershell -file ${oxa_tools_repository_path}/scripts/Process-OxaToolsKeyVaultConfiguration.ps1 -Operation "Upload" -VaultName "${keyvault_name}" -AadWebClientId "${aad_webclient_id}" -AadWebClientAppKey "${aad_webclient_appkey}" -AadTenantId "${aad_tenant_id}" -TargetPath "${cloudConfigBasePath}" -AzureSubscriptionId "${azure_subscription_id}" -AzureCliVersion 2
 exit_on_error "Failed downloading configurations from keyvault" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
