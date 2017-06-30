@@ -4,7 +4,7 @@
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
 #
-# This script enables Mobile Rest Api for LMS as well as OAUTH2 on a stamp cluster. These changes enable deep integration for Microsoft Professional Program (MPP).
+# This script enables Mobile Rest Api for LMS as well as OAUTH2 on a stamp cluster. These changes enable deep integration principally for Microsoft Professional Program (MPP).
 #
 
 # Oxa Tools
@@ -40,6 +40,9 @@ error_mobilerestapi_update_failed=20001
 
 # wait period between recycling of instances
 wait_interval_seconds=10
+
+# allow the user to specify which vmss instances to update. the expected value is the VMSS deployment id
+vmss_deployment_id=""
 
 #############################################################################
 # parse the command line arguments
@@ -100,6 +103,9 @@ parse_args()
           --wait-interval-seconds)
             wait_interval_seconds="${arg_value}"
             ;;
+          --vmss-deployment-id)
+            vmss_deployment_id="${arg_value}"
+            ;;
           --remote)
             remote_mode=1
             ;;
@@ -144,12 +150,13 @@ execute_remote_command()
 
 authenticate-azureuser()
 {
-    # requires azure cli2
+    # this call requires azure cli2
+
     # login
     results=`az login -u $aad_webclient_id --service-principal --tenant $aad_tenant_id -p $aad_webclient_appkey --output json`
     exit_on_error "Could not login to azure with the provided service principal credential from '${HOSTNAME}' !" "${error_mobilerestapi_update_failed}" "${notification_email_subject}" "${cluster_admin_email}"
 
-    # select the appropriate subscription
+    # select the appropriate subscription to set the execution context
     az account set --subscription "${azure_subscription_id}"
     exit_on_error "Could not set the azure subscription context to ${azure_subscription_id} from '${HOSTNAME}' !" "${error_mobilerestapi_update_failed}" "${notification_email_subject}" "${cluster_admin_email}"
 }
@@ -185,7 +192,7 @@ validate_args()
 ###############################################
 
 # Source our utilities for logging and other base functions (we need this staged with the installer script)
-# the file needs to be first downloaded from the public repository
+# The file needs to be first downloaded from the public repository
 current_path="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 utilities_path=$current_path/utilities.sh
 
@@ -196,23 +203,23 @@ then
     exit 3
 fi
 
-# source the utilities now
+# Source the utilities
 source $utilities_path
 
 # Script self-identification
-print_script_header $notification_email_subject
+print_script_header "${notification_email_subject}"
 
-# pass existing command line arguments
+# Parse existing command line arguments & run quick validation
 parse_args $@
 validate_args
 
-# debug mode support
+# Enable debug mode (if requested)
 if [[ $debug_mode == 1 ]];
 then
     set -x
 fi
 
-# sync the oxa-tools repository
+# Sync the oxa-tools repository (with tag support)
 repo_url=`get_github_url "$oxa_tools_public_github_account" "$oxa_tools_public_github_projectname"`
 sync_repo $repo_url $oxa_tools_public_github_projectbranch $oxa_tools_repository_path $access_token $oxa_tools_public_github_branchtag
 log "Repository sync is complete" " " 2
@@ -223,12 +230,12 @@ log "Repository sync is complete" " " 2
 
 if [[ $remote_mode == 1 ]];
 then
-    # this phase ONLY executes on the remote target
+    # This phase ONLY executes on the remote target
 
-    # make sure we have jq installed 
+    # Conditionally install jq
     install-json-processor
 
-    # update the target file (setting to true if false or creating a new feature that is enabled)
+    # Update the target lms environment file (setting to true if false or creating a new feature that is enabled)
     target_file="/edx/app/edxapp/lms.env.json"
 
     # backup the existing config file
@@ -239,7 +246,7 @@ then
     temp_file=`mktemp "/tmp/lms.env.json.XXXXXXXXXX"`
 
     log "Enabling OAUTH2 & Mobile Rest Api"
-    cat "${target_file}" | jq -r ".FEATURES.ENABLE_OAUTH2_PROVIDER |= true | .FEATURES.ENABLE_MOBILE_REST_API |= true" --indent 4 > $temp_file
+    cat "${target_file}" | jq -r '.FEATURES.ENABLE_OAUTH2_PROVIDER |= true | .FEATURES.OAUTH_ENFORCE_SECURE |= true | .FEATURES.ENABLE_MOBILE_REST_API |= true' --indent 4 > $temp_file
     exit_on_error "Could not enable oauth2 & mobile rest api on ${HOSTNAME}!" "${error_mobilerestapi_update_failed}" "${notification_email_subject}" "${cluster_admin_email}"
 
     # move the temporary copy as the new target file
@@ -255,6 +262,7 @@ then
     /edx/bin/supervisorctl restart all
     exit_on_error "Could not restart all services on ${HOSTNAME}!" "${error_mobilerestapi_update_failed}" "${notification_email_subject}" "${cluster_admin_email}"
 
+    log "Sleeping ${wait_interval_seconds} seconds before moving to update the next server"
     sleep "${wait_interval_seconds}s"
 
     log "Updated ${HOSTNAME} successfully"
@@ -264,27 +272,61 @@ fi
 # login
 authenticate-azureuser
 
-# list of all vmss in cluster
-# TODO: limit this to the one actively serving traffic
+# List the VMSSs in the target cluster. 
+# If the user specifies a VMSS filter (the deploymentId), list only that VMSS. Otherwise, list all VMSSs.
 log "Getting the list of VMSS in the '${azure_resource_group}' resource group"
-vmssIds=`az vmss list --resource-group ${azure_resource_group} | jq ".[] | .id" -r`
+vmssIdsArray=(`az vmss list --resource-group ${azure_resource_group} | jq -r '.[] | .id'`)
 exit_on_error "Could not get a list of the VMSSs in the '${azure_resource_group}' resource group from '${HOSTNAME}' !" "${error_mobilerestapi_update_failed}" "${notification_email_subject}" "${cluster_admin_email}"
 
-# TODO: validate against cluster with multiple VMSSs
-log "Listing all vmss instances in the identified VMSSs"
-vmssNics=`az vmss list-instances --resource-group ${azure_resource_group} --ids ${vmssIds} | jq ".[] .networkProfile.networkInterfaces[] .id" -r`
+vmssIdsList=""
+for vmssId in "${vmssIdsArray[@]}"
+do
+    if [[ -z $vmss_deployment_id ]] || ( [[ ! -z $vmss_deployment_id ]] && [[ $vmssId == *"vmss-$vmss_deployment_id" ]] );
+    then
+        log "Adding ${vmssId}"
+
+        # the user has specified a filter, apply it
+        vmssIdsList="${vmssId} ${vmssIdsList}"
+    fi
+done
+
+# Convert the list into an array for further processing
+filteredVmssIdsArray=($vmssIdsList)
+
+# Provide quick summary
+log "${#vmssIdsArray[@]} VMSS(s) identified for processing. After optional filtering, ${#filteredVmssIdsArray[@]} VMSS(s) will be targeted for update"
+
+# The structure of the response differ when multiple VMSSs are involved. Therefore, we have to account for that.
+log "Listing all VM instances in the targeted VMSS(s)"
+vmssInstanceList=`az vmss list-instances --resource-group ${azure_resource_group} --ids ${vmssIdsList}`
 exit_on_error "Could not get a list of the VMs in the identified VMSSs' !" "${error_mobilerestapi_update_failed}" "${notification_email_subject}" "${cluster_admin_email}"
 
-# for the next step, we only need one NIC reference to the VMSS to get all. We are using the first one here.
-vmssNicsArray=($vmssNics)
+if [[ ${#filteredVmssIdsArray[@]} -gt 1 ]];
+then
+    vmssNicsArray=(`echo $vmssInstanceList | jq -r '.[][] .networkProfile.networkInterfaces[] .id'`)
+else
+    vmssNicsArray=(`echo $vmssInstanceList | jq -r '.[] .networkProfile.networkInterfaces[] .id'`)
+fi
+exit_on_error "Could not process the vmss instance list!" "${error_mobilerestapi_update_failed}" "${notification_email_subject}" "${cluster_admin_email}"
 
-# Get the IPs
-log "Getting all VMSS nics, keying off the first nic: ${vmssNicsArray[0]}"
-vmssIps=`az vmss nic list --ids "${vmssNicsArray[0]}" | jq ".[] .ipConfigurations[] .privateIpAddress" -r`
-exit_on_error "Could not get a list of the IPs for the identified VMSSs' !" "${error_mobilerestapi_update_failed}" "${notification_email_subject}" "${cluster_admin_email}"
+# The final list of Ip addresses associated with the VMs in the targeted VMSS(s).
+vmssIpsMasterList=""
 
-vmssIpsArray=($vmssIps)
-log "${#vmssIpsArray[@]} IP(s) identified. Iterating each instance to enable the Mobile Rest Api"
+# Iterate all NICs only add unique value to the array
+log "Getting all relevant VMSS nics"
+
+for vmssNic in "${vmssNicsArray[@]}"
+do
+    vmssIpsList=`az vmss nic list --ids "${vmssNic}" | jq -r '.[] .ipConfigurations[] .privateIpAddress'`
+    exit_on_error "Could not get a list of the IPs for the identified VMSSs' !" "${error_mobilerestapi_update_failed}" "${notification_email_subject}" "${cluster_admin_email}"
+
+    # add to the master list
+    vmssIpsMasterList="${vmssIpsMasterList} ${vmssIpsList}"
+done
+
+# The master list will have duplicates. Prune it
+vmssIpsArray=(`echo $vmssIpsMasterList | tr ' ' '\n' | sort -u`)
+log "${#vmssIpsArray[@]} IP(s) discovered. Iterating each instance to enable the Mobile Rest Api."
 
 # Iterate the vmss intances and enable mobile rest api
 for vmssInstanceIp in "${vmssIpsArray[@]}"
@@ -292,10 +334,10 @@ do
     # Update the configs, recycle the services, pause (optional:1min)
     log "Updating ${vmssInstanceIp}"
 
-    # copy the bits
+    # Copy the bits
     copy_bits $vmssInstanceIp $target_user $current_path "${error_mobilerestapi_update_failed}" "${notification_email_subject}" "${cluster_admin_email}"
 
-    # execute the component deployment
+    # Execute the component deployment
     execute_remote_command $vmssInstanceIp $target_user
 done
 
