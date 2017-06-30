@@ -368,7 +368,7 @@ do
     setting_regex="^${setting}=.*"
     setting_replacement="${setting}=true"
 
-    setting_exists=`grep "${setting_regex}" "${cloudConfigFilePath}"`
+    setting_exists=`grep "${setting_regex}" "${cloud_config_filepath}"`
 
     if [[ -z $setting_exists ]];
     then
