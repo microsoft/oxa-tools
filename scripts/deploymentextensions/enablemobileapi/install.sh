@@ -122,7 +122,7 @@ parse_args()
 
         shift # past argument or value
 
-        if [ $shift_once -eq 0 ]; 
+        if [[ $shift_once -eq 0 ]]; 
         then
             shift # past argument or value
         fi
@@ -135,11 +135,8 @@ execute_remote_command()
     remote_execution_server_target=$1
     remote_execution_target_user=$2
 
-    # build the command for remote execution (basically: pass through all existing parameters)
-    repository_parameters="--oxatools-public-github-accountname ""${oxa_tools_public_github_account}"" --oxatools-public-github-projectname ""${oxa_tools_public_github_projectname}"" --oxatools-public-github-projectbranch ""${oxa_tools_public_github_projectbranch}"" --oxatools-public-github-branchtag ""${oxa_tools_public_github_branchtag}"" --oxatools-repository-path ""${oxa_tools_repository_path}"""
-    aad_parameters="--aad-webclient-id ""${aad_webclient_id}"" --aad-webclient-appkey ""${aad_webclient_appkey}"" --aad-tenant-id ""${aad_tenant_id}"""
-    azure_subscription_parameters="--azure-subscription-id ""${azure_subscription_id}"" --azure-resource-group ""${azure_resource_group}"""
-    misc_parameters="--cluster-admin-email ""${cluster_admin_email}"" --target-user ""${target_user}"" --remote"
+    # pass along transforms
+    misc_parameters="--remote"
 
     # conditionally enable debug mode over the remote session
     if [[ $debug_mode == 1 ]];
@@ -147,7 +144,7 @@ execute_remote_command()
         misc_parameters+=" --debug"
     fi
 
-    remote_command="sudo bash ~/install.sh ${repository_parameters} ${aad_parameters} ${azure_subscription_parameters} ${misc_parameters}"
+    remote_command="sudo bash ~/install.sh $@ ${misc_parameters}"
 
     # run the remote command
     ssh "${remote_execution_target_user}@${remote_execution_server_target}" $remote_command
@@ -291,9 +288,9 @@ vmssIdsArray=(`az vmss list --resource-group ${azure_resource_group} | jq -r '.[
 exit_on_error "Could not get a list of the VMSSs in the '${azure_resource_group}' resource group from '${HOSTNAME}' !" "${error_mobilerestapi_update_failed}" "${notification_email_subject}" "${cluster_admin_email}"
 
 vmssIdsList=""
-for vmssId in "${vmssIdsArray[@]}"
+for vmssId in "${vmssIdsArray[@]}";
 do
-    if [[ -z $vmss_deployment_id ]] || ( [[ ! -z $vmss_deployment_id ]] && [[ $vmssId == *"vmss-$vmss_deployment_id" ]] );
+    if [[ -z $vmss_deployment_id ]] || ( [[ -n $vmss_deployment_id ]] && [[ $vmssId == *"vmss-$vmss_deployment_id" ]] );
     then
         log "Adding ${vmssId}"
 
@@ -327,7 +324,7 @@ vmssIpsMasterList=""
 # Iterate all NICs only add unique value to the array
 log "Getting all relevant VMSS nics"
 
-for vmssNic in "${vmssNicsArray[@]}"
+for vmssNic in "${vmssNicsArray[@]}";
 do
     vmssIpsList=`az vmss nic list --ids "${vmssNic}" | jq -r '.[] .ipConfigurations[] .privateIpAddress'`
     exit_on_error "Could not get a list of the IPs for the identified VMSSs' !" "${error_mobilerestapi_update_failed}" "${notification_email_subject}" "${cluster_admin_email}"
@@ -341,7 +338,7 @@ vmssIpsArray=(`echo $vmssIpsMasterList | tr ' ' '\n' | sort -u`)
 log "${#vmssIpsArray[@]} IP(s) discovered. Iterating each instance to enable the Mobile Rest Api."
 
 # Iterate the vmss intances and enable mobile rest api
-for vmssInstanceIp in "${vmssIpsArray[@]}"
+for vmssInstanceIp in "${vmssIpsArray[@]}";
 do
     # Update the configs, recycle the services, pause (optional:1min)
     log "Updating ${vmssInstanceIp}"
@@ -361,7 +358,7 @@ cloud_config_filepath="${cloud_config_basepath}/${cloud}.sh"
 
 # check if the relevant settings are available or not and update them appropriately
 mobile_rest_api_settings=(`echo "EDXAPP_ENABLE_OAUTH2_PROVIDER EDXAPP_ENABLE_MOBILE_REST_API OAUTH_ENFORCE_SECURE"`)
-for setting in "${mobile_rest_api_settings[@]}"
+for setting in "${mobile_rest_api_settings[@]}";
 do
     log "Processing '${setting}' setting"
 
