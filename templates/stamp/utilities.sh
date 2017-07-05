@@ -1364,6 +1364,6 @@ copy_bits()
     exit_on_error "Unable to copy utilities to '${bitscopy_target_server}' from '${HOSTNAME}' !" "${error_code}" "${copyerror_mail_subject}" "${copyerror_mail_receiver}"
 
     # set appropriate permissions on the required installer files
-    ssh -o "StrictHostKeyChecking=no" "${bitscopy_target_user}@${bitscopy_target_server}" "sudo chmod 600 ~/install.sh && sudo chmod ~/utilities.sh"
+    ssh -o "StrictHostKeyChecking=no" "${bitscopy_target_user}@${bitscopy_target_server}" "sudo chmod 600 ~/install.sh && sudo chmod 600 ~/utilities.sh"
     exit_on_error "Unable to update permissions on the installer files copied to '${bitscopy_target_server}'!" "${error_code}" "${copyerror_mail_subject}" "${copyerror_mail_receiver}"
 }
