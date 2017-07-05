@@ -135,8 +135,11 @@ execute_remote_command()
     remote_execution_server_target=$1
     remote_execution_target_user=$2
 
-    # pass along transforms
-    misc_parameters="--remote"
+    # build the command for remote execution (basically: pass through all existing parameters)
+    repository_parameters="--oxatools-public-github-accountname ""${oxa_tools_public_github_account}"" --oxatools-public-github-projectname ""${oxa_tools_public_github_projectname}"" --oxatools-public-github-projectbranch ""${oxa_tools_public_github_projectbranch}"" --oxatools-public-github-branchtag ""${oxa_tools_public_github_branchtag}"" --oxatools-repository-path ""${oxa_tools_repository_path}"""
+    aad_parameters="--aad-webclient-id ""${aad_webclient_id}"" --aad-webclient-appkey ""${aad_webclient_appkey}"" --aad-tenant-id ""${aad_tenant_id}"""
+    azure_subscription_parameters="--azure-subscription-id ""${azure_subscription_id}"" --azure-resource-group ""${azure_resource_group}"""
+    misc_parameters="--cluster-admin-email ""${cluster_admin_email}"" --target-user ""${target_user}"" --remote"
 
     # conditionally enable debug mode over the remote session
     if [[ $debug_mode == 1 ]];
@@ -144,7 +147,7 @@ execute_remote_command()
         misc_parameters+=" --debug"
     fi
 
-    remote_command="sudo bash ~/install.sh $@ ${misc_parameters}"
+    remote_command="sudo bash ~/install.sh ${repository_parameters} ${aad_parameters} ${azure_subscription_parameters} ${misc_parameters}"
 
     # run the remote command
     ssh "${remote_execution_target_user}@${remote_execution_server_target}" $remote_command
