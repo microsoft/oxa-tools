@@ -150,6 +150,16 @@ else
 # the following keys: name, value, valueType (optional: defaults to string) and their accompanying values
 # the only supported valueTypes are: string (default) and FilePath
 # for FilePath valueType, the path will be tested, content read and base64 encoded before being passed as the parameter value
+
+# we already have some userful parameters that downstream scripts can leverage
+Log-Message "Adding Azure Subscription and AAD related parameters"
+
+$upgradeParameters += @{"name"="azure-resource-group"; "value"=$ResourceGroupName}
+$upgradeParameters += @{"name"="aad-webclient-id"; "value"=$AadWebClientId}
+$upgradeParameters += @{"name"="aad-webclient-appkey"; "value"=$AadWebClientAppKey}
+$upgradeParameters += @{"name"="aad-tenant-id"; "value"=$AadTenantId}
+$upgradeParameters += @{"name"="azure-subscription-id"; "value"=$AzureSubscriptionName}
+
 [array]$upgradeParameterList = @()
 foreach($parameter in $upgradeParameters)
 {
