@@ -49,7 +49,7 @@ log()
     # check if this is an error message
     LOG_MESSAGE="${TIMESTAMP} :: $1"
     
-    if [[ ! -z $2 ]]; then
+    if [[ ! -z "${2// }" ]]; then
         # stderr logging
         LOG_MESSAGE="${TIMESTAMP} :: [ERROR] $1"
         echo $LOG_MESSAGE >&2
@@ -1025,7 +1025,7 @@ EOF"
 # Set server Time Zone
 #############################################################################
 
-set_timezone()
+set-server-timezone()
 {
     timezone="America/Los_Angeles"
 
@@ -1278,8 +1278,9 @@ install-tools()
 
     # 1. Setup Tools
     install-git
-    install-gettext # required for envsubst
-    set_timezone
+    install-gettext # required for envsubst command
+    set-server-timezone
+    install-json-processor
 
     if [[ "$machine_role" == "jumpbox" ]] || [[ "$machine_role" == "vmss" ]] ;
     then
@@ -1356,9 +1357,13 @@ copy_bits()
     copyerror_mail_receiver=$6
 
     # copy the installer & the utilities files to the target server & ssh/execute the Operations
-    scp $script_base_path/install.sh "${bitscopy_target_user}@${bitscopy_target_server}":~/
-    exit_on_error "Unable to copy installer script to '${bitscopy_target_server}' from '${HOSTNAME}' !" $error_code, $copyerror_mail_subject $copyerror_mail_receiver
+    scp -o "StrictHostKeyChecking=no" $script_base_path/install.sh "${bitscopy_target_user}@${bitscopy_target_server}":~/
+    exit_on_error "Unable to copy installer script to '${bitscopy_target_server}' from '${HOSTNAME}' !" "${error_code}" "${copyerror_mail_subject}" "${copyerror_mail_receiver}"
 
-    scp $script_base_path/utilities.sh "${bitscopy_target_user}@${bitscopy_target_server}":~/
-    exit_on_error "Unable to copy utilities to '${bitscopy_target_server}' from '${HOSTNAME}' !" $error_code, $copyerror_mail_subject $copyerror_mail_receiver
+    scp -o "StrictHostKeyChecking=no" $script_base_path/utilities.sh "${bitscopy_target_user}@${bitscopy_target_server}":~/
+    exit_on_error "Unable to copy utilities to '${bitscopy_target_server}' from '${HOSTNAME}' !" "${error_code}" "${copyerror_mail_subject}" "${copyerror_mail_receiver}"
+
+    # set appropriate permissions on the required installer files
+    ssh -o "StrictHostKeyChecking=no" "${bitscopy_target_user}@${bitscopy_target_server}" "sudo chmod 600 ~/install.sh && sudo chmod 600 ~/utilities.sh"
+    exit_on_error "Unable to update permissions on the installer files copied to '${bitscopy_target_server}'!" "${error_code}" "${copyerror_mail_subject}" "${copyerror_mail_receiver}"
 }

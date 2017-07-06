@@ -633,6 +633,13 @@
             "metadata": {
                 "description": "Azure Cli version to use"
             }
+        },
+        "enableMobileRestApi": {
+            "type": "bool",
+            "defaultValue": "false",
+            "metadata": {
+                "description": "Indicator of whether or not the Mobile Rest Api is enabled for further integration"
+            }
         }
     },
     "variables": {
@@ -921,6 +928,7 @@
         "customInstallerMiscRepositoryVersionParameters": "[concat(' --edxversion ', parameters('edxVersion'), ' --forumversion ', parameters('edxForumVersion'), ' --edxtheme-public-github-projectbranch ', parameters('edxThemeGithubBranch') )]",
         "customInstallerKeyVaultParameters": "[concat(' --keyvault-name ', concat(parameters('clusterName'), '-kv'), ' --aad-webclient-id ', parameters('aadWebClientId'), ' --aad-webclient-appkey ', parameters('aadWebClientAppKey'), ' --aad-tenant-id ', parameters('aadTenantId'), ' --azure-subscription-id ', subscription().subscriptionId)]",
         "customInstallerDomainOverrideParameters": "[concat(' --base-domain-override ', parameters('baseDomain'), ' --domain-separator ', parameters('domainSeparator') )]",
+        "customInstallerMobileRestApiParameters": "[concat(' --enable-mobile-rest-api \"', parameters('enableMobileRestApi'), '\" ')]",
 
         "customInstallerOutputRedirect": " >> /var/log/bootstrap.csx.log 2>&1",
         "smtpParameters": "[concat(' --smtp-server ', parameters('smtpServer'), ' --smtp-server-port ', parameters('smtpServerPort'), ' --smtp-auth-user ', parameters('smtpAuthenticationUser'), ' --smtp-auth-user-password ', parameters('smtpAuthenticationUserPassword'), '  --cluster-admin-email ', parameters('clusterAdmininistratorEmailAddress'))]",
@@ -937,7 +945,7 @@
         "memcacheParameters": "[concat(' --memcache-server \"', base64(parameters('memcacheServer')), '\"')]",
         "azureCliParameters": "[concat(' --azurecli-version \"', parameters('azureCliVersion'), '\"')]",
 
-        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'), variables('backupParameters'), variables('sampleCourseParameters'), variables('comprehensiveThemingParameters'), variables('authenticationParameters'), variables('customInstallerDomainOverrideParameters'), variables('databaseParameters'), variables('edxappParameters'), variables('memcacheParameters'), variables('azureCliParameters'), variables('customInstallerOutputRedirect') )]",
+        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'), variables('backupParameters'), variables('sampleCourseParameters'), variables('comprehensiveThemingParameters'), variables('authenticationParameters'), variables('customInstallerDomainOverrideParameters'), variables('databaseParameters'), variables('edxappParameters'), variables('memcacheParameters'), variables('azureCliParameters'), variables('customInstallerMobileRestApiParameters'), variables('customInstallerOutputRedirect') )]",
 
         "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources.json')]",
         "jumpboxTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-jumpbox.json')]",
