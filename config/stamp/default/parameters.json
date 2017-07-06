@@ -275,7 +275,7 @@
             "value": "{AZURECLIVERSION}"
         },
         "enableMobileRestApi": {
-            "value": "{ENABLEMOBILERESTAPI}"
+            "value": {ENABLEMOBILERESTAPI}
         }
     }
 }
