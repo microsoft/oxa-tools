@@ -63,7 +63,7 @@
     "personalAccessToken": "",
     "scriptDownloadUri": "https://raw.githubusercontent.com/Microsoft/oxa-tools/btelnes/",
     "installScript": "bootstrap.sh",
-    "installCommand": "[concat('bash -c ''nohup ./', variables('installScript'), '  -r fullstack -e dev -a ', variables('personalAccessToken'), ' </dev/null &>/var/log/azure/openedx-install.log &''')]",
+    "installCommand": "[concat('bash -c ''nohup ./', variables('installScript'), '  -r fullstack -e dev ', ' </dev/null &>/var/log/azure/openedx-install.log &''')]",
     "vmName": "jumpbox2",
     "osImagePublisher": "Canonical",
     "osImageOffer": "UbuntuServer",
