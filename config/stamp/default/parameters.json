@@ -273,6 +273,9 @@
         },
         "azureCliVersion": {
             "value": "{AZURECLIVERSION}"
+        },
+        "enableMobileRestApi": {
+            "value": {ENABLEMOBILERESTAPI}
         }
     }
 }
