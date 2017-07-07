@@ -1,5 +1,5 @@
+---
 # Modifying Language list. null means language is removed from the list. Others either language is a new added language or display name is changed.
-EDXAPP_LANGUAGES_OVERRIDE:
+EDXAPP_ALL_LANGUAGES_OVERRIDE:
   EN: "ENGLISH-US"
   FR: "FRENCH-CANADA"
-
