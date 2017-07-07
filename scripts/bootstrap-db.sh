@@ -25,7 +25,7 @@ SECONDARY_LOG="/var/log/bootstrap.log"
 PRIMARY_LOG="/var/log/bootstrap.csx.log"
 
 display_usage() {
-    echo "Usage: $0 -a|--access_token {access token} -v|--version {oxa-tools-config version} [-e|--environment {dev|bvt|int|prod}] [--phase {0 1}] --keyvault-name {azure keyvault name} --aad-webclient-id {AAD web application client id} --aad-webclient-appkey {AAD web application client key} --aad-tenant-id {AAD Tenant to authenticate against} --azure-subscription-id {Azure subscription Id}"
+    echo "Usage: $0 -v|--version {oxa-tools-config version} [-e|--environment {dev|bvt|int|prod}] [--phase {0 1}] --keyvault-name {azure keyvault name} --aad-webclient-id {AAD web application client id} --aad-webclient-appkey {AAD web application client key} --aad-tenant-id {AAD Tenant to authenticate against} --azure-subscription-id {Azure subscription Id}"
     exit 1
 }
 

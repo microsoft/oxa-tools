@@ -7,7 +7,6 @@ set -x
 # argument defaults
 EDX_ROLE=""
 DEPLOYMENT_ENV="dev"
-ACCESS_TOKEN=""
 CRON_MODE=0
 RETRY_COUNT=5
 TARGET_FILE=""
@@ -65,7 +64,7 @@ SECONDARY_LOG="/var/log/bootstrap.csx.log"
 PRIMARY_LOG="/var/log/bootstrap.log"
 
 display_usage() {
-  echo "Usage: $0 -a|--access_token {access token} -v|--version {oxa-tools-config version} [-r|--role {jb|vmss|mongo|mysql|edxapp|fullstack|devstack}] [-e|--environment {dev|bvt|int|prod}] [--cron] --keyvault-name {azure keyvault name} --aad-webclient-id {AAD web application client id} --aad-webclient-appkey {AAD web application client key} --aad-tenant-id {AAD Tenant to authenticate against} --azure-subscription-id {Azure subscription Id}"
+  echo "Usage: $0 -v|--version {oxa-tools-config version} [-r|--role {jb|vmss|mongo|mysql|edxapp|fullstack|devstack}] [-e|--environment {dev|bvt|int|prod}] [--cron] --keyvault-name {azure keyvault name} --aad-webclient-id {AAD web application client id} --aad-webclient-appkey {AAD web application client key} --aad-tenant-id {AAD Tenant to authenticate against} --azure-subscription-id {Azure subscription Id}"
   exit 1
 }
 
@@ -102,10 +101,6 @@ parse_args()
               echo "Invalid environment specified\n"
               display_usage
             fi
-            ;;
-          # For devstack and fullstack deployments
-          -a|--access_token)
-            ACCESS_TOKEN="${arg_value}"
             ;;
           --cron)
             CRON_MODE=1
