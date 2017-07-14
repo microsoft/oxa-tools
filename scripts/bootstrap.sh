@@ -208,22 +208,13 @@ get_bootstrap_status()
     PRESENCE=0
 
     # check if the bootstrap is finished
-    if [ -e $TARGET_FILE ];
-    then
+    if [[ -e $TARGET_FILE ]] ; then
         # The crumb exists:: bootstrap is done
         PRESENCE=2
     else
         # check if there is an ongoing execution
-        if [ "$EDX_ROLE" == "vmss" ];
-        then
-            # Source the settings
-            # Moving source here reduces the noise in the logs
-            source $OXA_ENV_FILE
-
-            # apply the overridesm
-            if [[ -f $OXA_ENV_OVERRIDE_FILE ]]; then
-                source $OXA_ENV_OVERRIDE_FILE
-            fi
+        if [[ "$EDX_ROLE" == "vmss" ]] ; then
+            source_env
 
             # The crumb doesn't exist:: we need to execute boostrap
             # For VMSS role, we have to wait on the backend Mysql bootstrap operation
@@ -257,23 +248,23 @@ setup_overrides_file()
     setup_deployment_overrides $OXA_ENV_OVERRIDE_FILE $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH $EDX_CONFIGURATION_REPO $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH $EDX_PLATFORM_REPO $EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH $EDX_THEME_REPO $EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH $EDX_VERSION $FORUM_VERSION $EDX_ANSIBLE_REPO $ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH
 }
 
+source_env()
+{
+    # populate the deployment environment
+    set -a
+    source $OXA_ENV_FILE
+
+    # apply the overrides
+    if [[ -f $OXA_ENV_OVERRIDE_FILE ]] ; then
+        source $OXA_ENV_OVERRIDE_FILE
+    fi
+}
+
 ##
 ## Role-independent OXA environment bootstrap
 ##
 setup()
 {
-    # There is an implicit pre-requisite for the GIT client to be installed. 
-    # This is already handled in the calling script
-  
-    # populate the deployment environment
-    source $OXA_ENV_FILE
-    export $(sed -e 's/#.*$//' $OXA_ENV_FILE | cut -d= -f1)
-
-    # apply the overrides
-    if [[ -f $OXA_ENV_OVERRIDE_FILE ]]; then
-        source $OXA_ENV_OVERRIDE_FILE
-    fi
-
     export $(sed -e 's/#.*$//' $OXA_ENV_OVERRIDE_FILE | cut -d= -f1)
     export ANSIBLE_REPO=$EDX_ANSIBLE_REPO
     export ANSIBLE_VERSION=$EDX_ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH
@@ -386,8 +377,7 @@ edx_installation_playbook()
   systemctl >/dev/null 2>&1
   exit_on_error "Single VM instance of EDX has a hard requirement on systemd and its systemctl functionality"
 
-  # Most docker containers don't have sudo pre-installed
-  install-sudo
+  install-ssh
 
   # git, gettext
   install-tools
@@ -400,8 +390,6 @@ edx_installation_playbook()
 }
 
 update_fullstack() {
-  install-ssh
-
   # edx playbooks - fullstack (single VM)
   edx_installation_playbook
 
@@ -414,8 +402,6 @@ update_fullstack() {
 }
 
 update_devstack() {
-  install-ssh
-
   if ! id -u vagrant > /dev/null 2>&1; then
     # create required vagrant user account to avoid fatal error
     sudo adduser --disabled-password --gecos "" vagrant
@@ -549,6 +535,16 @@ fi
 # Note when we started
 log "Starting bootstrap of ${EDX_ROLE} on ${HOSTNAME}"
 
+if [[ "$DEPLOYMENT_ENV" == "dev" ]] ; then
+    # We're deploying a fullstack or devstack to a single-machine (possibly a docker container).
+    # Most docker containers don't have sudo pre-installed.
+    install-sudo
+else
+    # Deployments to multiple-VMs (STAMP) require a settings file.
+    # This includes BVT and PROD
+    source_env
+fi 
+
 setup
 
 ##
@@ -558,7 +554,7 @@ setup
 PATH=$PATH:/edx/bin
 ANSIBLE_PLAYBOOK=ansible-playbook
 OXA_PLAYBOOK=$OXA_TOOLS_PATH/playbooks/oxa_configuration.yml
-OXA_PLAYBOOK_ARGS="-e oxa_tools_path=$OXA_TOOLS_PATH -e oxa_tools_config_path=$OXA_TOOLS_CONFIG_PATH -e template_type=$TEMPLATE_TYPE"
+OXA_PLAYBOOK_ARGS="-e oxa_tools_path=$OXA_TOOLS_PATH -e template_type=$TEMPLATE_TYPE"
 OXA_SSH_ARGS="-u $ADMIN_USER --private-key=/home/$ADMIN_USER/.ssh/id_rsa"
 
 # Fixes error: RPC failed; result=56, HTTP code = 0'
