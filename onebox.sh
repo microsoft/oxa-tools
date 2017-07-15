@@ -111,13 +111,15 @@ test_args()
         exit 1
     fi
 
-    `warning $VAGRANT_USER_PASSWORD VAGRANT_USER_PASSWORD`
-    `warning $MONGO_USER MONGO_USER`
-    `warning $MONGO_PASSWORD MONGO_PASSWORD`
-    `warning $MYSQL_ADMIN_USER MYSQL_ADMIN_USER`
-    `warning $MYSQL_ADMIN_PASSWORD MYSQL_ADMIN_PASSWORD`
-    `warning $MYSQL_USER MYSQL_USER`
-    `warning $MYSQL_PASSWORD MYSQL_PASSWORD`
+    set +x
+    echo "`warning $VAGRANT_USER_PASSWORD VAGRANT_USER_PASSWORD`"
+    echo "`warning $MONGO_USER MONGO_USER`"
+    echo "`warning $MONGO_PASSWORD MONGO_PASSWORD`"
+    echo "`warning $MYSQL_ADMIN_USER MYSQL_ADMIN_USER`"
+    echo "`warning $MYSQL_ADMIN_PASSWORD MYSQL_ADMIN_PASSWORD`"
+    echo "`warning $MYSQL_USER MYSQL_USER`"
+    echo "`warning $MYSQL_PASSWORD MYSQL_PASSWORD`"
+    set -x
 }
 
 ##########################
