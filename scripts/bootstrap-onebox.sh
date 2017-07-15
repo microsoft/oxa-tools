@@ -138,6 +138,20 @@ get_upstream_branch()
 {
     echo "open-release/ficus.master"
 }
+get_current_branch()
+{
+    prefix='* '
+
+    # Current branch is prefixed with an asterisk. Remove it.
+    branchInfo=`git branch | grep "$prefix" | sed "s/$prefix//g"`
+
+    # Ensure branch information is useful.
+    if [[ -z "$branchInfo" ]] || [[ $branchInfo == *"no branch"* ]] || [[ $branchInfo == *"detached"* ]] ; then
+        branchInfo="`get_branch "oldStyle"`"
+    fi
+
+    echo "$branchInfo"
+}
 warning()
 {
     if [[ -z $1 ]] ; then
@@ -165,7 +179,7 @@ bootstrap.sh \
         "dev" \
     \
     --oxatools-public-github-projectbranch \
-        `get_branch "oldStyle"` \
+        `get_current_branch` \
     \
     --edxconfiguration-public-github-accountname \
         `get_org` \
