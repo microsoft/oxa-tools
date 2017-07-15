@@ -304,7 +304,7 @@ setup()
     # aggregate edx configuration with deployment environment expansion
     # warning: beware of yaml variable dependencies due to order of aggregation
     echo "---" > $OXA_PLAYBOOK_CONFIG
-    for config in $OXA_TOOLS_PATH/config/$TEMPLATE_TYPE/*.yml $OXA_TOOLS_PATH/config/*.yml; do
+    for config in $OXA_TOOLS_PATH/config/$TEMPLATE_TYPE/*.yml $OXA_TOOLS_PATH/config/$DEPLOYMENT_ENV/*.yml $OXA_TOOLS_PATH/config/*.yml; do
         sed -e "s/%%\([^%]*\)%%/$\{\\1\}/g" -e "s/^---.*$//g" $config | envsubst >> $OXA_PLAYBOOK_CONFIG
     done
 }
@@ -407,7 +407,9 @@ update_devstack() {
     sudo adduser --disabled-password --gecos "" vagrant
 
     # set the vagrant password
-    sudo usermod --password $(echo $VAGRANT_USER_PASSWORD | openssl passwd -1 -stdin) vagrant
+    if [[ -z $VAGRANT_USER_PASSWORD ]] ; then
+      sudo usermod --password $(echo $VAGRANT_USER_PASSWORD | openssl passwd -1 -stdin) vagrant
+    fi
   fi
 
   # create some required directories to avoid fatal errors
