@@ -11,7 +11,8 @@ set -axe
 # Script Defaults that can be overriden via parameter arguments OR assignment here)
 ##########################
 role=fullstack # or devstack
-branch_versions=stable_release # or development_edge
+branch_versions=development_edge # or stable_release
+
 VAGRANT_USER_PASSWORD=
 MONGO_USER=
 MONGO_PASSWORD=
@@ -155,7 +156,7 @@ get_current_branch()
 warning()
 {
     if [[ -z $1 ]] ; then
-        echo "Please provide a $2 value if deploying to publicly available instance"
+        echo -e "\n\nPlease provide a $2 value if deploying to publicly available instance\n\n"
     fi
 }
 get_org()
