@@ -11,7 +11,7 @@ set -axe
 # Script Defaults that can be overriden via parameter arguments OR assignment here)
 ##########################
 role=fullstack # or devstack
-branch_versions=development_edge # or stable_release
+branch_versions=edge # or stable
 
 VAGRANT_USER_PASSWORD=
 MONGO_USER=
@@ -102,19 +102,19 @@ test_args()
         exit 1
     fi
 
-    if [[ $branch_versions != stable_release ]] && [[ $branch_versions != development_edge ]] ; then
+    if [[ $branch_versions != stable ]] && [[ $branch_versions != edge ]] ; then
         echo "branch_versions is set to $branch_versions"
-        echo "but should be stable_release or development_edge"
+        echo "but should be stable or edge"
         exit 1
     fi
 
-    warning $VAGRANT_USER_PASSWORD VAGRANT_USER_PASSWORD
-    warning $MONGO_USER MONGO_USER
-    warning $MONGO_PASSWORD MONGO_PASSWORD
-    warning $MYSQL_ADMIN_USER MYSQL_ADMIN_USER
-    warning $MYSQL_ADMIN_PASSWORD MYSQL_ADMIN_PASSWORD
-    warning $MYSQL_USER MYSQL_USER
-    warning $MYSQL_PASSWORD MYSQL_PASSWORD
+    `warning $VAGRANT_USER_PASSWORD VAGRANT_USER_PASSWORD`
+    `warning $MONGO_USER MONGO_USER`
+    `warning $MONGO_PASSWORD MONGO_PASSWORD`
+    `warning $MYSQL_ADMIN_USER MYSQL_ADMIN_USER`
+    `warning $MYSQL_ADMIN_PASSWORD MYSQL_ADMIN_PASSWORD`
+    `warning $MYSQL_USER MYSQL_USER`
+    `warning $MYSQL_PASSWORD MYSQL_PASSWORD`
 }
 
 ##########################
@@ -122,9 +122,9 @@ test_args()
 ##########################
 get_branch()
 {
-    if [[ $branch_versions == stable_release ]] ; then
+    if [[ $branch_versions == stable ]] ; then
         echo "oxa/master.fic"
-    elif [[ $branch_versions == stable_release ]] ;
+    elif [[ $branch_versions == edge ]] ; then
         if [[ -n $1 ]] ; then
             # Legacy switch
             echo "oxa/devfic"
@@ -171,7 +171,7 @@ parse_args "$@"
 test_args
 
 #todo: get current dir
-bootstrap.sh \
+sudo bash bootstrap.sh \
     --role \
         $role \
     --retry-count \
