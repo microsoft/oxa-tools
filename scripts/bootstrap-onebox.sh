@@ -155,7 +155,7 @@ get_org()
 parse_args "$@"
 test_args
 
-# get current dir
+#todo: get current dir
 bootstrap.sh \
     --role \
         $role \

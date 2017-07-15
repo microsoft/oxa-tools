@@ -253,6 +253,7 @@ source_env()
     # populate the deployment environment
     set -a
     source $OXA_ENV_FILE
+    set +a
 
     # apply the overrides
     if [[ -f $OXA_ENV_OVERRIDE_FILE ]] ; then
@@ -407,7 +408,7 @@ update_devstack() {
     sudo adduser --disabled-password --gecos "" vagrant
 
     # set the vagrant password
-    if [[ -z $VAGRANT_USER_PASSWORD ]] ; then
+    if [[ -n $VAGRANT_USER_PASSWORD ]] ; then
       sudo usermod --password $(echo $VAGRANT_USER_PASSWORD | openssl passwd -1 -stdin) vagrant
     fi
   fi
