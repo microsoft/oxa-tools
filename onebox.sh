@@ -13,13 +13,16 @@ set -axe
 role=fullstack # or devstack
 branch_versions=edge # or stable
 
-VAGRANT_USER_PASSWORD=
-MONGO_USER=
-MONGO_PASSWORD=
-MYSQL_ADMIN_USER=
-MYSQL_ADMIN_PASSWORD=
-MYSQL_USER=
-MYSQL_PASSWORD=
+VAGRANT_USER_PASSWORD=insecureDefault
+
+MONGO_USER=oxamongoadmin
+MONGO_PASSWORD=insecureDefault
+
+MYSQL_ADMIN_USER=oxamysqladmin
+MYSQL_ADMIN_PASSWORD=insecureDefault
+
+MYSQL_USER=oxamysql
+MYSQL_PASSWORD=insecureDefault
 
 ##########################
 # Settings
@@ -155,7 +158,7 @@ get_current_branch()
 }
 warning()
 {
-    if [[ -z $1 ]] ; then
+    if [[ -z $1 ]] || [[ $1 == insecureDefault ]] ; then
         echo -e "\n\nPlease provide a $2 value if deploying to publicly available instance\n\n"
     fi
 }
