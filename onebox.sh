@@ -10,7 +10,7 @@ set -axe
 ##########################
 # Script Defaults that can be overriden via parameter arguments OR assignment here)
 ##########################
-role=fullstack # or devstack
+TEMPLATE_TYPE=fullstack # or devstack
 branch_versions=edge # or stable
 
 VAGRANT_USER_PASSWORD=insecureDefault
@@ -55,7 +55,7 @@ parse_args()
 
         case "$1" in
           -r|--role)
-            role="${arg_value}"
+            TEMPLATE_TYPE="${arg_value}"
             ;;
           -b|--branches)
             branch_versions="${arg_value}"
@@ -99,8 +99,8 @@ parse_args()
 }
 test_args()
 {
-    if [[ $role != fullstack ]] && [[ $role != devstack ]] ; then
-        echo "role is set to $role"
+    if [[ $TEMPLATE_TYPE != fullstack ]] && [[ $TEMPLATE_TYPE != devstack ]] ; then
+        echo "TEMPLATE_TYPE is set to $TEMPLATE_TYPE"
         echo "but should be fullstack or devstack"
         exit 1
     fi
@@ -178,7 +178,7 @@ test_args
 #todo: get current dir
 sudo bash scripts/bootstrap.sh \
     --role \
-        $role \
+        $TEMPLATE_TYPE \
     --retry-count \
         5 \
     --environment \
