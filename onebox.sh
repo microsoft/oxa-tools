@@ -171,7 +171,7 @@ parse_args "$@"
 test_args
 
 #todo: get current dir
-sudo bash bootstrap.sh \
+sudo bash scripts/bootstrap.sh \
     --role \
         $role \
     --retry-count \
