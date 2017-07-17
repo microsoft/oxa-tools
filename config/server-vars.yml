@@ -60,7 +60,6 @@ EDXAPP_REGISTRATION_EXTRA_FIELDS:
   level_of_education: "optional"
   mailing_address: "hidden"
   year_of_birth: "hidden"
-  language: "optional"
 
 
 # Enable social sharing icons for courses. For now we are just enabling linkedin. 
