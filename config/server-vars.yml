@@ -120,6 +120,7 @@ EDXAPP_GRADE_STORAGE_CONTAINER: "reports"
 EDXAPP_RETRY_ACTIVATION_EMAIL_MAX_ATTEMPTS: 50
 # overriding the default value from 0.5 to 2. 
 EDXAPP_RETRY_ACTIVATION_EMAIL_TIMEOUT: 2
+EDXAPP_SESSION_INACTIVITY_TIMEOUT_IN_SECONDS: 1800
 
 # Configure email addresses
 EDXAPP_BUGS_EMAIL: "microsoftlearning-bugs@microsoft.com"
