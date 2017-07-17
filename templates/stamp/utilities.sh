@@ -135,15 +135,11 @@ configure_datadisks()
 
 install-git()
 {
-    if type git >/dev/null 2>&1; then
+    if type git >/dev/null 2>&1 ; then
         log "Git already installed"
     else
-        log "Installing Git Client"
-
-        log "Updating Repository"
-        apt-get update
-
-        apt-get install -y git
+        apt-wrapper "update"
+        apt-wrapper "install git"
         exit_on_error "Failed to install the GIT client on ${HOSTNAME} !" $ERROR_GITINSTALL_FAILED
     fi
 
@@ -157,10 +153,9 @@ install-git()
 install-gettext()
 {
     # Ensure that gettext (which includes envsubst) is installed
-    if [ $(dpkg-query -W -f='${Status}' gettext 2>/dev/null | grep -c "ok installed") -eq 0 ];
-    then
-        log "Installing Get Text"
-        apt-get install -y gettext;
+    if [[ $(dpkg-query -W -f='${Status}' gettext 2>/dev/null | grep -c "ok installed") -eq 0 ]] ; then
+        apt-wrapper "update"
+        apt-wrapper "install gettext"
         exit_on_error "Failed to install the GetText package on ${HOSTNAME} !"
     else
         log "Get Text is already installed"
@@ -311,11 +306,85 @@ install-mysql-utilities()
 }
 
 #############################################################################
+# Wrapper functions
+#############################################################################
+
+apt-wrapper()
+{
+    log "$1 package(s)..."
+    sudo apt-get $1 -y -qq --fix-missing
+}
+
+retry-command()
+{
+    command="$1"
+    retry_count="$2"
+    optionalDescription="$3"
+    fix_packages="$4"
+
+    for (( a=1; a<=$retry_count; a++ )) ; do
+        message="$optionalDescription attempt number: $a"
+
+        # Some failures can be resolved by fixing packages.
+        if [[ -n "$fix_packages" ]] ; then
+            apt-wrapper "update"
+            apt-wrapper "install -f"
+            apt-wrapper "upgrade -f"
+            sudo dpkg --configure -a
+        fi
+
+        log "STARTING ${message}..."
+
+        eval "$command"
+        if [[ $? -eq 0 ]] ; then
+            log "SUCCEEDED ${message}!"
+            break
+        fi
+
+        log "FAILED ${message}"
+    done
+}
+
+#############################################################################
+# Setup Sudo
+#############################################################################
+
+install-sudo()
+{
+    if type sudo >/dev/null 2>&1 ; then
+        log "sudo already installed"
+        return
+    fi
+
+    apt-wrapper "update"
+    apt-wrapper "install sudo"
+    exit_on_error "Installing sudo Failed on $HOST"
+
+    log "sudo installed"
+}
+
+#############################################################################
 # Setup SSH
 #############################################################################
 
+install-ssh()
+{
+    if [[ -f "/etc/ssh/sshd_config" ]] ; then
+        log "SSH already installed"
+        return
+    fi
+
+    apt-wrapper "update"
+    apt-wrapper "install ssh"
+    exit_on_error "Installing SSH Failed on $HOST"
+
+    log "SSH installed"
+}
+
 setup-ssh()
 {
+    install-ssh
+
     log "Setting up SSH"
 
     # implicit assumptions: private repository with secrets has been cloned and certificates live at /{repository_root}/env/{cloud}/id_rsa*
@@ -574,7 +643,7 @@ exit_on_error()
     if [[ $? -ne 0 ]]; then
         log "${1}" 1
 
-        if [ "$#" -gt 3 ]; 
+        if [[ "$#" -gt 3 ]] ; 
         then
             # send a notification (if possible)
             MESSAGE="${1}"; SUBJECT="${3}"; TO="${4}"; MAIN_LOGFILE="${5}"; SECONDARY_LOGFILE="${6}"
@@ -582,10 +651,10 @@ exit_on_error()
         fi
 
         # exit with a custom error code (if one is specified)
-        if [ ! -z $2 ]; then
-            exit 1
-        else
+        if [[ -n $2 ]] ; then
             exit $2
+        else
+            exit 1
         fi
     fi
 }
@@ -596,6 +665,11 @@ exit_on_error()
 
 install-powershell()
 {
+    if [[ -f /usr/bin/powershell ]] ; then
+        log "Powershell is already installed"
+        return
+    fi
+
     log "Installing Powershell"
 
     wget https://raw.githubusercontent.com/PowerShell/PowerShell/v6.0.0-alpha.15/tools/download.sh  -O ~/powershell_installer.sh
@@ -611,26 +685,7 @@ install-powershell()
 
     # execute the installer
     bash ~/powershell_installer.sh
-
-    # validate powershell is installed
-    if [ -f /usr/bin/powershell ]; then
         exit_on_error "Powershell installation failed ${HOSTNAME} !" $ERROR_POWERSHELLINSTALL_FAILED
-    fi
-}
-
-install-azurepowershellcmdlets()
-{
-    log "Installing Azure Powershell Cmdlets"
-
-    # set the PSGallery as a trusted
-    log "Trusting PSGallery"
-    Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
-
-    log "Installing Azure RM cmdlets"
-    Install-Module AzureRM
-
-    log "Installing Azure cmdlets"
-    Install-Module Azure
 }
 
 #############################################################################
@@ -974,7 +1029,7 @@ set-server-timezone()
 {
     timezone="America/Los_Angeles"
 
-    if [ "$#" -ge 1 ]; then
+    if [[ "$#" -ge 1 ]] ; then
         $timezone="${1}"
     fi
 
@@ -1227,7 +1282,7 @@ install-tools()
     set-server-timezone
     install-json-processor
 
-    if [[ "$machine_role" == "jumpbox" ]] || [[ "$machine_role" == "vmss" ]];
+    if [[ "$machine_role" == "jumpbox" ]] || [[ "$machine_role" == "vmss" ]] ;
     then
         install-bc
         install-mongodb-shell
@@ -1237,7 +1292,7 @@ install-tools()
         install-azure-cli
         install-azure-cli-2
 
-        if [[ "$machine_role" == "jumpbox" ]]; 
+        if [[ "$machine_role" == "jumpbox" ]] ; 
         then
             log "Installing Mysql Utilities on Jumpbox ${HOSTNAME}"
             install-mysql-utilities
