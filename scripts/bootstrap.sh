@@ -261,6 +261,22 @@ source_env()
     fi
 }
 
+required_value()
+{
+    if [[ -z $1 ]] ; then
+        echo -e "\n\nPlease provide a $2 value. \n\n"
+        exit 1
+    fi
+}
+
+verify_state()
+{
+    `required_value $TEMPLATE_TYPE TEMPLATE_TYPE`
+    `required_value $DEPLOYMENT_ENV DEPLOYMENT_ENV`
+    `required_value $EDX_ANSIBLE_REPO EDX_ANSIBLE_REPO`
+    `required_value $EDX_ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH EDX_ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH`
+}
+
 ##
 ## Role-independent OXA environment bootstrap
 ##
@@ -284,13 +300,14 @@ setup()
     cd $CONFIGURATION_PATH
     ANSIBLE_BOOTSTRAP_SCRIPT=util/install/ansible-bootstrap.sh
 
+    #todo: this install script results in three config clones. can we get it down to one or two?
     # in order to support retries, we need to clean the temporary folder where the ansible bootstrap script clones the repository
     TEMP_CONFIGURATION_PATH=/tmp/configuration
     if [[ -d $TEMP_CONFIGURATION_PATH ]]; then
-        echo "Removing the temporary configuration path at $TEMP_CONFIGURATION_PATH"
+        log "Removing the temporary configuration path at $TEMP_CONFIGURATION_PATH"
         rm -rf $TEMP_CONFIGURATION_PATH
     else
-        echo "Skipping clean up of $TEMP_CONFIGURATION_PATH"
+        log "Skipping clean up of $TEMP_CONFIGURATION_PATH"
     fi
 
     bash $ANSIBLE_BOOTSTRAP_SCRIPT
@@ -546,7 +563,9 @@ else
     # Deployments to multiple-VMs (STAMP) require a settings file.
     # This includes BVT and PROD
     source_env
-fi 
+fi
+
+verify_state
 
 setup
 

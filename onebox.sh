@@ -176,32 +176,28 @@ parse_args "$@"
 test_args
 
 #todo: get current dir
-sudo bash scripts/bootstrap.sh \
+#todo: admin in bootstrap
+bash scripts/bootstrap.sh \
     --role \
         $TEMPLATE_TYPE \
     --retry-count \
         5 \
     --environment \
         "dev" \
-    \
     --oxatools-public-github-projectbranch \
         `get_current_branch` \
-    \
     --edxconfiguration-public-github-accountname \
         `get_org` \
     --edxconfiguration-public-github-projectname \
-        "edx-configuration"
+        "edx-configuration" \
     --edxconfiguration-public-github-projectbranch \
         `get_branch` \
-    \
     --edxplatform-public-github-accountname \
         `get_org` \
     --edxplatform-public-github-projectbranch \
         `get_branch` \
-    \
     --edxtheme-public-github-projectbranch \
         `get_branch` \
-    \
     --edxversion \
         `get_upstream_branch` \
     --forumversion \
