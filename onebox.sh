@@ -18,8 +18,8 @@ VAGRANT_USER_PASSWORD=insecureDefault
 MONGO_USER=oxamongoadmin
 MONGO_PASSWORD=insecureDefault
 
-MYSQL_ADMIN_USER=oxamysqladmin
-MYSQL_ADMIN_PASSWORD=insecureDefault
+MYSQL_ADMIN_USER=root
+MYSQL_ADMIN_PASSWORD=
 
 MYSQL_USER=oxamysql
 MYSQL_PASSWORD=insecureDefault
