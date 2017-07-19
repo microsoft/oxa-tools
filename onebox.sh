@@ -44,8 +44,7 @@ parse_args()
         arg_value="${2}"
         shift_once=0
 
-        if [[ "${arg_value}" =~ "--" ]]; 
-        then
+        if [[ "${arg_value}" =~ "--" ]] ; then
             arg_value=""
             shift_once=1
         fi
@@ -90,8 +89,7 @@ parse_args()
 
         shift # past argument or value
 
-        if [ $shift_once -eq 0 ]; 
-        then
+        if [[ $shift_once -eq 0 ]] ; then
             shift # past argument or value
         fi
 
