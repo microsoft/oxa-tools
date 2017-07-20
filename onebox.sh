@@ -2,10 +2,12 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
-# Export all bash variable assignments
+# Export all bash variable assignments (for use by sub-processes)
 # Write all commands to the console
 # Immmediately exit on error
 set -axe
+
+default=insecureDefault
 
 ##########################
 # Script Defaults that can be overriden via parameter arguments OR assignment here)
@@ -13,16 +15,19 @@ set -axe
 TEMPLATE_TYPE=fullstack # or devstack
 branch_versions=edge # or stable
 
-VAGRANT_USER_PASSWORD=insecureDefault
+VAGRANT_USER_PASSWORD=$default
 
 MONGO_USER=oxamongoadmin
-MONGO_PASSWORD=insecureDefault
+MONGO_PASSWORD=$default
 
 MYSQL_ADMIN_USER=root
 MYSQL_ADMIN_PASSWORD=
 
 MYSQL_USER=oxamysql
-MYSQL_PASSWORD=insecureDefault
+MYSQL_PASSWORD=$default
+
+EDXAPP_SU_USERNAME=edx_admin
+EDXAPP_SU_PASSWORD=$default
 
 ##########################
 # Settings
@@ -31,8 +36,11 @@ BASE_URL=$HOSTNAME
 LMS_URL=$BASE_URL # vanity
 CMS_URL=$BASE_URL
 PREVIEW_URL=$BASE_URL
-PLATFORM_NAME="Microsoft Learning"
+PLATFORM_NAME="Microsoft Learning on $HOSTNAME"
 EDXAPP_IMPORT_KITCHENSINK_COURSE=true
+EDXAPP_ENABLE_THIRD_PARTY_AUTH=false
+EDXAPP_SU_EMAIL="${EDXAPP_SU_USERNAME}@microsoft.com"
+PLATFORM_EMAIL="$EDXAPP_SU_EMAIL"
 
 ##########################
 # Script Parameter Arguments
@@ -80,6 +88,12 @@ parse_args()
           --mysql-password)
             MYSQL_PASSWORD="${arg_value}"
             ;;
+          --edxapp-su-username)
+            EDXAPP_SU_USERNAME="${arg_value}"
+            ;;
+          --edxapp-su-password)
+            EDXAPP_SU_PASSWORD="${arg_value}"
+            ;;
           *)
             # Unknown option encountered
             echo "Option '${BOLD}$1${NORM} ${arg_value}' not allowed."
@@ -117,6 +131,8 @@ test_args()
     echo "`warning $MYSQL_ADMIN_PASSWORD MYSQL_ADMIN_PASSWORD`"
     echo "`warning $MYSQL_USER MYSQL_USER`"
     echo "`warning $MYSQL_PASSWORD MYSQL_PASSWORD`"
+    echo "`warning $EDXAPP_SU_USERNAME EDXAPP_SU_USERNAME`"
+    echo "`warning $EDXAPP_SU_PASSWORD EDXAPP_SU_PASSWORD`"
     set -x
 }
 
@@ -158,7 +174,7 @@ get_current_branch()
 }
 warning()
 {
-    if [[ -z $1 ]] || [[ $1 == insecureDefault ]] ; then
+    if [[ -z $1 ]] || [[ $1 == $default ]] ; then
         echo -e "\n\nPlease provide a $2 value if deploying to publicly available instance\n\n"
     fi
 }
