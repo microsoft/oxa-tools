@@ -191,6 +191,7 @@ test_args
 
 #todo: get current dir
 #todo: admin in bootstrap
+#todo: switch plat to get_branch before merging.
 bash scripts/bootstrap.sh \
     --role \
         $TEMPLATE_TYPE \
@@ -209,7 +210,7 @@ bash scripts/bootstrap.sh \
     --edxplatform-public-github-accountname \
         `get_org` \
     --edxplatform-public-github-projectbranch \
-        `get_branch` \
+        `get_current_branch` \
     --edxtheme-public-github-projectbranch \
         `get_branch` \
     --edxversion \
