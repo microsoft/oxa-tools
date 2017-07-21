@@ -193,11 +193,11 @@ get_org()
 ##########################
 # Execution Starts
 ##########################
-parse_args "$@"
 
 echo "installing pwgen..."
 apt install -y -qq pwgen
 
+parse_args "$@"
 test_args
 
 #todo: get current dir so relative path works. wget if needed
