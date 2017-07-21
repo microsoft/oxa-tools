@@ -13,8 +13,7 @@ defaultString=insecureDefault
 # Script Defaults that can be overriden via parameter arguments OR assignment here
 ##########################
 TEMPLATE_TYPE=fullstack # or devstack
-branch_versions=edge # or stable
-
+branch_versions=edge    # or stable
 DEFAULT_PASSWORD=
 
 MONGO_USER=oxamongoadmin
@@ -71,6 +70,7 @@ parse_args()
           -d|--default-password)
             DEFAULT_PASSWORD="${arg_value}"
             ;;
+
           --mongo-user)
             MONGO_USER="${arg_value}"
             ;;
@@ -126,7 +126,7 @@ test_args()
 
     set +x
     MONGO_PASSWORD=`harden $MONGO_PASSWORD`
-    MYSQL_ADMIN_PASSWORD=`harden $MYSQL_ADMIN_PASSWORD`
+    #MYSQL_ADMIN_PASSWORD=`harden $MYSQL_ADMIN_PASSWORD`
     MYSQL_PASSWORD=`harden $MYSQL_PASSWORD`
     EDXAPP_SU_PASSWORD=`harden $EDXAPP_SU_PASSWORD`
     set -x
