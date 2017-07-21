@@ -1,9 +1,119 @@
-# Autodetect text files
-* text eol=lf
+## Default
+* text=auto   eol=lf
 
-# Definitively text files 
-*.json text
-*.sh text
-*.js text
-*.yml text
-*.ps1 text
+## Windows
+*.bat    text eol=crlf
+*.ps1    text eol=crlf
+*.srt    text eol=crlf
+
+## Source Code
+*.coffee text
+*.css    text
+*.htm    text
+*.html   text
+*.inc    text
+*.ini    text
+*.js     text
+*.json   text
+*.jsx    text
+*.less   text
+*.od     text
+*.php    text
+*.pl     text
+*.py     text
+*.rb     text
+*.sass   text
+*.scm    text
+*.scss   text
+*.sh     text
+*.sql    text
+*.styl   text
+*.tag    text
+*.ts     text
+*.tsx    text
+*.xml    text
+*.xhtml  text
+
+## CONFIGS
+*.bowerrc      text
+*.cnf          text
+*.conf         text
+*.config       text
+.gitattributes text
+.gitignore     text
+.htaccess      text
+*.npmignore    text
+*.yaml         text
+*.yml          text
+
+## Python Binary files
+*.db     binary
+*.p      binary
+*.pkl    binary
+*.pyc    binary
+*.pyd    binary
+*.pyo    binary
+
+## GRAPHICS
+*.ai     binary
+*.bmp    binary
+*.eps    binary
+*.gif    binary
+*.ico    binary
+*.jng    binary
+*.jp2    binary
+*.jpg    binary
+*.jpeg   binary
+*.jpx    binary
+*.jxr    binary
+*.pdf    binary
+*.png    binary
+*.psb    binary
+*.psd    binary
+*.svg    binary
+*.svgz   binary
+*.tif    binary
+*.tiff   binary
+*.wbmp   binary
+*.webp   binary
+
+## VIDEO
+*.3gpp   binary
+*.3gp    binary
+*.as     binary
+*.asf    binary
+*.asx    binary
+*.fla    binary
+*.flv    binary
+*.m4v    binary
+*.mng    binary
+*.mov    binary
+*.mp4    binary
+*.mpeg   binary
+*.mpg    binary
+*.ogv    binary
+*.swc    binary
+*.swf    binary
+*.webm   binary
+
+## ARCHIVES
+*.7z     binary
+*.gz     binary
+*.jar    binary
+*.rar    binary
+*.tar    binary
+*.zip    binary
+
+## Localization
+*.mo     binary
+
+## FONTS
+*.bcmap  binary
+*.ttf    binary
+*.eot    binary
+*.otf    binary
+*.woff   binary
+*.woff2  binary
+
+## Misc
+*.dat    binary
