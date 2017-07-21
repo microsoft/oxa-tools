@@ -7,7 +7,7 @@
 # Immmediately exit on error
 set -axe
 
-default=insecureDefault
+defaultString=insecureDefault
 
 ##########################
 # Script Defaults that can be overriden via parameter arguments OR assignment here
@@ -15,17 +15,19 @@ default=insecureDefault
 TEMPLATE_TYPE=fullstack # or devstack
 branch_versions=edge # or stable
 
+DEFAULT_PASSWORD=
+
 MONGO_USER=oxamongoadmin
-MONGO_PASSWORD=$default
+MONGO_PASSWORD=$defaultString
 
 MYSQL_ADMIN_USER=root
 MYSQL_ADMIN_PASSWORD=
 
 MYSQL_USER=oxamysql
-MYSQL_PASSWORD=$default
+MYSQL_PASSWORD=$defaultString
 
 EDXAPP_SU_USERNAME=edx_admin
-EDXAPP_SU_PASSWORD=$default
+EDXAPP_SU_PASSWORD=$defaultString
 
 ##########################
 # Settings
@@ -65,6 +67,9 @@ parse_args()
             ;;
           -b|--branches)
             branch_versions="${arg_value}"
+            ;;
+          -d|--default-password)
+            DEFAULT_PASSWORD="${arg_value}"
             ;;
           --mongo-user)
             MONGO_USER="${arg_value}"
@@ -120,10 +125,10 @@ test_args()
     fi
 
     set +x
-    echo "`warning $MONGO_PASSWORD MONGO_PASSWORD`"
-    echo "`warning $MYSQL_ADMIN_PASSWORD MYSQL_ADMIN_PASSWORD`"
-    echo "`warning $MYSQL_PASSWORD MYSQL_PASSWORD`"
-    echo "`warning $EDXAPP_SU_PASSWORD EDXAPP_SU_PASSWORD`"
+    MONGO_PASSWORD=`harden $MONGO_PASSWORD`
+    MYSQL_ADMIN_PASSWORD=`harden $MYSQL_ADMIN_PASSWORD`
+    MYSQL_PASSWORD=`harden $MYSQL_PASSWORD`
+    EDXAPP_SU_PASSWORD=`harden $EDXAPP_SU_PASSWORD`
     set -x
 }
 
@@ -163,10 +168,21 @@ get_current_branch()
 
     echo "$branchInfo"
 }
-warning()
+harden()
 {
-    if [[ -z $1 ]] || [[ $1 == $default ]] ; then
-        echo -e "\n\nPlease provide a $2 value if deploying to publicly available instance\n\n"
+    # Is the current password insecure?
+    if [[ -z $1 ]] || [[ $1 == $defaultString ]] ; then
+        if [[ -n $DEFAULT_PASSWORD ]] ; then
+            # A default was provided. Use it.
+            echo $DEFAULT_PASSWORD
+        else
+            # No default was provided.
+            # Generate a random one (persisted to oxa.yml)
+            pwgen -s 33 1
+        fi
+    else
+        # Don't overwrite existing password
+        echo $1
     fi
 }
 get_org()
@@ -178,9 +194,13 @@ get_org()
 # Execution Starts
 ##########################
 parse_args "$@"
+
+echo "installing pwgen..."
+apt install -y -qq pwgen
+
 test_args
 
-#todo: get current dir
+#todo: get current dir so relative path works. wget if needed
 #todo: admin in bootstrap
 #todo: switch plat to get_branch before merging.
 bash scripts/bootstrap.sh \
