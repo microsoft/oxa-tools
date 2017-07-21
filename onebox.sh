@@ -10,12 +10,10 @@ set -axe
 default=insecureDefault
 
 ##########################
-# Script Defaults that can be overriden via parameter arguments OR assignment here)
+# Script Defaults that can be overriden via parameter arguments OR assignment here
 ##########################
 TEMPLATE_TYPE=fullstack # or devstack
 branch_versions=edge # or stable
-
-VAGRANT_USER_PASSWORD=$default
 
 MONGO_USER=oxamongoadmin
 MONGO_PASSWORD=$default
@@ -41,6 +39,7 @@ EDXAPP_IMPORT_KITCHENSINK_COURSE=true
 EDXAPP_ENABLE_THIRD_PARTY_AUTH=false
 EDXAPP_SU_EMAIL="${EDXAPP_SU_USERNAME}@microsoft.com"
 PLATFORM_EMAIL="$EDXAPP_SU_EMAIL"
+VAGRANT_USER_PASSWORD=$EDXAPP_SU_PASSWORD
 
 ##########################
 # Script Parameter Arguments
@@ -66,9 +65,6 @@ parse_args()
             ;;
           -b|--branches)
             branch_versions="${arg_value}"
-            ;;
-          --vagrant-pasword)
-            VAGRANT_USER_PASSWORD="${arg_value}"
             ;;
           --mongo-user)
             MONGO_USER="${arg_value}"
@@ -124,14 +120,9 @@ test_args()
     fi
 
     set +x
-    echo "`warning $VAGRANT_USER_PASSWORD VAGRANT_USER_PASSWORD`"
-    echo "`warning $MONGO_USER MONGO_USER`"
     echo "`warning $MONGO_PASSWORD MONGO_PASSWORD`"
-    echo "`warning $MYSQL_ADMIN_USER MYSQL_ADMIN_USER`"
     echo "`warning $MYSQL_ADMIN_PASSWORD MYSQL_ADMIN_PASSWORD`"
-    echo "`warning $MYSQL_USER MYSQL_USER`"
     echo "`warning $MYSQL_PASSWORD MYSQL_PASSWORD`"
-    echo "`warning $EDXAPP_SU_USERNAME EDXAPP_SU_USERNAME`"
     echo "`warning $EDXAPP_SU_PASSWORD EDXAPP_SU_PASSWORD`"
     set -x
 }
