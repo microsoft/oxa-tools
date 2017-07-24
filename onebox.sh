@@ -7,48 +7,49 @@
 # Immmediately exit on error
 set -axe
 
-defaultString=insecureDefault
+readonly DEFAULT_STRING="insecureDefault"
 
 ##########################
-# Script Defaults that can be overriden via parameter arguments OR assignment here
+# Script Defaults that can be overriden via
+# - parameter arguments OR
+# - assignment here
 ##########################
 TEMPLATE_TYPE=fullstack # or devstack
-branch_versions=edge    # or stable
+BRANCH_VERSIONS=edge    # or stable
 DEFAULT_PASSWORD=
 
 MONGO_USER=oxamongoadmin
-MONGO_PASSWORD=$defaultString
+MONGO_PASSWORD=$DEFAULT_STRING
 
 MYSQL_ADMIN_USER=root
 MYSQL_ADMIN_PASSWORD=
 
 MYSQL_USER=oxamysql
-MYSQL_PASSWORD=$defaultString
+MYSQL_PASSWORD=$DEFAULT_STRING
 
 EDXAPP_SU_USERNAME=edx_admin
-EDXAPP_SU_PASSWORD=$defaultString
+EDXAPP_SU_PASSWORD=$DEFAULT_STRING
 
 ##########################
 # Settings
 ##########################
-BASE_URL=$HOSTNAME
-LMS_URL=$BASE_URL # vanity
-CMS_URL=$BASE_URL
-PREVIEW_URL=$BASE_URL
-PLATFORM_NAME="Microsoft Learning on $HOSTNAME"
-EDXAPP_IMPORT_KITCHENSINK_COURSE=true
-EDXAPP_ENABLE_THIRD_PARTY_AUTH=false
-EDXAPP_SU_EMAIL="${EDXAPP_SU_USERNAME}@microsoft.com"
-PLATFORM_EMAIL="$EDXAPP_SU_EMAIL"
-VAGRANT_USER_PASSWORD=$EDXAPP_SU_PASSWORD
+readonly BASE_URL=$HOSTNAME
+readonly LMS_URL=$BASE_URL # vanity
+readonly CMS_URL=$BASE_URL
+readonly PREVIEW_URL=$BASE_URL
+readonly PLATFORM_NAME="Microsoft Learning on $HOSTNAME"
+readonly EDXAPP_IMPORT_KITCHENSINK_COURSE=true
+readonly EDXAPP_ENABLE_THIRD_PARTY_AUTH=false
+readonly EDXAPP_SU_EMAIL="${EDXAPP_SU_USERNAME}@microsoft.com"
+readonly PLATFORM_EMAIL="$EDXAPP_SU_EMAIL"
+readonly EDX_BRANCH="open-release/ficus.master"
 
 ##########################
 # Script Parameter Arguments
 ##########################
 parse_args() 
 {
-    while [[ "$#" -gt 0 ]]
-    do
+    while [[ "$#" -gt 0 ]] ; do
         arg_value="${2}"
         shift_once=0
 
@@ -65,7 +66,7 @@ parse_args()
             TEMPLATE_TYPE="${arg_value}"
             ;;
           -b|--branches)
-            branch_versions="${arg_value}"
+            BRANCH_VERSIONS="${arg_value}"
             ;;
           -d|--default-password)
             DEFAULT_PASSWORD="${arg_value}"
@@ -98,7 +99,6 @@ parse_args()
           *)
             # Unknown option encountered
             echo "Option '${BOLD}$1${NORM} ${arg_value}' not allowed."
-            display_usage
             ;;
         esac
 
@@ -110,6 +110,31 @@ parse_args()
 
     done
 }
+fix_args()
+{
+    # Harden credentials if none were provided.
+    set +x
+    MONGO_PASSWORD=`harden $MONGO_PASSWORD`
+    #MYSQL_ADMIN_PASSWORD=`harden $MYSQL_ADMIN_PASSWORD`
+    MYSQL_PASSWORD=`harden $MYSQL_PASSWORD`
+    EDXAPP_SU_PASSWORD=`harden $EDXAPP_SU_PASSWORD`
+    VAGRANT_USER_PASSWORD=$EDXAPP_SU_PASSWORD
+    set -x
+
+    # Allow for synonyms
+    if [[ $TEMPLATE_TYPE == full ]] || [[ $TEMPLATE_TYPE == fs ]] || [[ $TEMPLATE_TYPE == f ]] ; then
+        TEMPLATE_TYPE=fullstack
+    elif [[ $TEMPLATE_TYPE == dev ]] || [[ $TEMPLATE_TYPE == ds ]] || [[ $TEMPLATE_TYPE == d ]] ; then
+        TEMPLATE_TYPE=devstack
+    fi
+
+    # Allow for synonyms
+    if [[ $BRANCH_VERSIONS == production ]] || [[ $BRANCH_VERSIONS == prod ]] || [[ $BRANCH_VERSIONS == master ]] || [[ $BRANCH_VERSIONS == release ]] ; then
+        BRANCH_VERSIONS=stable
+    elif [[ $BRANCH_VERSIONS == development ]] || [[ $BRANCH_VERSIONS == dev ]] || [[ $BRANCH_VERSIONS == beta ]] || [[ $BRANCH_VERSIONS == pre ]] || [[ $BRANCH_VERSIONS == int ]] ; then
+        BRANCH_VERSIONS=edge
+    fi
+}
 test_args()
 {
     if [[ $TEMPLATE_TYPE != fullstack ]] && [[ $TEMPLATE_TYPE != devstack ]] ; then
@@ -118,18 +143,11 @@ test_args()
         exit 1
     fi
 
-    if [[ $branch_versions != stable ]] && [[ $branch_versions != edge ]] ; then
-        echo "branch_versions is set to $branch_versions"
+    if [[ $BRANCH_VERSIONS != stable ]] && [[ $BRANCH_VERSIONS != edge ]] ; then
+        echo "BRANCH_VERSIONS is set to $BRANCH_VERSIONS"
         echo "but should be stable or edge"
         exit 1
     fi
-
-    set +x
-    MONGO_PASSWORD=`harden $MONGO_PASSWORD`
-    #MYSQL_ADMIN_PASSWORD=`harden $MYSQL_ADMIN_PASSWORD`
-    MYSQL_PASSWORD=`harden $MYSQL_PASSWORD`
-    EDXAPP_SU_PASSWORD=`harden $EDXAPP_SU_PASSWORD`
-    set -x
 }
 
 ##########################
@@ -137,9 +155,9 @@ test_args()
 ##########################
 get_branch()
 {
-    if [[ $branch_versions == stable ]] ; then
+    if [[ $BRANCH_VERSIONS == stable ]] ; then
         echo "oxa/master.fic"
-    elif [[ $branch_versions == edge ]] ; then
+    elif [[ $BRANCH_VERSIONS == edge ]] ; then
         if [[ -n $1 ]] ; then
             # Legacy switch
             echo "oxa/devfic"
@@ -149,10 +167,6 @@ get_branch()
     else
         test_args
     fi
-}
-get_upstream_branch()
-{
-    echo "open-release/ficus.master"
 }
 get_current_branch()
 {
@@ -171,7 +185,7 @@ get_current_branch()
 harden()
 {
     # Is the current password insecure?
-    if [[ -z $1 ]] || [[ $1 == $defaultString ]] ; then
+    if [[ -z $1 ]] || [[ $1 == $DEFAULT_STRING ]] ; then
         if [[ -n $DEFAULT_PASSWORD ]] ; then
             # A default was provided. Use it.
             echo $DEFAULT_PASSWORD
@@ -198,6 +212,7 @@ echo "installing pwgen..."
 apt install -y -qq pwgen
 
 parse_args "$@"
+fix_args
 test_args
 
 #todo: get current dir so relative path works. wget if needed
@@ -225,6 +240,6 @@ bash scripts/bootstrap.sh \
     --edxtheme-public-github-projectbranch \
         `get_branch` \
     --edxversion \
-        `get_upstream_branch` \
+        $EDX_BRANCH \
     --forumversion \
-        `get_upstream_branch`
+        $EDX_BRANCH
