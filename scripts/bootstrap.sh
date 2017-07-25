@@ -279,7 +279,7 @@ setup()
     export ANSIBLE_REPO=$EDX_ANSIBLE_REPO
     export ANSIBLE_VERSION=$ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH
   
-    # Sync public repositories using utilities.sh
+    # Sync public repository using utilities.sh
     sync_repo $OXA_TOOLS_REPO $OXA_TOOLS_VERSION $OXA_TOOLS_PATH
 
     # setup theme
@@ -466,17 +466,19 @@ CURRENT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 parse_args "$@"
 
 # source utilities for logging and other base functions
-pushd ../
+cd ../
 UTILITIES_PATH=templates/stamp/utilities.sh
 
 # check if the utilities file exists. If not, download from the public repository
 if [[ ! -e $UTILITIES_PATH ]] ; then
-    curl https://raw.githubusercontent.com/${OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME}/${OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME}/${OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH}/${UTILITIES_PATH} --create-dirs -o $UTILITIES_PATH
+    cd $CURRENT_PATH
+    fileName=`basename $UTILITIES_PATH`
+    wget -q https://raw.githubusercontent.com/${OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME}/${OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME}/${OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH}/${UTILITIES_PATH} -O $fileName
+    UTILITIES_PATH=$fileName
 fi
 
 # source the utilities now
 source $UTILITIES_PATH
-popd
 
 exit_if_limited_user
 

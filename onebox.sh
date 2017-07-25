@@ -211,7 +211,7 @@ get_org()
 ##########################
 
 echo "installing pwgen and curl..."
-apt install -y -qq pwgen curl
+apt install -y -qq pwgen
 
 parse_args "$@"
 fix_args
@@ -222,7 +222,7 @@ CURRENT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 bootstrap="scripts/bootstrap.sh"
 if [[ ! -f scripts/bootstrap.sh ]] ; then
     fileName=`basename $bootstrap`
-    curl https://raw.githubusercontent.com/$(get_org)/oxa-tools/$(get_current_branch)/$bootstrap -o $fileName
+    wget -q https://raw.githubusercontent.com/$(get_org)/oxa-tools/$(get_current_branch)/$bootstrap -O $fileName
     bootstrap=$fileName
 fi
 
