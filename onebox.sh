@@ -177,7 +177,9 @@ get_current_branch()
 
     # Ensure branch information is useful.
     if [[ -z "$branchInfo" ]] || [[ $branchInfo == *"no branch"* ]] || [[ $branchInfo == *"detached"* ]] ; then
-        branchInfo="`get_branch "oldStyle"`"
+        branchInfo="oxa/df_noConfig"
+        #todo: switch to get_branch before merging.
+        #branchInfo="`get_branch "oldStyle"`"
     fi
 
     echo "$branchInfo"
