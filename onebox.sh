@@ -63,10 +63,10 @@ parse_args()
 
         case "$1" in
           -r|--role)
-            TEMPLATE_TYPE="${arg_value}"
+            TEMPLATE_TYPE="${arg_value,,}" # convert to lowercase
             ;;
           -b|--branches)
-            BRANCH_VERSIONS="${arg_value}"
+            BRANCH_VERSIONS="${arg_value,,}" # convert to lowercase
             ;;
           -d|--default-password)
             DEFAULT_PASSWORD="${arg_value}"
@@ -208,15 +208,20 @@ get_org()
 # Execution Starts
 ##########################
 
-echo "installing pwgen..."
-apt install -y -qq pwgen
+echo "installing pwgen and curl..."
+apt install -y -qq pwgen curl
 
 parse_args "$@"
 fix_args
 test_args
 
-#todo: get current dir so relative path works. wget if needed
-#todo: admin in bootstrap
+# get current dir
+CURRENT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+bootstrap="scripts/bootstrap.sh"
+if [[ ! -f scripts/bootstrap.sh ]] ; then
+    curl https://raw.githubusercontent.com/$(get_org)/oxa-tools/$(get_current_branch)/$bootstrap --create-dirs -o $bootstrap
+fi
+
 #todo: switch plat to get_branch before merging.
 bash scripts/bootstrap.sh \
     --role \

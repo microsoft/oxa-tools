@@ -70,13 +70,11 @@ display_usage() {
 
 parse_args() 
 {
-    while [[ "$#" -gt 0 ]]
-    do
+    while [[ "$#" -gt 0 ]] ; do
         arg_value="${2}"
         shift_once=0
 
-        if [[ "${arg_value}" =~ "--" ]]; 
-        then
+        if [[ "${arg_value}" =~ "--" ]] ; then
             arg_value=""
             shift_once=1
         fi
@@ -87,20 +85,12 @@ parse_args()
         case "$1" in
           -r|--role)
             EDX_ROLE="${arg_value,,}" # convert to lowercase
-            if ! is_valid_arg "jb vmss mongo mysql edxapp fullstack devstack" $EDX_ROLE; then
-              echo "Invalid role specified\n"
-              display_usage
-            fi
             ;;
           --retry-count)
             RETRY_COUNT="${arg_value}"
             ;;
           -e|--environment)
             DEPLOYMENT_ENV="${arg_value,,}" # convert to lowercase
-            if ! is_valid_arg "dev bvt int prod" $DEPLOYMENT_ENV; then
-              echo "Invalid environment specified\n"
-              display_usage
-            fi
             ;;
           --cron)
             CRON_MODE=1
@@ -175,8 +165,7 @@ parse_args()
 
         shift # past argument or value
 
-        if [ $shift_once -eq 0 ]; 
-        then
+        if [[ $shift_once -eq 0 ]] ; then
             shift # past argument or value
         fi
 
@@ -243,33 +232,45 @@ setup_overrides_file()
     setup_deployment_overrides $OXA_ENV_OVERRIDE_FILE $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH $EDX_CONFIGURATION_REPO $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH $EDX_PLATFORM_REPO $EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH $EDX_THEME_REPO $EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH $EDX_VERSION $FORUM_VERSION $EDX_ANSIBLE_REPO $ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH
 }
 
-source_env()
-{
-    # populate the deployment environment
-    set -a
-    source $OXA_ENV_FILE
-    set +a
-
-    # apply the overrides
-    if [[ -f $OXA_ENV_OVERRIDE_FILE ]] ; then
-        source $OXA_ENV_OVERRIDE_FILE
-    fi
-}
-
 required_value()
 {
     if [[ -z $1 ]] ; then
-        echo -e "\n\nPlease provide a $2 value. \n\n"
-        exit 1
+        echo -e "\n\nPlease provide a $2 value OR"
+        echo -e "Use onebox.sh instead of invoking bootstrap.sh directly.\n\n"
+        display_usage
     fi
 }
 
 verify_state()
 {
     `required_value $TEMPLATE_TYPE TEMPLATE_TYPE`
-    `required_value $DEPLOYMENT_ENV DEPLOYMENT_ENV`
-    `required_value $EDX_ANSIBLE_REPO EDX_ANSIBLE_REPO`
+    #todo:test i expect this to fail
     `required_value $EDX_ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH EDX_ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH`
+    echo "EDX_ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH: $EDX_ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH"
+    exit 0
+
+    if ! is_valid_arg "jb vmss mongo mysql edxapp fullstack devstack" $EDX_ROLE; then
+      echo "Invalid role specified\n"
+      display_usage
+    fi
+
+    if ! is_valid_arg "dev bvt int prod" $DEPLOYMENT_ENV; then
+      echo "Invalid environment specified\n"
+      display_usage
+    fi
+}
+
+source_env()
+{
+    # populate the deployment environment
+    set -a
+    source $OXA_ENV_FILE
+
+    # apply the overrides
+    if [[ -f $OXA_ENV_OVERRIDE_FILE ]] ; then
+        source $OXA_ENV_OVERRIDE_FILE
+    fi
+    set +a
 }
 
 ##
@@ -291,10 +292,6 @@ setup()
     #ln -s $THEME_PATH /edx/app/edxapp/themes
     #chown -R edxapp:edxapp $THEME_PATH
 
-    # run edx bootstrap and install requirements
-    cd $CONFIGURATION_PATH
-    ANSIBLE_BOOTSTRAP_SCRIPT=util/install/ansible-bootstrap.sh
-
     #todo: this install script results in three config clones. can we get it down to one or two?
     # in order to support retries, we need to clean the temporary folder where the ansible bootstrap script clones the repository
     TEMP_CONFIGURATION_PATH=/tmp/configuration
@@ -304,6 +301,10 @@ setup()
     else
         log "Skipping clean up of $TEMP_CONFIGURATION_PATH"
     fi
+
+    # run edx bootstrap and install requirements
+    cd $CONFIGURATION_PATH
+    ANSIBLE_BOOTSTRAP_SCRIPT=util/install/ansible-bootstrap.sh
 
     bash $ANSIBLE_BOOTSTRAP_SCRIPT
     exit_on_error "Failed executing $ANSIBLE_BOOTSTRAP_SCRIPT"
@@ -462,25 +463,29 @@ update_devstack() {
 # START CORE EXECUTION
 ###############################################
 
-# source our utilities for logging and other base functions (we need this staged with the installer script)
-# the file needs to be first downloaded from the public repository
+# get current dir
 CURRENT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-UTILITIES_PATH=$CURRENT_PATH/../templates/stamp/utilities.sh
 
-# check if the utilities file exists. If not, bail out.
-if [[ ! -e $UTILITIES_PATH ]]; 
-then  
-    echo :"Utilities not present"
-    exit 3
+# pass existing command line arguments
+parse_args "$@"
+
+# source utilities for logging and other base functions
+pushd ../
+UTILITIES_PATH=templates/stamp/utilities.sh
+
+# check if the utilities file exists. If not, download from the public repository
+if [[ ! -e $UTILITIES_PATH ]] ; then
+    curl https://raw.githubusercontent.com/${OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME}/${OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME}/${OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH}/${UTILITIES_PATH} --create-dirs -o $UTILITIES_PATH
 fi
 
 # source the utilities now
 source $UTILITIES_PATH
+popd
+
+exit_if_limited_user
 
 # Script self-idenfitication
 print_script_header
-
-parse_args $@ # pass existing command line arguments
 
 ##
 ## Execute role-independent OXA environment bootstrap
