@@ -281,7 +281,6 @@ setup()
   
     # Sync public repositories using utilities.sh
     sync_repo $OXA_TOOLS_REPO $OXA_TOOLS_VERSION $OXA_TOOLS_PATH
-    sync_repo $CONFIGURATION_REPO $CONFIGURATION_VERSION $CONFIGURATION_PATH
 
     # setup theme
     #THEME_PATH="${OXA_PATH}/${EDX_THEME_PUBLIC_GITHUB_PROJECTNAME}"
@@ -289,8 +288,7 @@ setup()
     #ln -s $THEME_PATH /edx/app/edxapp/themes
     #chown -R edxapp:edxapp $THEME_PATH
 
-    #todo: this install script results in three config clones. can we get it down to one or two?
-    # in order to support retries, we need to clean the temporary folder where the ansible bootstrap script clones the repository
+    # in order to support retries, we should cleanup residue from previous ansible-bootstrap run
     TEMP_CONFIGURATION_PATH=/tmp/configuration
     if [[ -d $TEMP_CONFIGURATION_PATH ]]; then
         log "Removing the temporary configuration path at $TEMP_CONFIGURATION_PATH"
@@ -299,18 +297,19 @@ setup()
         log "Skipping clean up of $TEMP_CONFIGURATION_PATH"
     fi
 
-    # run edx bootstrap and install requirements
-    cd $CONFIGURATION_PATH
-    ANSIBLE_BOOTSTRAP_SCRIPT=util/install/ansible-bootstrap.sh
+    rawConfigUrl="https://raw.githubusercontent.com/${EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME}/${EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME}/${EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH}"
 
-    bash $ANSIBLE_BOOTSTRAP_SCRIPT
+    # run edx bootstrap and install requirements
+    ANSIBLE_BOOTSTRAP_SCRIPT=util/install/ansible-bootstrap.sh
+    fileName=`basename $ANSIBLE_BOOTSTRAP_SCRIPT`
+    wget -q ${rawConfigUrl}/${ANSIBLE_BOOTSTRAP_SCRIPT} -O $fileName
+    bash $fileName
     exit_on_error "Failed executing $ANSIBLE_BOOTSTRAP_SCRIPT"
 
-    pip install -r requirements.txt
+    fileName=requirements.txt
+    wget -q ${rawConfigUrl}/${fileName} -O $fileName
+    pip install -r $fileName
     exit_on_error "Failed pip-installing EdX requirements"
-
-    # fix OXA environment ownership
-    chown -R $ADMIN_USER:$ADMIN_USER $OXA_PATH
 
     # aggregate edx configuration with deployment environment expansion
     # warning: beware of yaml variable dependencies due to order of aggregation

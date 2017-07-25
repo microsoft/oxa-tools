@@ -221,11 +221,13 @@ test_args
 CURRENT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 bootstrap="scripts/bootstrap.sh"
 if [[ ! -f scripts/bootstrap.sh ]] ; then
-    curl https://raw.githubusercontent.com/$(get_org)/oxa-tools/$(get_current_branch)/$bootstrap --create-dirs -o $bootstrap
+    fileName=`basename $bootstrap`
+    curl https://raw.githubusercontent.com/$(get_org)/oxa-tools/$(get_current_branch)/$bootstrap -o $fileName
+    bootstrap=$fileName
 fi
 
 #todo: switch plat to get_branch before merging.
-bash scripts/bootstrap.sh \
+bash $bootstrap \
     --role \
         $TEMPLATE_TYPE \
     --retry-count \
