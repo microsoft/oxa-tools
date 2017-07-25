@@ -257,6 +257,28 @@ verify_state()
     fi
 }
 
+link_oxa_tools_repo()
+{
+    # Is this bootsrap.sh script within a git repo?
+    pushd $CURRENT_PATH
+    if git status > /dev/null 2>&1 ; then
+        # Is the git repo oxa-tools?
+        pushd ..
+        actualRemote=`git config --get remote.origin.url | grep -o 'github.com.*' | sed 's/\.git//g'`
+        count=`echo $OXA_TOOLS_REPO | grep -i $actualRemote | wc -l`
+        if [[ "$count" -gt "0" ]] ; then
+            # Does the linking help?
+            pushd ..
+            if [[ -d ${OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME}/.git ]] && [[ `pwd` != /oxa ]] ; then
+                ln -s `pwd` /oxa
+            fi
+            popd
+        fi
+        popd
+    fi
+    popd
+}
+
 source_env()
 {
     # populate the deployment environment
@@ -280,6 +302,7 @@ setup()
     export ANSIBLE_VERSION=$ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH
   
     # Sync public repository using utilities.sh
+    link_oxa_tools_repo
     sync_repo $OXA_TOOLS_REPO $OXA_TOOLS_VERSION $OXA_TOOLS_PATH
 
     # setup theme
