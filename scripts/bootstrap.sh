@@ -244,11 +244,7 @@ required_value()
 
 verify_state()
 {
-    `required_value TEMPLATE_TYPE $TEMPLATE_TYPE`
-    #todo:test i expect this to fail
-    `required_value EDX_ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH $EDX_ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH`
-    echo "EDX_ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH: $EDX_ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH"
-    exit 0
+    required_value TEMPLATE_TYPE $TEMPLATE_TYPE
 
     if ! is_valid_arg "jb vmss mongo mysql edxapp fullstack devstack" $EDX_ROLE; then
       echo "Invalid role specified\n"
@@ -281,7 +277,7 @@ setup()
 {
     export $(sed -e 's/#.*$//' $OXA_ENV_OVERRIDE_FILE | cut -d= -f1)
     export ANSIBLE_REPO=$EDX_ANSIBLE_REPO
-    export ANSIBLE_VERSION=$EDX_ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH
+    export ANSIBLE_VERSION=$ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH
   
     # Sync public repositories using utilities.sh
     sync_repo $OXA_TOOLS_REPO $OXA_TOOLS_VERSION $OXA_TOOLS_PATH
