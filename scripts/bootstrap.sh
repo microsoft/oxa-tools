@@ -63,7 +63,8 @@ NOTIFICATION_MESSAGE=""
 SECONDARY_LOG="/var/log/bootstrap.csx.log"
 PRIMARY_LOG="/var/log/bootstrap.log"
 
-display_usage() {
+display_usage()
+{
   echo "Usage: $0 [-r|--role {jb|vmss|mongo|mysql|edxapp|fullstack|devstack}] [-e|--environment {dev|bvt|int|prod}] [--cron] --keyvault-name {azure keyvault name} --aad-webclient-id {AAD web application client id} --aad-webclient-appkey {AAD web application client key} --aad-tenant-id {AAD Tenant to authenticate against} --azure-subscription-id {Azure subscription Id}"
   exit 1
 }
@@ -234,8 +235,8 @@ setup_overrides_file()
 
 required_value()
 {
-    if [[ -z $1 ]] ; then
-        echo -e "\n\nPlease provide a $2 value OR"
+    if [[ -z $2 ]] ; then
+        echo -e "\n\nPlease provide a $1 value OR"
         echo -e "Use onebox.sh instead of invoking bootstrap.sh directly.\n\n"
         display_usage
     fi
@@ -243,9 +244,9 @@ required_value()
 
 verify_state()
 {
-    `required_value $TEMPLATE_TYPE TEMPLATE_TYPE`
+    `required_value TEMPLATE_TYPE $TEMPLATE_TYPE`
     #todo:test i expect this to fail
-    `required_value $EDX_ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH EDX_ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH`
+    `required_value EDX_ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH $EDX_ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH`
     echo "EDX_ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH: $EDX_ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH"
     exit 0
 
