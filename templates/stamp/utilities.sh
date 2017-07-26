@@ -312,7 +312,7 @@ install-mysql-utilities()
 apt-wrapper()
 {
     log "$1 package(s)..."
-    sudo apt-get $1 -y -qq --fix-missing
+    apt $1 -y -qq --fix-missing
 }
 
 retry-command()
@@ -330,7 +330,7 @@ retry-command()
             apt-wrapper "update"
             apt-wrapper "install -f"
             apt-wrapper "upgrade -f"
-            sudo dpkg --configure -a
+            dpkg --configure -a
         fi
 
         log "STARTING ${message}..."
