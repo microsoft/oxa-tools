@@ -301,9 +301,10 @@ setup()
     export ANSIBLE_REPO=$EDX_ANSIBLE_REPO
     export ANSIBLE_VERSION=$ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH
   
-    # Sync public repository using utilities.sh
+    # Sync public repositories using utilities.sh
     link_oxa_tools_repo
     sync_repo $OXA_TOOLS_REPO $OXA_TOOLS_VERSION $OXA_TOOLS_PATH
+    sync_repo $CONFIGURATION_REPO $CONFIGURATION_VERSION $CONFIGURATION_PATH
 
     # setup theme
     #THEME_PATH="${OXA_PATH}/${EDX_THEME_PUBLIC_GITHUB_PROJECTNAME}"
@@ -320,19 +321,17 @@ setup()
         log "Skipping clean up of $TEMP_CONFIGURATION_PATH"
     fi
 
-    rawConfigUrl="https://raw.githubusercontent.com/${EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME}/${EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME}/${EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH}"
-
     # run edx bootstrap and install requirements
+    cd $CONFIGURATION_PATH
     ANSIBLE_BOOTSTRAP_SCRIPT=util/install/ansible-bootstrap.sh
-    fileName=`basename $ANSIBLE_BOOTSTRAP_SCRIPT`
-    wget -q ${rawConfigUrl}/${ANSIBLE_BOOTSTRAP_SCRIPT} -O $fileName
-    bash $fileName
+    bash $ANSIBLE_BOOTSTRAP_SCRIPT
     exit_on_error "Failed executing $ANSIBLE_BOOTSTRAP_SCRIPT"
 
-    fileName=requirements.txt
-    wget -q ${rawConfigUrl}/${fileName} -O $fileName
-    pip install -r $fileName
+    pip install -r requirements.txt
     exit_on_error "Failed pip-installing EdX requirements"
+
+    # fix OXA environment ownership
+    chown -R $ADMIN_USER:$ADMIN_USER $OXA_PATH
 
     # aggregate edx configuration with deployment environment expansion
     # warning: beware of yaml variable dependencies due to order of aggregation
