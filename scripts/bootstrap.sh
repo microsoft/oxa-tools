@@ -489,7 +489,7 @@ CURRENT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 parse_args "$@"
 
 # source utilities for logging and other base functions
-cd ../
+cd $CURRENT_PATH/..
 UTILITIES_PATH=templates/stamp/utilities.sh
 
 # check if the utilities file exists. If not, download from the public repository

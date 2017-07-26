@@ -210,8 +210,9 @@ get_org()
 # Execution Starts
 ##########################
 
-echo "installing pwgen and curl..."
-apt install -y -qq pwgen
+echo "installing pwgen and wget..."
+apt update -qq
+apt install -y -qq pwgen wget
 
 parse_args "$@"
 fix_args
