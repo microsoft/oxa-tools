@@ -138,14 +138,22 @@ fix_args()
 test_args()
 {
     if [[ $TEMPLATE_TYPE != fullstack ]] && [[ $TEMPLATE_TYPE != devstack ]] ; then
-        echo "TEMPLATE_TYPE is set to $TEMPLATE_TYPE"
-        echo "but should be fullstack or devstack"
+        set +x
+        echo -e "\033[1;36m"
+        echo -e "\n TEMPLATE_TYPE is set to $TEMPLATE_TYPE"
+        echo -e " but should be fullstack or devstack."
+        echo -e " Use the -r param argument.\n"
+        echo -e '\033[0m'
         exit 1
     fi
 
     if [[ $BRANCH_VERSIONS != stable ]] && [[ $BRANCH_VERSIONS != edge ]] ; then
-        echo "BRANCH_VERSIONS is set to $BRANCH_VERSIONS"
-        echo "but should be stable or edge"
+        set +x
+        echo -e "\033[1;36m"
+        echo -e "\n BRANCH_VERSIONS is set to $BRANCH_VERSIONS"
+        echo -e " but should be stable or edge.\n"
+        echo -e " Use the -b param argument.\n"
+        echo -e '\033[0m'
         exit 1
     fi
 }
