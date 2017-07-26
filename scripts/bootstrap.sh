@@ -238,8 +238,7 @@ required_value()
     if [[ -z $2 ]] ; then
         set +x
         echo -e "\033[1;36m"
-        echo -e "\n\n  Please provide a $1 value OR"
-        echo -e "  Use onebox.sh instead of invoking bootstrap.sh directly.\n\n"
+        echo -e "\n\n  Use onebox.sh instead of invoking bootstrap.sh directly.\n\n"
         echo -e '\033[0m'
         display_usage
     fi
