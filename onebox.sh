@@ -8,6 +8,7 @@
 set -axe
 
 readonly DEFAULT_STRING="insecureDefault"
+readonly MSFT="Microsoft"
 
 ##########################
 # Script Defaults that can be overriden via
@@ -15,7 +16,7 @@ readonly DEFAULT_STRING="insecureDefault"
 # - assignment here
 ##########################
 TEMPLATE_TYPE=fullstack # or devstack
-BRANCH_VERSIONS=edge    # or stable
+BRANCH_VERSIONS=edge    # or stable or edx
 DEFAULT_PASSWORD=
 
 MONGO_USER=oxamongoadmin
@@ -37,10 +38,10 @@ readonly BASE_URL=$HOSTNAME
 readonly LMS_URL=$BASE_URL # vanity
 readonly CMS_URL=$BASE_URL
 readonly PREVIEW_URL=$BASE_URL
-readonly PLATFORM_NAME="Microsoft Learning on $HOSTNAME"
+readonly PLATFORM_NAME="$MSFT Learning on $HOSTNAME"
 readonly EDXAPP_IMPORT_KITCHENSINK_COURSE=true
 readonly EDXAPP_ENABLE_THIRD_PARTY_AUTH=false
-readonly EDXAPP_SU_EMAIL="${EDXAPP_SU_USERNAME}@microsoft.com"
+readonly EDXAPP_SU_EMAIL="${EDXAPP_SU_USERNAME}@${MSFT}.com"
 readonly PLATFORM_EMAIL="$EDXAPP_SU_EMAIL"
 readonly EDX_BRANCH="open-release/ficus.master"
 
@@ -110,6 +111,7 @@ parse_args()
 
     done
 }
+
 fix_args()
 {
     # Harden credentials if none were provided.
@@ -133,8 +135,11 @@ fix_args()
         BRANCH_VERSIONS=stable
     elif [[ $BRANCH_VERSIONS == development ]] || [[ $BRANCH_VERSIONS == dev ]] || [[ $BRANCH_VERSIONS == beta ]] || [[ $BRANCH_VERSIONS == pre ]] || [[ $BRANCH_VERSIONS == int ]] ; then
         BRANCH_VERSIONS=edge
+    elif [[ $BRANCH_VERSIONS == upstream ]] || [[ $BRANCH_VERSIONS == up ]] || [[ $BRANCH_VERSIONS == ed ]] ; then
+        BRANCH_VERSIONS=edx
     fi
 }
+
 test_args()
 {
     if [[ $TEMPLATE_TYPE != fullstack ]] && [[ $TEMPLATE_TYPE != devstack ]] ; then
@@ -147,11 +152,11 @@ test_args()
         exit 1
     fi
 
-    if [[ $BRANCH_VERSIONS != stable ]] && [[ $BRANCH_VERSIONS != edge ]] ; then
+    if [[ $BRANCH_VERSIONS != stable ]] && [[ $BRANCH_VERSIONS != edge ]] && [[ $BRANCH_VERSIONS != edx ]] ; then
         set +x
         echo -e "\033[1;36m"
         echo -e "\n BRANCH_VERSIONS is set to $BRANCH_VERSIONS"
-        echo -e " but should be stable or edge.\n"
+        echo -e " but should be stable OR edge OR edx .\n"
         echo -e " Use the -b param argument.\n"
         echo -e '\033[0m'
         exit 1
@@ -165,17 +170,20 @@ get_branch()
 {
     if [[ $BRANCH_VERSIONS == stable ]] ; then
         echo "oxa/master.fic"
-    elif [[ $BRANCH_VERSIONS == edge ]] ; then
-        if [[ -n $1 ]] ; then
+    elif [[ $BRANCH_VERSIONS == edge ]] || [[ -n $1 ]] ; then
+        if [[ -n $2 ]] ; then
             # Legacy switch
             echo "oxa/devfic"
         else
             echo "oxa/dev.fic"
         fi
+    elif [[ $BRANCH_VERSIONS == edx ]] ; then
+        echo "$EDX_BRANCH"
     else
         test_args
     fi
 }
+
 get_current_branch()
 {
     prefix='* '
@@ -185,13 +193,14 @@ get_current_branch()
 
     # Ensure branch information is useful.
     if [[ -z "$branchInfo" ]] || [[ $branchInfo == *"no branch"* ]] || [[ $branchInfo == *"detached"* ]] ; then
+        #todo: switch before merging.
         branchInfo="oxa/df_noConfig"
-        #todo: switch to get_branch before merging.
-        #branchInfo="`get_branch "oldStyle"`"
+        #branchInfo="`get_branch useMicrosoftRepo oldDevStyle`"
     fi
 
     echo "$branchInfo"
 }
+
 harden()
 {
     # Is the current password insecure?
@@ -209,9 +218,23 @@ harden()
         echo $1
     fi
 }
+
 get_org()
 {
-    echo "Microsoft"
+    if [[ $BRANCH_VERSIONS == edx ]] ; then
+        echo "$BRANCH_VERSIONS"
+    else
+        echo "$MSFT"
+    fi
+}
+
+get_conf_project_name()
+{
+    if [[ $BRANCH_VERSIONS == edx ]] ; then
+        echo "configuration"
+    else
+        echo "edx-configuration"
+    fi
 }
 
 ##########################
@@ -231,11 +254,10 @@ CURRENT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 bootstrap="scripts/bootstrap.sh"
 if [[ ! -f scripts/bootstrap.sh ]] ; then
     fileName=`basename $bootstrap`
-    wget -q https://raw.githubusercontent.com/$(get_org)/oxa-tools/$(get_current_branch)/$bootstrap -O $fileName
+    wget -q https://raw.githubusercontent.com/${MSFT}/oxa-tools/$(get_current_branch)/$bootstrap -O $fileName
     bootstrap=$fileName
 fi
 
-#todo: switch plat to get_branch before merging.
 bash $bootstrap \
     --role \
         $TEMPLATE_TYPE \
@@ -248,15 +270,15 @@ bash $bootstrap \
     --edxconfiguration-public-github-accountname \
         `get_org` \
     --edxconfiguration-public-github-projectname \
-        "edx-configuration" \
+        `get_conf_project_name` \
     --edxconfiguration-public-github-projectbranch \
         `get_branch` \
     --edxplatform-public-github-accountname \
         `get_org` \
     --edxplatform-public-github-projectbranch \
-        `get_current_branch` \
-    --edxtheme-public-github-projectbranch \
         `get_branch` \
+    --edxtheme-public-github-projectbranch \
+        `get_branch useMicrosoftRepo` \
     --edxversion \
         $EDX_BRANCH \
     --forumversion \
