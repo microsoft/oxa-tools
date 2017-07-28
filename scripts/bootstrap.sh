@@ -338,9 +338,13 @@ setup()
     # aggregate edx configuration with deployment environment expansion
     # warning: beware of yaml variable dependencies due to order of aggregation
     echo "---" > $OXA_PLAYBOOK_CONFIG
-    for config in $OXA_TOOLS_PATH/config/$TEMPLATE_TYPE/*.yml $OXA_TOOLS_PATH/config/$DEPLOYMENT_ENV/*.yml $OXA_TOOLS_PATH/config/*.yml; do
-        sed -e "s/%%\([^%]*\)%%/$\{\\1\}/g" -e "s/^---.*$//g" $config | envsubst >> $OXA_PLAYBOOK_CONFIG
-    done
+    if [[ $BRANCH_VERSIONS == edx ]] ; then
+      sed -e "s/%%\([^%]*\)%%/$\{\\1\}/g" $OXA_TOOLS_PATH/config/$BRANCH_VERSIONS/onebox.yml | envsubst >> $OXA_PLAYBOOK_CONFIG
+    else
+      for config in $OXA_TOOLS_PATH/config/$TEMPLATE_TYPE/*.yml $OXA_TOOLS_PATH/config/$DEPLOYMENT_ENV/*.yml $OXA_TOOLS_PATH/config/*.yml; do
+          sed -e "s/%%\([^%]*\)%%/$\{\\1\}/g" -e "s/^---.*$//g" $config | envsubst >> $OXA_PLAYBOOK_CONFIG
+      done
+    fi
 }
 
 update_stamp_jb() 
