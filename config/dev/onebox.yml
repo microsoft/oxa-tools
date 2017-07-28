@@ -74,3 +74,5 @@ PROGRAMS_VERSION: "%%EDX_VERSION%%"
 
 # storage
 EDXAPP_GRADE_STORAGE_TYPE: "localfs"
+
+additional_nginx_sites: "%%ADDITIONAL_NGINX_SITES%%"

@@ -237,6 +237,15 @@ get_conf_project_name()
     fi
 }
 
+update_nginx_sites()
+{
+    # Microsoft repositories support the lms-preview subdomain.
+    if [[ $BRANCH_VERSIONS != edx ]] ; then
+        ADDITIONAL_NGINX_SITES="lms-preview,"
+    fi
+}
+
+
 ##########################
 # Execution Starts
 ##########################
@@ -248,6 +257,8 @@ apt install -y -qq pwgen wget
 parse_args "$@"
 fix_args
 test_args
+
+update_nginx_sites
 
 # get current dir
 CURRENT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"

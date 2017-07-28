@@ -65,4 +65,4 @@ EDXAPP_THEME_ENVIRONMENT: "%%ENVIRONMENT%%"
 COMPREHENSIVE_THEME_DIRS: "{{ EDXAPP_COMPREHENSIVE_THEME_DIRS }}"
 
 # Add lms-preview to list sites to configure
-nginx_sites: [certs, cms, lms, lms-preview, forum, xqueue]
+nginx_sites: [certs, cms, lms, forum, xqueue]
