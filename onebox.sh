@@ -239,10 +239,11 @@ get_conf_project_name()
 
 update_nginx_sites()
 {
-    # Microsoft repositories support the lms-preview subdomain.
-    if [[ $BRANCH_VERSIONS != edx ]] ; then
-        # Use commas to delimit more than one entry.
-        ADDITIONAL_NGINX_SITES="lms-preview"
+    if [[ $BRANCH_VERSIONS == edx ]] ; then
+        NGINX_SITES='[certs, cms, lms, forum, xqueue]'
+    else
+        # Microsoft repositories support the lms-preview subdomain.
+        NGINX_SITES='[certs, cms, lms, lms-preview, forum, xqueue]'
     fi
 }
 

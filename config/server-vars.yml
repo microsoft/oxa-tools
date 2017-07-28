@@ -135,4 +135,4 @@ EDXAPP_LTI_USER_EMAIL_DOMAIN: "lti.openedx.microsoft.com"
 #EDXAPP_LOG_LEVEL: 'INFO'
 
 # Add lms-preview to list sites to configure
-nginx_sites: [certs, cms, lms, "{{ additional_nginx_sites }}", forum, xqueue]
+nginx_sites: "{{ edxapp_nginx_sites }}"
