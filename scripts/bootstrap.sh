@@ -308,6 +308,18 @@ setup()
     sync_repo $OXA_TOOLS_REPO $OXA_TOOLS_VERSION $OXA_TOOLS_PATH
     sync_repo $CONFIGURATION_REPO $CONFIGURATION_VERSION $CONFIGURATION_PATH
 
+
+    # aggregate edx configuration with deployment environment expansion
+    # warning: beware of yaml variable dependencies due to order of aggregation
+    echo "---" > $OXA_PLAYBOOK_CONFIG
+    if [[ $BRANCH_VERSIONS == edx ]] ; then
+      sed -e "s/%%\([^%]*\)%%/$\{\\1\}/g" $OXA_TOOLS_PATH/config/$BRANCH_VERSIONS/onebox.yml | envsubst >> $OXA_PLAYBOOK_CONFIG
+    else
+      for config in $OXA_TOOLS_PATH/config/$TEMPLATE_TYPE/*.yml $OXA_TOOLS_PATH/config/$DEPLOYMENT_ENV/*.yml $OXA_TOOLS_PATH/config/*.yml; do
+          sed -e "s/%%\([^%]*\)%%/$\{\\1\}/g" -e "s/^---.*$//g" $config | envsubst >> $OXA_PLAYBOOK_CONFIG
+      done
+    fi
+
     # setup theme
     #THEME_PATH="${OXA_PATH}/${EDX_THEME_PUBLIC_GITHUB_PROJECTNAME}"
     #sync_repo $EDX_THEME_REPO $EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH "${THEME_PATH}/${EDX_THEME_NAME}"
@@ -334,17 +346,6 @@ setup()
 
     # fix OXA environment ownership
     chown -R $ADMIN_USER:$ADMIN_USER $OXA_PATH
-
-    # aggregate edx configuration with deployment environment expansion
-    # warning: beware of yaml variable dependencies due to order of aggregation
-    echo "---" > $OXA_PLAYBOOK_CONFIG
-    if [[ $BRANCH_VERSIONS == edx ]] ; then
-      sed -e "s/%%\([^%]*\)%%/$\{\\1\}/g" $OXA_TOOLS_PATH/config/$BRANCH_VERSIONS/onebox.yml | envsubst >> $OXA_PLAYBOOK_CONFIG
-    else
-      for config in $OXA_TOOLS_PATH/config/$TEMPLATE_TYPE/*.yml $OXA_TOOLS_PATH/config/$DEPLOYMENT_ENV/*.yml $OXA_TOOLS_PATH/config/*.yml; do
-          sed -e "s/%%\([^%]*\)%%/$\{\\1\}/g" -e "s/^---.*$//g" $config | envsubst >> $OXA_PLAYBOOK_CONFIG
-      done
-    fi
 }
 
 update_stamp_jb() 
