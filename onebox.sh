@@ -241,7 +241,8 @@ update_nginx_sites()
 {
     # Microsoft repositories support the lms-preview subdomain.
     if [[ $BRANCH_VERSIONS != edx ]] ; then
-        ADDITIONAL_NGINX_SITES="lms-preview,"
+        # Use commas to delimit more than one entry.
+        ADDITIONAL_NGINX_SITES="lms-preview"
     fi
 }
 
