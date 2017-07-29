@@ -8,7 +8,7 @@
 set -axe
 
 readonly DEFAULT_STRING="insecureDefault"
-readonly MSFT="Microsoft"
+readonly MSFT="microsoft"
 
 ##########################
 # Script Defaults that can be overriden via

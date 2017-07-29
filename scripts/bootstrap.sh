@@ -106,7 +106,7 @@ parse_args()
             OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH="${arg_value}"
             ;;
           --edxconfiguration-public-github-accountname)
-            EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME="${arg_value}"
+            EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME="${arg_value,,}" # convert to lowercase
             ;;
           --edxconfiguration-public-github-projectname)
             EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME="${arg_value}"
@@ -271,8 +271,8 @@ link_oxa_tools_repo()
         if [[ "$count" -gt "0" ]] ; then
             # Does the linking help?
             pushd ..
-            if [[ -d ${OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME}/.git ]] && [[ `pwd` != /oxa ]] ; then
-                ln -s `pwd` /oxa
+            if [[ -d ${OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME}/.git ]] && [[ `pwd` != $OXA_PATH ]] ; then
+                ln -s `pwd` $OXA_PATH
             fi
             popd
         fi
@@ -310,10 +310,12 @@ setup()
 
     # aggregate edx configuration with deployment environment expansion
     # warning: beware of yaml variable dependencies due to order of aggregation
+    pushd $OXA_TOOLS_PATH/config
     echo "---" > $OXA_PLAYBOOK_CONFIG
-    for config in $OXA_TOOLS_PATH/config/$TEMPLATE_TYPE/*.yml $OXA_TOOLS_PATH/config/$DEPLOYMENT_ENV/*.yml $OXA_TOOLS_PATH/config/*.yml; do
+    for config in $TEMPLATE_TYPE/*.yml $DEPLOYMENT_ENV/*.yml $EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME/*.yml *.yml ; do
         sed -e "s/%%\([^%]*\)%%/$\{\\1\}/g" -e "s/^---.*$//g" $config | envsubst >> $OXA_PLAYBOOK_CONFIG
     done
+    popd
 
     # setup theme
     #THEME_PATH="${OXA_PATH}/${EDX_THEME_PUBLIC_GITHUB_PROJECTNAME}"
