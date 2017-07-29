@@ -133,6 +133,3 @@ EDXAPP_LTI_USER_EMAIL_DOMAIN: "lti.openedx.microsoft.com"
 
 # Default log levels: DEBUG, INFO, WARNING, ERROR, CRITICAL
 #EDXAPP_LOG_LEVEL: 'INFO'
-
-# Add lms-preview to list sites to configure
-nginx_sites: {{ edxapp_nginx_sites }}
