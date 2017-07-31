@@ -33,8 +33,9 @@ debug_mode=0
 # Initialize required parameters
 package_name="installhaproxy"
 
-# this is the server that will run HA Proxy
+# this is the server & port on which HA Proxy will run
 haproxy_server="10.0.0.16"
+haproxy_server_probe_port=12010
 
 # this is a space-separated list (originally base64-encoded) of mysql servers in the replicated topology. The master is listed first followed by 2 slaves
 backend_server_list=""
@@ -43,6 +44,7 @@ mysql_slave1_server_ip=""
 mysql_slave2_server_ip=""
 mysql_server_port="3306"
 
+# credentials for mysql server
 mysql_admin_username=""
 mysql_admin_password=""
 
@@ -67,7 +69,6 @@ probe_service_configuration_template="${oxa_tools_repository_path}/scripts/deplo
 probe_script_source="${oxa_tools_repository_path}/scripts/deploymentextensions/${package_name}/${xinet_service_name}.sh"
 probe_script_installation_directory="/opt"
 probe_script="${probe_script_installation_directory}/${xinet_service_name}"
-haproxy_server_probe_port=12010
 
 #############################################################################
 # parse the command line arguments
@@ -162,14 +163,28 @@ validate_args()
     if [[ -z $target_user ]]; 
     then
         log "You must specify a user account to use for SSH to remote servers"
-        exit $ERROR_TOOLS_INSTALLER_FAIL
+        exit $ERROR_HAPROXY_INSTALLER_FAILED
+    fi
+
+    # cluster admin email (for notification purposes)
+    if [[ -z $cluster_admin_email ]]; 
+    then
+        log "You must specify the cluster admininstrator email address for notification purposes"
+        exit $ERROR_HAPROXY_INSTALLER_FAILED
     fi
 
     # Mysql validation
-    if [[ -z $smtp_server ]] || [[ -z smtp_server_port ]] || [[ -z $smtp_auth_user ]] || [[ -z smtp_auth_user_password ]] || [[ -z cluster_admin_email ]];
+    if [[ -z $mysql_admin_username ]] || [[ -z $mysql_admin_password ]] ;
     then
-        log "Invalid SMTP parameters. You must specify the smtp server, port, authentication user, authentication user password and a cluster administrator email"
-        exit $ERROR_TOOLS_INSTALLER_FAIL
+        log "You must specify the admin credentials for mysql server"
+        exit $ERROR_HAPROXY_INSTALLER_FAILED
+    fi
+
+    # Backend server list
+    if [[ -z $backend_server_list ]] ;
+    then
+        log "You must specify the list of backend servers on which to configure the proxy"
+        exit $ERROR_HAPROXY_INSTALLER_FAILED
     fi
 
     log "Completed argument validation successfully"
