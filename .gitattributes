@@ -1,7 +1,7 @@
 # based on https://github.com/alexkaratarakis/gitattributes
 
 ## Default
-* text=auto   eol=lf
+* text   eol=lf
 
 ## Python Binary files
 *.db     binary
@@ -71,6 +71,8 @@
 *.otf    binary
 *.woff   binary
 *.woff2  binary
+fonts    binary
+font-awesome binary
 
 ## Misc
 *.dat    binary
