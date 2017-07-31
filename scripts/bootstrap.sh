@@ -238,8 +238,9 @@ required_value()
     if [[ -z $2 ]] ; then
         set +x
         echo -e "\033[1;36m"
-        echo -e "\n\n  Use onebox.sh instead of invoking bootstrap.sh directly.\n\n"
+        echo -e "\n\n  Use onebox.sh for fullstack or devstack instead of invoking bootstrap.sh directly.\n\n"
         echo -e '\033[0m'
+
         display_usage
     fi
 }
@@ -259,9 +260,12 @@ verify_state()
     fi
 }
 
+# We should use the existing oxa-tools enlistment if one exists. This
+#   a) saves us a git clone AND
+#   b) preserves our current branch/changes
 link_oxa_tools_repo()
 {
-    # Is this bootsrap.sh script within a git repo?
+    # Is git installed and is this script within a git repo?
     pushd $CURRENT_PATH
     if git status > /dev/null 2>&1 ; then
         # Is the git repo oxa-tools?
@@ -269,7 +273,7 @@ link_oxa_tools_repo()
         actualRemote=`git config --get remote.origin.url | grep -o 'github.com.*' | sed 's/\.git//g'`
         count=`echo $OXA_TOOLS_REPO | grep -i $actualRemote | wc -l`
         if [[ "$count" -gt "0" ]] ; then
-            # Does the linking help?
+            # Is the repo already at the desired path?
             pushd ..
             if [[ -d ${OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME}/.git ]] && [[ `pwd` != $OXA_PATH ]] ; then
                 ln -s `pwd` $OXA_PATH
@@ -288,7 +292,7 @@ source_env()
     source $OXA_ENV_FILE
 
     # apply the overrides
-    if [[ -f $OXA_ENV_OVERRIDE_FILE ]] ; then
+    if [[ -f $OXA_ENV_OVERRIDE_FILE ]]; then
         source $OXA_ENV_OVERRIDE_FILE
     fi
     set +a

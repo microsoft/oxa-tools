@@ -33,7 +33,7 @@
   sudo: yes
   shell: bash ./configure_ssl.sh {{ NGINX_ENABLE_SSL }} {{ EDXAPP_LMS_SSL_NGINX_PORT }} {{ EDXAPP_CMS_SSL_NGINX_FRONTEND_PORT }} {{ EDXAPP_LMS_PREVIEW_SSL_NGINX_FRONTEND_PORT }}
   args:
-    9chdir: "{{ edxapp_files_path }}/nginx"
+    chdir: "{{ edxapp_files_path }}/nginx"
   register: bash
   when: "{{ NGINX_ENABLE_SSL }}"
 
