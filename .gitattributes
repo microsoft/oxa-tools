@@ -1,50 +1,7 @@
+# based on https://github.com/alexkaratarakis/gitattributes
+
 ## Default
 * text=auto   eol=lf
-
-## Windows
-*.bat    text eol=crlf
-*.ps1    text eol=crlf
-*.srt    text eol=crlf
-
-## Source Code
-*.coffee text
-*.css    text
-*.htm    text
-*.html   text
-*.inc    text
-*.ini    text
-*.js     text
-*.json   text
-*.jsx    text
-*.less   text
-*.od     text
-*.php    text
-*.pl     text
-*.py     text
-*.rb     text
-*.sass   text
-*.scm    text
-*.scss   text
-*.sh     text
-*.sql    text
-*.styl   text
-*.tag    text
-*.ts     text
-*.tsx    text
-*.xml    text
-*.xhtml  text
-
-## CONFIGS
-*.bowerrc      text
-*.cnf          text
-*.conf         text
-*.config       text
-.gitattributes text
-.gitignore     text
-.htaccess      text
-*.npmignore    text
-*.yaml         text
-*.yml          text
 
 ## Python Binary files
 *.db     binary
