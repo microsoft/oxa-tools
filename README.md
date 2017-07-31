@@ -12,7 +12,7 @@ Common parameter argument options: pick a cell from each column (there are 18 po
 --- | --- | ---
 `fullstack` (default) | `edge` (default) <br/> (will use branches like oxa/dev.fic) | randomly generated (default)
 `devstack` | `stable`  <br/> (will use branches like oxa/master.fic) | `--default` or `-d` <br/> `anyString` (set all passwords to anyString)
- | `edx`  <br/> (will use upstream edx repositories <br/> and open-release/ficus.master branch) | see other args in onebox.sh to sepcify <br/> usernames and passwords directly <br/> via arguments or editing the cloned repo
+ (n/a) | `edx`  <br/> (will use upstream edx repositories <br/> and open-release/ficus.master branch) | see other args in onebox.sh to sepcify <br/> usernames and passwords directly <br/> via arguments or editing the cloned repo
 
 For example:
 `sudo onebox.sh` OR
