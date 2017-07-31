@@ -321,7 +321,7 @@ setup()
     done
     popd
 
-    # setup theme
+    #todo:100132 setup theme for onebox installs
     #THEME_PATH="${OXA_PATH}/${EDX_THEME_PUBLIC_GITHUB_PROJECTNAME}"
     #sync_repo $EDX_THEME_REPO $EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH "${THEME_PATH}/${EDX_THEME_NAME}"
     #ln -s $THEME_PATH /edx/app/edxapp/themes
