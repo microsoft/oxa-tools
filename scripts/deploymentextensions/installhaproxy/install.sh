@@ -229,7 +229,7 @@ fi
 source $utilities_path
 
 # Script self-identification
-print_script_header $notification_email_subject
+print_script_header "${notification_email_subject}"
 
 # pass existing command line arguments
 parse_args $@
@@ -350,7 +350,7 @@ then
     log "Setting up probe service configuration"
 
     xinetd_service_configuration_file="/etc/xinetd.d/${xinet_service_name}"
-    cp "${probe_source_dir}/service_configuration.template" $xinetd_service_configuration_file
+    cp "${probe_service_configuration_template}" $xinetd_service_configuration_file
     exit_on_error "Could not copy the service configuration to '${xinetd_service_configuration_file}' on ${HOSTNAME}' !" "${ERROR_HAPROXY_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
     sed -i "s/{service_port}/${haproxy_server_probe_port}/I" $xinetd_service_configuration_file
