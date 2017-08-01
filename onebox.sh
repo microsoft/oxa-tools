@@ -183,6 +183,19 @@ get_branch()
         test_args
     fi
 }
+#todo: switch to get_branch() after platform change is merged
+get_plat_branch()
+{
+    if [[ $BRANCH_VERSIONS == stable ]] ; then
+        echo "oxa/master.fic"
+    elif [[ $BRANCH_VERSIONS == edge ]] ; then
+        echo "oxa/df_noConfig"
+    elif [[ $BRANCH_VERSIONS == edx ]] ; then
+        echo "$EDX_BRANCH"
+    else
+        test_args
+    fi
+}
 
 get_current_branch()
 {
@@ -289,7 +302,7 @@ bash $bootstrap \
     --edxplatform-public-github-accountname \
         `get_org` \
     --edxplatform-public-github-projectbranch \
-        `get_branch` \
+        `get_plat_branch` \
     --edxtheme-public-github-projectbranch \
         `get_branch useMicrosoftRepo` \
     --edxversion \
