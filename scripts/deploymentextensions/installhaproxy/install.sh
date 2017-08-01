@@ -267,7 +267,7 @@ then
         for server in "${backend_server_list[@]}"
         do
             # copy the bits
-            copy_bits "${server}" "${current_path}" "${ERROR_HAPROXY_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
+            copy_bits "${server}" "${target_user}" "${current_path}" "${ERROR_HAPROXY_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
             # execute the component deployment
             execute_remote_command $server
@@ -284,7 +284,7 @@ then
     log "Initiating remote installation of haproxy"
 
     # copy the installer & the utilities files to the target server & ssh/execute the Operations
-    copy_bits $haproxy_server $current_path $ERROR_HAPROXY_INSTALLER_FAILED $notification_email_subject $cluster_admin_email
+    copy_bits "${haproxy_server}" "${target_user}" "${current_path}" "${ERROR_HAPROXY_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
     # execute the component deployment
     execute_remote_command $server
