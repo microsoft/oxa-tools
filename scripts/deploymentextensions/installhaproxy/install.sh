@@ -259,7 +259,7 @@ then
     if [[ "${component,,}" != "xinetd" ]]; 
     then
 
-        log "Initiating report installation of xinetd"
+        log "Initiating installation of xinetd"
 
         # turn on component deployment
         component="xinetd"
@@ -267,7 +267,7 @@ then
         for server in "${backend_server_list[@]}"
         do
             # copy the bits
-            copy_bits $server $current_path $ERROR_HAPROXY_INSTALLER_FAILED $notification_email_subject $cluster_admin_email
+            copy_bits "${server}" "${current_path}" "${ERROR_HAPROXY_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
             # execute the component deployment
             execute_remote_command $server
