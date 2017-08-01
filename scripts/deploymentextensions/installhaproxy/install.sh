@@ -65,7 +65,7 @@ xinet_service_line="${xinet_service_name} \t ${haproxy_server_probe_port} \t\t $
 xinet_service_name="mysqlmastercheck"
 
 probe_source_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-probe_service_configuration_template="${oxa_tools_repository_path}/scripts/deploymentextensions/${package_name}/service_configuration.template.sh"
+probe_service_configuration_template="${oxa_tools_repository_path}/scripts/deploymentextensions/${package_name}/service_configuration.template"
 probe_script_source="${oxa_tools_repository_path}/scripts/deploymentextensions/${package_name}/${xinet_service_name}.sh"
 probe_script_installation_directory="/opt"
 probe_script="${probe_script_installation_directory}/${xinet_service_name}"
