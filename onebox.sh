@@ -193,7 +193,9 @@ get_current_branch()
 
     # Ensure branch information is useful.
     if [[ -z "$branchInfo" ]] || [[ $branchInfo == *"no branch"* ]] || [[ $branchInfo == *"detached"* ]] ; then
-        branchInfo=`get_branch useMicrosoftRepo oldDevStyle`
+        #todo: uncomment before merge
+        #branchInfo=`get_branch useMicrosoftRepo oldDevStyle`
+        branchInfo="oxa/df_noConfig"
     fi
 
     echo "$branchInfo"
