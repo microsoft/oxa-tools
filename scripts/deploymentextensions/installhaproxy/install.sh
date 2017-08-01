@@ -199,14 +199,14 @@ execute_remote_command()
     encoded_server_list=`echo ${backend_server_list} | base64`
     
     repository_parameters="--oxatools-public-github-accountname ${oxa_tools_public_github_account} --oxatools-public-github-projectname ${oxa_tools_public_github_projectname} --oxatools-public-github-projectbranch ${oxa_tools_public_github_projectbranch} --oxatools-public-github-branchtag ${oxa_tools_public_github_branchtag} --oxatools-repository-path ${oxa_tools_repository_path}"
-    mysql_parameters="--mysql-server-port ${mysql_server_port} --mysql-admin-username ${mysql_admin_username} --mysql-admin-password ${mysql_admin_password} --haproxy-server-port ${haproxy_port} --mysql-server-list ${encoded_server_list}"
+    mysql_parameters="--mysql-server-port ${mysql_server_port} --mysql-admin-username ${mysql_admin_username} --mysql-admin-password ${mysql_admin_password} --haproxy-server-port ${haproxy_port} --backend-server-list ${encoded_server_list}"
     misc_parameters="--cluster-admin-email ${cluster_admin_email} --haproxy-server ${haproxy_server} --probe-port ${haproxy_server_probe_port} --target-user ${target_user} --component ${component} --remote"
 
     remote_command="sudo bash ~/install.sh ${repository_parameters} ${mysql_parameters} ${misc_parameters}"
 
     # run the remote command
     ssh "${remote_execution_target_user}@${remote_execution_server_target}" $remote_command
-    exit_on_error "Could not execute the haproxy installer on the remote target: ${remote_execution_server_target} from '${HOSTNAME}' !" $ERROR_HAPROXY_INSTALLER_FAILED, $notification_email_subject $cluster_admin_email
+    exit_on_error "Could not execute the haproxy installer on the remote target: ${remote_execution_server_target} from '${HOSTNAME}' !" "${ERROR_HAPROXY_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 }
 
 ###############################################
@@ -301,19 +301,19 @@ then
     log "Installing & Configuring xinetd"
 
     install-xinetd
-    exit_on_error "Could not install xinetd on ${HOSTNAME} }' !" $ERROR_XINETD_INSTALLER_FAILED, $notification_email_subject $cluster_admin_email
+    exit_on_error "Could not install xinetd on ${HOSTNAME} }' !" "${ERROR_XINETD_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
     # 2. Copy custom probe script to /opt & update the permissions
     log "Copying the probe script and updating its permissions"
 
     cp  $probe_script_source $probe_script
-    exit_on_error "Could not copy the probe script '${probe_script_source}' to the target directory '${probe_script_installation_directory}' xinetd on ${HOSTNAME}' !" $ERROR_XINETD_INSTALLER_FAILED, $notification_email_subject $cluster_admin_email
+    exit_on_error "Could not copy the probe script '${probe_script_source}' to the target directory '${probe_script_installation_directory}' xinetd on ${HOSTNAME}' !" "${ERROR_XINETD_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
     chmod 700 $probe_script
-    exit_on_error "Could not update permissions for the probe script '${probe_script}' on '${HOSTNAME}' !" $ERROR_XINETD_INSTALLER_FAILED, $notification_email_subject $cluster_admin_email
+    exit_on_error "Could not update permissions for the probe script '${probe_script}' on '${HOSTNAME}' !" "${ERROR_XINETD_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
     chown $target_user:$target_user $probe_script
-    exit_on_error "Could not update ownership for the probe script '${probe_script}' on '${HOSTNAME}' !" $ERROR_XINETD_INSTALLER_FAILED, $notification_email_subject $cluster_admin_email
+    exit_on_error "Could not update ownership for the probe script '${probe_script}' on '${HOSTNAME}' !" "${ERROR_XINETD_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
     # inject the parameter overrides
     sed -i "s/^mysql_user=.*/${mysql_admin_username}/I" $probe_script
@@ -325,7 +325,7 @@ then
 
     # backup the services file
     cp "${network_services_file}"{,.backup}
-    exit_on_error "Could not backup the network service file at '${network_services_file}' on ${HOSTNAME}' !" $ERROR_XINETD_INSTALLER_FAILED, $notification_email_subject $cluster_admin_email
+    exit_on_error "Could not backup the network service file at '${network_services_file}' on ${HOSTNAME}' !" "${ERROR_XINETD_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
     # check if the port is used, if it is, test if it is used for our service, if so, remove the existing line and add the new one
     existing_service_line=`grep "${xinet_service_port_regex}" "${network_services_file}"`
@@ -339,7 +339,7 @@ then
 
         # append a new line to the file
         echo "${xinet_service_line}" >> $network_services_file
-        exit_on_error "Could not append network service configuration for the probe.' !" $ERROR_XINETD_INSTALLER_FAILED, $notification_email_subject $cluster_admin_email
+        exit_on_error "Could not append network service configuration for the probe.' !" "${ERROR_XINETD_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
     else
         # some other service is using the port
         log "${haproxy_server_probe_port} is in use by another service: ${existing_service_line}"
@@ -351,7 +351,7 @@ then
 
     xinetd_service_configuration_file="/etc/xinetd.d/${xinet_service_name}"
     cp "${probe_source_dir}/service_configuration.template" $xinetd_service_configuration_file
-    exit_on_error "Could not copy the service configuration to '${xinetd_service_configuration_file}' on ${HOSTNAME}' !" $ERROR_HAPROXY_INSTALLER_FAILED, $notification_email_subject $cluster_admin_email
+    exit_on_error "Could not copy the service configuration to '${xinetd_service_configuration_file}' on ${HOSTNAME}' !" "${ERROR_HAPROXY_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
     sed -i "s/{service_port}/${haproxy_server_probe_port}/I" $xinetd_service_configuration_file
     sed -i "s/{target_user}/${target_user}/I" $xinetd_service_configuration_file
@@ -361,7 +361,7 @@ then
     log "Restarting xinetd"
 
     restart_xinetd
-    exit_on_error "Could not restart xinet after updating the service configuration on ${HOSTNAME}' !" $ERROR_HAPROXY_INSTALLER_FAILED, $notification_email_subject $cluster_admin_email
+    exit_on_error "Could not restart xinet after updating the service configuration on ${HOSTNAME}' !" "${ERROR_HAPROXY_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
     log "Completed Remote execution successfully"
     exit
@@ -377,11 +377,11 @@ mysql_slave2_server_ip=${backend_server_list[2]}
 
 # 1. Create the HA Proxy Mysql account on the master mysql server
 mysql -u ${mysql_admin_username} -p${mysql_admin_password} -h ${mysql_master_server_ip} -e "INSERT INTO mysql.user (Host,User) values ('${haproxy_server}','${haproxy_username}') ON DUPLICATE KEY UPDATE Host='${haproxy_server}', User='${haproxy_username}'; FLUSH PRIVILEGES;"
-exit_on_error "Unable to create HA Proxy Mysql account on '${HOSTNAME}' !" $ERROR_HAPROXY_INSTALLER_FAILED, $notification_email_subject $cluster_admin_email
+exit_on_error "Unable to create HA Proxy Mysql account on '${HOSTNAME}' !" "${ERROR_HAPROXY_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
 # Validate user access
 database_list=`mysql -u ${haproxy_username} -N -h ${mysql_master_server_ip} -e "SHOW DATABASES"`
-exit_on_error "Unable to access the target server using ${haproxy_username}@${mysql_master_server_ip} without password from '${HOSTNAME}' !" $ERROR_HAPROXY_INSTALLER_FAILED, $notification_email_subject $cluster_admin_email
+exit_on_error "Unable to access the target server using ${haproxy_username}@${mysql_master_server_ip} without password from '${HOSTNAME}' !" "${ERROR_HAPROXY_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
 # 2. Install HA Proxy
 stop_haproxy
@@ -405,11 +405,11 @@ fi
 if [ -f "${haproxy_configuration_file}" ];
 then
     mv "${haproxy_configuration_file}"{,.bak}
-    exit_on_error "Unable to backup the HA Proxy configuration file at ${haproxy_configuration_file} !" $ERROR_HAPROXY_INSTALLER_FAILED, $notification_email_subject $cluster_admin_email
+    exit_on_error "Unable to backup the HA Proxy configuration file at ${haproxy_configuration_file} !" "${ERROR_HAPROXY_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 fi
 
 cp  "${haproxy_configuration_template_file}" "${haproxy_configuration_file}"
-exit_on_error "Unable to copy the HA Proxy configuration template from  the target server using ${haproxy_username}@${mysql_master_server_ip} without password from '${HOSTNAME}' !" $ERROR_HAPROXY_INSTALLER_FAILED, $notification_email_subject $cluster_admin_email
+exit_on_error "Unable to copy the HA Proxy configuration template from  the target server using ${haproxy_username}@${mysql_master_server_ip} without password from '${HOSTNAME}' !" "${ERROR_HAPROXY_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
 log "Replacing template variables"
 
@@ -426,11 +426,11 @@ sed -i "s/{MysqlSlave2ServerIP}/${mysql_slave2_server_ip}/I" "${haproxy_configur
 
 # 3.3 Start HA Proxy
 start_haproxy
-exit_on_error "Unable to start HA Proxy on '${HOSTNAME}' !" $ERROR_HAPROXY_INSTALLER_FAILED, $notification_email_subject $cluster_admin_email
+exit_on_error "Unable to start HA Proxy on '${HOSTNAME}' !" "${ERROR_HAPROXY_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
 # 3.4 Final validation
 database_list=`mysql -u ${mysql_admin_username} -p${mysql_admin_password} -h ${mysql_master_server_ip} -P ${haproxy_port} -e "SHOW DATABASES;"`
-exit_on_error "Unable to access the target server using ${mysql_admin_username}@${mysql_master_server_ip} from '${HOSTNAME}' !" $ERROR_HAPROXY_INSTALLER_FAILED, $notification_email_subject $cluster_admin_email
+exit_on_error "Unable to access the target server using ${mysql_admin_username}@${mysql_master_server_ip} from '${HOSTNAME}' !" "${ERROR_HAPROXY_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
 if [[ -z "${database_list// }" ]];
 then    
