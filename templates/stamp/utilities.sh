@@ -1356,11 +1356,10 @@ copy_bits()
     copyerror_mail_subject=$5
     copyerror_mail_receiver=$6
 
-    ssh_options = "StrictHostKeyChecking=no"
+    ssh_options="StrictHostKeyChecking=no"
 
     # clean up existing files (if present)
     ssh -o "${ssh_options}" "${bitscopy_target_user}@${bitscopy_target_server}" "sudo rm ~/install.sh && sudo rm ~/utilities.sh"
-    exit_on_error "Unable to update permissions on the installer files copied to '${bitscopy_target_server}'!" "${error_code}" "${copyerror_mail_subject}" "${copyerror_mail_receiver}"
 
     # copy the installer & the utilities files to the target server & ssh/execute the Operations
     scp -o "${ssh_options}" $script_base_path/install.sh "${bitscopy_target_user}@${bitscopy_target_server}":~/

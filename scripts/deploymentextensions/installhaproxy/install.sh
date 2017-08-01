@@ -270,7 +270,7 @@ then
             copy_bits "${server}" "${target_user}" "${current_path}" "${ERROR_HAPROXY_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
             # execute the component deployment
-            execute_remote_command $server
+            execute_remote_command "${server}" "${target_user}"
         done
 
         # turn off component deployment
@@ -287,7 +287,7 @@ then
     copy_bits "${haproxy_server}" "${target_user}" "${current_path}" "${ERROR_HAPROXY_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
     # execute the component deployment
-    execute_remote_command $server
+    execute_remote_command "${haproxy_server}" "${target_user}"
 
     log "Completed Remote execution successfully"
     exit
