@@ -1291,12 +1291,13 @@ install-tools()
         install-powershell
         install-azure-cli
         install-azure-cli-2
+    fi
 
-        if [[ "$machine_role" == "jumpbox" ]] ; 
-        then
-            log "Installing Mysql Utilities on Jumpbox ${HOSTNAME}"
-            install-mysql-utilities
-        fi
+    # we want this utility installed on the backends & jb
+    if [[ "$machine_role" != "vmss" ]] ; 
+    then
+        log "Installing Mysql Utilities on ${HOSTNAME}"
+        install-mysql-utilities
     fi
 }
 
