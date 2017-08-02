@@ -38,6 +38,7 @@ haproxy_server="10.0.0.16"
 haproxy_server_probe_port=12010
 
 # this is a space-separated list (originally base64-encoded) of mysql servers in the replicated topology. The master is listed first followed by 2 slaves
+encoded_server_list=""
 backend_server_list=""
 mysql_master_server_ip=""
 mysql_slave1_server_ip=""
@@ -131,6 +132,7 @@ parse_args()
             ;;
           --backend-server-list)
             backend_server_list=(`echo ${arg_value} | base64 --decode`)
+            encoded_server_list="${arg_value}"
             ;;
           --target-user)
             target_user="${arg_value}"
@@ -194,10 +196,8 @@ execute_remote_command()
 {
     remote_execution_server_target=$1
     remote_execution_target_user=$2
-
-    # build the command for remote execution (basically: pass through all existing parameters)
-    encoded_server_list=`echo ${backend_server_list} | base64`
     
+    # build the command for remote execution (basically: pass through all existing parameters)
     repository_parameters="--oxatools-public-github-accountname ${oxa_tools_public_github_account} --oxatools-public-github-projectname ${oxa_tools_public_github_projectname} --oxatools-public-github-projectbranch ${oxa_tools_public_github_projectbranch} --oxatools-public-github-branchtag ${oxa_tools_public_github_branchtag} --oxatools-repository-path ${oxa_tools_repository_path}"
     mysql_parameters="--mysql-server-port ${mysql_server_port} --mysql-admin-username ${mysql_admin_username} --mysql-admin-password ${mysql_admin_password} --haproxy-server-port ${haproxy_port} --backend-server-list ${encoded_server_list}"
     misc_parameters="--cluster-admin-email ${cluster_admin_email} --haproxy-server ${haproxy_server} --probe-port ${haproxy_server_probe_port} --target-user ${target_user} --component ${component} --remote"
@@ -275,7 +275,7 @@ then
             copy_bits "${server}" "${target_user}" "${current_path}" "${ERROR_HAPROXY_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
             # execute the component deployment
-            execute_remote_command "${server}" "${target_user}"
+            execute_remote_command "${server}" "${target_user}" "${backend_server_list}"
         done
 
         # turn off component deployment
@@ -292,7 +292,7 @@ then
     copy_bits "${haproxy_server}" "${target_user}" "${current_path}" "${ERROR_HAPROXY_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
     # execute the component deployment
-    execute_remote_command "${haproxy_server}" "${target_user}"
+    execute_remote_command "${haproxy_server}" "${target_user}" "${backend_server_list}"
 
     log "Completed Remote execution successfully"
     exit
