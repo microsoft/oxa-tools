@@ -1270,6 +1270,133 @@ is_master_server()
 }
 
 #############################################################################
+# Mysql Data Directory Move Operation
+#############################################################################
+
+move_mysql_datadirectory()
+{
+    ###################################
+    # 0. Pre-requisites
+    # track the input parameters
+    new_datadirectory_path=$1
+    admin_email_address=$2
+
+    # database credentials & version
+    mysql_adminuser_name=$3
+    mysql_adminuser_password=$4
+    mysql_server_ip=$5
+    mysql_server_port=$6
+
+    # subject for email notification
+    subject="Operation: Moving Mysql Data Directory"
+
+    # get the current data directory (as the server sees it)
+    current_datadirectory_path=`mysql -u ${mysql_adminuser_name} -p${mysql_adminuser_password} -N -h ${mysql_server_ip} -e "select @@datadir;"`
+    exit_on_error "Could not query the mysql server at on '${mysql_adminuser_name}@${mysql_server_ip}' to determine its current data directory!" $ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED "${subject}" $admin_email_address
+
+    # remove trailing slash (if present)
+    current_datadirectory_path=${current_datadirectory_path%/}
+
+    # make sure we have a valid data directory
+    if [ -z $current_datadirectory_path ] || [ ! -d $current_datadirectory_path ];
+    then
+        log "Could not determine the current data directory for '${mysql_adminuser_name}@${mysql_server_ip}'! Current value is: ${current_datadirectory_path}."
+        exit $ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED
+    fi
+
+    ###################################
+    # 1. Stop the server
+    # It is assumed that the server is already running as a slave vs a master node
+    stop_mysql
+    exit_on_error "Could not stop mysql on '${HOSTNAME}'!" $ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED "${subject}" $admin_email_address
+
+    ###################################
+    # 2. Copy the server data to the new location and move the server data to backup
+    # there are very restrictive permissions on the data directory (we need super user access)
+
+    # The expectation is that the parent directory exists at the target path. Make sure of that
+    new_datadirectory_basepath=`dirname $new_datadirectory_path`
+    if [[ ! -d $new_datadirectory_basepath ]]; 
+    then
+        log "Creating the base path at '${new_datadirectory_basepath}' since it doesn't already exist"
+        mkdir -p "${new_datadirectory_basepath}"
+    fi
+
+    log "Copying the data directory from '${current_datadirectory_path}' to '${new_datadirectory_path}'"
+
+    rsync -av $current_datadirectory_path $new_datadirectory_basepath
+    exit_on_error "Failed copying server data from '${current_datadirectory_path}' to '${new_datadirectory_path}' on '${HOSTNAME}' !" $ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED "${subject}" $admin_email_address
+
+    # Backup the current data directory
+    datadirectory_backup_path="${current_datadirectory_path}-backup"
+    log "Backing up the data directory from '${current_datadirectory_path}' to '${datadirectory_backup_path}'"
+
+    mv $current_datadirectory_path $datadirectory_backup_path
+    exit_on_error "Could not backup the data directory from '${current_datadirectory_path}' to '${datadirectory_backup_path}' on '${HOSTNAME}' !" $ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED "${subject}" $admin_email_address
+
+    ###################################
+    # 3. Update mysql configuration to reference the new path
+    # locate the main configuration file
+    mysql_configuration_file="/etc/mysql/conf.d/mysqld.cnf"
+
+    # update the data directory path
+    log "Updating Mysql Configuration at ${mysql_configuration_file} : setting datadir=${new_datadirectory_path}"
+    if [[ ! -f $mysql_configuration_file ]]; 
+    then
+        echo "The calculated Mysql Configuration file isn't available!"
+        exit $ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED
+    fi
+
+    sed -i "s#^datadir=.*#datadir=${new_datadirectory_path}#I" $mysql_configuration_file
+    exit_on_error "Could not update the Mysql Configuration file at '${mysql_configuration_file}'!" $ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED "${subject}" $admin_email_address
+
+    # update the systemd service startup configs
+    mysqld_servicefile="/etc/systemd/system/mysqld.service"
+    sudo sed -i "s#--datadir=.\\S*#--datadir=${new_datadirectory_path}#I" $mysql_servicefile
+    exit_on_error "Could not update the systemd Mysqld Service configuration file at at '${mysql_servicefile}'!" $ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED "${subject}" $admin_email_address
+
+    ###################################
+    #4. Configure Apparmor
+    # Instead of using symlink (which has been problematic), we will leverage apparmor to handle the aliasing of the data directory path
+
+    # Check if there is a reference to the new path already established. If there isn't any reference, append a new line to the apparmor configs
+    apparmor_config_file="/etc/apparmor.d/tunables/alias"
+    alias="alias ${current_datadirectory_path} -> ${new_datadirectory_path}, "
+    alias_regex="^alias ${current_datadirectory_path} ->.*"
+
+    if [ `grep -Gxq "${alias_regex}" "${apparmor_config_file}"` ];
+    then
+        # Existing Alias: Override it
+        log "Existing alias detected in ${apparmor_config_file}. Overriding with new value: ${alias}"
+        sed -i "s~${alias_regex}~${alias}~I" $apparmor_config_file
+    else
+        # Alias doesn't exist: Append It
+        log "Adding new alias to ${apparmor_config_file}"
+        echo "${alias}" >> $apparmor_config_file
+    fi
+
+    # restart apparmor to apply the settings
+    os_version=$(lsb_release -rs)
+    if (( $(echo "$os_version > 16" | bc -l) ))
+    then
+        systemctl restart apparmor
+    else
+        service apparmor restart
+    fi
+
+    # check for errors
+    exit_on_error "Could not start apparmor after adding the data directory alias on '${HOSTNAME}' !" $ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED "${subject}" $admin_email_address
+
+    # setup blank reference for mysql database directory to circumvent any startup check failures
+    mkdir "${current_datadirectory_path}/mysql" -p
+
+    ###################################
+    #5. Restart the server
+    start_mysql $mysql_server_port
+    exit_on_error "Could not start mysql server after moving its data directory on '${HOSTNAME}' !" $ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED "${subject}" $admin_email_address
+}
+
+#############################################################################
 # Wrapper function for doing role-based tools installation
 #############################################################################
 install-tools()
