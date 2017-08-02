@@ -6,13 +6,14 @@ Deploying and maintaining Open edX on Azure
 
 Execute onebox.sh on any Ubuntu 16 machine.
 
-Common parameter argument options: pick a cell from each column (there are 18 possible variations). The first row is what happens when no additional parameter arguments are provided.
+Common parameter argument options: pick a cell from each column. The first row is what happens when no additional parameter arguments are provided.
 
 `--role` or `-r` | `--branches` or `-b` | credential parameter arguments
 --- | --- | ---
 `fullstack` (default) | `edge` (default) <br/> (will use branches like oxa/dev.fic) | randomly generated (default)
 `devstack` | `stable`  <br/> (will use branches like oxa/master.fic) | `--default` or `-d` <br/> `anyString` (set all passwords to anyString)
- (n/a) | `edx`  <br/> (will use upstream edx repositories <br/> and open-release/ficus.master branch) | see other args in onebox.sh to specify <br/> usernames and passwords directly <br/> via arguments or editing the cloned repo
+ (n/a) | `edx`  <br/> (will use upstream edx repositories <br/> and open-release/ficus.master branch) | edit onebox.sh to specify custom <br/> usernames and passwords directly
+ (n/a) | edit onebox.sh to specify custom <br/> remote urls and branches directly | n/a
 
 For example:
 `sudo onebox.sh` OR

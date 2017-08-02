@@ -72,31 +72,6 @@ parse_args()
           -d|--default-password)
             DEFAULT_PASSWORD="${arg_value}"
             ;;
-
-          --mongo-user)
-            MONGO_USER="${arg_value}"
-            ;;
-          --mongo-password)
-            MONGO_PASSWORD="${arg_value}"
-            ;;
-          --mysql-admin-user)
-            MYSQL_ADMIN_USER="${arg_value}"
-            ;;
-          --mysql-admin-password)
-            MYSQL_ADMIN_PASSWORD="${arg_value}"
-            ;;
-          --mysql-user)
-            MYSQL_USER="${arg_value}"
-            ;;
-          --mysql-password)
-            MYSQL_PASSWORD="${arg_value}"
-            ;;
-          --edxapp-su-username)
-            EDXAPP_SU_USERNAME="${arg_value}"
-            ;;
-          --edxapp-su-password)
-            EDXAPP_SU_PASSWORD="${arg_value}"
-            ;;
           *)
             # Unknown option encountered
             echo "Option '${BOLD}$1${NORM} ${arg_value}' not allowed."
@@ -177,19 +152,6 @@ get_branch()
         else
             echo "oxa/dev.fic"
         fi
-    elif [[ $BRANCH_VERSIONS == edx ]] ; then
-        echo "$EDX_BRANCH"
-    else
-        test_args
-    fi
-}
-#todo: switch to get_branch() after platform change is merged
-get_plat_branch()
-{
-    if [[ $BRANCH_VERSIONS == stable ]] ; then
-        echo "oxa/master.fic"
-    elif [[ $BRANCH_VERSIONS == edge ]] ; then
-        echo "oxa/df_noConfig"
     elif [[ $BRANCH_VERSIONS == edx ]] ; then
         echo "$EDX_BRANCH"
     else
@@ -302,7 +264,7 @@ bash $bootstrap \
     --edxplatform-public-github-accountname \
         `get_org` \
     --edxplatform-public-github-projectbranch \
-        `get_plat_branch` \
+        `get_branch` \
     --edxtheme-public-github-projectbranch \
         `get_branch useMicrosoftRepo` \
     --edxversion \
