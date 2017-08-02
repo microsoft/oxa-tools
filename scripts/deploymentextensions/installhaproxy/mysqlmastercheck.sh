@@ -40,16 +40,16 @@ is_valid_master=`is_master_server ${encoded_replication_serverlist} ${local_serv
 if [[ $is_valid_master == 1 ]];
 then
     # server is a valid master, return http 200
-    echo -e "HTTP/1.1 200 OKrn"
-    echo -e "Content-Type: Content-Type: text/plainrn"
-    echo -e "rn"
-    echo -e "${local_server_ip} is a valid replication master.rn"
-    echo -e "rn"
+    echo -e "HTTP/1.1 200 OK \r\n"
+    echo -e "Content-Type: Content-Type: text/plain \r\n"
+    echo -e "\r\n"
+    echo -e "${local_server_ip} is a valid replication master.\r\n"
+    echo -e "\r\n"
 else
     # server is not valid master, return http 503
-    echo -e "HTTP/1.1 503 Service Unavailablern"
-    echo -e "Content-Type: Content-Type: text/plainrn"
-    echo -e "rn"
-    echo -e "${local_server_ip} is a not a valid replication master.rn"
-    echo -e "rn"
+    echo -e "HTTP/1.1 503 Service Unavailable\r\n"
+    echo -e "Content-Type: Content-Type: text/plain\r\n"
+    echo -e "\r\n"
+    echo -e "${local_server_ip} is a not a valid replication master.\r\n"
+    echo -e "\r\n"
 fi
