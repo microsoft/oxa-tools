@@ -16,7 +16,7 @@ utilities_path=$current_path/utilities.sh
 # check if the utilities file exists. If not, bail out.
 if [[ ! -e $utilities_path ]]; 
 then  
-    echo :"Utilities not present"
+    echo "Utilities not present"
     exit 3
 fi
 

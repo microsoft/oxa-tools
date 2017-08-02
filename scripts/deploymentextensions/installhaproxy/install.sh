@@ -321,9 +321,9 @@ then
     exit_on_error "Could not update ownership for the probe script '${probe_script}' on '${HOSTNAME}' !" "${ERROR_XINETD_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
     # inject the parameter overrides
-    sed -i "s/^mysql_user=.*/${mysql_admin_username}/I" $probe_script
-    sed -i "s/^mysql_user_password=.*/${mysql_admin_password}/I" $probe_script
-    sed -i "s/^replication_serverlist.*/${backend_server_list}/I" $probe_script
+    sed -i "s/^mysql_user=.*/mysql_user=${mysql_admin_username}/I" $probe_script
+    sed -i "s/^mysql_user_password=.*/mysql_user_password=${mysql_admin_password}/I" $probe_script
+    sed -i "s/^replication_serverlist.*/replication_serverlist=${backend_server_list}/I" $probe_script
 
     # 3. Add probe port to /etc/services
     log "Adding the probe service to network service configuration"
@@ -343,7 +343,7 @@ then
         fi
 
         # append a new line to the file
-        echo $xinet_service_line >> $network_services_file
+        echo -e $xinet_service_line >> $network_services_file
         exit_on_error "Could not append network service configuration for the probe.' !" "${ERROR_XINETD_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
     else
         # some other service is using the port
