@@ -30,7 +30,7 @@ mysql_user_password=
 replication_serverlist="10.0.0.16 10.0.0.17 10.0.0.18"
 
 # Variables
-encoded_replication_serverlist=`echo $list | base64`
+encoded_replication_serverlist=`echo $replication_serverlist | base64`
 local_server_ip=`ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p'`
 
 # main function call
