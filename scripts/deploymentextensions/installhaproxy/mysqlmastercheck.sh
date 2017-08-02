@@ -10,8 +10,8 @@
 #
 
 # Source our utilities for logging and other base functions (we need this staged with the installer script)
-current_path="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-utilities_path=$current_path/utilities.sh
+# we expect utilities to be in a known path
+utilities_path=/oxa/oxa-tools/templates/stamp/utilities.sh
 
 # check if the utilities file exists. If not, bail out.
 if [[ ! -e $utilities_path ]]; 
