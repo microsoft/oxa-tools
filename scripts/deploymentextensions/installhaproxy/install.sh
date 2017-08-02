@@ -321,7 +321,7 @@ then
     exit_on_error "Could not update ownership for the probe script '${probe_script}' on '${HOSTNAME}' !" "${ERROR_XINETD_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
     # inject the parameter overrides
-    server_list=(`echo ${encoded_server_list} | base64 --decode`)
+    server_list=`echo ${encoded_server_list} | base64 --decode`
 
     sed -i "s/^mysql_user=.*/mysql_user=\"${mysql_admin_username}\"/I" $probe_script
     sed -i "s/^mysql_user_password=.*/mysql_user_password=\"${mysql_admin_password}\"/I" $probe_script
