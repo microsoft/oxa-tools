@@ -62,7 +62,7 @@ xinet_service_name="mysqlmastercheck"
 xinet_service_description="# Mysql Master Probe"
 xinet_service_port_regex="${haproxy_server_probe_port}\/tcp"
 xinet_service_line_regex="^${xinet_service_name}.*${xinet_service_port_regex}.*"
-xinet_service_line="${xinet_service_name} \t ${haproxy_server_probe_port} \t\t ${xinet_service_description}"
+xinet_service_line="${xinet_service_name} \t ${haproxy_server_probe_port}/tcp \t\t ${xinet_service_description}"
 
 probe_source_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 probe_service_configuration_template="${oxa_tools_repository_path}/scripts/deploymentextensions/${package_name}/service_configuration.template"
@@ -343,7 +343,7 @@ then
         fi
 
         # append a new line to the file
-        echo "${xinet_service_line}" >> $network_services_file
+        echo $xinet_service_line >> $network_services_file
         exit_on_error "Could not append network service configuration for the probe.' !" "${ERROR_XINETD_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
     else
         # some other service is using the port
