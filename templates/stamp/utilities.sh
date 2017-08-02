@@ -1336,7 +1336,7 @@ restart_xinetd()
     # make sure it is running
     xinetd_pid=`ps -ef | grep '/usr/sbin/xinetd' | grep -v grep | awk '{print $2}'`
 
-    if [[ ! -z "$xinetd_pid" ]]; 
+    if [[ -z "${xinetd_pid}" ]]; 
     then
         log "Unable to start xinet"
         exit $ERROR_XINETD_INSTALLER_FAILED

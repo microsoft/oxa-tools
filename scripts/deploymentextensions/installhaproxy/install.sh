@@ -202,6 +202,11 @@ execute_remote_command()
     mysql_parameters="--mysql-server-port ${mysql_server_port} --mysql-admin-username ${mysql_admin_username} --mysql-admin-password ${mysql_admin_password} --haproxy-server-port ${haproxy_port} --backend-server-list ${encoded_server_list}"
     misc_parameters="--cluster-admin-email ${cluster_admin_email} --haproxy-server ${haproxy_server} --probe-port ${haproxy_server_probe_port} --target-user ${target_user} --component ${component} --remote"
 
+    if [[ $debug_mode == 1 ]];
+    then
+        misc_parameters="${misc_parameters} --debug"
+    fi
+
     remote_command="sudo bash ~/install.sh ${repository_parameters} ${mysql_parameters} ${misc_parameters}"
 
     # run the remote command
@@ -353,9 +358,9 @@ then
     cp "${probe_service_configuration_template}" $xinetd_service_configuration_file
     exit_on_error "Could not copy the service configuration to '${xinetd_service_configuration_file}' on ${HOSTNAME}' !" "${ERROR_HAPROXY_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
-    sed -i "s/{service_port}/${haproxy_server_probe_port}/I" $xinetd_service_configuration_file
-    sed -i "s/{target_user}/${target_user}/I" $xinetd_service_configuration_file
-    sed -i "s/{script_path}/${probe_script}/I" $xinetd_service_configuration_file
+    sed -i "s#{service_port}#${haproxy_server_probe_port}#I" $xinetd_service_configuration_file
+    sed -i "s#{service_user}#${target_user}#I" $xinetd_service_configuration_file
+    sed -i "s#{script_path}#${probe_script}#I" $xinetd_service_configuration_file
 
     # 5. Restart xinetd
     log "Restarting xinetd"
