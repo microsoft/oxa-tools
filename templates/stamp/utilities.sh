@@ -1293,7 +1293,7 @@ move_mysql_datadirectory()
 
     # get the current data directory (as the server sees it)
     current_datadirectory_path=`mysql -u ${mysql_adminuser_name} -p${mysql_adminuser_password} -N -h ${mysql_server_ip} -e "select @@datadir;"`
-    exit_on_error "Could not query the mysql server at on '${mysql_adminuser_name}@${mysql_server_ip}' to determine its current data directory!" $ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED "${subject}" $admin_email_address
+    exit_on_error "Could not query the mysql server at on '${mysql_adminuser_name}@${mysql_server_ip}' to determine its current data directory!" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
 
     # remove trailing slash (if present)
     current_datadirectory_path=${current_datadirectory_path%/}
@@ -1302,14 +1302,14 @@ move_mysql_datadirectory()
     if [ -z $current_datadirectory_path ] || [ ! -d $current_datadirectory_path ];
     then
         log "Could not determine the current data directory for '${mysql_adminuser_name}@${mysql_server_ip}'! Current value is: ${current_datadirectory_path}."
-        exit $ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED
+        exit "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}"
     fi
 
     ###################################
     # 1. Stop the server
     # It is assumed that the server is already running as a slave vs a master node
     stop_mysql
-    exit_on_error "Could not stop mysql on '${HOSTNAME}'!" $ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED "${subject}" $admin_email_address
+    exit_on_error "Could not stop mysql on '${HOSTNAME}'!" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
 
     ###################################
     # 2. Copy the server data to the new location and move the server data to backup
@@ -1326,14 +1326,14 @@ move_mysql_datadirectory()
     log "Copying the data directory from '${current_datadirectory_path}' to '${new_datadirectory_path}'"
 
     rsync -av $current_datadirectory_path $new_datadirectory_basepath
-    exit_on_error "Failed copying server data from '${current_datadirectory_path}' to '${new_datadirectory_path}' on '${HOSTNAME}' !" $ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED "${subject}" $admin_email_address
+    exit_on_error "Failed copying server data from '${current_datadirectory_path}' to '${new_datadirectory_path}' on '${HOSTNAME}' !" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
 
     # Backup the current data directory
     datadirectory_backup_path="${current_datadirectory_path}-backup"
     log "Backing up the data directory from '${current_datadirectory_path}' to '${datadirectory_backup_path}'"
 
     mv $current_datadirectory_path $datadirectory_backup_path
-    exit_on_error "Could not backup the data directory from '${current_datadirectory_path}' to '${datadirectory_backup_path}' on '${HOSTNAME}' !" $ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED "${subject}" $admin_email_address
+    exit_on_error "Could not backup the data directory from '${current_datadirectory_path}' to '${datadirectory_backup_path}' on '${HOSTNAME}' !" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
 
     ###################################
     # 3. Update mysql configuration to reference the new path
@@ -1345,16 +1345,16 @@ move_mysql_datadirectory()
     if [[ ! -f $mysql_configuration_file ]]; 
     then
         echo "The calculated Mysql Configuration file isn't available!"
-        exit $ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED
+        exit "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}"
     fi
 
     sed -i "s#^datadir=.*#datadir=${new_datadirectory_path}#I" $mysql_configuration_file
-    exit_on_error "Could not update the Mysql Configuration file at '${mysql_configuration_file}'!" $ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED "${subject}" $admin_email_address
+    exit_on_error "Could not update the Mysql Configuration file at '${mysql_configuration_file}'!" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
 
     # update the systemd service startup configs
     mysqld_servicefile="/etc/systemd/system/mysqld.service"
-    sudo sed -i "s#--datadir=.\\S*#--datadir=${new_datadirectory_path}#I" $mysql_servicefile
-    exit_on_error "Could not update the systemd Mysqld Service configuration file at at '${mysql_servicefile}'!" $ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED "${subject}" $admin_email_address
+    sudo sed -i "s#--datadir=.\\S*#--datadir=${new_datadirectory_path}#I" $mysqld_servicefile
+    exit_on_error "Could not update the systemd Mysqld Service configuration file at at '${mysqld_servicefile}'!" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
 
     ###################################
     #4. Configure Apparmor
@@ -1386,7 +1386,7 @@ move_mysql_datadirectory()
     fi
 
     # check for errors
-    exit_on_error "Could not start apparmor after adding the data directory alias on '${HOSTNAME}' !" $ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED "${subject}" $admin_email_address
+    exit_on_error "Could not start apparmor after adding the data directory alias on '${HOSTNAME}' !" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
 
     # setup blank reference for mysql database directory to circumvent any startup check failures
     mkdir "${current_datadirectory_path}/mysql" -p
@@ -1394,7 +1394,7 @@ move_mysql_datadirectory()
     ###################################
     #5. Restart the server
     start_mysql $mysql_server_port
-    exit_on_error "Could not start mysql server after moving its data directory on '${HOSTNAME}' !" $ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED "${subject}" $admin_email_address
+    exit_on_error "Could not start mysql server after moving its data directory on '${HOSTNAME}' !" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
 }
 
 #############################################################################

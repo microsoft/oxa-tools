@@ -18,7 +18,7 @@ oxa_tools_repository_path="/oxa/oxa-tools"
 # Initialize required parameters
 
 # admin user for OS
-os_admin_user=""
+target_user=""
 
 # the server being re-configured
 target_server_ip=""
@@ -89,8 +89,8 @@ parse_args()
           --target-server-ip)
             target_server_ip="${arg_value}"
             ;;
-          --os-admin-user)
-            os_admin_user="${arg_value}"
+          --target-user)
+            target_user="${arg_value}"
             ;;
           --remote)
             remote_mode=1
@@ -105,6 +105,50 @@ parse_args()
         fi
 
     done
+}
+
+validate_args()
+{
+
+    #TODO: check for missing parameters
+    log "Validating arguments"
+
+    # target user (only if local)
+    if [[ -z $target_user ]] && [[ $remote_mode == 0 ]];
+    then
+        log "You must specify a user account to use for SSH to remote servers"
+        exit $ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED
+    fi
+
+    # cluster admin email (for notification purposes)
+    if [[ -z $cluster_admin_email ]]; 
+    then
+        log "You must specify the cluster admininstrator email address for notification purposes"
+        exit $ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED
+    fi
+
+    # verify the new data directory path is specified. if it doesn't already exist, it will be created
+    if [[ -z $target_datadirectory_path ]] ; 
+    then
+        log "You must specify a data directory path to which the mysql data will be moved"
+        exit $ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED
+    fi
+
+    # Mysql validation
+    if [[ -z $mysql_admin_username ]] || [[ -z $mysql_admin_password ]] ;
+    then
+        log "You must specify the admin credentials for mysql server"
+        exit $ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED
+    fi
+
+    # Target server
+    if [[ -z $target_server_ip ]] ;
+    then
+        log "You must specify a server whose data directory we want to move"
+        exit $ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED
+    fi
+
+    log "Completed argument validation successfully"
 }
 
 ###############################################
@@ -131,6 +175,13 @@ print_script_header "Move Mysql Data Directory"
 
 # pass existing command line arguments
 parse_args $@
+validate_args
+
+# debug mode support
+if [[ $debug_mode == 1 ]];
+then
+    set -x
+fi
 
 # sync the oxa-tools repository
 repo_url=`get_github_url "${oxa_tools_public_github_account}" "${oxa_tools_public_github_projectname}"`
@@ -143,10 +194,10 @@ then
     log "Copying scripts to target server '$target_server_ip'"
 
     # copy the installer & the utilities files to the target server & ssh/execute the Operations
-    scp  -o "StrictHostKeyChecking=no" "${current_path}/install.sh" $os_admin_user@$target_server_ip:~/
+    scp  -o "StrictHostKeyChecking=no" "${current_path}/install.sh" $target_user@$target_server_ip:~/
     exit_on_error "Unable to copy installer script to '${target_server}' from '${HOSTNAME}' !" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
-    scp -o "StrictHostKeyChecking=no" "${current_path}/utilities.sh" $os_admin_user@$target_server_ip:~/
+    scp -o "StrictHostKeyChecking=no" "${current_path}/utilities.sh" $target_user@$target_server_ip:~/
     exit_on_error "Unable to copy utilities to '${target_server}' from '${HOSTNAME}' !" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
     # build the command for remote execution (basically: pass through all existing parameters)
@@ -164,7 +215,7 @@ then
     # run the remote command
     log "Executing '${remote_command}' against ${target_server_ip}"
 
-    ssh -o "StrictHostKeyChecking=no" "${os_admin_user}@${target_server_ip}" "${remote_command}"
+    ssh -o "StrictHostKeyChecking=no" "${target_user}@${target_server_ip}" "${remote_command}"
     exit_on_error "Could not execute the installer on the remote target: ${target_server_ip} from '${HOSTNAME}' !" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
     log "Completed Remote execution successfully"
