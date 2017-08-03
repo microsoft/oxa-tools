@@ -1279,20 +1279,20 @@ move_mysql_datadirectory()
     ###################################
     # 0. Pre-requisites
     # track the input parameters
-    new_datadirectory_path=$1
-    admin_email_address=$2
+    local new_datadirectory_path=$1
+    local admin_email_address=$2
 
     # database credentials & version
-    mysql_adminuser_name=$3
-    mysql_adminuser_password=$4
-    mysql_server_ip=$5
-    mysql_server_port=$6
+    local mysql_adminuser_name=$3
+    local mysql_adminuser_password=$4
+    local mysql_server_ip=$5
+    local mysql_server_port=$6
 
     # subject for email notification
-    subject="Operation: Moving Mysql Data Directory"
+    local subject="Operation: Moving Mysql Data Directory"
 
     # get the current data directory (as the server sees it)
-    current_datadirectory_path=`mysql -u ${mysql_adminuser_name} -p${mysql_adminuser_password} -N -h ${mysql_server_ip} -e "select @@datadir;"`
+    local current_datadirectory_path=`mysql -u ${mysql_adminuser_name} -p${mysql_adminuser_password} -N -h ${mysql_server_ip} -e "select @@datadir;"`
     exit_on_error "Could not query the mysql server at on '${mysql_adminuser_name}@${mysql_server_ip}' to determine its current data directory!" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
 
     # remove trailing slash (if present)
@@ -1316,7 +1316,7 @@ move_mysql_datadirectory()
     # there are very restrictive permissions on the data directory (we need super user access)
 
     # The expectation is that the parent directory exists at the target path. Make sure of that
-    new_datadirectory_basepath=`dirname $new_datadirectory_path`
+    local new_datadirectory_basepath=`dirname $new_datadirectory_path`
     if [[ ! -d $new_datadirectory_basepath ]]; 
     then
         log "Creating the base path at '${new_datadirectory_basepath}' since it doesn't already exist"
@@ -1329,7 +1329,7 @@ move_mysql_datadirectory()
     exit_on_error "Failed copying server data from '${current_datadirectory_path}' to '${new_datadirectory_path}' on '${HOSTNAME}' !" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
 
     # Backup the current data directory
-    datadirectory_backup_path="${current_datadirectory_path}-backup"
+    local datadirectory_backup_path="${current_datadirectory_path}-backup"
     log "Backing up the data directory from '${current_datadirectory_path}' to '${datadirectory_backup_path}'"
 
     mv $current_datadirectory_path $datadirectory_backup_path
@@ -1338,7 +1338,7 @@ move_mysql_datadirectory()
     ###################################
     # 3. Update mysql configuration to reference the new path
     # locate the main configuration file
-    mysql_configuration_file="/etc/mysql/conf.d/mysqld.cnf"
+    local mysql_configuration_file="/etc/mysql/conf.d/mysqld.cnf"
 
     # update the data directory path
     log "Updating Mysql Configuration at ${mysql_configuration_file} : setting datadir=${new_datadirectory_path}"
@@ -1352,7 +1352,7 @@ move_mysql_datadirectory()
     exit_on_error "Could not update the Mysql Configuration file at '${mysql_configuration_file}'!" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
 
     # update the systemd service startup configs
-    mysqld_servicefile="/etc/systemd/system/mysqld.service"
+    local mysqld_servicefile="/etc/systemd/system/mysqld.service"
     sudo sed -i "s#--datadir=.\\S*#--datadir=${new_datadirectory_path}#I" $mysqld_servicefile
     exit_on_error "Could not update the systemd Mysqld Service configuration file at at '${mysqld_servicefile}'!" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
 
@@ -1361,9 +1361,9 @@ move_mysql_datadirectory()
     # Instead of using symlink (which has been problematic), we will leverage apparmor to handle the aliasing of the data directory path
 
     # Check if there is a reference to the new path already established. If there isn't any reference, append a new line to the apparmor configs
-    apparmor_config_file="/etc/apparmor.d/tunables/alias"
-    alias="alias ${current_datadirectory_path} -> ${new_datadirectory_path}, "
-    alias_regex="^alias ${current_datadirectory_path} ->.*"
+    local apparmor_config_file="/etc/apparmor.d/tunables/alias"
+    local alias="alias ${current_datadirectory_path} -> ${new_datadirectory_path}, "
+    local alias_regex="^alias ${current_datadirectory_path} ->.*"
 
     if [ `grep -Gxq "${alias_regex}" "${apparmor_config_file}"` ];
     then

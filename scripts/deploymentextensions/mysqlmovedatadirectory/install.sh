@@ -32,6 +32,9 @@ target_datadirectory_path=/datadirectory/disk1/mysql
 # operation mode: 0=local, 1=remote via ssh
 remote_mode=0
 
+# debug mode: 0=set +x, 1=set -x
+debug_mode=0
+
 # Email Notifications
 notification_email_subject="Move Mysql Data Directory"
 cluster_admin_email=""
@@ -94,6 +97,9 @@ parse_args()
             ;;
           --remote)
             remote_mode=1
+            ;;
+          --debug)
+            debug_mode=1
             ;;
         esac
 
