@@ -194,11 +194,14 @@ validate_args()
 
 execute_remote_command()
 {
-    remote_execution_server_target=$1
-    remote_execution_target_user=$2
+    remote_execution_server_target="${1}"
+    remote_execution_target_user="${2}"
     
     # build the command for remote execution (basically: pass through all existing parameters)
-    repository_parameters="--oxatools-public-github-accountname ${oxa_tools_public_github_account} --oxatools-public-github-projectname ${oxa_tools_public_github_projectname} --oxatools-public-github-projectbranch ${oxa_tools_public_github_projectbranch} --oxatools-public-github-branchtag ${oxa_tools_public_github_branchtag} --oxatools-repository-path ${oxa_tools_repository_path}"
+    repository_parameters="--oxatools-public-github-accountname ${oxa_tools_public_github_account} --oxatools-public-github-projectname ${oxa_tools_public_github_projectname}   /
+                        --oxatools-public-github-projectbranch ${oxa_tools_public_github_projectbranch} --oxatools-public-github-branchtag ${oxa_tools_public_github_branchtag}  /
+                        --oxatools-repository-path ${oxa_tools_repository_path}"
+
     mysql_parameters="--mysql-server-port ${mysql_server_port} --mysql-admin-username ${mysql_admin_username} --mysql-admin-password ${mysql_admin_password} --haproxy-server-port ${haproxy_port} --backend-server-list ${encoded_server_list}"
     misc_parameters="--cluster-admin-email ${cluster_admin_email} --haproxy-server ${haproxy_server} --probe-port ${haproxy_server_probe_port} --target-user ${target_user} --component ${component} --remote"
 
@@ -247,8 +250,8 @@ then
 fi
 
 # sync the oxa-tools repository
-repo_url=`get_github_url "$oxa_tools_public_github_account" "$oxa_tools_public_github_projectname"`
-sync_repo $repo_url $oxa_tools_public_github_projectbranch $oxa_tools_repository_path $access_token $oxa_tools_public_github_branchtag
+repo_url=`get_github_url "${oxa_tools_public_github_account}" "${oxa_tools_public_github_projectname}"`
+sync_repo "${repo_url}" "${oxa_tools_public_github_projectbranch}" "${oxa_tools_repository_path}" "${access_token}" "${oxa_tools_public_github_branchtag}"
 
 ####################################
 # Main Operations

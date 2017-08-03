@@ -34,7 +34,7 @@ remote_mode=0
 
 # Email Notifications
 notification_email_subject="Move Mysql Data Directory"
-admin_email_address=""
+cluster_admin_email=""
 
 #############################################################################
 # parse the command line arguments
@@ -71,8 +71,8 @@ parse_args()
           --oxatools-repository-path)
             oxa_tools_repository_path="${arg_value}"
             ;;
-          --admin-email-address)
-            admin_email_address="${arg_value}"
+          --cluster-admin-email)
+            cluster_admin_email="${arg_value}"
             ;;
           --target-datadirectory-path)
             target_datadirectory_path="${arg_value}"
@@ -133,8 +133,8 @@ print_script_header "Move Mysql Data Directory"
 parse_args $@
 
 # sync the oxa-tools repository
-repo_url=`get_github_url "$oxa_tools_public_github_account" "$oxa_tools_public_github_projectname"`
-sync_repo $repo_url $oxa_tools_public_github_projectbranch $oxa_tools_repository_path $access_token $oxa_tools_public_github_branchtag
+repo_url=`get_github_url "${oxa_tools_public_github_account}" "${oxa_tools_public_github_projectname}"`
+sync_repo "${repo_url}" "${oxa_tools_public_github_projectbranch}" "${oxa_tools_repository_path}" "${access_token}" "${oxa_tools_public_github_branchtag}"
 
 # execute the installer remote
 if [[ $remote_mode == 0 ]];
@@ -144,20 +144,31 @@ then
 
     # copy the installer & the utilities files to the target server & ssh/execute the Operations
     scp  -o "StrictHostKeyChecking=no" "${current_path}/install.sh" $os_admin_user@$target_server_ip:~/
-    exit_on_error "Unable to copy installer script to '${target_server}' from '${HOSTNAME}' !" $ERROR_MYSQL_MOVE_DATADIRECTORY_INSTALLER_FAILED $notification_email_subject $admin_email_address
+    exit_on_error "Unable to copy installer script to '${target_server}' from '${HOSTNAME}' !" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
     scp -o "StrictHostKeyChecking=no" "${current_path}/utilities.sh" $os_admin_user@$target_server_ip:~/
-    exit_on_error "Unable to copy utilities to '${target_server}' from '${HOSTNAME}' !" $ERROR_MYSQL_MOVE_DATADIRECTORY_INSTALLER_FAILED $notification_email_subject $admin_email_address
+    exit_on_error "Unable to copy utilities to '${target_server}' from '${HOSTNAME}' !" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
-    # build the command for remote execution
-    $encoded_server_list=`echo ${mysql_server_list} | base64`
-    remote_command="su -c ""bash ~/install.sh --oxatools-public-github-accountname $oxa_tools_public_github_account --oxatools-public-github-projectname $oxa_tools_public_github_projectname --oxatools-public-github-projectbranch $oxa_tools_public_github_projectbranch --oxatools-public-github-branchtag $oxa_tools_public_github_branchtag --oxatools-repository-path $oxa_tools_repository_path --admin-email-address $admin_email_address --target-datadirectory-path $target_datadirectory_path --mysql-server-port $mysql_server_port --mysql-admin-username $mysql_admin_username --mysql-admin-password $mysql_admin_password --target-server-ip $target_server_ip  --remote"" root "
+    # build the command for remote execution (basically: pass through all existing parameters)
+    repository_parameters="--oxatools-public-github-accountname ${oxa_tools_public_github_account} --oxatools-public-github-projectname ${oxa_tools_public_github_projectname}     /
+                          --oxatools-public-github-projectbranch ${oxa_tools_public_github_projectbranch} --oxatools-public-github-branchtag ${oxa_tools_public_github_branchtag}  /
+                          --oxatools-repository-path ${oxa_tools_repository_path}"
+
+    mysql_parameters="--mysql-server-port ${mysql_server_port} --mysql-admin-username ${mysql_admin_username} --mysql-admin-password ${mysql_admin_password}"
+    misc_parameters="--cluster-admin-email ${cluster_admin_email} --target-datadirectory-path ${target_datadirectory_path} --target-server-ip ${target_server_ip} --remote"
+    
+    if [[ $debug_mode == 1 ]];
+    then
+        misc_parameters="${misc_parameters} --debug"
+    fi
+
+    remote_command="sudo bash ~/install.sh ${repository_parameters} ${mysql_parameters} ${misc_parameters}"
 
     # run the remote command
     log "Executing '${remote_command}' against ${target_server_ip}"
 
     ssh -o "StrictHostKeyChecking=no" "${os_admin_user}@${target_server_ip}" "${remote_command}"
-    exit_on_error "Could not execute the installer on the remote target: ${target_server_ip} from '${HOSTNAME}' !" $ERROR_MYSQL_MOVE_DATADIRECTORY_INSTALLER_FAILED $notification_email_subject $admin_email_address
+    exit_on_error "Could not execute the installer on the remote target: ${target_server_ip} from '${HOSTNAME}' !" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
     log "Completed Remote execution successfully"
     exit
@@ -171,7 +182,7 @@ fi
 log "Starting main execution (remote exection mode)"
 
 # run the move operation
-move_mysql_datadirectory "${target_datadirectory_path}" "${admin_email_address}" "${mysql_admin_username}" "${mysql_admin_password}" "${target_server_ip}" "${mysql_server_port}"
-exit_on_error "Unable move the data directory for '${HOSTNAME}' !" $ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED "${notification_email_subject}" $admin_email_address
+move_mysql_datadirectory "${target_datadirectory_path}" "${cluster_admin_email}" "${mysql_admin_username}" "${mysql_admin_password}" "${target_server_ip}" "${mysql_server_port}"
+exit_on_error "Unable move the data directory for '${HOSTNAME}' !" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
 log "Completed move of mysql data directory on '${target_server_ip}' successfully."
