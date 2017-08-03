@@ -122,7 +122,7 @@ EDXAPP_RETRY_ACTIVATION_EMAIL_MAX_ATTEMPTS: 50
 # overriding the default value from 0.5 to 2. 
 EDXAPP_RETRY_ACTIVATION_EMAIL_TIMEOUT: 2
 EDXAPP_SESSION_INACTIVITY_TIMEOUT_IN_SECONDS: 1800
-
+EDXAPP_CSRF_COOKIE_SECURE: true
 # Configure email addresses
 EDXAPP_BUGS_EMAIL: "microsoftlearning-bugs@microsoft.com"
 EDXAPP_BULK_EMAIL_DEFAULT_FROM_EMAIL: "microsoftlearning-noreply@microsoft.com"
