@@ -11,7 +11,7 @@
 .*ignore*       text eol=lf
 .npmrc          text eol=lf
 *.tf            text eol=lf
-vim
+vim             text eol=lf
 gitconfig       text eol=lf
 inventory       text eol=lf
 pylintrc*       text eol=lf
