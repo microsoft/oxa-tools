@@ -150,10 +150,7 @@ then
     exit_on_error "Unable to copy utilities to '${target_server}' from '${HOSTNAME}' !" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
     # build the command for remote execution (basically: pass through all existing parameters)
-    repository_parameters="--oxatools-public-github-accountname ${oxa_tools_public_github_account} --oxatools-public-github-projectname ${oxa_tools_public_github_projectname}     /
-                          --oxatools-public-github-projectbranch ${oxa_tools_public_github_projectbranch} --oxatools-public-github-branchtag ${oxa_tools_public_github_branchtag}  /
-                          --oxatools-repository-path ${oxa_tools_repository_path}"
-
+    repository_parameters="--oxatools-public-github-accountname ${oxa_tools_public_github_account} --oxatools-public-github-projectname ${oxa_tools_public_github_projectname} --oxatools-public-github-projectbranch ${oxa_tools_public_github_projectbranch} --oxatools-public-github-branchtag ${oxa_tools_public_github_branchtag} --oxatools-repository-path ${oxa_tools_repository_path}"
     mysql_parameters="--mysql-server-port ${mysql_server_port} --mysql-admin-username ${mysql_admin_username} --mysql-admin-password ${mysql_admin_password}"
     misc_parameters="--cluster-admin-email ${cluster_admin_email} --target-datadirectory-path ${target_datadirectory_path} --target-server-ip ${target_server_ip} --remote"
     
