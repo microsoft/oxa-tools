@@ -41,9 +41,15 @@ readonly PREVIEW_URL=$BASE_URL
 readonly PLATFORM_NAME="$MSFT Learning on $HOSTNAME"
 readonly EDXAPP_IMPORT_KITCHENSINK_COURSE=true
 readonly EDXAPP_ENABLE_THIRD_PARTY_AUTH=false
+readonly NGINX_ENABLE_SSL=false
 readonly EDXAPP_SU_EMAIL="${EDXAPP_SU_USERNAME}@${MSFT}.com"
 readonly PLATFORM_EMAIL="$EDXAPP_SU_EMAIL"
-readonly EDX_BRANCH="open-release/ficus.master"
+
+# The nearest tag in the upstream to our fork is open-release/ficus.1
+# Specifically, our edx-platform fork lines up perfectly with
+# open-release/ficus.1, but our fork from configuration is 13 commits
+# before open-release/ficus.1
+readonly EDX_BRANCH="open-release/ficus.1"
 
 ##########################
 # Script Parameter Arguments
@@ -92,6 +98,7 @@ fix_args()
     # Harden credentials if none were provided.
     set +x
     MONGO_PASSWORD=`harden $MONGO_PASSWORD`
+    #todo:100757 re-enable this assignment
     #MYSQL_ADMIN_PASSWORD=`harden $MYSQL_ADMIN_PASSWORD`
     MYSQL_PASSWORD=`harden $MYSQL_PASSWORD`
     EDXAPP_SU_PASSWORD=`harden $EDXAPP_SU_PASSWORD`
