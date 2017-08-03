@@ -46,10 +46,9 @@ readonly EDXAPP_SU_EMAIL="${EDXAPP_SU_USERNAME}@${MSFT}.com"
 readonly PLATFORM_EMAIL="$EDXAPP_SU_EMAIL"
 
 # The nearest tag in the upstream to our fork is open-release/ficus.1
-# Specifically, our edx-platform fork lines up perfectly with
-# open-release/ficus.1, but our fork from configuration is 13 commits
-# before open-release/ficus.1
-readonly EDX_BRANCH="open-release/ficus.1"
+# Specifically: our edx-platform fork was made at that tag, but our
+# fork from configuration is 13 commits before open-release/ficus.1
+readonly EDX_BRANCH="tags/open-release/ficus.1"
 
 ##########################
 # Script Parameter Arguments
