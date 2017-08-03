@@ -144,10 +144,10 @@ then
 
     # copy the installer & the utilities files to the target server & ssh/execute the Operations
     scp  -o "StrictHostKeyChecking=no" "${current_path}/install.sh" $os_admin_user@$target_server_ip:~/
-    exit_on_error "Unable to copy installer script to '${target_server}' from '${HOSTNAME}' !" $ERROR_HAPROXY_INSTALLER_FAILED, $notification_email_subject $admin_email_address
+    exit_on_error "Unable to copy installer script to '${target_server}' from '${HOSTNAME}' !" $ERROR_MYSQL_MOVE_DATADIRECTORY_INSTALLER_FAILED $notification_email_subject $admin_email_address
 
     scp -o "StrictHostKeyChecking=no" "${current_path}/utilities.sh" $os_admin_user@$target_server_ip:~/
-    exit_on_error "Unable to copy utilities to '${target_server}' from '${HOSTNAME}' !" $ERROR_HAPROXY_INSTALLER_FAILED, $notification_email_subject $admin_email_address
+    exit_on_error "Unable to copy utilities to '${target_server}' from '${HOSTNAME}' !" $ERROR_MYSQL_MOVE_DATADIRECTORY_INSTALLER_FAILED $notification_email_subject $admin_email_address
 
     # build the command for remote execution
     $encoded_server_list=`echo ${mysql_server_list} | base64`
@@ -157,7 +157,7 @@ then
     log "Executing '${remote_command}' against ${target_server_ip}"
 
     ssh -o "StrictHostKeyChecking=no" "${os_admin_user}@${target_server_ip}" "${remote_command}"
-    exit_on_error "Could not execute the installer on the remote target: ${target_server_ip} from '${HOSTNAME}' !" $ERROR_HAPROXY_INSTALLER_FAILED, $notification_email_subject $admin_email_address
+    exit_on_error "Could not execute the installer on the remote target: ${target_server_ip} from '${HOSTNAME}' !" $ERROR_MYSQL_MOVE_DATADIRECTORY_INSTALLER_FAILED $notification_email_subject $admin_email_address
 
     log "Completed Remote execution successfully"
     exit
