@@ -5,6 +5,8 @@
 
 # ERROR CODES: 
 # TODO: move to common script
+ERROR_MYSQL_STARTUP_FAILED=2001
+
 ERROR_CRONTAB_FAILED=4101
 ERROR_GITINSTALL_FAILED=5101
 ERROR_MONGOCLIENTINSTALL_FAILED=5201
@@ -1102,18 +1104,40 @@ start_mysql()
     # track the OS version
     os_version=$(lsb_release -rs)
 
-    if [[ $(echo "$os_version > 16" | bc -l) ]]
-    then
-        systemctl start mysqld
+    # we need some resilience here
+    local server_started=0
+    local wait_time_seconds=10
+    local max_wait_seconds=$(($wait_time_seconds * 10))
+    local total_wait_seconds=0
 
-        # enable mysqld on startup
-        systemctl enable mysqld
-    else
-        service mysql start
-    fi
+    while [[ $server_started == 0 ]] ;
+    do
+        if [[ $(echo "$os_version > 16" | bc -l) ]] ;
+        then
+            systemctl start mysqld
 
-    # Wait for Mysql daemon to start and initialize for the first time (this may take up to a minute or so)
-    while ! timeout 1 bash -c "echo > /dev/tcp/localhost/$mysql_port"; do sleep 10; done
+            # enable mysqld on startup
+            systemctl enable mysqld
+        else
+            service mysql start
+        fi
+
+        # Wait for Mysql server to start/initialize for the first time (this may take up to a minute or so)
+        (echo >/dev/tcp/localhost/$mysql_port) &>/dev/null && server_started=1 || server_started=0
+
+        # if the server isn't yet started, wait $wait_time_seconds seconds before retry
+        if [[ $server_started == 0 ]] ;
+        then
+            sleep $wait_time_seconds;
+            ((total_wait_seconds+=$wait_time_seconds))
+
+            if [[ "$total_wait_seconds" -gt "$max_wait_seconds" ]] ;
+            then
+                log "Exceeded the expected wait time for starting up the server: $total_wait_seconds seconds"
+                exit $ERROR_MYSQL_STARTUP_FAILED
+            fi
+        fi
+    done
 
     log "Mysql server has been started"
 }
@@ -1393,6 +1417,10 @@ move_mysql_datadirectory()
 
     ###################################
     #5. Restart the server
+
+    # incase there are config changes
+    systemctl daemon-reload
+
     start_mysql $mysql_server_port
     exit_on_error "Could not start mysql server after moving its data directory on '${HOSTNAME}' !" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
 }
