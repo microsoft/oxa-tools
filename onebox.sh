@@ -17,23 +17,23 @@ readonly MSFT="microsoft"
 ##########################
 TEMPLATE_TYPE=fullstack # or devstack
 BRANCH_VERSIONS=edge    # or stable or edx
-DEFAULT_PASSWORD=
+DEFAULT_PASSWORD=$DEFAULT_STRING
 
+##########################
+# Settings
+##########################
 MONGO_USER=oxamongoadmin
-MONGO_PASSWORD=$DEFAULT_STRING
+MONGO_PASSWORD=
 
 MYSQL_ADMIN_USER=root
 MYSQL_ADMIN_PASSWORD=
 
 MYSQL_USER=oxamysql
-MYSQL_PASSWORD=$DEFAULT_STRING
+MYSQL_PASSWORD=
 
 EDXAPP_SU_USERNAME=edx_admin
-EDXAPP_SU_PASSWORD=$DEFAULT_STRING
+EDXAPP_SU_PASSWORD=
 
-##########################
-# Settings
-##########################
 readonly BASE_URL=$HOSTNAME
 readonly LMS_URL=$BASE_URL # vanity
 readonly CMS_URL=$BASE_URL
@@ -184,9 +184,11 @@ get_current_branch()
 
 harden()
 {
+    originalString=$1
+
     # Is the current password insecure?
-    if [[ -z $1 ]] || [[ $1 == $DEFAULT_STRING ]] ; then
-        if [[ -n $DEFAULT_PASSWORD ]] ; then
+    if [[ -z $originalString ]] ; then
+        if [[ $DEFAULT_PASSWORD != $DEFAULT_STRING ]] ; then
             # A default was provided. Use it.
             echo $DEFAULT_PASSWORD
         else
@@ -196,7 +198,7 @@ harden()
         fi
     else
         # Don't overwrite existing password
-        echo $1
+        echo $originalString
     fi
 }
 
