@@ -7,7 +7,6 @@
 # Immmediately exit on error
 set -axe
 
-readonly DEFAULT_STRING="insecureDefault"
 readonly MSFT="microsoft"
 
 ##########################
@@ -17,7 +16,7 @@ readonly MSFT="microsoft"
 ##########################
 TEMPLATE_TYPE=fullstack # or devstack
 BRANCH_VERSIONS=edge    # or stable or edx
-DEFAULT_PASSWORD=$DEFAULT_STRING
+DEFAULT_PASSWORD=
 
 ##########################
 # Settings
@@ -188,7 +187,7 @@ harden()
 
     # Is the current password insecure?
     if [[ -z $originalString ]] ; then
-        if [[ $DEFAULT_PASSWORD != $DEFAULT_STRING ]] ; then
+        if [[ -n $DEFAULT_PASSWORD ]] ; then
             # A default was provided. Use it.
             echo $DEFAULT_PASSWORD
         else
