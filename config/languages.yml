@@ -1,277 +1,228 @@
 ---
 # Modifying Language list. null means language is removed from the list. Others either language is a new added language or display name is changed.
 EDXAPP_ALL_LANGUAGES_OVERRIDE:
-  AE: null
-  AFB: "Arabic, Gulf"
-  AGQ: "Aghem"
-  AN: null
-  APC: "Arabic, Levantine"
-  ARN: "Mapudungun"
-  ARZ: "Arabic, Egyptian"
-  ASA: "Asu"
-  AST: "Asturian"
-  AV: null
-  AY: null
-  AZ-CYRL: "Azerbaijani (Cyrillic)"
-  AZ-LATN: "Azerbaijani (Latin)"
-  BAS: "Basaa"
-  BEM: "Bemba"
-  BEZ: "Bena"
-  BH: null
-  BI: null
-  BIN: "Edo"
-  BM: null
-  BM-LATN: "Bamanankan (Latin)"
-  BN: "Bangla"
-  BO: "Tibetan"
-  BRX: "Bodo"
-  BS-CYRL: "Bosnian (Cyrillic)"
-  BS-LATN: "Bosnian (Latin)"
-  BYN: "Blin"
-  CA-ES-VALENCIA: "Valencian"
-  CEB: "Cebuano"
-  CGG: "Chiga"
-  CH: null
-  CHR-CHER: "Cherokee (Cherokee)"
-  CR: null
-  CS: "Czech"
-  CV: null
-  CY: "Welsh"
-  DA: "Danish"
-  DAV: "Taita"
-  DE: "German"
-  DGO: "Dogri"
-  DJE: "Zarma"
-  DSB: "Lower Sorbian"
-  DUA: "Duala"
-  DV: "Divehi"
-  DYO: "Jola-Fonyi"
-  EBU: "Embu"
-  EL: "Greek"
-  ES: "Spanish"
-  EWO: "Ewondo"
-  FA: "Persian"
-  FF-LATN: "Fulah"
-  FI: "Finnish"
-  FIL: "Filipino"
-  FJ: "Fijian"
-  FO: "Faroese"
-  FR: "French"
-  FUR: "Friulian"
-  FY: "Western Frisian"
-  GA: "Irish"
-  GD: "Scottish Gaelic"
-  GL: "Galician"
-  GN: "Guarani"
-  GSW: "Swiss German"
-  GU: "Gujarati"
-  GUZ: "Gusii"
-  GV: "Manx"
-  HA-LATN: "Hausa (Latin)"
-  HAW: "Hawaiian"
-  HE: "Hebrew"
-  HI: "Hindi"
-  HO: null
-  HSB: "Upper Sorbian"
-  HU: "Hungarian"
-  HZ: null
-  IE: null
-  IG: "Igbo"
-  II: "Yi"
-  IK: null
-  IO: null
-  IS: "Icelandic"
-  IT: "Italian"
-  IU-CANS: "Inuktitut (Canadian Aboriginal Syllabics)"
-  IU-LATN: "Inuktitut (Latin)"
-  IV: "Invariant Language"
-  JA: "Japanese"
-  IGO: "Ngomba"
-  JMC: "Machame"
-  JV: null
-  JV-LATN: "Javanese (Latin)"
-  KA: "Georgian"
-  KAB: "Kabyle"
-  KAM: "Kamba"
-  KDE: "Makonde"
-  KEA: "Kabuverdianu"
-  KFR: "Kutchi"
-  KG: null
-  KHQ: "Koyra Chiini"
-  KI: "Kikuyu"
-  KJ: null
-  KK: "Kazakh"
-  KKJ: "Kako"
-  KL: "Greenlandic"
-  KLN: "Kalenjin"
-  KM: "Khmer"
-  KMR-ARAB: "Northern Kurdish (Arabic)"
-  KO: "Korean"
-  KOK: "Konkani"
-  KS: null
-  KS-ARAB: "Kashmiri (Perso-Arabic)"
-  KSB: "Shambala"
-  KS-DEVA: "Kashmiri (Devanagari)"
-  KSF: "Bafia"
-  KSH: "Colognian"
-  KU-ARAB: "Central Kurdish"
-  KV: null
-  KY: "Kyrgyz"
-  LA: null
-  LAG: "Langi"
-  LB: "Luxembourgish"
-  LG: "Ganda"
-  LI: null
-  LKT: "Lakota"
-  LRC: "Northern Luri"
-  LU: "Luba-Katanga"
-  LUO: "Luo"
-  LUY: "Luyia"
-  MAI: "Maithili"
-  MAS: "Masai"
-  MER: "Meru"
-  MFE: "Morisyen"
-  MG: "Malagasy"
-  MGH: "Makhuwa-Meetto"
-  MGO: "Meta'"
-  MH: null
-  MI: "Maori"
-  MK: "Macedonian"
-  MN: null
-  MN-CYRL: "Mongolian (Cyrillic)"
-  MNI: "Manipuri"
-  MN-MONG: "Mongolian (Traditional Mongolian)"
-  MOH: "Mohawk"
-  MR: "Marathi"
-  MS: "Malay (Latin)"
-  MUA: "Mundang"
-  MWW: "Hmong Daw"
-  MZN: "Mazanderani"
-  NA: null
-  NAQ: "Nama"
-  NB: "Norwegian Bokmål"
-  ND: "North Ndebele"
-  NDS: "Low German"
-  NG: null
-  NMG: "Kwasio"
-  NN: "Norwegian Nynorsk"
-  NNH: "Ngiemboon"
-  NO: null
-  NGO: "N’Ko"
-  NR: "South Ndebele"
-  NSO: "Sesotho sa Leboa"
-  NUS: "Nuer"
-  NV: null
-  NY: null
-  NYN: "Nyankole"
-  OJ: null
-  OM: "Oromo"
-  OR: "Odia"
-  OS: null
-  OS-CYRL: "Ossetic (Cyrillic)"
-  OTQ: "Querétaro Otomi"
-  PA: null
-  PA-ARAB: "Punjabi (Arabic)"
-  PA-GURU: "Punjabi (Gurmukhi)"
-  PAP: "Papiamento"
-  PI: null
-  PL: "Polish"
-  PRG: "Prussian"
-  PRS: "Dari"
-  PS: "Pashto"
-  PT: "Portuguese"
-  PT-BR: "Portuguese (Brazil)"
-  PT-PT: "Portuguese (Portugal)"
-  QPS: "Pseudo"
-  QUC: "K’iche’"
-  RM: "Romansh"
-  RN: "Rundi"
-  RO: "Romanian"
-  ROF: "Rombo"
-  RU: "Russian"
-  RW: "Kinyarwanda"
-  RWK: "Rwa"
-  SA: "Sanskrit"
-  SAH: "Sakha"
-  SAQ: "Samburu"
-  SAT-DEVA: "Santali (Devanagari)"
-  SPB: "Sangu"
-  SC: null
-  SD: null
-  SD-ARAB: "Sindhi (Arabic)"
-  SD-DEVA: "Sindhi (Devanagari)"
-  SE: "Northern Sami"
-  SEH: "Sena"
-  SES: "Koyraboro Senni"
-  SG: "Sango"
-  SHI-LATN: "Tachelhit (Latin)"
-  SHI-TFNG: "Tachelhit (Tifinagh)"
-  SI: "Sinhala"
-  SK: "Slovak"
-  SM: "Samoan"
-  SMA: "Southern Sami"
-  SMJ: "Lule Sami"
-  SMN: "Inari Sami"
-  SMS: "Skolt Sami"
-  SO: "Somali"
-  SR: null
-  SR-CYRL: "Serbian (Cyrillic)"
-  SR-LATN: "Serbian (Latin)"
-  SS: "siSwati"
-  SSY: "Saho"
-  ST: "Sesotho"
-  SV: "Swedish"
-  SW: "Kiswahili"
-  SWC: "Congo Swahili"
-  SYR: "Syriac"
-  TE: "Telugu"
-  TEO: "Teso"
-  TG: null
-  TG-CYRL: "Tajik (Cyrillic)"
-  TH: "Thai"
-  TI: "Tigrinya"
-  TIG: "Tigre"
-  TK: null
-  TK-LATIN: "Turkmen (Latin)"
-  TL: null
-  TN: "Setswana"
-  TO: "Tongan"
-  TR: "Turkish"
-  TS: "Xitsonga"
-  TT: null
-  TT-CYRL: "Tatar (Cyrillic)"
-  TW: null
-  TWQ: "Tasawaq"
-  TY: "Tahitian"
-  TZM-ARAB: "Central Atlas Tamazight (Arabic)"
-  TZM-LATN": "Central Atlas Tamazight (Latin)"
-  TZM-TFNG: "Central Atlas Tamazight (Tifinagh)"
-  UG: null
-  UG-ARAB: "Uyghur (Arabic)"
-  UK: "Ukrainian"
-  UZ: null
-  UZ-ARAB: "Uzbek (Perso-Arabic)"
-  UZ-CYRL: "Uzbek (Cyrillic)"
-  UZ-LATN: "Uzbek (Latin)"
-  VAI-LATN: "Vai (Latin)"
-  VAI-VAII: "Vai (Vai)"
-  VE: "Venda"
-  VI: "Vietnamese"
-  VO: "Volapük"
-  VUN: "Vunjo"
-  WA: null
-  WAE: "Walser"
-  WAL: "Wolaytta"
-  WO: "Wolof"
-  XH: "isiXhosa"
-  XOG: "Soga"
-  YAV: "Yangben"
-  YUA: "Yucatec Maya"
-  YUE-HANT: "Cantonese (Traditional)"
-  ZA: null
-  ZGH-TFNG: "Standard Moroccan Tamazight (Tifinagh)"
-  ZH: null
-  ZH-HANS: "Chinese (Simplified)"
-  ZH-HANT: "Chinese (Traditional)"
-  ZU: "isiZulu"
+  ab: null,
+  ae: null,
+  afb: "Arabic, Gulf",
+  agq: "Aghem",
+  an: null,
+  apc: "Arabic, Levantine",
+  arn: "Mapudungun",
+  arz: "Arabic, Egyptian",
+  asa: "Asu",
+  ast: "Asturian",
+  av: null,
+  ay: null,
+  az: null,
+  az-Cyrl: "Azerbaijani (Cyrillic)",
+  az-Latn: "Azerbaijani (Latin)",
+  bas: "Basaa",
+  bem: "Bemba",
+  bez: "Bena",
+  bh: null,
+  bi: null,
+  bin: "Edo",
+  bm: null,
+  bm-Latn: "Bamanankan (Latin)",
+  bn: "Bangla",
+  brx: "Bodo",
+  bs: null,
+  bs-Cyrl: "Bosnian (Cyrillic)",
+  bs-Latn: "Bosnian (Latin)",
+  byn: "Blin",
+  ca-ES-valencia: "Valencian",
+  ceb: "Cebuano",
+  cgg: "Chiga",
+  ch: null,
+  chr-Cher: "Cherokee (Cherokee)",
+  cr: null,
+  cv: null,
+  dav: "Taita",
+  dgo: "Dogri",
+  dje: "Zarma",
+  dsb: "Lower Sorbian",
+  dua: "Duala",
+  dyo: "Jola-Fonyi",
+  ebu: "Embu",
+  ewo: "Ewondo",
+  ff: null,
+  ff-Latn: "Fulah",
+  fil: "Filipino",
+  fur: "Friulian",
+  ga: "Irish",
+  gd: "Scottish Gaelic",
+  gsw: "Swiss German",
+  guz: "Gusii",
+  ha: null,
+  ha-Latn: "Hausa (Latin)",
+  haw: "Hawaiian",
+  he: "Hebrew",
+  ho: null,
+  hsb: "Upper Sorbian",
+  hz: null,
+  ie: null,
+  ig: "Igbo",
+  ii: "Yi",
+  ik: null,
+  io: null,
+  iu: null,
+  iu-Cans: "Inuktitut (Canadian Aboriginal Syllabics)",
+  iu-Latn: "Inuktitut (Latin)",
+  iv: "Invariant Language",
+  jgo: "Ngomba",
+  jmc: "Machame",+
+  jv: null,
+  jv-Latn: "Javanese (Latin)",
+  kab: "Kabyle",
+  kam: "Kamba",
+  kde: "Makonde",
+  kea: "Kabuverdianu",
+  kfr: "Kutchi",
+  kg: null,
+  khq: "Koyra Chiini",
+  kj: null,
+  kkj: "Kako",
+  kl: "Greenlandic",
+  kln: "Kalenjin",
+  km: "Khmer",
+  kmr-Arab: "Northern Kurdish (Arabic)",
+  kok: "Konkani",
+  ks: null,
+  ks-Arab: "Kashmiri (Perso-Arabic)",
+  ksb: "Shambala",
+  ks-Deva: "Kashmiri (Devanagari)",
+  ksf: "Bafia",
+  ksh: "Colognian",
+  ku: null,
+  ku-Arab: "Central Kurdish",
+  kv: null,
+  ky: "Kyrgyz",
+  la: null,
+  lag: "Langi",
+  li: null,
+  lkt: "Lakota",
+  lrc: "Northern Luri",
+  luo: "Luo",
+  luy: "Luyia",
+  mai: "Maithili",
+  mas: "Masai",
+  mer: "Meru",
+  mfe: "Morisyen",
+  mgh: "Makhuwa-Meetto",
+  mgo: "Meta'",
+  mh: null,
+  mn: null,
+  mn-Cyrl: "Mongolian (Cyrillic)",
+  mni: "Manipuri",
+  mn-Mong: "Mongolian (Traditional Mongolian)",
+  moh: "Mohawk",
+  ms: "Malay (Latin)",
+  mua: "Mundang",
+  mww: "Hmong Daw",
+  mzn: "Mazanderani",
+  na: null,
+  naq: "Nama",
+  nb: "Norwegian Bokmål",
+  nd: "North Ndebele",
+  nds: "Low German",
+  ng: null,
+  nmg: "Kwasio",
+  nnh: "Ngiemboon",
+  no: null,
+  nqo: "N’Ko",
+  nr: "South Ndebele",
+  nso: "Sesotho sa Leboa",
+  nus: "Nuer",
+  nv: null,
+  ny: null,
+  nyn: "Nyankole",
+  oj: null,
+  or: "Odia",
+  os: null,
+  os-Cyrl: "Ossetic (Cyrillic)",
+  os-Latn: "Ossetic (Latin)",
+  otq: "Querétaro Otomi",
+  pa: null,
+  pa-Arab: "Punjabi (Arabic)",
+  pa-Guru: "Punjabi (Gurmukhi)",
+  pap: "Papiamento",
+  pi: null,
+  prg: "Prussian",
+  prs: "Dari",
+  ps: "Pashto",
+  pt-BR: "Portuguese (Brazil)",
+  pt-PT: "Portuguese (Portugal)",
+  qps: "Pseudo",
+  quc: "K’iche’",
+  rof: "Rombo",
+  rwk: "Rwa",
+  sah: "Sakha",
+  saq: "Samburu",
+  sat-Deva: "Santali (Devanagari)",
+  sbp: "Sangu",
+  sc: null,
+  sd: null,
+  sd-Arab: "Sindhi (Arabic)",
+  sd-Deva: "Sindhi (Devanagari)",
+  se: "Northern Sami",
+  seh: "Sena",
+  ses: "Koyraboro Senni",
+  shi-Latn: "Tachelhit (Latin)",
+  shi-Tfng: "Tachelhit (Tifinagh)",
+  sma: "Southern Sami",
+  smj: "Lule Sami",
+  smn: "Inari Sami",
+  sms: "Skolt Sami",
+  sr: null,
+  sr-Cyrl: "Serbian (Cyrillic)",
+  sr-Latn: "Serbian (Latin)",
+  ss: "SiSwati",
+  ssy: "Saho",
+  st: "Sesotho",
+  su: null,
+  sw: "Kiswahili",
+  swc: "Congo Swahili",
+  syr: "Syriac",
+  teo: "Teso",
+  tg: null,
+  tg-Cyrl: "Tajik (Cyrillic)",
+  tig: "Tigre",
+  tk: null,
+  tk-Latn: "Turkmen (Latin)",
+  tl: null,
+  tn: "Setswana",
+  to: "Tongan",
+  ts: "Xitsonga",
+  tt: null,
+  tt-Cyrl: "Tatar (Cyrillic)",
+  tw: null,
+  twq: "Tasawaq",
+  tzm-Arab: "Central Atlas Tamazight (Arabic)",
+  tzm-Latn: "Central Atlas Tamazight (Latin)",
+  tzm-Tfng: "Central Atlas Tamazight (Tifinagh)",
+  ug: null,
+  ug-Arab: "Uyghur (Arabic)",
+  uz: null,
+  uz-Arab: "Uzbek (Perso-Arabic)",
+  uz-Cyrl: "Uzbek (Cyrillic)",
+  uz-Latn: "Uzbek (Latin)",
+  vai-Latn: "Vai (Latin)",
+  vai-Vaii: "Vai (Vai)",
+  vun: "Vunjo",
+  wa: null,
+  wae: "Walser",
+  wal: "Wolaytta",
+  xh: "IsiXhosa",
+  xog: "Soga",
+  yav: "Yangben",
+  yua: "Yucatec Maya",
+  yue-Hant: "Cantonese (Traditional)",
+  za: null,
+  zgh-Tfng: "Standard Moroccan Tamazight (Tifinagh)",
+  zh: null,
+  zh_HANS: null,
+  zh_HANT: null,
+  zh-Hans: "Chinese (Simplified)",
+  zh-Hant: "Chinese (Traditional)",
+  zu: "IsiZulu"
 
