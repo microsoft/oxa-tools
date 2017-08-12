@@ -28,6 +28,11 @@ ERROR_XINETD_INSTALLER_FAILED=7301
 ERROR_TOOLS_INSTALLER_FAILED=7401
 ERROR_SSHKEYROTATION_INSTALLER_FAILED=7501
 
+# Mysql failover related errors
+ERROR_MYSQL_FAILOVER_INVALIDPROXYPORT=7601
+ERROR_MYSQL_FAILOVER_UNKNOWNRESPONSE=7602
+ERROR_MYSQL_FAILOVER_FAILED=7603
+
 #############################################################################
 # Log a message
 #############################################################################
@@ -1274,12 +1279,8 @@ is_master_server()
     third_server=${replicated_servers_list[$third_server_position]}
 
     # more defensive: the repladmin will override the file/or create a new file
-    replication_status_file="/tmp/replication_status_$server.csv"
-    if [[ -f $replication_status_file ]];
-    then
-        #log "Cleaning up existing replication file"
-        rm $replication_status_file
-    fi
+    replication_status_file="$(mktemp /tmp/replication_status_XXXXXX.csv)"
+    remove_replication_file "${replication_status_file}"
 
     # run the repl admin to check the replication status from the perspective of the target server
     mysqlrpladmin --master=${mysql_admin_user}:${mysql_admin_user_password}@${local_server_ip}:$mysql_server_port --slaves=${mysql_admin_user}:${mysql_admin_user_password}@${second_server}:3306,${mysql_admin_user}:${mysql_admin_user_password}@${third_server}:3306 health --format=csv > $replication_status_file
@@ -1291,7 +1292,21 @@ is_master_server()
     # assess the replication status
     is_valid_master=`check_master_status ${local_server_ip} ${replication_status_file}`
 
+    # clean up
+    remove_replication_file "${replication_status_file}"
+
     echo $is_valid_master
+}
+
+remove_replication_file()
+{
+    local status_file="${1}"
+
+    if [[ -f $status_file ]];
+    then
+        #log "Cleaning up existing replication file"
+        rm $status_file
+    fi
 }
 
 #############################################################################
