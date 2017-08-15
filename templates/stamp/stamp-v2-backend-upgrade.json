@@ -1,0 +1,102 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "clusterName": {
+            "type": "string",
+            "maxLength": 12
+        },
+        "clusterAdmininistratorEmailAddress": {
+            "type": "string",
+            "metadata": {
+                "description": "Email address of the administrator where system and other notifications will be sent"
+            }
+        },
+        "oxaToolsGithubAccountName": {
+            "type": "string",
+            "defaultValue": "microsoft",
+            "metadata": {
+                "description": "Name of the account that owns the oxa-tools GitHub repository"
+            }
+        },
+        "oxaToolsGithubProjectName": {
+            "type": "string",
+            "defaultValue": "oxa-tools",
+            "metadata": {
+                "description": "Name of the oxa-tools GitHub repository"
+            }
+        },
+        "oxaToolsGithubBranch": {
+            "type": "string",
+            "defaultValue": "master",
+            "metadata": {
+                "description": "Branch of the oxa-tools GitHub repository"
+            }
+        },
+        "oxaToolsGithubBranchTag": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Tag within the branch to checkout"
+            }
+        },
+        "installerPackageName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the folder under deploymentextensions containing the installer script to be used."
+            }
+        },
+        "upgradeParameters": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "A string representing parameter name & value pairs that will be used by the upgrade script. This string needs to be Base64-encoded."
+            }
+        }
+    },
+
+    "variables": {
+
+        "defaultApiVersion": "2015-05-01-preview",
+        "computeApiVersion": "2016-03-30",
+        "virtualMachineExtensionsApiVersion": "[variables('defaultApiVersion')]",
+        "clusterJumpBoxName": "[concat(parameters('clusterName'), '-jb')]",
+
+        "templateBaseUrl": "[concat('https://raw.githubusercontent.com/',parameters('oxaToolsGithubAccountName'), '/', parameters('oxaToolsGithubProjectName'), '/', parameters('oxaToolsGithubBranch'), '/')]",
+        "installerScript": "install.sh",
+        "relativeUtilitiesScriptPath": "templates/stamp/utilities.sh",
+
+        "oxaToolsGitHubRepositoryParameters": "[concat(' --oxatools-public-github-accountname ', parameters('oxaToolsGithubAccountName'), ' --oxatools-public-github-projectname ', parameters('oxaToolsGithubProjectName'), ' --oxatools-public-github-projectbranch ', parameters('oxaToolsGithubBranch'), ' --oxatools-public-github-branchtag ', parameters('oxaToolsGithubBranchTag') )]",
+        "installerCommand": "[concat('bash ', variables('installerScript'), variables('oxaToolsGitHubRepositoryParameters'), ' ', base64ToString(parameters('upgradeParameters')),  '  >> /var/log/bootstrap.csx.log 2>&1')]",
+
+        "monitoringAgentInstallerFiles": {
+            "scriptsToDownload": [
+                "[concat(variables('templateBaseUrl'), 'scripts/deploymentextensions/', parameters('installerPackageName'), '/install.sh')]",
+                "[concat(variables('templateBaseUrl'), variables('relativeUtilitiesScriptPath'))]"
+            ],
+            "agentInstallerCommand": "[variables('installerCommand')]"
+        }
+    },
+
+    "resources": [
+        {
+            "comments": "Upgrade Custom Script Extension for Jumpbox.",
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(variables('clusterJumpBoxName'),'/', parameters('installerPackageName'))]",
+            "apiVersion": "[variables('virtualMachineExtensionsApiVersion')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publisher": "Microsoft.Azure.Extensions",
+                "type": "CustomScript",
+                "typeHandlerVersion": "2.0",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "fileUris": "[variables('monitoringAgentInstallerFiles').scriptsToDownload]"
+                },
+                "protectedSettings": {
+                    "commandToExecute": "[variables('monitoringAgentInstallerFiles').agentInstallerCommand]"
+                }
+            }
+        }
+    ]
+}

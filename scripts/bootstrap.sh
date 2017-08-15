@@ -7,8 +7,8 @@ set -x
 # argument defaults
 EDX_ROLE=""
 DEPLOYMENT_ENV="dev"
-ACCESS_TOKEN=""
 CRON_MODE=0
+RETRY_COUNT=5
 TARGET_FILE=""
 
 # Oxa Tools
@@ -49,7 +49,7 @@ ANSIBLE_PUBLIC_GITHUB_PROJECTNAME="ansible"
 ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH="master"
 
 # MISC
-EDX_VERSION="master"
+EDX_VERSION="open-release/ficus.master"
 #FORUM_VERSION="mongoid5-release"
 FORUM_VERSION="open-release/ficus.master"
 
@@ -64,7 +64,7 @@ SECONDARY_LOG="/var/log/bootstrap.csx.log"
 PRIMARY_LOG="/var/log/bootstrap.log"
 
 display_usage() {
-  echo "Usage: $0 -a|--access_token {access token} -v|--version {oxa-tools-config version} [-r|--role {jb|vmss|mongo|mysql|edxapp|fullstack}] [-e|--environment {dev|bvt|int|prod}] [--cron] --keyvault-name {azure keyvault name} --aad-webclient-id {AAD web application client id} --aad-webclient-appkey {AAD web application client key} --aad-tenant-id {AAD Tenant to authenticate against} --azure-subscription-id {Azure subscription Id}"
+  echo "Usage: $0 [-r|--role {jb|vmss|mongo|mysql|edxapp|fullstack|devstack}] [-e|--environment {dev|bvt|int|prod}] [--cron] --keyvault-name {azure keyvault name} --aad-webclient-id {AAD web application client id} --aad-webclient-appkey {AAD web application client key} --aad-tenant-id {AAD Tenant to authenticate against} --azure-subscription-id {Azure subscription Id}"
   exit 1
 }
 
@@ -87,10 +87,13 @@ parse_args()
         case "$1" in
           -r|--role)
             EDX_ROLE="${arg_value,,}" # convert to lowercase
-            if ! is_valid_arg "jb vmss mongo mysql edxapp fullstack" $EDX_ROLE; then
+            if ! is_valid_arg "jb vmss mongo mysql edxapp fullstack devstack" $EDX_ROLE; then
               echo "Invalid role specified\n"
               display_usage
             fi
+            ;;
+          --retry-count)
+            RETRY_COUNT="${arg_value}"
             ;;
           -e|--environment)
             DEPLOYMENT_ENV="${arg_value,,}" # convert to lowercase
@@ -98,10 +101,6 @@ parse_args()
               echo "Invalid environment specified\n"
               display_usage
             fi
-            ;;
-          # For fullstack deployments
-          -a|--access_token)
-            ACCESS_TOKEN="${arg_value}"
             ;;
           --cron)
             CRON_MODE=1
@@ -377,19 +376,43 @@ update_scalable_mysql() {
   exit_on_error "Execution of OXA MySQL playbook failed"
 }
 
+edx_installation_playbook()
+{
+  systemctl >/dev/null 2>&1
+  exit_on_error "Single VM instance of EDX has a hard requirement on systemd and its systemctl functionality"
+
+  # Most docker containers don't have sudo pre-installed
+  install-sudo
+
+  # git, gettext
+  install-tools
+
+  command="$ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG vagrant-${EDX_ROLE}.yml"
+
+  # We've been experiencing intermittent failures on ficus. Simply retrying
+  # mitigates the problem, but we should solve the underlying cause(s) soon.
+  retry-command "$command" "$RETRY_COUNT" "${EDX_ROLE} installation" "fixPackages"
+}
+
 update_fullstack() {
+  install-ssh
+
   # edx playbooks - fullstack (single VM)
-  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG vagrant-fullstack.yml
-  exit_on_error "Execution of edX fullstack playbook failed"
+  edx_installation_playbook
 
   # oxa playbooks - all (single VM)
   $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK
   exit_on_error "Execution of OXA playbook failed"
+
+  # get status of edx services
+  /edx/bin/supervisorctl status
 }
 
 update_devstack() {
+  install-ssh
+
   if ! id -u vagrant > /dev/null 2>&1; then
-  # create required vagrant user account to avoid fatal error
+    # create required vagrant user account to avoid fatal error
     sudo adduser --disabled-password --gecos "" vagrant
 
     # set the vagrant password
@@ -397,21 +420,21 @@ update_devstack() {
   fi
 
   # create some required directories to avoid fatal errors
-  if [ ! -d /edx/app/ecomworker ]; then
-  sudo mkdir -p /edx/app/ecomworker
+  if [[ ! -d /edx/app/ecomworker ]] ; then
+    sudo mkdir -p /edx/app/ecomworker
   fi
 
-  if [ ! -d /home/vagrant/share_x11 ]; then
-  sudo mkdir -p /home/vagrant/share_x11
+  if [[ ! -d /home/vagrant/share_x11 ]] ; then
+    sudo mkdir -p /home/vagrant/share_x11
   fi
 
-  if [ ! -d /edx/app/ecommerce ]; then
+  if [[ ! -d /edx/app/ecommerce ]] ; then
     sudo mkdir -p /edx/app/ecommerce
   fi
 
-  if [ ! -f /home/vagrant/.bashrc ]; then
-  # create empty .bashrc file to avoid fatal error
-  sudo touch /home/vagrant/.bashrc
+  if [[ ! -f /home/vagrant/.bashrc ]] ; then
+    # create empty .bashrc file to avoid fatal error
+    sudo touch /home/vagrant/.bashrc
   fi
 
   if $(stat -c "%U" /home/vagrant) != "vagrant"; then
@@ -422,9 +445,7 @@ update_devstack() {
   fi
 
   # edx playbooks - devstack (single VM)
-  # Skip ecommerce for now since it isn't used and requires debugging
-  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG vagrant-devstack.yml --skip-tags="ecommerce,ecomworker"
-  exit_on_error "Execution of edX devstack playbook failed"
+  edx_installation_playbook
 
   # oxa playbooks - all (single VM)
   $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK -e "edxrole=$EDX_ROLE"

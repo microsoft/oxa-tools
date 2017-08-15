@@ -633,6 +633,13 @@
             "metadata": {
                 "description": "Azure Cli version to use"
             }
+        },
+        "enableMobileRestApi": {
+            "type": "bool",
+            "defaultValue": "false",
+            "metadata": {
+                "description": "Indicator of whether or not the Mobile Rest Api is enabled for further integration"
+            }
         }
     },
     "variables": {

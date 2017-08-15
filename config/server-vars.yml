@@ -60,6 +60,7 @@ EDXAPP_REGISTRATION_EXTRA_FIELDS:
   level_of_education: "optional"
   mailing_address: "hidden"
   year_of_birth: "hidden"
+  language: "optional"
 
 
 # Enable social sharing icons for courses. For now we are just enabling linkedin. 
@@ -81,19 +82,22 @@ EDXAPP_SOCIAL_MEDIA_FOOTER_NAMES: [ "linkedin" ]
 # see: http://edx.readthedocs.org/projects/edx-installing-configuring-and-running/en/latest/feature_flags/feature_flag_index.html
 EDXAPP_FEATURES:  
   ENABLE_THIRD_PARTY_AUTH: %%EDXAPP_ENABLE_THIRD_PARTY_AUTH%%
-  #ENABLE_OAUTH2_PROVIDER: "{{ EDXAPP_ENABLE_OAUTH2_PROVIDER }}"
+  ENABLE_OAUTH2_PROVIDER: %%EDXAPP_ENABLE_OAUTH2_PROVIDER%%
   ENABLE_SYSADMIN_DASHBOARD: true
   ENABLE_INSTRUCTOR_EMAIL: true
   REQUIRE_COURSE_EMAIL_AUTH: false
   # PREVIEW_LMS_BASE must be localhost for course discovery to work with dns (openedx.slack - 9/14/16 @3:08pm)
   PREVIEW_LMS_BASE: "{{ EDXAPP_PREVIEW_SITE_NAME }}"
   DISABLE_COURSE_CREATION: true
+  DISABLE_LIBRARY_CREATION: true
   ALLOW_ALL_ADVANCED_COMPONENTS: true
   ALLOW_HIDING_DISCUSSION_TAB: true
   CERTIFICATES_ENABLED: true
   CERTIFICATES_HTML_VIEW: true
   ENABLE_GRADE_DOWNLOADS: true
   ENABLE_VIDEO_UPLOAD_PIPELINE: true
+  ENABLE_MOBILE_REST_API: %%EDXAPP_ENABLE_MOBILE_REST_API%%
+  OAUTH_ENFORCE_SECURE: %%OAUTH_ENFORCE_SECURE%%
   # ENABLE_CSMH_EXTENDED: true 
   
 # Comprehensive Theming Configuration
@@ -113,7 +117,13 @@ EDXAPP_GRADE_STORAGE_CLASS: "openedx.core.storage.AzureStorageExtended"
 EDXAPP_GRADE_STORAGE_KWARGS:
   container: "reports"
 EDXAPP_GRADE_STORAGE_CONTAINER: "reports"
-  
+# overriding the default value from 5 to 50. we don't want to stop the retry's at any point.  
+EDXAPP_RETRY_ACTIVATION_EMAIL_MAX_ATTEMPTS: 50
+# overriding the default value from 0.5 to 2. 
+EDXAPP_RETRY_ACTIVATION_EMAIL_TIMEOUT: 2
+EDXAPP_SESSION_INACTIVITY_TIMEOUT_IN_SECONDS: 1800
+EDXAPP_X_FRAME_OPTIONS: "SAMEORIGIN"
+EDXAPP_CSRF_COOKIE_SECURE: true
 # Configure email addresses
 EDXAPP_BUGS_EMAIL: "microsoftlearning-bugs@microsoft.com"
 EDXAPP_BULK_EMAIL_DEFAULT_FROM_EMAIL: "microsoftlearning-noreply@microsoft.com"

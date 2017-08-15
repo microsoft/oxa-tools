@@ -96,6 +96,9 @@ MEMCACHE_SERVER=""
 # Azure Cli Version
 AZURE_CLI_VERSION="2"
 
+# Mobile rest api 
+EDXAPP_ENABLE_MOBILE_REST_API="false"
+
 help()
 {
     echo "This script bootstraps the OXA Stamp"
@@ -150,6 +153,7 @@ help()
     echo "        --domain-separator domain separator character"
     echo "        --azurecli-version azure cli version to use"
     echo "        --memcache-server the memcache server to use"
+    echo "        --enable-mobile-rest-api indicator of whether or not the mobile rest api will be enabled"
 }
 
 # Parse script parameters
@@ -407,6 +411,15 @@ parse_args()
              --azurecli-version)
                 AZURE_CLI_VERSION="${arg_value}"
                 ;;
+             --enable-mobile-rest-api)
+                EDXAPP_ENABLE_MOBILE_REST_API="${arg_value,,}"
+                if ( ! is_valid_arg "true false" $EDXAPP_ENABLE_MOBILE_REST_API ) ; 
+                then
+                  echo "Invalid state specified for mobile rest api"
+                  help
+                  exit 2
+                fi
+                ;;
             -h|--help)  # Helpful hints
                 help
                 exit 2
@@ -499,12 +512,24 @@ persist_deployment_time_values()
     fi
 
     # check for MemCache Server Override
-    if [ ! -z ${MEMCACHE_SERVER} ];
+    if [[ ! -z ${MEMCACHE_SERVER} ]];
     then
         log "Overriding 'MEMCACHE_SERVER_IP'"
         sed -i "s#^MEMCACHE_SERVER_IP=.*#MEMCACHE_SERVER_IP=${MEMCACHE_SERVER}#I" $config_file
     else
         log "Memcache Server override not specified"
+    fi
+
+    # check for Mobile Rest Api override
+    if [[ ! -z ${EDXAPP_ENABLE_MOBILE_REST_API} ]];
+    then
+        # if EDXAPP_ENABLE_MOBILE_REST_API & EDXAPP_ENABLE_OAUTH2_PROVIDER must have the same value (dependency)
+        log "Overriding 'EDXAPP_ENABLE_MOBILE_REST_API'"
+        sed -i "s#^EDXAPP_ENABLE_MOBILE_REST_API=.*#EDXAPP_ENABLE_MOBILE_REST_API=${EDXAPP_ENABLE_MOBILE_REST_API}#I" $config_file
+        sed -i "s#^EDXAPP_ENABLE_OAUTH2_PROVIDER=.*#EDXAPP_ENABLE_OAUTH2_PROVIDER=${EDXAPP_ENABLE_MOBILE_REST_API}#I" $config_file
+        sed -i "s#^OAUTH_ENFORCE_SECURE=.*#OAUTH_ENFORCE_SECURE=${EDXAPP_ENABLE_MOBILE_REST_API}#I" $config_file
+    else
+        log "Mobile Rest API override not specified"
     fi
 
     # Re-source the cloud configurations
@@ -576,6 +601,9 @@ then
     MEMCACHE_PARAMS="--memcache-server \"${MEMCACHE_SERVER}\""
     AZURE_CLI_VERSION="--azurecli-version \"${AZURE_CLI_VERSION}\""
 
+    # Mobile rest api parameter
+    MOBILE_REST_API_PARAMS="--enable-mobile-rest-api \"${EDXAPP_ENABLE_MOBILE_REST_API}\""
+
     # Strip out the spaces for passing it along
     MONGO_BACKUP_FREQUENCY="${MONGO_BACKUP_FREQUENCY// /_}"
     MYSQL_BACKUP_FREQUENCY="${MYSQL_BACKUP_FREQUENCY// /_}"
@@ -583,7 +611,7 @@ then
     BACKUP_PARAMS="--storage-account-name \"${BACKUP_STORAGEACCOUNT_NAME}\" --storage-account-key \"${BACKUP_STORAGEACCOUNT_KEY}\" --mongo-backup-frequency \"${MONGO_BACKUP_FREQUENCY}\" --mysql-backup-frequency \"${MYSQL_BACKUP_FREQUENCY}\" --mongo-backup-retention-days \"${MONGO_BACKUP_RETENTIONDAYS}\" --mysql-backup-retention-days \"${MYSQL_BACKUP_RETENTIONDAYS}\""
 
     # Create the cron job & exit
-    INSTALL_COMMAND="sudo flock -n /var/log/bootstrap-run-customization.lock bash $CURRENT_PATH/run-customizations.sh -c $CLOUDNAME -u $OS_ADMIN_USERNAME -i $CUSTOM_INSTALLER_RELATIVEPATH -m $MONITORING_CLUSTER_NAME -s $BOOTSTRAP_PHASE -u $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --crontab-interval $CRONTAB_INTERVAL_MINUTES --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID --smtp-server $SMTP_SERVER --smtp-server-port $SMTP_SERVER_PORT --smtp-auth-user $SMTP_AUTH_USER --smtp-auth-user-password $SMTP_AUTH_USER_PASSWORD --cluster-admin-email $CLUSTER_ADMIN_EMAIL --cluster-name $CLUSTER_NAME ${OXA_TOOLS_GITHUB_PARAMS} ${EDX_CONFIGURATION_GITHUB_PARAMS} ${EDX_PLATFORM_GITHUB_PARAMS} ${EDX_THEME_GITHUB_PARAMS} ${ANSIBLE_GITHUB_PARAMS} ${BACKUP_PARAMS} ${SAMPLE_COURSE_PARAMS} ${COMPREHENSIVE_THEMING_PARAMS} ${AUTHENTICATION_PARAMS} ${DOMAIN_PARAMS} ${EDXAPP_PARAMS} --edxversion ${EDX_VERSION} --forumversion ${FORUM_VERSION} ${DATABASE_PARAMS} ${MEMCACHE_PARAMS} ${AZURE_CLI_VERSION} --cron >> $SECONDARY_LOG 2>&1"
+    INSTALL_COMMAND="sudo flock -n /var/log/bootstrap-run-customization.lock bash $CURRENT_PATH/run-customizations.sh -c $CLOUDNAME -u $OS_ADMIN_USERNAME -i $CUSTOM_INSTALLER_RELATIVEPATH -m $MONITORING_CLUSTER_NAME -s $BOOTSTRAP_PHASE -u $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --crontab-interval $CRONTAB_INTERVAL_MINUTES --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID --smtp-server $SMTP_SERVER --smtp-server-port $SMTP_SERVER_PORT --smtp-auth-user $SMTP_AUTH_USER --smtp-auth-user-password $SMTP_AUTH_USER_PASSWORD --cluster-admin-email $CLUSTER_ADMIN_EMAIL --cluster-name $CLUSTER_NAME ${OXA_TOOLS_GITHUB_PARAMS} ${EDX_CONFIGURATION_GITHUB_PARAMS} ${EDX_PLATFORM_GITHUB_PARAMS} ${EDX_THEME_GITHUB_PARAMS} ${ANSIBLE_GITHUB_PARAMS} ${BACKUP_PARAMS} ${SAMPLE_COURSE_PARAMS} ${COMPREHENSIVE_THEMING_PARAMS} ${AUTHENTICATION_PARAMS} ${DOMAIN_PARAMS} ${EDXAPP_PARAMS} --edxversion ${EDX_VERSION} --forumversion ${FORUM_VERSION} ${DATABASE_PARAMS} ${MEMCACHE_PARAMS} ${AZURE_CLI_VERSION} ${MOBILE_REST_API_PARAMS} --cron >> $SECONDARY_LOG 2>&1"
     echo $INSTALL_COMMAND > $CRON_INSTALLER_SCRIPT
 
     # Remove the task if it is already setup
@@ -609,25 +637,10 @@ install-mailer $SMTP_SERVER $SMTP_SERVER_PORT $SMTP_AUTH_USER $SMTP_AUTH_USER_PA
 exit_on_error "Configuring the mailer failed"
 
 # 1. Setup Tools
-install-git
-install-gettext # required for envsubst command
-set_timezone
+install-tools
 
 if [ "$MACHINE_ROLE" == "jumpbox" ] || [ "$MACHINE_ROLE" == "vmss" ];
 then
-    install-bc
-    install-mongodb-shell
-    install-mysql-client
-
-    install-powershell
-    install-azure-cli
-    install-azure-cli-2
-
-    if [ "$MACHINE_ROLE" == "jumpbox" ]; 
-    then
-        log "Installing Mysql Utilities on Jumpbox ${HOSTNAME}"
-        install-mysql-utilities
-    fi
 
     # When the comprehensive theming dirs is specified, edxapp:migrate task fails with :  ImproperlyConfigured: COMPREHENSIVE_THEME_DIRS
     # As an interim mitigation, create the folder if the path specified is not under the edx-platform directory (where the default themes directory is)

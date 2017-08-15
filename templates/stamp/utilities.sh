@@ -18,6 +18,12 @@ ERROR_AZURECLI_FAILED=6201
 ERROR_AZURECLI_SCRIPT_DOWNLOAD_FAILED=6202
 ERROR_AZURECLI2_INSTALLATION_FAILED=6203
 ERROR_AZURECLI_INVALID_OSVERSION=6204
+ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED=7001
+EROR_REPLICATION_MASTER_MISSING=7201
+ERROR_HAPROXY_INSTALLER_FAILED=7201
+ERROR_XINETD_INSTALLER_FAILED=7301
+ERROR_TOOLS_INSTALLER_FAILED=7401
+ERROR_SSHKEYROTATION_INSTALLER_FAILED=7501
 
 #############################################################################
 # Log a message
@@ -30,13 +36,20 @@ log()
     
     # $1 - the message to log
     # $2 - flag for error message = 1 (only presence test)
+    # $3 - extra line
     
+    # sometimes it is necessary to prepend an extra line
+    if [[ ! -z $3 ]] && ( [[ $3 == 1 ]] || [[ $3 == 3 ]] );
+    then
+        echo " "
+    fi
+
     TIMESTAMP=`date +"%D %T"`
     
     # check if this is an error message
     LOG_MESSAGE="${TIMESTAMP} :: $1"
     
-    if [ ! -z $2 ]; then
+    if [[ ! -z "${2// }" ]]; then
         # stderr logging
         LOG_MESSAGE="${TIMESTAMP} :: [ERROR] $1"
         echo $LOG_MESSAGE >&2
@@ -44,6 +57,12 @@ log()
         echo $LOG_MESSAGE
     fi
     
+    # sometimes it is necessary to append an extra line
+    if [[ ! -z $3 ]] && ( [[ $3 == 2 ]] || [[ $3 == 3 ]] );
+    then
+        echo " "
+    fi
+
     # send the message to syslog
     logger "$1"
 }
@@ -116,16 +135,12 @@ configure_datadisks()
 
 install-git()
 {
-    if type git >/dev/null 2>&1; then
+    if type git >/dev/null 2>&1 ; then
         log "Git already installed"
     else
-        log "Installing Git Client"
-
-        log "Updating Repository"
-        apt-get update
-
-        apt-get install -y git
-        exit_on_error "Failed to install the GIT clienton ${HOSTNAME} !" $ERROR_GITINSTALL_FAILED
+        apt-wrapper "update"
+        apt-wrapper "install git"
+        exit_on_error "Failed to install the GIT client on ${HOSTNAME} !" $ERROR_GITINSTALL_FAILED
     fi
 
     log "Git client installed"
@@ -138,10 +153,9 @@ install-git()
 install-gettext()
 {
     # Ensure that gettext (which includes envsubst) is installed
-    if [ $(dpkg-query -W -f='${Status}' gettext 2>/dev/null | grep -c "ok installed") -eq 0 ];
-    then
-        log "Installing Get Text"
-        apt-get install -y gettext;
+    if [[ $(dpkg-query -W -f='${Status}' gettext 2>/dev/null | grep -c "ok installed") -eq 0 ]] ; then
+        apt-wrapper "update"
+        apt-wrapper "install gettext"
         exit_on_error "Failed to install the GetText package on ${HOSTNAME} !"
     else
         log "Get Text is already installed"
@@ -292,11 +306,85 @@ install-mysql-utilities()
 }
 
 #############################################################################
+# Wrapper functions
+#############################################################################
+
+apt-wrapper()
+{
+    log "$1 package(s)..."
+    sudo apt-get $1 -y -qq --fix-missing
+}
+
+retry-command()
+{
+    command="$1"
+    retry_count="$2"
+    optionalDescription="$3"
+    fix_packages="$4"
+
+    for (( a=1; a<=$retry_count; a++ )) ; do
+        message="$optionalDescription attempt number: $a"
+
+        # Some failures can be resolved by fixing packages.
+        if [[ -n "$fix_packages" ]] ; then
+            apt-wrapper "update"
+            apt-wrapper "install -f"
+            apt-wrapper "upgrade -f"
+            sudo dpkg --configure -a
+        fi
+
+        log "STARTING ${message}..."
+
+        eval "$command"
+        if [[ $? -eq 0 ]] ; then
+            log "SUCCEEDED ${message}!"
+            break
+        fi
+
+        log "FAILED ${message}"
+    done
+}
+
+#############################################################################
+# Setup Sudo
+#############################################################################
+
+install-sudo()
+{
+    if type sudo >/dev/null 2>&1 ; then
+        log "sudo already installed"
+        return
+    fi
+
+    apt-wrapper "update"
+    apt-wrapper "install sudo"
+    exit_on_error "Installing sudo Failed on $HOST"
+
+    log "sudo installed"
+}
+
+#############################################################################
 # Setup SSH
 #############################################################################
 
+install-ssh()
+{
+    if [[ -f "/etc/ssh/sshd_config" ]] ; then
+        log "SSH already installed"
+        return
+    fi
+
+    apt-wrapper "update"
+    apt-wrapper "install ssh"
+    exit_on_error "Installing SSH Failed on $HOST"
+
+    log "SSH installed"
+}
+
 setup-ssh()
 {
+    install-ssh
+
     log "Setting up SSH"
 
     # implicit assumptions: private repository with secrets has been cloned and certificates live at /{repository_root}/env/{cloud}/id_rsa*
@@ -349,31 +437,31 @@ get_github_url()
 clone_repository()
 {
     # Required params
-    ACCOUNT_NAME=$1; PROJECT_NAME=$2; BRANCH=$3
+    account_name=$1; project_name=$2; branch=$3
 
     # Optional args
-    ACCESS_TOKEN=$4; REPO_PATH=$5
+    access_token=$4; repo_path=$5; repo_tag=$6
 
     # Validate parameters
-    if [ -z $ACCOUNT_NAME ] || [ -z $PROJECT_NAME ] || [ -z $BRANCH ] ;
+    if [[ -z $account_name ]] || [ -z $project_name ] || [[ -z $branch ]] ;
     then
         log "You must specify the GitHub account name, project name and branch " "ERROR"
         exit 3
     fi
 
     # If repository path is not specified then use home directory
-    if [ -z $REPO_PATH ]
+    if [[ -z $repo_path ]];
     then
-        REPO_PATH=~/$PROJECT_NAME
+        repo_path=~/$project_name
     fi 
 
     # Clean up any residue of the repository. (scorch)
-    clean_repository $REPO_PATH
+    clean_repository $repo_path
 
     #todo: We don't provide the token here because sync_repo() will try adding it again. See todo in sync_repo().
-    REPO_URL=`get_github_url "$ACCOUNT_NAME" "$PROJECT_NAME"`
+    repo_url=`get_github_url "$account_name" "$project_name"`
 
-    sync_repo $REPO_URL $BRANCH $REPO_PATH $ACCESS_TOKEN
+    sync_repo $repo_url $branch $repo_path $access_token $repo_tag
 }
 
 #############################################################################
@@ -422,9 +510,15 @@ get_machine_role()
 
 print_script_header()
 {
-    SCRIPT_NAME=`basename "$0"`
+    scriptname_override=$1;
 
-    log "-"
+    if [[ -z $scriptname_override ]]; then
+        SCRIPT_NAME=`basename "$0"`
+    else
+        SCRIPT_NAME=$scriptname_override
+    fi
+
+    log "-" " " 1
     log "#############################################"
     log "Starting ${SCRIPT_NAME}"
     log "#############################################"
@@ -437,29 +531,42 @@ print_script_header()
 
 sync_repo()
 {
-    REPO_URL=$1; REPO_VERSION=$2; REPO_PATH=$3
-    REPO_TOKEN=$4 # optional
+    repo_url=$1; repo_version=$2; repo_path=$3
+    repo_token=$4 # optional
+    repo_tag=$5   # optional
 
     if [ "$#" -lt 3 ]; then
         echo "sync_repo: invalid number of arguments" && exit 1
     fi
   
-    if [[ ! -d $REPO_PATH ]]; then
-        sudo mkdir -p $REPO_PATH
-        # todo: we should prevent adding REPO_TOKEN more than once. One option is to use get_github_url()
+    log "Syncing the '${repo_url}' repository (Branch='${repo_version}', Tag='${repo_tag}')"
+
+    if [[ ! -d $repo_path ]]; then
+        sudo mkdir -p $repo_path
+        # todo: we should prevent adding repo_token more than once. One option is to use get_github_url()
         #   to create the url "just-in-time" instead of taking a url as a parameter.
-        sudo git clone --recursive ${REPO_URL/github/$REPO_TOKEN@github} $REPO_PATH
-        exit_on_error "Failed cloning repository $REPO_URL to $REPO_PATH"
+        sudo git clone --recursive ${repo_url/github/$repo_token@github} $repo_path
+        exit_on_error "Failed cloning repository $repo_url to $repo_path"
     else
-        pushd $REPO_PATH
-        sudo git pull --all
-        exit_on_error "Failed syncing repository $REPO_URL to $REPO_PATH"
+        pushd $repo_path
+
+        sudo git pull --all --tags --prune
+        exit_on_error "Failed syncing repository $repo_url to $repo_path"
+
         popd
     fi
 
-    pushd $REPO_PATH
-    sudo git checkout ${REPO_VERSION:-master}
-    exit_on_error "Failed checking out branch $REPO_VERSION from repository $REPO_URL in $REPO_PATH"
+    pushd $repo_path
+
+    # checkout latest (or up to tag if specified)
+    if [[ -z $repo_tag ]];
+    then
+        sudo git checkout "${repo_version:-master}"
+    else
+        sudo git checkout "tags/${repo_tag}" "${repo_version:-master}"
+    fi
+
+    exit_on_error "Failed checking out branch $repo_version from repository $repo_url in $repo_path"
     popd
 }
 
@@ -494,7 +601,7 @@ send_notification()
     # if for some reason, mail isn't already installed, just go quietly
     if ! type "mail" > /dev/null 2>&1; then
         log "Mail not installed"
-        exit 0;
+        return
     fi
 
     if [ "$#" -ge 3 ]; 
@@ -536,7 +643,7 @@ exit_on_error()
     if [[ $? -ne 0 ]]; then
         log "${1}" 1
 
-        if [ "$#" -gt 3 ]; 
+        if [[ "$#" -gt 3 ]] ; 
         then
             # send a notification (if possible)
             MESSAGE="${1}"; SUBJECT="${3}"; TO="${4}"; MAIN_LOGFILE="${5}"; SECONDARY_LOGFILE="${6}"
@@ -544,10 +651,10 @@ exit_on_error()
         fi
 
         # exit with a custom error code (if one is specified)
-        if [ ! -z $2 ]; then
-            exit 1
-        else
+        if [[ -n $2 ]] ; then
             exit $2
+        else
+            exit 1
         fi
     fi
 }
@@ -558,6 +665,11 @@ exit_on_error()
 
 install-powershell()
 {
+    if [[ -f /usr/bin/powershell ]] ; then
+        log "Powershell is already installed"
+        return
+    fi
+
     log "Installing Powershell"
 
     wget https://raw.githubusercontent.com/PowerShell/PowerShell/v6.0.0-alpha.15/tools/download.sh  -O ~/powershell_installer.sh
@@ -573,26 +685,7 @@ install-powershell()
 
     # execute the installer
     bash ~/powershell_installer.sh
-
-    # validate powershell is installed
-    if [ -f /usr/bin/powershell ]; then
         exit_on_error "Powershell installation failed ${HOSTNAME} !" $ERROR_POWERSHELLINSTALL_FAILED
-    fi
-}
-
-install-azurepowershellcmdlets()
-{
-    log "Installing Azure Powershell Cmdlets"
-
-    # set the PSGallery as a trusted
-    log "Trusting PSGallery"
-    Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
-
-    log "Installing Azure RM cmdlets"
-    Install-Module AzureRM
-
-    log "Installing Azure cmdlets"
-    Install-Module Azure
 }
 
 #############################################################################
@@ -717,7 +810,7 @@ install-json-processor()
 }
 
 #############################################################################
-# Install GIT client
+# Install Mailer
 #############################################################################
 
 install-mailer()
@@ -932,14 +1025,345 @@ EOF"
 # Set server Time Zone
 #############################################################################
 
-set_timezone()
+set-server-timezone()
 {
     timezone="America/Los_Angeles"
 
-    if [ "$#" -ge 1 ]; then
+    if [[ "$#" -ge 1 ]] ; then
         $timezone="${1}"
     fi
 
     log "Setting the timezone for '${HOSTNAME}' to '${timezone}'"
     timedatectl set-timezone $timezone
+}
+
+#############################################################################
+# Install HA Proxy
+#############################################################################
+
+install_haproxy()
+{
+    if type haproxy >/dev/null 2>&1; then
+        log "HA Proxy is already installed"
+    else
+        log "Installing HA Proxy"
+
+        log "Updating Repository"
+        apt-get update
+
+        apt-get install -y haproxy
+        exit_on_error "Failed to install the HAProxy ${HOSTNAME} !" $ERROR_GITINSTALL_FAILED
+    fi
+
+    log "HAProxy installed"
+}
+
+start_haproxy()
+{
+    log "Starting HA Proxy Server"
+
+    service haproxy start
+
+    # Important - wait for the service to startup and interact with mysql
+    sleep 15s
+
+    log "HA Proxy has been started"
+}
+
+stop_haproxy()
+{
+    # Find out what PID(s) the HaProxy instance is running as (if any)
+    haproxy_pid=`ps -ef | grep 'haproxy' | grep -v grep | awk '{print $2}'`
+    
+    if [[ ! -z "$haproxy_pid" ]]; 
+    then
+        log "Stopping HA Proxy Server (PID $haproxy_pid)"
+        
+        service haproxy stop
+
+        # Important not to attempt to start the daemon immediately after it was stopped as unclean shutdown may be wrongly perceived
+        sleep 15s
+    fi
+}
+
+
+#############################################################################
+# Mysql Utilities
+#############################################################################
+
+start_mysql()
+{
+    log "Starting Mysql Server"
+
+    # the server port: default to 3306
+    mysql_port=${1:-3306}
+
+    # track the OS version
+    os_version=$(lsb_release -rs)
+
+    if [[ $(echo "$os_version > 16" | bc -l) ]]
+    then
+        systemctl start mysqld
+
+        # enable mysqld on startup
+        systemctl enable mysqld
+    else
+        service mysql start
+    fi
+
+    # Wait for Mysql daemon to start and initialize for the first time (this may take up to a minute or so)
+    while ! timeout 1 bash -c "echo > /dev/tcp/localhost/$mysql_port"; do sleep 10; done
+
+    log "Mysql server has been started"
+}
+
+stop_mysql()
+{
+    # Find out what PID the Mysql instance is running as (if any)
+    MYSQLPID=`ps -ef | grep '/usr/sbin/mysqld' | grep -v grep | awk '{print $2}'`
+    
+    if [[ ! -z "$MYSQLPID" ]]; then
+        log "Stopping Mysql Server (PID $MYSQLPID)"
+        
+        kill -15 $MYSQLPID
+
+        # Important not to attempt to start the daemon immediately after it was stopped as unclean shutdown may be wrongly perceived
+        sleep 15s
+    fi
+}
+
+# restart mysql server (stop and start)
+restart_mysql()
+{
+    stop_mysql
+    start_mysql ${1:-3306}
+}
+
+# determine the next position in a list of servers with support for circular reference
+get_next_position()
+{
+    current_position=$1
+    maximum_position=$2
+
+    next_position=$((current_position+1))
+
+    if [[ "$next_position" -ge "$maximum_position" ]];
+    then
+        # loop
+        next_position=0
+    fi
+
+    echo $next_position
+}
+
+# Using a replication status file (generated from mysqlrepladmin), determine if a server is a valid master
+# Note: the replication status file shows the health of replication from the perspective of the target server
+check_master_status()
+{
+    # get input parameters
+    target_server=$1
+    repl_status_csv_file_path=$2
+
+    # initialize other key variables
+    rows_processed=-1
+    master_identified=0
+    servers_ok=0
+
+    ########################################
+
+    # Iterate the rows of the replication status
+    # expected header: host,port,role,state,gtid_mode,health
+    while IFS=, read host port role state gtid_mode health
+    do
+        # increment the processed rows 
+        ((rows_processed++))
+
+        # the csv file has a header. Skip it
+        if [[ $rows_processed == 0 ]];
+        then
+            continue
+        fi
+
+        # assess the server replication status
+        # we expect state=up, gtid_mode=on, health=ok for all members & role=master when host==target_server
+        if [[ "${state,,}" == "up" ]] && [[ "${gtid_mode,,}" == "on" ]] && [[ "${health,,}"=="ok" ]];
+        then
+            # track the number of server in a valid state
+            ((servers_ok++))
+        fi
+
+        # check if the target server is in master mode (expected | defensive)
+        if [[ "${host,,}" == $target_server ]] &&  [[ "${role,,}" == "master" ]];
+        then
+            master_identified=1
+        fi
+
+    done < $repl_status_csv_file_path
+
+    # Make assessment whether or not the server is a valid master
+    if [[ $servers_ok -eq $rows_processed ]] && [[ $master_identified -eq 1 ]];
+    then
+        # valid master
+        echo 1
+    else
+        # not currently master
+        echo 0
+    fi
+}
+
+# check if the target server is a valid master
+is_master_server()
+{
+    encoded_replicated_servers_list=$1  # ip address of the servers participating in the replication
+    local_server_ip=$2                  # get the server ip
+    mysql_admin_user=$3                 # admin mysql user 
+    mysql_admin_user_password=$4        # admin mysql user password
+
+    # initialize other key variables
+    replicated_servers_list=(`echo ${encoded_replicated_servers_list} | base64 --decode`)
+    total_servers=${#replicated_servers_list[@]}
+    server_position=0
+
+    for replicated_server in "${replicated_servers_list[@]}"
+    do
+        if [[ $replicated_server == $local_server_ip ]];
+        then
+            local_server_replicated_position=$server_position
+            break
+        fi
+
+        ((server_position++))
+    done
+
+    if [[ -z $local_server_replicated_position ]];
+    then
+        log "Could not locate the IP address of ${HOSTNAME} (${local_server_ip}) in the configured replication topology ${replicated_servers_list}"
+        exit $REPLICATION_MASTER_MISSING
+    fi
+
+    # identify the positions of the other servers participating in the replication topology
+    second_server_position=`get_next_position $server_position $total_servers`
+    second_server=${replicated_servers_list[$second_server_position]}
+
+    third_server_position=`get_next_position $second_server_position $total_servers`
+    third_server=${replicated_servers_list[$third_server_position]}
+
+    # more defensive: the repladmin will override the file/or create a new file
+    replication_status_file="/tmp/replication_status_$server.csv"
+    if [[ -f $replication_status_file ]];
+    then
+        #log "Cleaning up existing replication file"
+        rm $replication_status_file
+    fi
+
+    # run the repl admin to check the replication status from the perspective of the target server
+    mysqlrpladmin --master=${mysql_admin_user}:${mysql_admin_user_password}@${local_server_ip}:$mysql_server_port --slaves=${mysql_admin_user}:${mysql_admin_user_password}@${second_server}:3306,${mysql_admin_user}:${mysql_admin_user_password}@${third_server}:3306 health --format=csv > $replication_status_file
+
+    # clean up the status file (remove comment lines and warning text)
+    sed -i "/^#/ d" $replication_status_file
+    sed -i "/^WARNING/ d" $replication_status_file
+
+    # assess the replication status
+    is_valid_master=`check_master_status ${local_server_ip} ${replication_status_file}`
+
+    echo $is_valid_master
+}
+
+#############################################################################
+# Wrapper function for doing role-based tools installation
+#############################################################################
+install-tools()
+{
+    machine_role=$(get_machine_role)
+
+    # 1. Setup Tools
+    install-git
+    install-gettext # required for envsubst command
+    set-server-timezone
+    install-json-processor
+
+    if [[ "$machine_role" == "jumpbox" ]] || [[ "$machine_role" == "vmss" ]] ;
+    then
+        install-bc
+        install-mongodb-shell
+        install-mysql-client
+
+        install-powershell
+        install-azure-cli
+        install-azure-cli-2
+
+        if [[ "$machine_role" == "jumpbox" ]] ; 
+        then
+            log "Installing Mysql Utilities on Jumpbox ${HOSTNAME}"
+            install-mysql-utilities
+        fi
+    fi
+}
+
+#############################################################################
+# Install Xinet (Extended Internet) Service
+#############################################################################
+
+install-xinetd()
+{
+    if type xinetd >/dev/null 2>&1; then
+        log "xinet is already installed"
+    else
+        log "Installing Xinet service"
+
+        log "Updating Repository"
+        apt-get update
+
+        apt-get install -y xinetd
+        exit_on_error "Failed to install xinet service on ${HOSTNAME} !" $ERROR_XINETD_INSTALLER_FAILED
+    fi
+
+    log "Xinet service installed"
+}
+
+#############################################################################
+# Xinet Service Controls
+#############################################################################
+
+restart_xinetd()
+{
+    # restart the service
+    /etc/init.d/xinetd restart
+
+    # the server is lightweight. A brief pause may be necessary.
+    sleep 5s
+
+    # make sure it is running
+    xinetd_pid=`ps -ef | grep '/usr/sbin/xinetd' | grep -v grep | awk '{print $2}'`
+
+    if [[ ! -z "$xinetd_pid" ]]; 
+    then
+        log "Unable to start xinet"
+        exit $ERROR_XINETD_INSTALLER_FAILED
+    fi
+}
+
+#############################################################################
+# Deployment Support
+#############################################################################
+
+copy_bits()
+{
+    bitscopy_target_server=$1
+    bitscopy_target_user=$2
+    script_base_path=$3
+    error_code=$4
+    copyerror_mail_subject=$5
+    copyerror_mail_receiver=$6
+
+    # copy the installer & the utilities files to the target server & ssh/execute the Operations
+    scp -o "StrictHostKeyChecking=no" $script_base_path/install.sh "${bitscopy_target_user}@${bitscopy_target_server}":~/
+    exit_on_error "Unable to copy installer script to '${bitscopy_target_server}' from '${HOSTNAME}' !" "${error_code}" "${copyerror_mail_subject}" "${copyerror_mail_receiver}"
+
+    scp -o "StrictHostKeyChecking=no" $script_base_path/utilities.sh "${bitscopy_target_user}@${bitscopy_target_server}":~/
+    exit_on_error "Unable to copy utilities to '${bitscopy_target_server}' from '${HOSTNAME}' !" "${error_code}" "${copyerror_mail_subject}" "${copyerror_mail_receiver}"
+
+    # set appropriate permissions on the required installer files
+    ssh -o "StrictHostKeyChecking=no" "${bitscopy_target_user}@${bitscopy_target_server}" "sudo chmod 600 ~/install.sh && sudo chmod 600 ~/utilities.sh"
+    exit_on_error "Unable to update permissions on the installer files copied to '${bitscopy_target_server}'!" "${error_code}" "${copyerror_mail_subject}" "${copyerror_mail_receiver}"
 }
