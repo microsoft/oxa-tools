@@ -159,7 +159,7 @@ create_or_update_cron_job()
     # Setup the background job
     log "Install job that tests for low remaining disk space"
     crontab -l | { cat; echo "${low_storage_frequency} sudo bash ${cron_installer_script}"; } | crontab -
-    exit_on_error "Failed setting up low remaining dis space job." $ERROR_CRONTAB_FAILED
+    exit_on_error "Failed setting up low remaining disk space job." $ERROR_CRONTAB_FAILED
 
     # setup the cron job
     log "Completed job that tests for and partially mitigates low remaining disk space"

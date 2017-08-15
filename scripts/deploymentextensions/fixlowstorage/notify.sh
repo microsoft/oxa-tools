@@ -47,18 +47,21 @@ check_usage_threshold()
         # Alert when threshold is exceeded.
         if (( $(echo "$percentUsed > $usage_threshold_percent" | bc -l) )) ; then
 
-            # Help clarify messaging by appending trailing slash to directory.
-            if [[ $directoryPath != '/' ]] ; then
+            if [[ $directoryPath == '/' ]] ; then
+                # Exclude OTHER partitions, mounts, and drives when reporting root
+                # For example: datadisks\|dev\|media\|mnt\|run\|sys
+                remove="`df -l | awk '{ print $6 }' | grep -v -i "mounted\|${directoryPath}$" | cut -d "/" -f2 | sort | uniq | sed ':a;N;$!ba;s/\n/\\\|/g'`"
+            else
+                # Append trailing slash for non-root directories. This is required for the "du" command below AND helps clarify messaging
                 directoryPath="${directoryPath}/"
+                remove=""
             fi
 
             # Message
-            
             log "Please cleanup this directory at your earliest convenience."
             log "The top subfolders or subfiles in $directoryPath are:"
             # Get list of subitems and filesize, sort them, grab top five, indent, newline.
-            printf "`du -sh $directoryPath* 2> /dev/null | sort -h -r | head -n 5 | sed -e 's/^/  /'`"
-            echo
+            echo "`du -sh $directoryPath* 2> /dev/null | grep -v "$remove" | sort -h -r | head -n 5 | sed -e 's/^/  /'`"
 
         fi
 
