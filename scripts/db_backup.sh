@@ -3,6 +3,8 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
+# Dumps DB to azure storage AND removes old backups.
+
 set -x
 
 # Path to settings file provided as an argument to this script.

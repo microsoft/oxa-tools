@@ -3,6 +3,8 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
+# Helpers used when rotating big logs AND detecting low partition storage (then sends notification).
+
 set -x
 
 # Cron Job Setup/Execution
@@ -123,9 +125,6 @@ parse_args()
     done
 }
 
-###############################################
-# INVOKED EXTERNALLY
-###############################################
 persist_settings_for_cron()
 {
 # persist the settings
@@ -141,6 +140,7 @@ EOF"
     # this file contains important information (like db info). Secure it
     chmod 600 $settings_file
 }
+
 create_or_update_cron_job()
 {
     # create the cron job
@@ -159,27 +159,8 @@ create_or_update_cron_job()
     # Setup the background job
     log "Install job that tests for low remaining disk space"
     crontab -l | { cat; echo "${low_storage_frequency} sudo bash ${cron_installer_script}"; } | crontab -
-    exit_on_error "Failed setting up low remaining dis space job." $ERROR_CRONTAB_FAILED
+    exit_on_error "Failed setting up low remaining disk space job." $ERROR_CRONTAB_FAILED
 
     # setup the cron job
     log "Completed job that tests for and partially mitigates low remaining disk space"
 }
-
-###############################################
-# START CORE EXECUTION
-###############################################
-
-# Update working directory
-pushd $current_script_path
-
-# Source utilities. Exit on failure.
-source_utilities || exit 1
-
-# Script self-idenfitication
-print_script_header
-
-# pass existing command line arguments
-parse_args "$@"
-
-# Restore working directory
-popd

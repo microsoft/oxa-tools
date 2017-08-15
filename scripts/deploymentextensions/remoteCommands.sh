@@ -31,6 +31,7 @@ help_both()
     echo "backend_server_list: Array of remote machines"
     echo "target_user:         User on remote machine"
 }
+
 help_scp()
 {
     help_both "scp"
@@ -38,6 +39,7 @@ help_scp()
     echo "destination_path:   Remote target folder path for copies (the destination directory)"
     echo
 }
+
 help_ssh()
 {
     help_both "ssh"
@@ -45,6 +47,7 @@ help_ssh()
     echo "remote_arguments:   Parameters for remote command"
     echo
 }
+
 help()
 {
     echo
@@ -110,6 +113,7 @@ valid_scp_settings()
 
     true
 }
+
 valid_ssh_settings()
 {
     [[ -n $backend_server_list ]] || return

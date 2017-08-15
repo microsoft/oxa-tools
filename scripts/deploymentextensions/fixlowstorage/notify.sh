@@ -3,6 +3,8 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
+# Detects low partition storage (then sends notification)
+
 set -x
 
 # Settings
@@ -18,7 +20,7 @@ check_usage_threshold()
     # for example:
     #   "4%/"
     #   "1%/datadisks/disk1"
-    diskUsages=`df --output=ipcent,target | grep -v -i "use%\|mounted on" | tr -d ' '`
+    diskUsages=`df -l | awk '{ print $5$6 }' | grep -v -i "use%\|mounted"`
 
     # Iterate over list of <usage>%<path> pairs.
     while read diskUsage ; do
@@ -45,18 +47,21 @@ check_usage_threshold()
         # Alert when threshold is exceeded.
         if (( $(echo "$percentUsed > $usage_threshold_percent" | bc -l) )) ; then
 
-            # Help clarify messaging by appending trailing slash to directory.
-            if [[ $directoryPath != '/' ]] ; then
+            if [[ $directoryPath == '/' ]] ; then
+                # Exclude OTHER partitions, mounts, and drives when reporting root
+                # For example: datadisks\|dev\|media\|mnt\|run\|sys
+                remove="`df -l | awk '{ print $6 }' | grep -v -i "mounted\|${directoryPath}$" | cut -d "/" -f2 | sort | uniq | sed ':a;N;$!ba;s/\n/\\\|/g'`"
+            else
+                # Append trailing slash for non-root directories. This is required for the "du" command below AND helps clarify messaging
                 directoryPath="${directoryPath}/"
+                remove=""
             fi
 
             # Message
-            
             log "Please cleanup this directory at your earliest convenience."
             log "The top subfolders or subfiles in $directoryPath are:"
             # Get list of subitems and filesize, sort them, grab top five, indent, newline.
-            printf "`du -sh $directoryPath* 2> /dev/null | sort -h -r | head -n 5 | sed -e 's/^/  /'`"
-            echo
+            echo "`du -sh $directoryPath* 2> /dev/null | grep -v "$remove" | sort -h -r | head -n 5 | sed -e 's/^/  /'`"
 
         fi
 
@@ -70,13 +75,21 @@ check_usage_threshold()
 # START CORE EXECUTION
 ###############################################
 
-log "Checking for low disk space"
-
 # Update working directory
 pushd $current_script_path
 
-# Parse commandline argument, source utilities. Exit on failure.
 source sharedOperations.sh || exit 1
+
+# Source utilities. Exit on failure.
+source_utilities || exit 1
+
+log "Checking for low disk space"
+
+# Script self-idenfitication
+print_script_header
+
+# Parse commandline arguments
+parse_args "$@"
 
 # Rotate log (if machine support it). Exit on failure.
 source rotateLog.sh || exit 1

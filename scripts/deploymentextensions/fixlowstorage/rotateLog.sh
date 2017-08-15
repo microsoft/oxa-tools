@@ -3,6 +3,8 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
+# Rotates big logs
+
 set -x
 
 # Settings
@@ -19,15 +21,17 @@ mysql_command()
 
     echo "`mysql -u $mysql_user -p$mysql_pass -se "$command"`"
 }
+
 invalid_mysql_settings()
 {
     [[ -z $file_size_threshold ]] && return
     [[ -z $mysql_user ]] && return
     [[ -z $mysql_pass ]] && return
-    [[ -z $large_partition && return
+    [[ -z $large_partition ]] && return
 
     false
 }
+
 rotate_mysql_slow_log()
 {
     if invalid_mysql_settings ; then
@@ -73,15 +77,23 @@ rotate_mysql_slow_log()
 # START CORE EXECUTION
 ###############################################
 
-log "Starting mysql slow logs rotation."
-
 # Update working directory
 pushd $current_script_path
 
-if [[ -z $mysql_pass]] ; then
-    # Parse commandline argument, source utilities. Exit on failure.
+if [[ -z $mysql_pass ]] ; then
     source sharedOperations.sh || exit 1
+
+    # Source utilities. Exit on failure.
+    source_utilities || exit 1
+
+    # Parse commandline arguments
+    parse_args "$@"
 fi
+
+log "Starting mysql slow logs rotation."
+
+# Script self-idenfitication
+print_script_header
 
 # Pre-conditionals
 exit_if_limited_user
