@@ -72,13 +72,21 @@ check_usage_threshold()
 # START CORE EXECUTION
 ###############################################
 
-log "Checking for low disk space"
-
 # Update working directory
 pushd $current_script_path
 
-# Parse commandline argument, source utilities. Exit on failure.
 source sharedOperations.sh || exit 1
+
+# Source utilities. Exit on failure.
+source_utilities || exit 1
+
+log "Checking for low disk space"
+
+# Script self-idenfitication
+print_script_header
+
+# Parse commandline arguments
+parse_args "$@"
 
 # Rotate log (if machine support it). Exit on failure.
 source rotateLog.sh || exit 1

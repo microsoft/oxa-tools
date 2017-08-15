@@ -125,9 +125,6 @@ parse_args()
     done
 }
 
-###############################################
-# INVOKED EXTERNALLY
-###############################################
 persist_settings_for_cron()
 {
 # persist the settings
@@ -143,6 +140,7 @@ EOF"
     # this file contains important information (like db info). Secure it
     chmod 600 $settings_file
 }
+
 create_or_update_cron_job()
 {
     # create the cron job
@@ -166,22 +164,3 @@ create_or_update_cron_job()
     # setup the cron job
     log "Completed job that tests for and partially mitigates low remaining disk space"
 }
-
-###############################################
-# START CORE EXECUTION
-###############################################
-
-# Update working directory
-pushd $current_script_path
-
-# Source utilities. Exit on failure.
-source_utilities || exit 1
-
-# Script self-idenfitication
-print_script_header
-
-# pass existing command line arguments
-parse_args "$@"
-
-# Restore working directory
-popd
