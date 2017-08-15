@@ -20,7 +20,7 @@ check_usage_threshold()
     # for example:
     #   "4%/"
     #   "1%/datadisks/disk1"
-    diskUsages=`df --output=ipcent,target | grep -v -i "use%\|mounted on" | tr -d ' '`
+    diskUsages=`df -l | awk '{ print $5$6 }' | grep -v -i "use%\|mounted"`
 
     # Iterate over list of <usage>%<path> pairs.
     while read diskUsage ; do
