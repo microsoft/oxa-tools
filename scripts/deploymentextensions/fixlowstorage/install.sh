@@ -3,6 +3,8 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
+# Installs recurring cron job that rotates big logs AND detects low partition storage (then sends notification).
+
 set -x
 
 # Update working directory

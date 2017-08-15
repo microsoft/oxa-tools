@@ -3,6 +3,8 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
+# Rotates big logs
+
 set -x
 
 # Settings
@@ -24,7 +26,7 @@ invalid_mysql_settings()
     [[ -z $file_size_threshold ]] && return
     [[ -z $mysql_user ]] && return
     [[ -z $mysql_pass ]] && return
-    [[ -z $large_partition && return
+    [[ -z $large_partition ]] && return
 
     false
 }
@@ -78,7 +80,7 @@ log "Starting mysql slow logs rotation."
 # Update working directory
 pushd $current_script_path
 
-if [[ -z $mysql_pass]] ; then
+if [[ -z $mysql_pass ]] ; then
     # Parse commandline argument, source utilities. Exit on failure.
     source sharedOperations.sh || exit 1
 fi

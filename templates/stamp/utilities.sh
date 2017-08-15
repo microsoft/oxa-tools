@@ -856,10 +856,8 @@ EOF
     log "Deployment configuration overrides file has been created at '${OVERRIDES_FILE_PATH}'"
 }
 
-
 #############################################################################
 # Setup Database Backup Parameters
-#todo: use deployment extensions instead (similar to fixlowstorage)
 #############################################################################
 
 setup_backup()
@@ -927,6 +925,7 @@ EOF"
 
     # setup the cron job
     log "Completed setting up database backup for '${databaseType}' database(s)"
+    # exit 0;
 }
 
 #############################################################################

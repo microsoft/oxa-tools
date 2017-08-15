@@ -3,6 +3,8 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
+# Helpers used when rotating big logs AND detecting low partition storage (then sends notification).
+
 set -x
 
 # Cron Job Setup/Execution
