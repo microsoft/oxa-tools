@@ -271,6 +271,8 @@ then
 
         for server in "${backend_server_list[@]}"
         do
+            log "Installing xinetd on ${server}"
+
             # copy the bits
             copy_bits "${server}" "${target_user}" "${current_path}" "${ERROR_HAPROXY_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
@@ -286,7 +288,7 @@ then
     fi
 
     # Install HAProxy
-    log "Initiating remote installation of haproxy"
+    log "Initiating remote installation of haproxy on ${haproxy_server}"
 
     # copy the installer & the utilities files to the target server & ssh/execute the Operations
     copy_bits "${haproxy_server}" "${target_user}" "${current_path}" "${ERROR_HAPROXY_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
