@@ -14,8 +14,8 @@ readonly MSFT="microsoft"
 # - parameter arguments OR
 # - assignment here
 ##########################
-TEMPLATE_TYPE=fullstack # or devstack
-BRANCH_VERSIONS=edge    # or stable or edx
+TEMPLATE_TYPE=fullstack # fullstack or devstack
+BRANCH_VERSIONS=edge    # edge or release or stable or edx
 DEFAULT_PASSWORD=
 
 ##########################
@@ -111,9 +111,11 @@ fix_args()
     fi
 
     # Allow for synonyms
-    if [[ $BRANCH_VERSIONS == production ]] || [[ $BRANCH_VERSIONS == prod ]] || [[ $BRANCH_VERSIONS == master ]] || [[ $BRANCH_VERSIONS == release ]] ; then
+    if [[ $BRANCH_VERSIONS == production ]] || [[ $BRANCH_VERSIONS == prod ]] || [[ $BRANCH_VERSIONS == master ]]; then
         BRANCH_VERSIONS=stable
-    elif [[ $BRANCH_VERSIONS == development ]] || [[ $BRANCH_VERSIONS == dev ]] || [[ $BRANCH_VERSIONS == beta ]] || [[ $BRANCH_VERSIONS == pre ]] || [[ $BRANCH_VERSIONS == int ]] ; then
+    elif [[ $BRANCH_VERSIONS == pre ]] || [[ $BRANCH_VERSIONS == bvt ]] || [[ $BRANCH_VERSIONS == int ]] ; then
+        BRANCH_VERSIONS=release
+    elif [[ $BRANCH_VERSIONS == development ]] || [[ $BRANCH_VERSIONS == dev ]] || [[ $BRANCH_VERSIONS == beta ]] ; then
         BRANCH_VERSIONS=edge
     elif [[ $BRANCH_VERSIONS == upstream ]] || [[ $BRANCH_VERSIONS == up ]] || [[ $BRANCH_VERSIONS == ed ]] ; then
         BRANCH_VERSIONS=edx
@@ -132,11 +134,11 @@ test_args()
         exit 1
     fi
 
-    if [[ $BRANCH_VERSIONS != stable ]] && [[ $BRANCH_VERSIONS != edge ]] && [[ $BRANCH_VERSIONS != edx ]] ; then
+    if [[ $BRANCH_VERSIONS != stable ]] && [[ $BRANCH_VERSIONS != release ]] && [[ $BRANCH_VERSIONS != edge ]] && [[ $BRANCH_VERSIONS != edx ]] ; then
         set +x
         echo -e "\033[1;36m"
         echo -e "\n BRANCH_VERSIONS is set to $BRANCH_VERSIONS"
-        echo -e " but should be stable OR edge OR edx .\n"
+        echo -e " but should be stable OR release OR edge OR edx .\n"
         echo -e " Use the -b param argument.\n"
         echo -e '\033[0m'
         exit 1
@@ -150,6 +152,8 @@ get_branch()
 {
     if [[ $BRANCH_VERSIONS == stable ]] ; then
         echo "oxa/master.fic"
+    elif [[ $BRANCH_VERSIONS == release ]] ; then
+        echo "oxa/release.fic"
     elif [[ $BRANCH_VERSIONS == edge ]] || [[ -n $1 ]] ; then
         if [[ -n $2 ]] ; then
             # Legacy switch
