@@ -258,7 +258,7 @@ if [[ $remote_mode == 0 ]];
 then
     # at this point, we are on the jumpbox attempting to execute the installer on the remote target 
 
-    # Install Xinetd
+    # 1. Install Xinetd
     # As a supporting requirement, install & configure xinetd on all mysql servers specified (the members of the replication topology)
     # this is triggered from the JB but executed remotely on each mysql server specified
     if [[ "${component,,}" != "xinetd" ]]; 
@@ -284,10 +284,9 @@ then
         component=""
 
         log "Completed xinetd installation"
-        exit
     fi
 
-    # Install HAProxy
+    # 2. Install HAProxy
     log "Initiating remote installation of haproxy on ${haproxy_server}"
 
     # copy the installer & the utilities files to the target server & ssh/execute the Operations
@@ -296,8 +295,8 @@ then
     # execute the component deployment
     execute_remote_command "${haproxy_server}" "${target_user}"
 
-    log "Completed Remote execution successfully"
-    exit
+    log "Completed Remote installation of xinetd  & haproxy successfully"
+	exit
 fi
 
 # check for component installation mode
