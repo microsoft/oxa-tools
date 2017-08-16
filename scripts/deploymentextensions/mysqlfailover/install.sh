@@ -28,7 +28,7 @@ encoded_server_list=""
 current_master_server_ip=""
 new_master_server_ip=""
 
-mysql_proxy_port="12010"
+haproxy_server_port="12010"
 mysql_server_port="3306"
 mysql_admin_username=""
 mysql_admin_password=""
@@ -86,8 +86,8 @@ parse_args()
           --cluster-admin-email)
             cluster_admin_email="${arg_value}"
             ;;            
-          --mysql-proxy-port)
-            mysql_proxy_port="${arg_value}"
+          --haproxy-server-port)
+            haproxy_server_port="${arg_value}"
             ;;            
           --mysql-server-port)
             mysql_server_port="${arg_value}"
@@ -155,7 +155,7 @@ validate_args()
     fi
 
     # Mysql user account
-    if [[ -z $mysql_admin_username ]] || [[ -z $mysql_admin_password ]] || [[ -z $mysql_server_port ]] || [[ -z $mysql_proxy_port ]];
+    if [[ -z $mysql_admin_username ]] || [[ -z $mysql_admin_password ]] || [[ -z $mysql_server_port ]] || [[ -z $haproxy_server_port ]];
     then
         log "You must specify the admin credentials for mysql server, the server and proxy port"
         exit $ERROR_MYSQL_FAILOVER_FAILED
@@ -405,7 +405,7 @@ log "Starting Mysql Failover in '${operation}' mode"
 
 # run the move operation
 log "Quering cluster status"
-results=`query_cluster_status "${encoded_server_list}" "${mysql_proxy_port}" "${operation}"`
+results=`query_cluster_status "${encoded_server_list}" "${haproxy_server_port}" "${operation}"`
 exit_on_error "Unable to determine the mysql cluster status!" "${ERROR_MYSQL_FAILOVER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
 if [[ "${operation}" == "query" ]] ;
@@ -428,7 +428,6 @@ else
 
     log "Executing actual master failover"
     failover_mysql_master "${master_connection_str}" "${new_master_connection_str}" "${slave1_connection_str},${slave2_connection_str}"
-
 fi
 
 
