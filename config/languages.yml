@@ -128,7 +128,7 @@ EDXAPP_ALL_LANGUAGES_OVERRIDE:
   ng: null
   nmg: "Kwasio"
   nnh: "Ngiemboon"
-  no: null
+  'no': null
   nqo: "N’Ko"
   nr: "South Ndebele"
   nso: "Sesotho sa Leboa"
