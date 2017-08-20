@@ -437,7 +437,7 @@ start_haproxy
 exit_on_error "Unable to start HA Proxy on '${HOSTNAME}' !" "${ERROR_HAPROXY_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
 # 3.4 Final validation
-database_list=`mysql -u ${mysql_admin_username} -p${mysql_admin_password} -h ${mysql_master_server_ip} -P ${haproxy_port} -e "SHOW DATABASES;"`
+database_list=`mysql -u ${mysql_admin_username} -p${mysql_admin_password} -h ${haproxy_server} -P ${haproxy_port} -e "SHOW DATABASES;"`
 exit_on_error "Unable to access the target server using ${mysql_admin_username}@${mysql_master_server_ip} from '${HOSTNAME}' !" "${ERROR_HAPROXY_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
 if [[ -z "${database_list// }" ]];
