@@ -10,10 +10,11 @@ Common parameter argument options: pick a cell from each column. The first row i
 
 `--role` or `-r` | `--branches` or `-b` | credential parameter arguments
 --- | --- | ---
-`fullstack` (default) | `edge` (default) <br/> (will use branches like oxa/dev.fic) | randomly generated (default)
-`devstack` | `stable`  <br/> (will use branches like oxa/master.fic) | `--default` or `-d` <br/> `anyString` (set all passwords to anyString)
- (n/a) | `edx`  <br/> (will use upstream edx repositories <br/> and open-release/ficus.master branch) | edit onebox.sh to specify custom <br/> usernames and passwords directly
- (n/a) | edit onebox.sh to specify custom <br/> remote urls and branches directly | n/a
+`fullstack` (default) | `edge` (default) <br/> (will use branches like oxa/dev.fic ) | randomly generated (default)
+`devstack` | `release`  <br/> (will use branches like oxa/release.fic ) | `--default-password` or `-d` <br/> `anyString` (set all passwords to anyString)
+n/a | `stable`  <br/> (will use branches like oxa/master.fic) | n/a
+ n/a | `edx`  <br/> (will use upstream edx repositories <br/> and open-release/ficus.1 tag) | n/a
+ n/a | edit onebox.sh to specify custom <br/> remote urls and branches directly | edit onebox.sh to specify custom <br/> usernames and passwords directly
 
 For example:
 `sudo onebox.sh` OR
