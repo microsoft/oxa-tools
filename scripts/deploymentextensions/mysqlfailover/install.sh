@@ -193,19 +193,31 @@ get_replication_report()
     mysqlrpladmin --master="${master_connection}" --slaves=""${slave1_connection},"${slave2_connection}" health --format=grid --log="${temp_log_file_1}" > $temp_log_file_2
     exit_on_error "Unable to check the status of the mysql replication network with '${master}' as master!" "${ERROR_MYSQL_FAILOVER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}" "${main_logfile}" "${temp_log_file}"
 
+    # augment the query report with detailed master/slave status
+    master_status=`mysql -u ${mysql_admin_username} -p${mysql_admin_password} -h ${master} -e "show master status \G"`
+    cluster_server_status_title="Detailed Master Replication Status - ${master}"
+    cluster_server_status="${cluster_server_status_title}\n${master_status}\n\n"
+
+    IFS=',' read -ra slave_list <<< "$slaves"
+    for slave in "${slave_list[@]}"; do
+        slave_status=`mysql -u ${mysql_admin_username} -p${mysql_admin_password} -h ${slave} -e "show slave status \G"`
+        cluster_server_status_title="Detailed Slave Replication Status - ${slave}"
+        cluster_server_status="${cluster_server_status}\n${cluster_server_status_title}\n${slave_status}\n\n"
+    done
+
     # build the report now
     main_title="Replication Server Status"
     server_status=" Master: ${master} \n Slaves: ${slaves}"
-        
+
     # format the outputs
     replication_status_title="Replication Status (using '${master}' as master)"
     replication_status=`tail -n +4 $temp_log_file_2`
 
     replication_log_title="Log"
     replication_log=`cat "${temp_log_file_1}"`
-        
+
     # build the full response (to be emailed)
-    response="\n${main_title}\n${server_status}\n\n${replication_status_title}\n\n${replication_status}\n\n${replication_log_title}\n${replication_log}"
+    response="\n${main_title}\n${server_status}\n\n${replication_status_title}\n\n${replication_status}\n\n${cluster_server_status}${replication_log_title}\n${replication_log}"
 
     # clean up
     rm "${temp_log_file_1}"
