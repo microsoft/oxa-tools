@@ -1102,7 +1102,7 @@ start_haproxy()
             fi
         else
             # the server was successfully started and is returning results
-            $server_started=1
+            server_started=1
         fi
     done
 
