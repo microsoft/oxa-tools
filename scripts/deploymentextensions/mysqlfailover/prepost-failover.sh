@@ -30,6 +30,11 @@ operation_phase="prefailover"
 # debug mode: 0=set +x, 1=set -x
 debug_mode=0
 
+
+# Oxa Tools
+# Settings for the OXA-Tools public repository 
+oxa_tools_repository_path="/oxa/oxa-tools"
+
 # Email Notifications
 notification_email_subject="Mysql Failover - Marking servers Read-Only"
 main_logfile="/var/log/bootstrap.csx.log"
@@ -151,8 +156,7 @@ update_mysql_server_readonly_status()
 
 # Source our utilities for logging and other base functions (we need this staged with the installer script)
 # the file needs to be first downloaded from the public repository
-current_path="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-utilities_path=$current_path/utilities.sh
+utilities_path="${oxa_tools_repository_path}/templates/stamp/utilities.sh"
 
 # check if the utilities file exists. If not, bail out.
 if [[ ! -e $utilities_path ]]; 
