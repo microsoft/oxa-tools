@@ -355,6 +355,9 @@ generate_failover_exec_script()
     sed -i "s/^debug_mode.*/debug_mode=${debug_mode}/I" $temp_script_file
     sed -i "s/^operation_phase.*/operation_phase=\"${operation_phase}\"/I" $temp_script_file
 
+    # set the permissions on the file
+    chmod +x "${temp_script_file}"
+
     # return file path
     echo $temp_script_file
 }
