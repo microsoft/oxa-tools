@@ -30,7 +30,6 @@ operation_phase="prefailover"
 # debug mode: 0=set +x, 1=set -x
 debug_mode=0
 
-
 # Oxa Tools
 # Settings for the OXA-Tools public repository 
 oxa_tools_repository_path="/oxa/oxa-tools"
