@@ -55,6 +55,7 @@ haproxy_username="haproxy_check"
 haproxy_initscript="/etc/default/haproxy"
 haproxy_configuration_file="/etc/haproxy/haproxy.cfg"
 haproxy_configuration_template_file="${oxa_tools_repository_path}/scripts/deploymentextensions/${package_name}/haproxy.template.cfg"
+haproxy_probe_interval_sec="1800"
 
 # probe Settings
 network_services_file="/etc/services"
@@ -117,6 +118,9 @@ parse_args()
             ;;
           --haproxy-server-probe-port)
             haproxy_server_probe_port="${arg_value}"
+            ;;
+          --haproxy-probe-interval-sec)
+            haproxy_probe_interval_sec="${arg_value}"
             ;;
           --mysql-server-port)
             mysql_server_port="${arg_value}"
@@ -431,6 +435,7 @@ sed -i "s/{MysqlServerPort}/${mysql_server_port}/I" "${haproxy_configuration_fil
 sed -i "s/{MysqlMasterServerIP}/${mysql_master_server_ip}/I" "${haproxy_configuration_file}"
 sed -i "s/{MysqlSlave1ServerIP}/${mysql_slave1_server_ip}/I" "${haproxy_configuration_file}"
 sed -i "s/{MysqlSlave2ServerIP}/${mysql_slave2_server_ip}/I" "${haproxy_configuration_file}"
+sed -i "s/{ProbeInterval}/${haproxy_probe_interval_sec}/I" "${haproxy_configuration_file}"
 
 # 3.3 Start HA Proxy
 start_haproxy

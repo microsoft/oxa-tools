@@ -141,7 +141,7 @@ validate_args()
     # we have 2 modes and each requires a different set of parameters
     # core variables
 
-    if [[ -z $encoded_server_list ]] && [[ $encoded_server_list == 0 ]];
+    if [[ -z $encoded_server_list ]];
     then
         log "You must specify a list of server in the mysql replication network"
         exit $ERROR_MYSQL_FAILOVER_FAILED
@@ -334,25 +334,54 @@ get_failover_connection_str()
     echo "${connection_str}"
 }
 
+generate_failover_exec_script()
+{
+    # establish key variables
+    local operation_phase="${1}"
+    local src_file="${2}"
+
+    local temp_script_file=`mktemp "${operation_phase}.XXXXXXXXXX.sh"`
+    local src_file="${oxa_tools_repository_path}\scripts\deploymentextensions\mysqlfailover\prepost-failover.sh"
+
+    # copy the base file to temp_log_file
+    cp "${src_file}" "${temp_script_file}"
+
+    # make sed replacements
+    sed -i "s/^encoded_server_list=.*/encoded_server_list=\"${encoded_server_list}\"/I" $temp_script_file
+    sed -i "s/^mysql_admin_username=.*/mysql_admin_username=\"${mysql_admin_username}\"/I" $temp_script_file
+    sed -i "s/^mysql_admin_password.*/mysql_admin_password=\"${mysql_admin_password}\"/I" $temp_script_file
+    sed -i "s/^master_server_ip=.*/master_server_ip=\"${new_master_server_ip}\"/I" $temp_script_file
+    sed -i "s/^cluster_admin_email.*/cluster_admin_email=\"${cluster_admin_email}\"/I" $temp_script_file
+    sed -i "s/^debug_mode.*/debug_mode=${debug_mode}/I" $temp_script_file
+    sed -i "s/^operation_phase.*/operation_phase=\"${operation_phase}\"/I" $temp_script_file
+
+    # return file path
+    echo $temp_script_file
+}
+
 failover_mysql_master()
 {
+    log "Failover mysql server master from '${current_master_server_ip}' to '${new_master_server_ip}'"
+
     local current_master_connection="${1}"
     local new_master_connection="${2}"
     local slaves_connection="${3}"
 
-    log "Failover mysql server master from '${current_master_server_ip}' to '${new_master_server_ip}'"
+    local temp_log_filename_template="/tmp/mysql_failover_status"
+    local temp_log_file_1=`mktemp "${temp_log_filename_template}.XXXXXXXXXX.log"`
+    local temp_log_file_2="${temp_log_filename_template}.log"
 
-    temp_log_filename_template="/tmp/mysql_failover_status"
-    temp_log_file_1=`mktemp "${temp_log_filename_template}.XXXXXXXXXX.log"`
-    temp_log_file_2="${temp_log_filename_template}.log"
+    # setup the pre and post failover scripts
+    local pre_failover_script=`generate_failover_exec_script "prefailover"`
+    local post_failover_script=`generate_failover_exec_script "postfailover"`
 
     if [[ $force_failover == 0 ]] ;
     then
         log "Failover is in standard mode"
-        mysqlrpladmin --master="${current_master_connection}" --new-master="${new_master_connection}" --demote-master --slaves="${slaves_connection}" switchover --log="${temp_log_file_1}" > $temp_log_file_2
+        mysqlrpladmin --master="${current_master_connection}" --new-master="${new_master_connection}" --demote-master --slaves="${slaves_connection}" switchover --log="${temp_log_file_1}" --exec-before="${pre_failover_script}" --exec-after="${post_failover_script}" > $temp_log_file_2
     else
         log "Failover is in --force mode"
-        mysqlrpladmin --master="${current_master_connection}" --new-master="${new_master_connection}" --demote-master --slaves="${slaves_connection}" switchover --log="${temp_log_file_1}" --force > $temp_log_file_2
+        mysqlrpladmin --master="${current_master_connection}" --new-master="${new_master_connection}" --demote-master --slaves="${slaves_connection}" switchover --log="${temp_log_file_1}" --exec-before="${pre_failover_script}" --exec-after="${post_failover_script}" --force > $temp_log_file_2
     fi
 
     exit_on_error "Unable to failover from '${current_master_server_ip}' to '${new_master_server_ip}'!" "${ERROR_MYSQL_FAILOVER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}" "${main_logfile}" "${temp_log_file_2}"
@@ -366,7 +395,9 @@ failover_mysql_master()
     send_notification "${report_content}" "${notification_email_subject}" "${cluster_admin_email}"
 
     # clean up (general, in case of a prior failure)
-    rm ${temp_log_filename_template}.*    
+    rm ${temp_log_filename_template}.*
+    rm ${pre_failover_script}
+    rm ${post_failover_script}
 }
 
 
