@@ -23,7 +23,8 @@ ERROR_AZURECLI_INVALID_OSVERSION=6204
 ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED=7001
 EROR_REPLICATION_MASTER_MISSING=7201
 ERROR_HAPROXY_INSTALLER_FAILED=7202
-ERROR_MYSQL_MOVE_DATADIRECTORY_INSTALLER_FAILED=7203
+ERROR_HAPROXY_STARTUP_FAILED=7203
+ERROR_MYSQL_MOVE_DATADIRECTORY_INSTALLER_FAILED=7210
 ERROR_XINETD_INSTALLER_FAILED=7301
 ERROR_TOOLS_INSTALLER_FAILED=7401
 ERROR_SSHKEYROTATION_INSTALLER_FAILED=7501
@@ -1071,10 +1072,39 @@ start_haproxy()
 {
     log "Starting HA Proxy Server"
 
-    service haproxy start
+    # add some resilience
+    local mysql_admin_username="${1}"
+    local mysql_admin_password="${2}"
+    local haproxy_server="${3}"
+    local haproxy_port="${4}"
 
-    # Important - wait for the service to startup and interact with mysql
-    sleep 15s
+    local server_started=0
+    local wait_time_seconds=10
+    local max_wait_seconds=$(($wait_time_seconds * 10))
+    local total_wait_seconds=0
+
+    while [[ $server_started == 0 ]] ;
+    do
+        service haproxy start
+
+        # run a basic query against the Proxy
+        db_response=`mysql -u ${mysql_admin_username} -p${mysql_admin_password} -h ${haproxy_server} -P ${haproxy_port} -e "SHOW DATABASES;"`
+
+        if [[ -z "${db_response// }" ]];
+        then
+            sleep $wait_time_seconds;
+            ((total_wait_seconds+=$wait_time_seconds))
+
+            if [[ "$total_wait_seconds" -gt "$max_wait_seconds" ]] ;
+            then
+                log "Exceeded the expected wait time for starting up the haproxy server: $total_wait_seconds seconds"
+                exit $ERROR_HAPROXY_STARTUP_FAILED
+            fi
+        else
+            # the server was successfully started and is returning results
+            $server_started=1
+        fi
+    done
 
     log "HA Proxy has been started"
 }

@@ -72,6 +72,8 @@ probe_script_source="${oxa_tools_repository_path}/scripts/deploymentextensions/$
 probe_script_installation_directory="/opt"
 probe_script="${probe_script_installation_directory}/${xinet_service_name}"
 
+main_logfile="/var/log/bootstrap.csx.log"
+
 #############################################################################
 # parse the command line arguments
 
@@ -204,7 +206,7 @@ execute_remote_command()
     # build the command for remote execution (basically: pass through all existing parameters)
     repository_parameters="--oxatools-public-github-accountname ${oxa_tools_public_github_account} --oxatools-public-github-projectname ${oxa_tools_public_github_projectname} --oxatools-public-github-projectbranch ${oxa_tools_public_github_projectbranch} --oxatools-public-github-branchtag ${oxa_tools_public_github_branchtag} --oxatools-repository-path ${oxa_tools_repository_path}"
     mysql_parameters="--mysql-server-port ${mysql_server_port} --mysql-admin-username ${mysql_admin_username} --mysql-admin-password ${mysql_admin_password} --haproxy-server-port ${haproxy_port} --backend-server-list ${encoded_server_list}"
-    misc_parameters="--cluster-admin-email ${cluster_admin_email} --haproxy-server ${haproxy_server} --haproxy-server-probe-port ${haproxy_server_probe_port} --target-user ${target_user} --component ${component} --remote"
+    misc_parameters="--cluster-admin-email ${cluster_admin_email} --haproxy-server ${haproxy_server} --haproxy-probe-interval-sec ${haproxy_probe_interval_sec} --haproxy-server-probe-port ${haproxy_server_probe_port} --target-user ${target_user} --component ${component} --remote"
 
     if [[ $debug_mode == 1 ]];
     then
@@ -437,18 +439,8 @@ sed -i "s/{MysqlSlave1ServerIP}/${mysql_slave1_server_ip}/I" "${haproxy_configur
 sed -i "s/{MysqlSlave2ServerIP}/${mysql_slave2_server_ip}/I" "${haproxy_configuration_file}"
 sed -i "s/{ProbeInterval}/${haproxy_probe_interval_sec}/I" "${haproxy_configuration_file}"
 
-# 3.3 Start HA Proxy
-start_haproxy
-exit_on_error "Unable to start HA Proxy on '${HOSTNAME}' !" "${ERROR_HAPROXY_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
-
-# 3.4 Final validation
-database_list=`mysql -u ${mysql_admin_username} -p${mysql_admin_password} -h ${haproxy_server} -P ${haproxy_port} -e "SHOW DATABASES;"`
-exit_on_error "Unable to access the target server using ${mysql_admin_username}@${mysql_master_server_ip} from '${HOSTNAME}' !" "${ERROR_HAPROXY_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
-
-if [[ -z "${database_list// }" ]];
-then    
-    log "The database list returned is empty: '${database_list}'"
-    exit $ERROR_HAPROXY_INSTALLER_FAILED
-fi
+# 3.3 Start HA Proxy & validate
+start_haproxy "${mysql_admin_username}" "${mysql_admin_password}" "${haproxy_server}" "${haproxy_port}"
+exit_on_error "Unable to start HA Proxy on '${HOSTNAME}' !" "${ERROR_HAPROXY_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}" "${main_logfile}"
 
 log "Completed HA Proxy installation for ${HOSTNAME}"
