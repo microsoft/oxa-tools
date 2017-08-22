@@ -249,14 +249,22 @@ verify_state()
 {
     required_value TEMPLATE_TYPE $TEMPLATE_TYPE
 
-    if ! is_valid_arg "jb vmss mongo mysql edxapp fullstack devstack" $EDX_ROLE; then
+    if ! is_valid_arg "jb vmss mongo mysql edxapp fullstack devstack" $EDX_ROLE ; then
       echo "Invalid role specified\n"
       display_usage
     fi
 
-    if ! is_valid_arg "dev bvt prod" $DEPLOYMENT_ENV; then
+    if ! is_valid_arg "dev bvt prod" $DEPLOYMENT_ENV ; then
       echo "Invalid environment specified\n"
       display_usage
+    fi
+}
+
+fix_jdk()
+{
+    count=`grep -i "8u65" playbooks/roles/oraclejdk/defaults/main.yml | wc -l`
+    if [[ "$count" -gt "0" ]] ; then
+        git cherry-pick -x 0ca865c9b0da42bed83459389ae35e2551860472
     fi
 }
 
@@ -338,6 +346,7 @@ setup()
 
     # run edx bootstrap and install requirements
     cd $CONFIGURATION_PATH
+    fix_jdk
     ANSIBLE_BOOTSTRAP_SCRIPT=util/install/ansible-bootstrap.sh
     bash $ANSIBLE_BOOTSTRAP_SCRIPT
     exit_on_error "Failed executing $ANSIBLE_BOOTSTRAP_SCRIPT"
