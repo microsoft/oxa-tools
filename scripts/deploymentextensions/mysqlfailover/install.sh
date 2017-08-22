@@ -341,7 +341,7 @@ generate_failover_exec_script()
     local src_file="${2}"
 
     local temp_script_file=`mktemp "${operation_phase}.XXXXXXXXXX.sh"`
-    local src_file="${oxa_tools_repository_path}\scripts\deploymentextensions\mysqlfailover\prepost-failover.sh"
+    local src_file="${oxa_tools_repository_path}/scripts/deploymentextensions/mysqlfailover/prepost-failover.sh"
 
     # copy the base file to temp_log_file
     cp "${src_file}" "${temp_script_file}"
