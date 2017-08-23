@@ -24,7 +24,9 @@ DEFAULT_PASSWORD=
 MONGO_USER=oxamongoadmin
 MONGO_PASSWORD=
 
-MYSQL_ADMIN_USER=root
+# Ansible creates "root" user when installing mysql so don't
+# change this username, but we will harden the password.
+readonly MYSQL_ADMIN_USER=root
 MYSQL_ADMIN_PASSWORD=
 
 MYSQL_USER=oxamysql
@@ -95,7 +97,15 @@ fix_args()
     # Harden credentials if none were provided.
     set +x
     MONGO_PASSWORD=`harden $MONGO_PASSWORD`
-    MYSQL_ADMIN_PASSWORD=`harden $MYSQL_ADMIN_PASSWORD`
+
+    # The upstream doesn't have the relevant
+    # changes to leverage MYSQL_ADMIN_PASSWORD
+    # For details, see edx-configuration commit:
+    # 65e2668672bda0112a64aabb86cf532ad228c4fa
+    if [[ $BRANCH_VERSIONS == $MSFT ]] ; then
+        MYSQL_ADMIN_PASSWORD=`harden $MYSQL_ADMIN_PASSWORD`
+    fi
+
     MYSQL_PASSWORD=`harden $MYSQL_PASSWORD`
     EDXAPP_SU_PASSWORD=`harden $EDXAPP_SU_PASSWORD`
     VAGRANT_USER_PASSWORD=$EDXAPP_SU_PASSWORD
@@ -254,7 +264,7 @@ if [[ ! -f scripts/bootstrap.sh ]] ; then
     wget -q https://raw.githubusercontent.com/${MSFT}/oxa-tools/$(get_current_branch)/$bootstrap -O $fileName
     bootstrap=$fileName
 fi
-#todo: switch configuration branch to get_branch after odf_ficOneAndFixSqlPass is merged
+#todo: switch configuration branch to get_branch after odf_ficOneAndFixSqlPass AND odfFicOne_fixSqlPass are merged
 bash $bootstrap \
     --role \
         $TEMPLATE_TYPE \
@@ -269,7 +279,7 @@ bash $bootstrap \
     --edxconfiguration-public-github-projectname \
         `get_conf_project_name` \
     --edxconfiguration-public-github-projectbranch \
-        odf_ficOneAndFixSqlPass \
+        odfFicOne_fixSqlPass \
     --edxplatform-public-github-accountname \
         `get_org` \
     --edxplatform-public-github-projectbranch \
