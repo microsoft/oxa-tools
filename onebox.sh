@@ -44,9 +44,8 @@ readonly NGINX_ENABLE_SSL=false
 readonly EDXAPP_SU_EMAIL="${EDXAPP_SU_USERNAME}@${MSFT}.com"
 readonly PLATFORM_EMAIL="$EDXAPP_SU_EMAIL"
 
-# The nearest tag in the upstream to our fork is open-release/ficus.1
-# Specifically: our edx-platform fork was made at that tag, but our
-# fork from configuration is 13 commits before open-release/ficus.1
+# The common tag in the upstream to our fork is open-release/ficus.1
+# Specifically: our forks of edx-platform and configuration
 readonly EDX_BRANCH="tags/open-release/ficus.1"
 
 ##########################
@@ -96,8 +95,7 @@ fix_args()
     # Harden credentials if none were provided.
     set +x
     MONGO_PASSWORD=`harden $MONGO_PASSWORD`
-    #todo:100757 re-enable this assignment
-    #MYSQL_ADMIN_PASSWORD=`harden $MYSQL_ADMIN_PASSWORD`
+    MYSQL_ADMIN_PASSWORD=`harden $MYSQL_ADMIN_PASSWORD`
     MYSQL_PASSWORD=`harden $MYSQL_PASSWORD`
     EDXAPP_SU_PASSWORD=`harden $EDXAPP_SU_PASSWORD`
     VAGRANT_USER_PASSWORD=$EDXAPP_SU_PASSWORD
@@ -256,7 +254,7 @@ if [[ ! -f scripts/bootstrap.sh ]] ; then
     wget -q https://raw.githubusercontent.com/${MSFT}/oxa-tools/$(get_current_branch)/$bootstrap -O $fileName
     bootstrap=$fileName
 fi
-
+#todo: switch configuration branch to get_branch after odf_ficOneAndFixSqlPass is merged
 bash $bootstrap \
     --role \
         $TEMPLATE_TYPE \
@@ -271,7 +269,7 @@ bash $bootstrap \
     --edxconfiguration-public-github-projectname \
         `get_conf_project_name` \
     --edxconfiguration-public-github-projectbranch \
-        `get_branch` \
+        odf_ficOneAndFixSqlPass \
     --edxplatform-public-github-accountname \
         `get_org` \
     --edxplatform-public-github-projectbranch \
