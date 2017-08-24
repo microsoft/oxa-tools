@@ -57,7 +57,7 @@
             "value": "{SERVICEACCOUNTPASSWORD}"
         },
         "deploymentSlot": {
-            "value": "slot1"
+            "value": "{DEPLOYMENTSLOT}"
         },
         "deploymentVersionId": {
             "value": "201703141409"
@@ -81,7 +81,7 @@
             "value": "oxa-tools"
         },
         "oxaToolsGithubBranch": {
-            "value": "oxa/master.fic"
+            "value": "{OXATOOLSGITHUBBRANCH}"
         },
         "edxConfigurationGithubAccountName": {
             "value": "Microsoft"
@@ -90,7 +90,7 @@
             "value": "edx-configuration"
         },
         "edxConfigurationGithubBranch": {
-            "value": "oxa/master.fic"
+            "value": "[(parameters('oxaToolsGithubBranch')]"
         },
         "edxPlatformGithubAccountName": {
             "value": "microsoft"
@@ -99,7 +99,7 @@
             "value": "edx-platform"
         },
         "edxPlatformGithubBranch": {
-            "value": "oxa/master.fic"
+            "value": "[(parameters('oxaToolsGithubBranch')]"
         },
         "edxThemeGithubAccountName": {
             "value": "microsoft"
@@ -108,7 +108,7 @@
             "value": "edx-theme"
         },
         "edxThemeGithubBranch": {
-            "value": "oxa/master.fic"
+            "value": "[(parameters('oxaToolsGithubBranch')]"
         },
         "ansibleGithubAccountName": {
             "value": "edx"
@@ -177,24 +177,24 @@
         },
         "lmsTrafficManagerStateMetadata": {
             "value": [
-                "Enabled",
-                "Disabled",
+                "[if(equals(parameters('deploymentSlot'), 'slot1'), 'Enabled','Disabled')]",
+                "[if(equals(parameters('deploymentSlot'), 'slot2'), 'Enabled','Disabled')]",
                 1,
                 2
             ]
         },
         "cmsTrafficManagerStateMetadata": {
             "value": [
-                "Enabled",
-                "Disabled",
+                "[if(equals(parameters('deploymentSlot'), 'slot1'), 'Enabled','Disabled')]",
+                "[if(equals(parameters('deploymentSlot'), 'slot2'), 'Enabled','Disabled')]",
                 1,
                 2
             ]
         },
         "previewTrafficManagerStateMetadata": {
             "value": [
-                "Enabled",
-                "Disabled",
+                "[if(equals(parameters('deploymentSlot'), 'slot1'), 'Enabled','Disabled')]",
+                "[if(equals(parameters('deploymentSlot'), 'slot2'), 'Enabled','Disabled')]",
                 1,
                 2
             ]

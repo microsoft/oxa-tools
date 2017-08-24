@@ -387,3 +387,329 @@ function Create-StorageContainer
     $storageContext = New-AzureStorageContext -StorageAccountName $StorageAccountName -StorageAccountKey $StorageAccountKey
     New-AzureStorageContainer -Name $StorageContainerName -Context $storageContext
 }
+#################################################################
+#
+# Wrappers for All Azure Cmdlet Calls
+#
+#################################################################
+
+# Command, Activity, Parameters
+function Execute-AzureCommand
+{
+    param( [Parameter(Mandatory=$true)][hashtable]$InputParameters )
+
+    # we will make one generic call for every wrapped Azure Cmdlet
+    # With that approach, we unify the call pattern, retries & error handling
+    # special error handling will still be the responsibility of the caller
+
+    # the object we will return
+    $response = $null;
+
+    # we support individual function using custom maximum retries
+    # right now, they are not all enabled (but wired to do so)
+    [int]$MaxRetries = 3;
+    if ($InputParameters.ContainsKey("MaxRetries"))
+    {
+        try
+        {
+            $MaxRetries = [int]$InputParameters['MaxRetries'];
+        }
+        catch{ }
+    }
+
+    # check the expected exceptions
+    if ($InputParameters.ContainsKey('ExpectedException') -eq $false)
+    {
+        $InputParameters['ExpectedException'] = "";
+    }
+
+    # track the retries
+    $retryAttempt = 1;
+    while ($retryAttempt -le $MaxRetries)
+    {
+        try
+        {
+            Log-Message "Attempt [$($retryAttempt)|$($MaxRetries)] - $($InputParameters['Activity']) started." -Context $Context;
+
+            # handle the commands appropriately
+            switch ($InputParameters['Command']) 
+            {
+
+                "Find-AzureRmResource"
+                {
+                    if ($InputParameters['params'] -ne $null)
+                    {
+                         $response= Find-AzureRmResource -ResourceGroupNameContains $InputParameters['params'].ResourceGroupNameEquals -ResourceType $InputParameters['params'].ResourceType -Verbose ;  
+                    }
+                    break;
+                }
+                "Get-AzureRmLoadBalancer"
+                {
+                    if ($InputParameters['Name'] -ne $null)
+                    {
+                        $response= Get-AzureRmLoadBalancer -Name $InputParameters['Name'] -ResourceGroupName $InputParameters['ResourceGroup'] -Verbose ;  
+                    }
+                    break;
+                }
+
+                "Get-AzureRmLoadBalancerRuleConfig"
+                {
+                    if ($InputParameters['Name'] -ne $null)
+                    {
+                        $response= Get-AzureRmLoadBalancerRuleConfig -LoadBalancer $InputParameters['Name'];
+                    }
+                    break;
+                }
+
+                 "Remove-AzureRmLoadBalancerRuleConfig"
+                {
+                    if ($InputParameters['Name'] -ne $null)
+                    {
+                        $response= Remove-AzureRmLoadBalancerRuleConfig -Name $InputParameters['Name'] -LoadBalancer $InputParameters['lbName'] -Verbose;
+                    }
+                    break;
+                }
+
+                 "Set-AzureRmLoadBalancer"
+                {
+                    if ($InputParameters['lbName'] -ne $null)
+                    {
+                        $response= Set-AzureRmLoadBalancer -LoadBalancer $InputParameters['lbName'] -Verbose;
+                    }
+                    break;
+                }
+
+                 "Get-AzureRmVmss"
+                {
+                    if ($InputParameters['ResourceGroup'] -ne $null)
+                    {
+                        $response= Get-AzureRmVmss -ResourceGroupName $InputParameters['ResourceGroup'] -Verbose;
+                    }
+                    break;
+                }
+
+                
+                 "Remove-AzureRmVmss"
+                {
+                    if ($InputParameters['VmssName'] -ne $null)
+                    {
+                        $response= Remove-AzureRmVmss -ResourceGroupName $InputParameters['ResourceGroup'] -VMScaleSetName $InputParameters['VmssName'] -Verbose -Force;
+                    }
+                    break;
+                }
+
+                 
+                 "Remove-AzureRmLoadBalancerBackendAddressPoolConfig"
+                {
+                    if ($InputParameters['Name'] -ne $null)
+                    {
+                        $response= Remove-AzureRmLoadBalancerBackendAddressPoolConfig -LoadBalancer $InputParameters['LbName'] -Name $InputParameters['Name'] -Verbose;
+                    }
+                    break;
+                }
+                
+                 
+                 "Remove-AzureRmLoadBalancerFrontendIpConfig"
+                {
+                    if ($InputParameters['Name'] -ne $null)
+                    {
+                        $response= Remove-AzureRmLoadBalancerFrontendIpConfig -Name $InputParameters['Name'] -LoadBalancer $InputParameters['LbName'] -Verbose;
+                    }
+                    break;
+                }
+
+                  
+                 "Remove-AzureRmLoadBalancer"
+                {
+                    if ($InputParameters['LbName'] -ne $null)
+                    {
+                        $response= Remove-AzureRmLoadBalancer -ResourceGroupName $InputParameters['ResourceGroup'] -Name $InputParameters['LbName'] -Verbose -Force;
+                    }
+                    break;
+                }
+
+                  "Get-AzureRmPublicIpAddress"
+                {
+                    if ($InputParameters['Name'] -ne $null)
+                    {
+                        $response= Get-AzureRmPublicIpAddress -Name $InputParameters['Name'] -ResourceGroupName $InputParameters['ResourceGroup'] -Verbose;
+                    }
+                    break;
+                }
+
+                  "Remove-AzureRmPublicIpAddress"
+                {
+                    if ($InputParameters['Name'] -ne $null)
+                    {
+                        $response= Remove-AzureRmPublicIpAddress -ResourceGroupName $InputParameters['ResourceGroup'] -Name $InputParameters['Name'] -Verbose -Force;
+                    }
+                    break;
+                }
+
+                default 
+                { 
+                    throw "$($InputParameters['Command']) is not a supported call."; 
+                    break; 
+                }
+            }
+            
+            
+            Log-Message "Attempt [$($retryAttempt)|$($MaxRetries)] - $($InputParameters['Activity']) completed." -Context $Context;
+
+            break;
+        }
+        catch
+        {
+            # check for expected exceptions
+            if (([string]$InputParameters['ExpectedException']).Trim() -ne "" -and ($_.Exception.Message -imatch $InputParameters['ExpectedException']))
+            {
+                # at this level, we don't do special handling for exceptions
+                # Therefore, rethrowing the exception so the caller can handle it appropriately
+
+                throw $_.Exception;
+            }
+
+            Capture-ErrorStack;
+
+            # check if we have exceeded our retry count
+            if ($retryAttempt -eq $MaxRetries)
+            {
+                # we have had 3 tries and failed when an error wasn't expected. throwing a fit.
+                $errorMessage = "Azure Call Failure [$($InputParameters['Command'])]: $($InputParameters['Activity']) failed. Error: $($_.Exception.Message)";
+                throw $errorMessage;
+            }
+        }
+
+        $retryAttempt++;
+
+        [int]$retryDelay = $env:RetryDelaySeconds;
+
+        Log-Message -Message "Waiting $($retryDelay) seconds between retries" -Context $Context -Foregroundcolor Yellow;
+        #Start-Sleep -Seconds $retryDelay;
+    }
+
+    return $response;
+    
+}
+#################################
+# Wrapped function
+#################################
+## Function: Get-ResourcesList
+##
+## Purpose: 
+##    To get the resource list using ResourceGroup 
+##
+## Input: 
+##   ResourceGroupName   Name of the Resource group  
+
+## Output:
+##   resourceList
+
+function Get-ResourcesList
+{
+    param(      
+            [Parameter(Mandatory=$true)][string]$ResourceGroupName        
+         )
+
+      [array]$resourceList =@();
+      $resourcesListContext = "Resources";
+
+     
+      @(
+
+         'Microsoft.Network/loadBalancers'
+         'Microsoft.Network/publicIPAddresses'           
+         'Microsoft.Network/trafficManagerProfiles' 
+       
+      ) | % {
+  
+                $params = @{'ResourceGroupNameEquals' = $ResourceGroupName }
+                            
+  
+                 if ($_ -ne '*') 
+                 {
+                     $params.Add('ResourceType', $_)
+                 }
+                 # get the azure resources based on provuded resourcetypes in the resourcegroup
+                 [array]$response = Get-AzureResources -params $params -Context $resourcesListContext;
+                 if($response -ne $null)
+                 {
+                     [array]$resourceList += $response;
+                 }
+                                
+            }
+    return $resourceList;
+
+}
+function Get-AzureResources
+{
+    param(
+            [Parameter(Mandatory=$true)][object]$params,
+            [Parameter(Mandatory=$true)][string]$Context,
+            [Parameter(Mandatory=$false)][int]$MaxRetries=3
+         )
+
+    # prepare the inputs
+    [hashtable]$inputParameters = @{
+                                        "params" =$params
+                                        "Command" = "Find-AzureRmResource";
+                                        "Activity" = "Fetching Azure Resources $($params.ResourceType) from Resource Group '$($ResourceGroupName)'"
+                                        "ExecutionContext" = $Context
+                                   };
+
+    # this call doesn't require special error handling
+    return Execute-AzureCommand -InputParameters $inputParameters;
+}
+## Function: Select-DisabledSlot
+##
+## Purpose: 
+##   selects the disabled Traffic manager endpoint to determine the slot 
+##
+## Input: 
+##   $resourceList  - Azure RM resources
+##   
+## Output:
+##  $slot name
+##
+function Get-DisabledSlot($resourceList)
+{
+
+    # Assgin the slot names
+    [hashtable]$disabledSlot = @{
+                                   "EndPoint1" = "endpoint1";
+                                   "EndPoint2" = "endpoint2";                                       
+                                };
+
+    $slot="";
+    foreach($resource in $resourceList)
+    {
+        if($resource.resourcetype -eq 'Microsoft.Network/trafficManagerProfiles' )
+        {
+            $profile = Get-AzureRmTrafficManagerProfile -Name $resource.Name -ResourceGroupName $ResourceGroupName
+     
+            foreach( $endpoint in $profile.Endpoints )
+            {
+                if ($endpoint.EndpointMonitorStatus -eq "Disabled")
+                {
+           
+                    if($endpoint.Name.Contains($disabledSlot['EndPoint1']))
+                    {
+                        $slot="slot1";                      
+                    }
+
+                    if($endpoint.Name.Contains($disabledSlot['EndPoint2']))
+                    {
+                         $slot="slot2";                       
+                    }
+
+                    if($slot -ne $null)
+                    {
+                        return $slot;
+                    }
+        
+                }
+                
+            }
+         }
+    }         
+}  

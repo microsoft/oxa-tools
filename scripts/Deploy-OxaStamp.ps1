@@ -133,7 +133,9 @@ Param(
 
         [Parameter(Mandatory=$false)][string]$DeploymentVersionId="",
 
-        [Parameter(Mandatory=$false)][switch]$EnableMobileRestApi=$false
+        [Parameter(Mandatory=$false)][switch]$EnableMobileRestApi=$false,
+        
+        [Parameter(Mandatory=$true)][string]$BranchName = "oxa/devfic"
      )
 
 #################################
@@ -199,6 +201,25 @@ if ($DeploymentVersionId -eq "")
     $DeploymentVersionId=$(get-date -f "yyyyMMddHms")
 }
 
+# We need to determine the slot that needs to be targetted to deploy with the help of Traffic manager end point status
+if($ResourceGroupName -ne "")
+{
+    try
+    {
+        # Getting Azure resource list from the provided resource group
+        $resourcelist=Get-ResourcesList -ResourceGroupName $ResourceGroupName;
+
+        # determining the slot by passing Azure resource list from the provided resource group
+        $disabledSlot= Get-DisabledSlot -resourceList $resourcelist;
+                     
+    }
+    catch
+    {
+        throw "Determing the slot has been failed.Please check the Traffic manager endpoint status: $($_.Message)";
+        exit;        
+    }
+}
+
 # Prep the variables we want to use for replacement
 $replacements = @{ 
                     "CLUSTERNAME"=$ResourceGroupName;  
@@ -215,7 +236,9 @@ $replacements = @{
                     "EDXAPPSUPERUSEREMAIL"=$EdxAppSuperUserEmail;
                     "MEMCACHESERVER"=$MemcacheServer;
                     "AZURECLIVERSION"=$AzureCliVersion;
-                    "DEPLOYMENTVERSIONID"=$DeploymentVersionId
+                    "DEPLOYMENTVERSIONID"=$DeploymentVersionId;
+                    "OXATOOLSGITHUBBRANCH"=$BranchName;
+                    "DEPLOYMENTSLOT"=$disabledSlot 
                 }
 
 # Assumption: if the SMTP server is specified, the rest of its configuration will be specified
