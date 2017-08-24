@@ -102,7 +102,7 @@ fix_args()
     # changes to leverage MYSQL_ADMIN_PASSWORD
     # For details, see edx-configuration commit:
     # 65e2668672bda0112a64aabb86cf532ad228c4fa
-    if [[ $BRANCH_VERSIONS == $MSFT ]] ; then
+    if [[ $BRANCH_VERSIONS != edx ]] ; then
         MYSQL_ADMIN_PASSWORD=`harden $MYSQL_ADMIN_PASSWORD`
     fi
 
