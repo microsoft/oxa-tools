@@ -711,6 +711,7 @@
                 "mongo": true,
                 "mysql": true,
                 "vmss": true,
+                "keyVault": false,
                 "trafficManagerLms": true,
                 "trafficManagerCms": true,
                 "trafficManagerPreview": true
@@ -721,6 +722,7 @@
                 "mongo": false,
                 "mysql": false,
                 "vmss": true,
+                "keyVault": false,
                 "trafficManagerLms": false,
                 "trafficManagerCms": false,
                 "trafficManagerPreview": false
@@ -731,6 +733,7 @@
                 "mongo": false,
                 "mysql": false,
                 "vmss": false,
+                "keyVault": false,
                 "trafficManagerLms": true,
                 "trafficManagerCms": true,
                 "trafficManagerPreview": true

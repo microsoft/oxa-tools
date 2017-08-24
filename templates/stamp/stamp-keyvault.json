@@ -640,6 +640,18 @@
             "metadata": {
                 "description": "Indicator of whether or not the Mobile Rest Api is enabled for further integration"
             }
+        },
+        "deploymentType": {
+            "type": "string",
+            "defaultValue": "upgrade",
+            "allowedValues": [
+                "bootstrap",
+                "upgrade",
+                "swap"
+            ],
+            "metadata": {
+                "description": "This will determine which resources to conditionally deploy."
+            }
         }
     },
     "variables": {
