@@ -82,6 +82,9 @@ A timestamp or other identifier to associate with the VMSS being deployed.
 .PARAMETER EnableMobileRestApi
 An switch to indicate whether or not mobile rest api is turned on
 
+.PARAMETER DeploymentType
+A switch to indicate the deployment type (any of bootstrap, upgrade, swap)
+
 .INPUTS
 None. You cannot pipe objects to Deploy-OxaStamp.ps1
 
@@ -133,7 +136,9 @@ Param(
 
         [Parameter(Mandatory=$false)][string]$DeploymentVersionId="",
 
-        [Parameter(Mandatory=$false)][switch]$EnableMobileRestApi=$false
+        [Parameter(Mandatory=$false)][switch]$EnableMobileRestApi=$false,
+
+        [Parameter(Mandatory=$false)][string]$DeploymentType="upgrade"
      )
 
 #################################
@@ -215,7 +220,8 @@ $replacements = @{
                     "EDXAPPSUPERUSEREMAIL"=$EdxAppSuperUserEmail;
                     "MEMCACHESERVER"=$MemcacheServer;
                     "AZURECLIVERSION"=$AzureCliVersion;
-                    "DEPLOYMENTVERSIONID"=$DeploymentVersionId
+                    "DEPLOYMENTVERSIONID"=$DeploymentVersionId;
+                    "DEPLOYMENTTYPE"=$DeploymentType;
                 }
 
 # Assumption: if the SMTP server is specified, the rest of its configuration will be specified
@@ -244,7 +250,7 @@ try
         # provision the keyvault
         # we may need to replace the default resource group name in the parameters file
         Log-Message "Cluster: $ResourceGroupName | Template: $KeyVaultDeploymentArmTemplateFile | Parameters file: $($tempParametersFile)"
-        $provisioningOperation = New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $KeyVaultDeploymentArmTemplateFile -TemplateParameterFile $tempParametersFile -Force -Verbose  
+        $provisioningOperation = New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $KeyVaultDeploymentArmTemplateFile -TemplateParameterFile $tempParametersFile -Force -Verbose
     
         if ($provisioningOperation.ProvisioningState -ine "Succeeded")
         {
