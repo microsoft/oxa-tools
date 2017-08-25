@@ -143,3 +143,6 @@ EDXAPP_LTI_USER_EMAIL_DOMAIN: "lti.openedx.microsoft.com"
 
 # Add lms-preview to list sites to configure
 nginx_sites: [certs, cms, lms, lms-preview, forum, xqueue]
+
+#Cookies API url
+EDXAPP_COOKIE_API_URL: %%EDXAPP_COOKIE_API_URL%%
