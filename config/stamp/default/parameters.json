@@ -60,7 +60,7 @@
             "value": "slot1"
         },
         "deploymentVersionId": {
-            "value": "201703141409"
+            "value": "{DEPLOYMENTVERSIONID}"
         },
         "autoScaleEnabled": {
             "value": true

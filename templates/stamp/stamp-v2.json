@@ -1399,6 +1399,10 @@
         "deploymentType": {
             "type": "string",
             "value": "[parameters('deploymentType')]"
+        },
+        "deploymentVersionId": {
+            "type": "string",
+            "value": "[parameters('deploymentVersionId')]"
         }
     }
 }
