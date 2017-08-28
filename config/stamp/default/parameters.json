@@ -60,7 +60,7 @@
             "value": "{DEPLOYMENTSLOT}"
         },
         "deploymentVersionId": {
-            "value": "201703141409"
+            "value": "{DEPLOYMENTVERSIONID}"
         },
         "autoScaleEnabled": {
             "value": true
@@ -275,7 +275,7 @@
             "value": "{AZURECLIVERSION}"
         },
         "enableMobileRestApi": {
-            "value": "{ENABLEMOBILERESTAPI}"
+            "value": {ENABLEMOBILERESTAPI}
         },
         "deploymentType": {
             "value": "{DEPLOYMENTTYPE}"
