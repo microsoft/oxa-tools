@@ -140,7 +140,11 @@ Param(
         
         [Parameter(Mandatory=$true)][string]$BranchName = "oxa/devfic",
 
-        [Parameter(Mandatory=$false)][string]$DeploymentType="upgrade"
+        [Parameter(Mandatory=$false)][string]$DeploymentType="upgrade",
+        
+        [Parameter(Mandatory=$false)][string]$Slot="slot1",
+
+        [Parameter(Mandatory=$true)][ValidateSet("Prod", "Int", "BVT", "")][string]$Cloud="BVT"
 
      )
 
@@ -208,7 +212,7 @@ if ($DeploymentVersionId -eq "")
 }
 
 # We need to determine the slot that needs to be targetted to deploy with the help of Traffic manager end point status
-if($ResourceGroupName -ne "")
+if($DeploymentType -ne "bootstrap")
 {
     try
     {
@@ -216,13 +220,30 @@ if($ResourceGroupName -ne "")
         $resourcelist=Get-ResourcesList -ResourceGroupName $ResourceGroupName;
 
         # determining the slot by passing Azure resource list from the provided resource group
-        $disabledSlot= Get-DisabledSlot -resourceList $resourcelist;
+        $Slot= Get-DisabledSlot -resourceList $resourcelist;
                      
     }
     catch
     {
+        Capture-ErrorStack;
         throw "Determing the slot has been failed.Please check the Traffic manager endpoint status: $($_.Message)";
         exit;        
+    }
+
+    if( $Slot -ne "" -and ($cloud -eq  "BVT" -or $cloud  -eq "Int" -or $cloud -eq "prod" ))
+    {
+        try
+        {
+            #cleaning up the resources from the disabled slot
+            Remove-StagingResources -ResourceGroupName $ResourceGroupName -slot $Slot;
+
+        }
+        catch
+        {
+            Capture-ErrorStack;
+            throw "Error in deleting the resources from the $($Slot) : $($_.Message)";
+            exit;  
+        }
     }
 }
 
@@ -244,7 +265,7 @@ $replacements = @{
                     "AZURECLIVERSION"=$AzureCliVersion;
                     "DEPLOYMENTVERSIONID"=$DeploymentVersionId;
                     "OXATOOLSGITHUBBRANCH"=$BranchName;
-                    "DEPLOYMENTSLOT"=$disabledSlot; 
+                    "DEPLOYMENTSLOT"=$Slot; 
                     "DEPLOYMENTTYPE"=$DeploymentType;
                 }
 

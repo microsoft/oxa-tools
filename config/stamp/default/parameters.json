@@ -90,7 +90,7 @@
             "value": "edx-configuration"
         },
         "edxConfigurationGithubBranch": {
-            "value": "[(parameters('oxaToolsGithubBranch')]"
+            "value": "{OXATOOLSGITHUBBRANCH}"
         },
         "edxPlatformGithubAccountName": {
             "value": "microsoft"
@@ -99,7 +99,7 @@
             "value": "edx-platform"
         },
         "edxPlatformGithubBranch": {
-            "value": "[(parameters('oxaToolsGithubBranch')]"
+            "value": "{OXATOOLSGITHUBBRANCH}"
         },
         "edxThemeGithubAccountName": {
             "value": "microsoft"
@@ -108,7 +108,7 @@
             "value": "edx-theme"
         },
         "edxThemeGithubBranch": {
-            "value": "[(parameters('oxaToolsGithubBranch')]"
+            "value": "{OXATOOLSGITHUBBRANCH}"
         },
         "ansibleGithubAccountName": {
             "value": "edx"
@@ -174,30 +174,6 @@
         },
         "keyVaultSku": {
             "value": "Standard"
-        },
-        "lmsTrafficManagerStateMetadata": {
-            "value": [
-                "[if(equals(parameters('deploymentSlot'), 'slot1'), 'Enabled','Disabled')]",
-                "[if(equals(parameters('deploymentSlot'), 'slot2'), 'Enabled','Disabled')]",
-                1,
-                2
-            ]
-        },
-        "cmsTrafficManagerStateMetadata": {
-            "value": [
-                "[if(equals(parameters('deploymentSlot'), 'slot1'), 'Enabled','Disabled')]",
-                "[if(equals(parameters('deploymentSlot'), 'slot2'), 'Enabled','Disabled')]",
-                1,
-                2
-            ]
-        },
-        "previewTrafficManagerStateMetadata": {
-            "value": [
-                "[if(equals(parameters('deploymentSlot'), 'slot1'), 'Enabled','Disabled')]",
-                "[if(equals(parameters('deploymentSlot'), 'slot2'), 'Enabled','Disabled')]",
-                1,
-                2
-            ]
         },
         "aadWebClientId": {
             "value": "{AADWEBCLIENTID}"
