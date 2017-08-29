@@ -145,10 +145,18 @@ $currentPath = Split-Path $invocation.MyCommand.Path
 $rootPath = (get-item $currentPath).parent.FullName
 Import-Module "$($currentPath)/Common.ps1" -Force
 
-$FullDeploymentArmTemplateFile = Set-ScriptDefault -ScriptParamName $FullDeploymentArmTemplateFile -DefaultValue "$($rootPath)/templates/stamp/stamp-v2.json"
-$FullDeploymentParametersFile = Set-ScriptDefault -ScriptParamName $FullDeploymentParametersFile -DefaultValue "$($rootPath)/config/stamp/default/parameters.json"
-$KeyVaultDeploymentArmTemplateFile = Set-ScriptDefault -ScriptParamName $KeyVaultDeploymentArmTemplateFile -DefaultValue "$($rootPath)/templates/stamp/stamp-keyvault.json"
-$KeyVaultDeploymentParametersFile = Set-ScriptDefault -ScriptParamName $KeyVaultDeploymentParametersFile -DefaultValue $FullDeploymentParametersFile
+$FullDeploymentArmTemplateFile = Set-ScriptDefault -ScriptParamName "FullDeploymentArmTemplateFile" `
+                                    -ScriptParamVal $FullDeploymentArmTemplateFile `
+                                    -DefaultValue "$($rootPath)/templates/stamp/stamp-v2.json"
+$FullDeploymentParametersFile = Set-ScriptDefault -ScriptParamName "FullDeploymentArmTemplateFile" `
+                                    -ScriptParamVal $FullDeploymentParametersFile `
+                                    -DefaultValue "$($rootPath)/config/stamp/default/parameters.json"
+$KeyVaultDeploymentArmTemplateFile = Set-ScriptDefault -ScriptParamName "FullDeploymentArmTemplateFile" `
+                                    -ScriptParamVal $KeyVaultDeploymentArmTemplateFile `
+                                    -DefaultValue "$($rootPath)/templates/stamp/stamp-keyvault.json"
+$KeyVaultDeploymentParametersFile = Set-ScriptDefault -ScriptParamName "FullDeploymentArmTemplateFile" `
+                                    -ScriptParamVal $KeyVaultDeploymentParametersFile `
+                                    -DefaultValue $FullDeploymentParametersFile
 
 # Login
 $clientSecret = ConvertTo-SecureString -String $AadWebClientAppKey -AsPlainText -Force
