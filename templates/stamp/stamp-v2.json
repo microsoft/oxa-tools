@@ -1012,319 +1012,319 @@
         }
     },
     "resources": [
-        // {
-        //     "name": "shared-resources",
-        //     "type": "Microsoft.Resources/deployments",
-        //     "apiVersion": "[variables('apiVersion')]",
-        //     "properties": {
-        //         "mode": "Incremental",
-        //         "templateLink": {
-        //             "uri": "[variables('sharedTemplateUrl')]",
-        //             "contentVersion": "1.0.0.0"
-        //         },
-        //         "parameters": {
-        //             "networkSettings": {
-        //                 "value": "[variables('networkSettings')]"
-        //             },
-        //             "apiSettings": {
-        //                 "value": "[variables('apiSettings')]"
-        //             },
-        //             "storageSettings": {
-        //                 "value": "[variables('storageSettings')]"
-        //             }
-        //         }
-        //     }
-        // },
-        // {
-        //     "name": "jumpbox",
-        //     "type": "Microsoft.Resources/deployments",
-        //     "apiVersion": "[variables('apiVersion')]",
-        //     "dependsOn": [
-        //         "[concat('Microsoft.Resources/deployments/', 'shared-resources')]",
-        //         "mongoNodesLoop",
-        //         "mysqlMasterNodeLoop",
-        //         "keyVault"
-        //     ],
-        //     "properties": {
-        //         "mode": "Incremental",
-        //         "templateLink": {
-        //             "uri": "[variables('jumpboxTemplateUrl')]",
-        //             "contentVersion": "1.0.0.0"
-        //         },
-        //         "parameters": {
-        //             "networkSettings": {
-        //                 "value": "[variables('networkSettings')]"
-        //             },
-        //             "apiSettings": {
-        //                 "value": "[variables('apiSettings')]"
-        //             },
-        //             "machineSettings": {
-        //                 "value": "[variables('jumpboxMachineSettings')]"
-        //             },
-        //             "storageSettings": {
-        //                 "value": "[variables('storageSettings')]"
-        //             },
-        //             "customSettings": {
-        //                 "value": {
-        //                     "vmScripts": "[variables('jumpBoxInstallerSettings').scriptsToDownload]",
-        //                     "customInstallerCommandToExecute": "[variables('jumpBoxInstallerSettings').customInstallerCommand]",
-        //                     "storageKeyPlaceholder": "[variables('secureGenericStorageAccountKey')]",
-        //                     "secureGenericStorageAccountKey": "[listKeys(variables('secureGenericStorageAccountId'), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value]"
-        //                 }
-        //             }
-        //         }
-        //     }
-        // },
-        // {
-        //     "type": "Microsoft.Resources/deployments",
-        //     "name": "[concat(variables('networkSettings').clusterMongoDataNodeName, copyindex(1))]",
-        //     "apiVersion": "[variables('apiVersion')]",
-        //     "dependsOn": [
-        //         "[concat('Microsoft.Resources/deployments/', 'shared-resources')]",
-        //         "keyVault"
-        //     ],
-        //     "copy": {
-        //         "name": "mongoNodesLoop",
-        //         "count": "[int(variables('networkSettings').mongoDataNodeCount)]"
-        //     },
-        //     "properties": {
-        //         "mode": "Incremental",
-        //         "templateLink": {
-        //             "uri": "[variables('mongoNodeTemplateUrl')]",
-        //             "contentVersion": "1.0.0.0"
-        //         },
-        //         "parameters": {
-        //             "networkSettings": {
-        //                 "value": "[variables('networkSettings')]"
-        //             },
-        //             "apiSettings": {
-        //                 "value": "[variables('apiSettings')]"
-        //             },
-        //             "machineSettings": {
-        //                 "value": "[variables('mongoMachineSettings')]"
-        //             },
-        //             "storageSettings": {
-        //                 "value": "[variables('storageSettings')]"
-        //             },
-        //             "customSettings": {
-        //                 "value": {
-        //                     "machineIndex": "[copyindex(1)]",
-        //                     "vmScripts": "[variables('mongoDBInstallerSettings').scriptsToDownload]",
-        //                     "adminUsername": "[variables('networkSettings').adminUsername]",
-        //                     "adminPassword": "[variables('networkSettings').mongoServerAdminPassword]",
-        //                     "machineNamePrefix": "[variables('networkSettings').clusterMongoDataNodeName]",
-        //                     "osImageReference": "[variables('mongoMachineSettings').osImageReference]",
-        //                     "vmSize": "[variables('mongoMachineSettings').vmSize]",
-        //                     "dataDiskSize": "[variables('mongoMachineSettings').dataDiskSize]",
-        //                     "commandToExecute": "[variables('mongoDBInstallerSettings').regularNodeInstallCommand]",
-        //                     "machineIpOffset": "[int(variables('networkSettings').mongoServerIpOffset)]"
-        //                 }
-        //             }
-        //         }
-        //     }
-        // },
-        // {
-        //     "type": "Microsoft.Resources/deployments",
-        //     "name": "[concat(variables('networkSettings').clusterMysqlDataNodeName, copyindex(1))]",
-        //     "apiVersion": "[variables('apiVersion')]",
-        //     "dependsOn": [
-        //         "[concat('Microsoft.Resources/deployments/', 'shared-resources')]",
-        //         "keyVault"
-        //     ],
-        //     "copy": {
-        //         "name": "mysqlMasterNodeLoop",
-        //         "count": "[int(variables('networkSettings').mysqlDataNodeCount)]"
-        //     },
-        //     "properties": {
-        //         "mode": "Incremental",
-        //         "templateLink": {
-        //             "uri": "[variables('mysqlNodeTemplateUrl')]",
-        //             "contentVersion": "1.0.0.0"
-        //         },
-        //         "parameters": {
-        //             "networkSettings": {
-        //                 "value": "[variables('networkSettings')]"
-        //             },
-        //             "apiSettings": {
-        //                 "value": "[variables('apiSettings')]"
-        //             },
-        //             "machineSettings": {
-        //                 "value": "[variables('mysqlMachineSettings')]"
-        //             },
-        //             "storageSettings": {
-        //                 "value": "[variables('storageSettings')]"
-        //             },
-        //             "customSettings": {
-        //                 "value": {
-        //                     "machineIndex": "[copyindex(1)]",
-        //                     "vmScripts": "[variables('mysqlDBInstallerSettings').scriptsToDownload]",
-        //                     "commandToExecute": "[concat(variables('mysqlDBInstallerSettings').regularNodeInstallCommand, ' -n ', copyindex(1))]",
-        //                     "machineIpOffset": "[int(variables('networkSettings').mysqlServerIpOffset)]"
-        //                 }
-        //             }
-        //         }
-        //     }
-        // },
+        {
+            "name": "shared-resources",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('apiVersion')]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('sharedTemplateUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "networkSettings": {
+                        "value": "[variables('networkSettings')]"
+                    },
+                    "apiSettings": {
+                        "value": "[variables('apiSettings')]"
+                    },
+                    "storageSettings": {
+                        "value": "[variables('storageSettings')]"
+                    }
+                }
+            }
+        },
+        {
+            "name": "jumpbox",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('apiVersion')]",
+            "dependsOn": [
+                "[concat('Microsoft.Resources/deployments/', 'shared-resources')]",
+                "mongoNodesLoop",
+                "mysqlMasterNodeLoop",
+                "keyVault"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('jumpboxTemplateUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "networkSettings": {
+                        "value": "[variables('networkSettings')]"
+                    },
+                    "apiSettings": {
+                        "value": "[variables('apiSettings')]"
+                    },
+                    "machineSettings": {
+                        "value": "[variables('jumpboxMachineSettings')]"
+                    },
+                    "storageSettings": {
+                        "value": "[variables('storageSettings')]"
+                    },
+                    "customSettings": {
+                        "value": {
+                            "vmScripts": "[variables('jumpBoxInstallerSettings').scriptsToDownload]",
+                            "customInstallerCommandToExecute": "[variables('jumpBoxInstallerSettings').customInstallerCommand]",
+                            "storageKeyPlaceholder": "[variables('secureGenericStorageAccountKey')]",
+                            "secureGenericStorageAccountKey": "[listKeys(variables('secureGenericStorageAccountId'), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value]"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(variables('networkSettings').clusterMongoDataNodeName, copyindex(1))]",
+            "apiVersion": "[variables('apiVersion')]",
+            "dependsOn": [
+                "[concat('Microsoft.Resources/deployments/', 'shared-resources')]",
+                "keyVault"
+            ],
+            "copy": {
+                "name": "mongoNodesLoop",
+                "count": "[int(variables('networkSettings').mongoDataNodeCount)]"
+            },
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('mongoNodeTemplateUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "networkSettings": {
+                        "value": "[variables('networkSettings')]"
+                    },
+                    "apiSettings": {
+                        "value": "[variables('apiSettings')]"
+                    },
+                    "machineSettings": {
+                        "value": "[variables('mongoMachineSettings')]"
+                    },
+                    "storageSettings": {
+                        "value": "[variables('storageSettings')]"
+                    },
+                    "customSettings": {
+                        "value": {
+                            "machineIndex": "[copyindex(1)]",
+                            "vmScripts": "[variables('mongoDBInstallerSettings').scriptsToDownload]",
+                            "adminUsername": "[variables('networkSettings').adminUsername]",
+                            "adminPassword": "[variables('networkSettings').mongoServerAdminPassword]",
+                            "machineNamePrefix": "[variables('networkSettings').clusterMongoDataNodeName]",
+                            "osImageReference": "[variables('mongoMachineSettings').osImageReference]",
+                            "vmSize": "[variables('mongoMachineSettings').vmSize]",
+                            "dataDiskSize": "[variables('mongoMachineSettings').dataDiskSize]",
+                            "commandToExecute": "[variables('mongoDBInstallerSettings').regularNodeInstallCommand]",
+                            "machineIpOffset": "[int(variables('networkSettings').mongoServerIpOffset)]"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(variables('networkSettings').clusterMysqlDataNodeName, copyindex(1))]",
+            "apiVersion": "[variables('apiVersion')]",
+            "dependsOn": [
+                "[concat('Microsoft.Resources/deployments/', 'shared-resources')]",
+                "keyVault"
+            ],
+            "copy": {
+                "name": "mysqlMasterNodeLoop",
+                "count": "[int(variables('networkSettings').mysqlDataNodeCount)]"
+            },
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('mysqlNodeTemplateUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "networkSettings": {
+                        "value": "[variables('networkSettings')]"
+                    },
+                    "apiSettings": {
+                        "value": "[variables('apiSettings')]"
+                    },
+                    "machineSettings": {
+                        "value": "[variables('mysqlMachineSettings')]"
+                    },
+                    "storageSettings": {
+                        "value": "[variables('storageSettings')]"
+                    },
+                    "customSettings": {
+                        "value": {
+                            "machineIndex": "[copyindex(1)]",
+                            "vmScripts": "[variables('mysqlDBInstallerSettings').scriptsToDownload]",
+                            "commandToExecute": "[concat(variables('mysqlDBInstallerSettings').regularNodeInstallCommand, ' -n ', copyindex(1))]",
+                            "machineIpOffset": "[int(variables('networkSettings').mysqlServerIpOffset)]"
+                        }
+                    }
+                }
+            }
+        },
 
-        // {
-        //     "name": "vmss",
-        //     "type": "Microsoft.Resources/deployments",
-        //     "apiVersion": "[variables('apiVersion')]",
-        //     "dependsOn": [
-        //         "[concat('Microsoft.Resources/deployments/', 'shared-resources')]",
-        //         "keyVault",
-        //         "jumpbox"
-        //     ],
-        //     "properties": {
-        //         "mode": "Incremental",
-        //         "templateLink": {
-        //             "uri": "[variables('vmssTemplateUrl')]",
-        //             "contentVersion": "1.0.0.0"
-        //         },
-        //         "parameters": {
-        //             "networkSettings": {
-        //                 "value": "[variables('networkSettings')]"
-        //             },
-        //             "apiSettings": {
-        //                 "value": "[variables('apiSettings')]"
-        //             },
-        //             "machineSettings": {
-        //                 "value": "[variables('frontendMachineSettings')]"
-        //             },
-        //             "storageSettings": {
-        //                 "value": "[variables('storageSettings')]"
-        //             },
-        //             "customSettings": {
-        //                 "value": {
-        //                     "vmScripts": "[variables('vmssInstallerSettings').scriptsToDownload]",
-        //                     "commandToExecute": "[variables('vmssInstallerSettings').customInstallerCommand]",
-        //                     "linuxDiagnosticsSettings": "[variables('vmssLinuxDiagnosticsSettings')]",
-        //                     "storageKeyPlaceholder": "[variables('secureGenericStorageAccountKey')]",
-        //                     "secureGenericStorageAccountKey": "[listKeys(variables('secureGenericStorageAccountId'), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value]"
-        //                 }
-        //             }
-        //         }
-        //     }
-        // },
-        // {
-        //     "name": "keyVault",
-        //     "type": "Microsoft.Resources/deployments",
-        //     "apiVersion": "[variables('apiVersion')]",
-        //     "properties": {
-        //         "mode": "Incremental",
-        //         "templateLink": {
-        //             "uri": "[variables('keyVaultTemplateUrl')]",
-        //             "contentVersion": "1.0.0.0"
-        //         },
-        //         "parameters": {
-        //             "apiSettings": {
-        //                 "value": "[variables('apiSettings')]"
-        //             },
-        //             "networkSettings": {
-        //                 "value": "[variables('networkSettings')]"
-        //             },
-        //             "keyVaultSettings": {
-        //                 "value": "[variables('keyVaultSettings')]"
-        //             }
-        //         }
-        //     }
-        // },
-        // {
-        //     "name": "trafficManagerLms",
-        //     "type": "Microsoft.Resources/deployments",
-        //     "apiVersion": "[variables('apiVersion')]",
-        //     "dependsOn": [
-        //         "vmss"
-        //     ],
-        //     "properties": {
-        //         "mode": "Incremental",
-        //         "templateLink": {
-        //             "uri": "[variables('trafficManagerTemplateUrl')]",
-        //             "contentVersion": "1.0.0.0"
-        //         },
-        //         "parameters": {
-        //             "apiSettings": {
-        //                 "value": "[variables('apiSettings')]"
-        //             },
-        //             "customSettings": {
-        //                 "value": {
-        //                     "trafficManagerName": "[variables('networkSettings').trafficManagerSettings.lms.name]",
-        //                     "relativeDnsName": "[variables('networkSettings').trafficManagerSettings.lms.name]",
-        //                     "dnsTtl": "[variables('networkSettings').trafficManagerSettings.dnsTtlSeconds]",
-        //                     "monitorConfigProtocol": "[variables('networkSettings').trafficManagerSettings.monitorConfigProtocol]",
-        //                     "monitorConfigPort": "[variables('networkSettings').trafficManagerSettings.lms.monitorConfigPort]",
-        //                     "monitorConfigPath": "[variables('networkSettings').trafficManagerSettings.lms.monitorConfigPath]",
-        //                     "endpoint1": "[variables('networkSettings').trafficManagerSettings.lms.endpoint1]",
-        //                     "endpoint2": "[variables('networkSettings').trafficManagerSettings.lms.endpoint2]"
-        //                 }
-        //             }
-        //         }
-        //     }
-        // },
-        // {
-        //     "name": "trafficManagerCms",
-        //     "type": "Microsoft.Resources/deployments",
-        //     "apiVersion": "[variables('apiVersion')]",
-        //     "dependsOn": [
-        //         "vmss"
-        //     ],
-        //     "properties": {
-        //         "mode": "Incremental",
-        //         "templateLink": {
-        //             "uri": "[variables('trafficManagerTemplateUrl')]",
-        //             "contentVersion": "1.0.0.0"
-        //         },
-        //         "parameters": {
-        //             "apiSettings": {
-        //                 "value": "[variables('apiSettings')]"
-        //             },
-        //             "customSettings": {
-        //                 "value": {
-        //                     "trafficManagerName": "[variables('networkSettings').trafficManagerSettings.cms.name]",
-        //                     "relativeDnsName": "[variables('networkSettings').trafficManagerSettings.cms.name]",
-        //                     "dnsTtl": "[variables('networkSettings').trafficManagerSettings.dnsTtlSeconds]",
-        //                     "monitorConfigProtocol": "[variables('networkSettings').trafficManagerSettings.monitorConfigProtocol]",
-        //                     "monitorConfigPort": "[variables('networkSettings').trafficManagerSettings.cms.monitorConfigPort]",
-        //                     "monitorConfigPath": "[variables('networkSettings').trafficManagerSettings.cms.monitorConfigPath]",
-        //                     "endpoint1": "[variables('networkSettings').trafficManagerSettings.cms.endpoint1]",
-        //                     "endpoint2": "[variables('networkSettings').trafficManagerSettings.cms.endpoint2]"
-        //                 }
-        //             }
-        //         }
-        //     }
-        // },
-        // {
-        //     "name": "trafficManagerPreview",
-        //     "type": "Microsoft.Resources/deployments",
-        //     "apiVersion": "[variables('apiVersion')]",
-        //     "dependsOn": [
-        //         "vmss"
-        //     ],
-        //     "properties": {
-        //         "mode": "Incremental",
-        //         "templateLink": {
-        //             "uri": "[variables('trafficManagerTemplateUrl')]",
-        //             "contentVersion": "1.0.0.0"
-        //         },
-        //         "parameters": {
-        //             "apiSettings": {
-        //                 "value": "[variables('apiSettings')]"
-        //             },
-        //             "customSettings": {
-        //                 "value": {
-        //                     "trafficManagerName": "[variables('networkSettings').trafficManagerSettings.preview.name]",
-        //                     "relativeDnsName": "[variables('networkSettings').trafficManagerSettings.preview.name]",
-        //                     "dnsTtl": "[variables('networkSettings').trafficManagerSettings.dnsTtlSeconds]",
-        //                     "monitorConfigProtocol": "[variables('networkSettings').trafficManagerSettings.monitorConfigProtocol]",
-        //                     "monitorConfigPort": "[variables('networkSettings').trafficManagerSettings.preview.monitorConfigPort]",
-        //                     "monitorConfigPath": "[variables('networkSettings').trafficManagerSettings.preview.monitorConfigPath]",
-        //                     "endpoint1": "[variables('networkSettings').trafficManagerSettings.preview.endpoint1]",
-        //                     "endpoint2": "[variables('networkSettings').trafficManagerSettings.preview.endpoint2]"
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
+        {
+            "name": "vmss",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('apiVersion')]",
+            "dependsOn": [
+                "[concat('Microsoft.Resources/deployments/', 'shared-resources')]",
+                "keyVault",
+                "jumpbox"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('vmssTemplateUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "networkSettings": {
+                        "value": "[variables('networkSettings')]"
+                    },
+                    "apiSettings": {
+                        "value": "[variables('apiSettings')]"
+                    },
+                    "machineSettings": {
+                        "value": "[variables('frontendMachineSettings')]"
+                    },
+                    "storageSettings": {
+                        "value": "[variables('storageSettings')]"
+                    },
+                    "customSettings": {
+                        "value": {
+                            "vmScripts": "[variables('vmssInstallerSettings').scriptsToDownload]",
+                            "commandToExecute": "[variables('vmssInstallerSettings').customInstallerCommand]",
+                            "linuxDiagnosticsSettings": "[variables('vmssLinuxDiagnosticsSettings')]",
+                            "storageKeyPlaceholder": "[variables('secureGenericStorageAccountKey')]",
+                            "secureGenericStorageAccountKey": "[listKeys(variables('secureGenericStorageAccountId'), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value]"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "name": "keyVault",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('apiVersion')]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('keyVaultTemplateUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "apiSettings": {
+                        "value": "[variables('apiSettings')]"
+                    },
+                    "networkSettings": {
+                        "value": "[variables('networkSettings')]"
+                    },
+                    "keyVaultSettings": {
+                        "value": "[variables('keyVaultSettings')]"
+                    }
+                }
+            }
+        },
+        {
+            "name": "trafficManagerLms",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('apiVersion')]",
+            "dependsOn": [
+                "vmss"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('trafficManagerTemplateUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "apiSettings": {
+                        "value": "[variables('apiSettings')]"
+                    },
+                    "customSettings": {
+                        "value": {
+                            "trafficManagerName": "[variables('networkSettings').trafficManagerSettings.lms.name]",
+                            "relativeDnsName": "[variables('networkSettings').trafficManagerSettings.lms.name]",
+                            "dnsTtl": "[variables('networkSettings').trafficManagerSettings.dnsTtlSeconds]",
+                            "monitorConfigProtocol": "[variables('networkSettings').trafficManagerSettings.monitorConfigProtocol]",
+                            "monitorConfigPort": "[variables('networkSettings').trafficManagerSettings.lms.monitorConfigPort]",
+                            "monitorConfigPath": "[variables('networkSettings').trafficManagerSettings.lms.monitorConfigPath]",
+                            "endpoint1": "[variables('networkSettings').trafficManagerSettings.lms.endpoint1]",
+                            "endpoint2": "[variables('networkSettings').trafficManagerSettings.lms.endpoint2]"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "name": "trafficManagerCms",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('apiVersion')]",
+            "dependsOn": [
+                "vmss"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('trafficManagerTemplateUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "apiSettings": {
+                        "value": "[variables('apiSettings')]"
+                    },
+                    "customSettings": {
+                        "value": {
+                            "trafficManagerName": "[variables('networkSettings').trafficManagerSettings.cms.name]",
+                            "relativeDnsName": "[variables('networkSettings').trafficManagerSettings.cms.name]",
+                            "dnsTtl": "[variables('networkSettings').trafficManagerSettings.dnsTtlSeconds]",
+                            "monitorConfigProtocol": "[variables('networkSettings').trafficManagerSettings.monitorConfigProtocol]",
+                            "monitorConfigPort": "[variables('networkSettings').trafficManagerSettings.cms.monitorConfigPort]",
+                            "monitorConfigPath": "[variables('networkSettings').trafficManagerSettings.cms.monitorConfigPath]",
+                            "endpoint1": "[variables('networkSettings').trafficManagerSettings.cms.endpoint1]",
+                            "endpoint2": "[variables('networkSettings').trafficManagerSettings.cms.endpoint2]"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "name": "trafficManagerPreview",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('apiVersion')]",
+            "dependsOn": [
+                "vmss"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('trafficManagerTemplateUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "apiSettings": {
+                        "value": "[variables('apiSettings')]"
+                    },
+                    "customSettings": {
+                        "value": {
+                            "trafficManagerName": "[variables('networkSettings').trafficManagerSettings.preview.name]",
+                            "relativeDnsName": "[variables('networkSettings').trafficManagerSettings.preview.name]",
+                            "dnsTtl": "[variables('networkSettings').trafficManagerSettings.dnsTtlSeconds]",
+                            "monitorConfigProtocol": "[variables('networkSettings').trafficManagerSettings.monitorConfigProtocol]",
+                            "monitorConfigPort": "[variables('networkSettings').trafficManagerSettings.preview.monitorConfigPort]",
+                            "monitorConfigPath": "[variables('networkSettings').trafficManagerSettings.preview.monitorConfigPath]",
+                            "endpoint1": "[variables('networkSettings').trafficManagerSettings.preview.endpoint1]",
+                            "endpoint2": "[variables('networkSettings').trafficManagerSettings.preview.endpoint2]"
+                        }
+                    }
+                }
+            }
+        }
     ],
     "outputs": {
         "mongoReplicaSetKey": {
