@@ -1090,6 +1090,7 @@ start_haproxy()
         # run a basic query against the Proxy
         db_response=`mysql -u ${mysql_admin_username} -p${mysql_admin_password} -h ${haproxy_server} -P ${haproxy_port} -e "SHOW DATABASES;"`
 
+        # trim the response before assessing emptiness: null /zero-length
         if [[ -z "${db_response// }" ]];
         then
             sleep $wait_time_seconds;
