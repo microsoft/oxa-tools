@@ -140,11 +140,11 @@ Param(
         
         [Parameter(Mandatory=$true)][string]$BranchName = "oxa/devfic",
 
-        [Parameter(Mandatory=$false)][string]$DeploymentType="upgrade",
-        
+        [Parameter(Mandatory=$true)][ValidateSet("bootstrap", "upgrade", "swap", "")][string]$DeploymentType="upgrade",
+                
         [Parameter(Mandatory=$false)][string]$Slot="slot1",
 
-        [Parameter(Mandatory=$true)][ValidateSet("Prod", "Int", "BVT", "")][string]$Cloud="BVT"
+        [Parameter(Mandatory=$true)][ValidateSet("prod", "int", "bvt", "")][string]$Cloud="bvt"
 
      )
 
@@ -217,11 +217,10 @@ if($DeploymentType -ne "bootstrap")
     try
     {
         # Getting Azure resource list from the provided resource group
-        $resourcelist=Get-ResourcesList -ResourceGroupName $ResourceGroupName;
+        $resourcelist = Get-ResourcesList -ResourceGroupName $ResourceGroupName;
 
         # determining the slot by passing Azure resource list from the provided resource group
-        $Slot= Get-DisabledSlot -resourceList $resourcelist;
-                     
+        $Slot = Get-DisabledSlot -resourceList $resourcelist;                     
     }
     catch
     {
@@ -229,22 +228,12 @@ if($DeploymentType -ne "bootstrap")
         throw "Determing the slot has been failed.Please check the Traffic manager endpoint status: $($_.Message)";
         exit;        
     }
-
-    if( $Slot -ne "" -and ($cloud -eq  "BVT" -or $cloud  -eq "Int" -or $cloud -eq "prod" ))
+    if($DeploymentType -eq "upgrade")
     {
-        try
-        {
-            #cleaning up the resources from the disabled slot
-            Remove-StagingResources -ResourceGroupName $ResourceGroupName -slot $Slot;
-
-        }
-        catch
-        {
-            Capture-ErrorStack;
-            throw "Error in deleting the resources from the $($Slot) : $($_.Message)";
-            exit;  
-        }
+        Log-Message "Proceeding with the deleting the resources from ResourceGroup: $ResourceGroupName and cloud: $Cloud"
+        Delete-Resources $DeploymentType -Cloud $Cloud -ResourceGroupName $ResourceGroupName;
     }
+    
 }
 
 # Prep the variables we want to use for replacement
@@ -314,7 +303,13 @@ try
     {
         # kick off full deployment
         # we may need to replace the default resource group name in the parameters file
-        New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $FullDeploymentArmTemplateFile -TemplateParameterFile $tempParametersFile -Force -Verbose  
+        $DeploymentStatus = New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $FullDeploymentArmTemplateFile -TemplateParameterFile $tempParametersFile -Force -Verbose  
+        
+        if($DeploymentType -eq "swap" -and $cloud -eq "bvt")
+        {
+            Log-Message "Deleting the resources from $ResourceGroupName since $cloud has been completed"
+            Delete-Resources -DeploymentType $DeploymentType -Cloud $Cloud -ResourceGroupName $ResourceGroupName -DeploymentStatus $DeploymentStatus;
+        }   
     }
 }
 catch

@@ -387,6 +387,7 @@ function Create-StorageContainer
     $storageContext = New-AzureStorageContext -StorageAccountName $StorageAccountName -StorageAccountKey $StorageAccountKey
     New-AzureStorageContainer -Name $StorageContainerName -Context $storageContext
 }
+
 #################################################################
 #
 # Wrappers for All Azure Cmdlet Calls
@@ -443,6 +444,7 @@ function Execute-AzureCommand
                     }
                     break;
                 }
+                
                 "Get-AzureRmLoadBalancer"
                 {
                     if ($InputParameters['Name'] -ne $null)
@@ -461,7 +463,7 @@ function Execute-AzureCommand
                     break;
                 }
 
-                 "Remove-AzureRmLoadBalancerRuleConfig"
+                "Remove-AzureRmLoadBalancerRuleConfig"
                 {
                     if ($InputParameters['Name'] -ne $null)
                     {
@@ -470,7 +472,7 @@ function Execute-AzureCommand
                     break;
                 }
 
-                 "Set-AzureRmLoadBalancer"
+                "Set-AzureRmLoadBalancer"
                 {
                     if ($InputParameters['lbName'] -ne $null)
                     {
@@ -479,7 +481,7 @@ function Execute-AzureCommand
                     break;
                 }
 
-                 "Get-AzureRmVmss"
+                "Get-AzureRmVmss"
                 {
                     if ($InputParameters['ResourceGroup'] -ne $null)
                     {
@@ -487,9 +489,8 @@ function Execute-AzureCommand
                     }
                     break;
                 }
-
                 
-                 "Remove-AzureRmVmss"
+                "Remove-AzureRmVmss"
                 {
                     if ($InputParameters['VmssName'] -ne $null)
                     {
@@ -497,9 +498,8 @@ function Execute-AzureCommand
                     }
                     break;
                 }
-
                  
-                 "Remove-AzureRmLoadBalancerBackendAddressPoolConfig"
+                "Remove-AzureRmLoadBalancerBackendAddressPoolConfig"
                 {
                     if ($InputParameters['Name'] -ne $null)
                     {
@@ -507,9 +507,8 @@ function Execute-AzureCommand
                     }
                     break;
                 }
-                
-                 
-                 "Remove-AzureRmLoadBalancerFrontendIpConfig"
+                                 
+                "Remove-AzureRmLoadBalancerFrontendIpConfig"
                 {
                     if ($InputParameters['Name'] -ne $null)
                     {
@@ -517,9 +516,8 @@ function Execute-AzureCommand
                     }
                     break;
                 }
-
                   
-                 "Remove-AzureRmLoadBalancer"
+                "Remove-AzureRmLoadBalancer"
                 {
                     if ($InputParameters['LbName'] -ne $null)
                     {
@@ -528,7 +526,7 @@ function Execute-AzureCommand
                     break;
                 }
 
-                  "Get-AzureRmPublicIpAddress"
+                "Get-AzureRmPublicIpAddress"
                 {
                     if ($InputParameters['Name'] -ne $null)
                     {
@@ -537,7 +535,7 @@ function Execute-AzureCommand
                     break;
                 }
 
-                  "Remove-AzureRmPublicIpAddress"
+                "Remove-AzureRmPublicIpAddress"
                 {
                     if ($InputParameters['Name'] -ne $null)
                     {
@@ -545,7 +543,7 @@ function Execute-AzureCommand
                     }
                     break;
                 }
-
+                
                 default 
                 { 
                     throw "$($InputParameters['Command']) is not a supported call."; 
@@ -591,6 +589,7 @@ function Execute-AzureCommand
     return $response;
     
 }
+
 #################################
 # Wrapped function
 #################################
@@ -660,6 +659,7 @@ function Get-AzureResources
     # this call doesn't require special error handling
     return Execute-AzureCommand -InputParameters $inputParameters;
 }
+
 ## Function: Select-DisabledSlot
 ##
 ## Purpose: 
@@ -726,15 +726,17 @@ function Get-DisabledSlot($resourceList)
 function Remove-StagingResources()
 {
  param(
-          [Parameter(Mandatory=$true)][string]$slot,
           [Parameter(Mandatory=$true)][string]$ResourceGroupName
-
-       )
+      )
 
     # Getting Azure resource list from the provided resource group
     $resourcelist=Get-ResourcesList -ResourceGroupName $ResourceGroupName;
+    
+    # determining the slot by passing Azure resource list from the provided resource group
+    $Slot = Get-DisabledSlot -resourceList $resourcelist;
+      
     # Filter the resources based on the determined slot
-     $targetedResources = $resourceList | Where-Object { $_.ResourceName.Contains($slot) };
+    $targetedResources = $resourceList | Where-Object { $_.ResourceName.Contains($Slot) };
     
      if($targetedResources -ne $null)
      {   
@@ -776,13 +778,13 @@ function Remove-StagingResources()
  
                      [array]$LoadbalancerPools=$Loadbalancer.BackendAddressPools;
 
-                      # fetching id which has VMSS name from loadbalancer banckendIp configurations
-                      #It will be helpful for us to make sure we are deleting targetted VMSS
+                     # fetching id which has VMSS name from loadbalancer banckendIp configurations
+                     #It will be helpful for us to make sure we are deleting targetted VMSS
                      $vmssLoadBalancerID=$LoadbalancerPools.BackendIpConfigurations.ID;
                                           
                      $VmssContext = "Fetching Vmss resources details"; 
 
-                      # fetching the vmss name from loadbalancer frontendpool configurations
+                     # fetching the vmss name from loadbalancer frontendpool configurations
                      $vmssList = Get-OxaAzureVMSS -ResourceGroupName $ResourceGroupName -Context $VmssContext;
                    
                      foreach($vmss in $vmssList.Name)
@@ -800,7 +802,7 @@ function Remove-StagingResources()
                              Log-Message -Message  "There are no VMSS to delete" -LogType Host
                          }
                      }
-                    Log-Message -Message  "I do not fine VMSS in the ResourceGroup $ResourceGroupName" -LogType Host
+                     Log-Message -Message  "I do not fine VMSS in the ResourceGroup $ResourceGroupName" -LogType Host
 
                     if($LoadbalancerPools.Name -ne $null)
                     {
@@ -866,17 +868,17 @@ function Remove-StagingResources()
                         if($resource.ResourceType -ne "Microsoft.Network/loadBalancers")
                         {
                              # fetching the the cloud services to be deleted
-                              [array]$ipslots = Get-OxaPubicIpAddress -Name $resource.Name -ResourceGroupName $ResourceGroupName -Context $PublicIpAddressContext; 
+                             [array]$ipslots = Get-OxaPubicIpAddress -Name $resource.Name -ResourceGroupName $ResourceGroupName -Context $PublicIpAddressContext; 
                         }
                         
                         if($ipslots -ne $null )
                         {                               
-                              Remove-OxaPubicIpAddress -Name $ipslots.name -ResourceGroupName $ResourceGroupName -Context $PublicIpAddressContext;                                                           
+                             Remove-OxaPubicIpAddress -Name $ipslots.name -ResourceGroupName $ResourceGroupName -Context $PublicIpAddressContext;                                                           
                                 
                         }
                         else
                         {
-                              Log-Message -Message  "There are no slots to delete" -LogType Host
+                             Log-Message -Message  "There are no slots to delete" -LogType Host
                         } 
 
                      }
@@ -890,7 +892,7 @@ function Remove-StagingResources()
 
              
      }
-     Log-Message -Message  "There are no Resources targetted to delete from $($ResourceGroupName)" -LogType Host
+     Log-Message -Message  "There are no Resources targeted to delete from $($ResourceGroupName)" -LogType Host
 
 }
  function Get-OxaAzureLoadBalancers
@@ -1128,4 +1130,39 @@ function Get-OxaAzureVMSS
     # this call doesn't require special error handling
     return Execute-AzureCommand -InputParameters $inputParameters;
 }
-  
+
+## Function: Delete-Resources
+##
+## Purpose: 
+##    To delete the resources by determining the slot status
+##
+## Input: 
+##   DeploymentType          the type of deployment like bootstrap, upgrade, swap
+##   Cloud      the type of environment name like bvt, int, prod
+##   DeploymentStatus             the status of deployment like succeded or not
+##  
+## Output:
+##   nothing
+##
+ function Delete-Resources($DeploymentType,$Cloud ,$DeploymentStatus)
+{
+   
+   if(($DeploymentType -eq "upgrade") -or ($DeploymentType -eq "swap" -and $Cloud -eq  "bvt" -and $DeploymentStatus.ProvisioningState -ieq "Succeeded"))
+    {
+        try
+        {
+            #cleaning up the resources from the disabled slot
+            Remove-StagingResources -ResourceGroupName $ResourceGroupName;
+        }
+        catch
+        {
+            Capture-ErrorStack;
+            throw "Error in deleting the resources: $($_.Message)";
+            exit;  
+        }
+    }
+    else
+    {
+          Log-Message "Skipping the deleting of resources since deployment type: $($DeploymentType) and cloud $($Cloud) has been selected"
+    }
+}
