@@ -135,3 +135,6 @@ EDXAPP_LTI_USER_EMAIL_DOMAIN: "lti.openedx.microsoft.com"
 
 # Default log levels: DEBUG, INFO, WARNING, ERROR, CRITICAL
 #EDXAPP_LOG_LEVEL: 'INFO'
+
+#Cookies API url
+EDXAPP_API_COOKIE_URL: "%%EDXAPP_COOKIE_API_URL%%"
