@@ -598,13 +598,6 @@
                 "description": "Email address associated with the application"
             }
         },
-        "memcacheServer": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "Memcache server to use for the application servers"
-            }
-        },
         "azureCliVersion": {
             "type": "string",
             "defaultValue": "2",
@@ -652,6 +645,7 @@
         "virtualMachineApiVersion": "[variables('defaultApiVersion')]",
         "slot1Status": "[if(equals(parameters('deploymentSlot'), 'slot1'), 'Enabled','Disabled')]",
         "slot2Status": "[if(equals(parameters('deploymentSlot'), 'slot2'), 'Enabled','Disabled')]",
+        "memcacheServer": "[if(equals(parameters('deploymentSlot'), 'slot1'), '10.0.0.16','10.0.0.17')]",
 
         "diagnosticStorageAccountName": "[concat(toLower(parameters('clusterName')), 'diagnostics')]",
         "storageAccountName": "[concat(toLower(parameters('clusterName')), 'vhdsa')]",

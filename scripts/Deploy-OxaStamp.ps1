@@ -73,9 +73,6 @@ Email address associated with the application
 .PARAMETER AzureCliVersion
 Version of Azure CLI to use
 
-.PARAMETER MemcacheServer
-IP Address of the Memcache Server the application servers will use. It is assumed Memcache is configured and is running on the default port of 11211
-
 .PARAMETER DeploymentVersionId
 A timestamp or other identifier to associate with the VMSS being deployed.
 
@@ -132,8 +129,7 @@ Param(
         [Parameter(Mandatory=$false)][string]$EdxAppSuperUserEmail="",
 
         [Parameter(Mandatory=$false)][string][ValidateSet("1","2")]$AzureCliVersion="1",
-        [Parameter(Mandatory=$false)][string]$MemcacheServer="10.0.0.16",
-
+       
         [Parameter(Mandatory=$false)][string]$DeploymentVersionId="",
 
         [Parameter(Mandatory=$false)][switch]$EnableMobileRestApi=$false,
@@ -233,6 +229,11 @@ if($DeploymentType -ne "bootstrap")
         Log-Message "Proceeding with the deleting the resources from ResourceGroup: $ResourceGroupName and cloud: $Cloud"
         Delete-Resources $DeploymentType -Cloud $Cloud -ResourceGroupName $ResourceGroupName;
     }
+    if($DeploymentType -eq "swap")
+    {
+        Log-Message "Proceeding with the getting VMSS Name to replace as deploymentVersion ID from resource group: $ResourceGroupName."
+        $DeploymentVersionId = Get-VmssName -ResourceGroupName $ResourceGroupName;
+    }
     
 }
 
@@ -303,12 +304,12 @@ try
     {
         # kick off full deployment
         # we may need to replace the default resource group name in the parameters file
-        $DeploymentStatus = New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $FullDeploymentArmTemplateFile -TemplateParameterFile $tempParametersFile -Force -Verbose  
+        $deploymentStatus = New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $FullDeploymentArmTemplateFile -TemplateParameterFile $tempParametersFile -Force -Verbose  
         
         if($DeploymentType -eq "swap" -and $cloud -eq "bvt")
         {
             Log-Message "Deleting the resources from $ResourceGroupName since $cloud has been completed"
-            Delete-Resources -DeploymentType $DeploymentType -Cloud $Cloud -ResourceGroupName $ResourceGroupName -DeploymentStatus $DeploymentStatus;
+            Delete-Resources -DeploymentType $DeploymentType -Cloud $Cloud -ResourceGroupName $ResourceGroupName -DeploymentStatus $deploymentStatus;
         }   
     }
 }

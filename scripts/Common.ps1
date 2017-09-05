@@ -1166,3 +1166,26 @@ function Get-OxaAzureVMSS
           Log-Message "Skipping the deleting of resources since deployment type: $($DeploymentType) and cloud $($Cloud) has been selected"
     }
 }
+
+## Function: Get-VmssName
+##
+## Purpose: 
+##    To get the VMSS Name in order to swap the instances
+##
+## Input: 
+##   ResourceGroupName          Resource Group Name
+##  
+## Output:
+##   VmssInstanceId
+##
+function Get-VmssName($ResourceGroupName)
+{
+    $vmssContext = "Fetching Vmss resources details"; 
+    Log-Message "Fetching VMSS details to set deployment versionid for Swap "
+    $vmssList = Get-OxaAzureVMSS -ResourceGroupName $ResourceGroupName -Context $VmssContext;
+    $vmssName = $vmssList | Sort-Object -Descending | Select-Object -Skip 1
+    $vmssInstanceId = $vmssName.Name.Split('-') | Select-Object -Last 1
+
+    # this return the VMSSID to use as deploymentVersion id
+    return $VmssInstanceId;
+}
