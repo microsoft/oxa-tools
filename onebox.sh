@@ -187,7 +187,7 @@ get_current_branch()
     if [[ -z "$branchInfo" ]] || [[ $branchInfo == *"no branch"* ]] || [[ $branchInfo == *"detached"* ]] ; then
         #todo: uncomment before merge
         #branchInfo=`get_branch useMicrosoftRepo oldDevStyle`
-        branchInfo="oxa/df_noConfig"
+        branchInfo="oxa/df_noConfig3"
     fi
 
     echo "$branchInfo"
@@ -199,7 +199,7 @@ get_conf_branch()
     branchInfo=`get_branch`
 
     if [[ -n "$MYSQL_ADMIN_PASSWORD" ]] ; then
-        branchInfo="odfFicOne_fixSqlPass"
+        branchInfo="odfFicOne_fixSqlPass2"
     fi
 
     echo "$branchInfo"
