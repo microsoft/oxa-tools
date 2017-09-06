@@ -104,10 +104,10 @@ Param(
         [Parameter(Mandatory=$true)][string]$AadTenantId,
         [Parameter(Mandatory=$false)][string]$KeyVaultUserObjectId="",
 
-        [Parameter(Mandatory=$true)][string]$KeyVaultDeploymentArmTemplateFile,
+        [Parameter(Mandatory=$false)][string]$KeyVaultDeploymentArmTemplateFile="",
         [Parameter(Mandatory=$false)][string]$KeyVaultDeploymentParametersFile="",
-        [Parameter(Mandatory=$true)][string]$FullDeploymentArmTemplateFile,
-        [Parameter(Mandatory=$true)][string]$FullDeploymentParametersFile,
+        [Parameter(Mandatory=$false)][string]$FullDeploymentArmTemplateFile="",
+        [Parameter(Mandatory=$false)][string]$FullDeploymentParametersFile="",
 
         [Parameter(Mandatory=$true)][string]$ClusterAdministratorEmailAddress,
 
@@ -142,14 +142,21 @@ Param(
 
 $invocation = (Get-Variable MyInvocation).Value 
 $currentPath = Split-Path $invocation.MyCommand.Path 
+$rootPath = (get-item $currentPath).parent.FullName
 Import-Module "$($currentPath)/Common.ps1" -Force
 
-# set the default keyvault parameter file (if one isn't specified)
-if ($KeyVaultDeploymentParametersFile.Trim().Length -eq 0)
-{
-    Log-Message "Setting KeyVaultDeploymentParametersFile to FullDeploymentParametersFile"
-    $KeyVaultDeploymentParametersFile = $FullDeploymentParametersFile;
-}
+$FullDeploymentArmTemplateFile = Set-ScriptDefault -ScriptParamName "FullDeploymentArmTemplateFile" `
+                                    -ScriptParamVal $FullDeploymentArmTemplateFile `
+                                    -DefaultValue "$($rootPath)/templates/stamp/stamp-v2.json"
+$FullDeploymentParametersFile = Set-ScriptDefault -ScriptParamName "FullDeploymentArmTemplateFile" `
+                                    -ScriptParamVal $FullDeploymentParametersFile `
+                                    -DefaultValue "$($rootPath)/config/stamp/default/parameters.json"
+$KeyVaultDeploymentArmTemplateFile = Set-ScriptDefault -ScriptParamName "FullDeploymentArmTemplateFile" `
+                                    -ScriptParamVal $KeyVaultDeploymentArmTemplateFile `
+                                    -DefaultValue "$($rootPath)/templates/stamp/stamp-keyvault.json"
+$KeyVaultDeploymentParametersFile = Set-ScriptDefault -ScriptParamName "FullDeploymentArmTemplateFile" `
+                                    -ScriptParamVal $KeyVaultDeploymentParametersFile `
+                                    -DefaultValue $FullDeploymentParametersFile
 
 # Login
 $clientSecret = ConvertTo-SecureString -String $AadWebClientAppKey -AsPlainText -Force
