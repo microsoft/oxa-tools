@@ -4,13 +4,18 @@ Handle automatic, continuous deployments for OXA Stamp environments
 
 #>
 
-Param(
-    [Parameter(Mandatory=$true)][string]$AzureSubscriptionName,
-    [Parameter(Mandatory=$true)][string]$ResourceGroupName,
-    [Parameter(Mandatory=$true)][string]$Location,
+Param(    
     [Parameter(Mandatory=$true)][string]$AadWebClientId,
     [Parameter(Mandatory=$true)][string]$AadWebClientAppKey,
-    [Parameter(Mandatory=$true)][string]$AadTenantId
+    [Parameter(Mandatory=$true)][string]$AadTenantId,
+
+    [Parameter(Mandatory=$false)][string]$AzureSubscriptionName,
+    [Parameter(Mandatory=$false)][string]$ResourceGroupName,
+    [Parameter(Mandatory=$false)][string]$Location="south central us",
+
+    [Parameter(Mandatory=$false)][string]$BranchName="oxa/devfic",
+    [Parameter(Mandatory=$false)][ValidateSet("bootstrap", "upgrade", "swap")][string]$DeploymentType="upgrade",    
+    [Parameter(Mandatory=$false)][ValidateSet("prod", "int", "bvt")][string]$Cloud="bvt"
 )
 
 $invocation = (Get-Variable MyInvocation).Value 
