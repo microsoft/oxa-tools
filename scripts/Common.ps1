@@ -391,7 +391,7 @@ function Create-StorageContainer
 ## Function: Set-ScriptDefault
 ##
 ## Purpose: 
-##    Set default for parameter and log a message saying the default was set.
+##    Validate parameter exists and log a message saying the default was set.
 ##
 ## Input: 
 ##   ScriptParamVal      supplied value of script parameter override if it is null or an empty string
@@ -399,7 +399,7 @@ function Create-StorageContainer
 ##   DefaultValue        default value provided
 ##
 ## Output:
-##   nothing
+##   The DefaultValue parameter
 ##
 function Set-ScriptDefault
 {
