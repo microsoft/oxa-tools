@@ -956,23 +956,32 @@ EOF
 setup_backup()
 {
     # collect the parameters
-    backup_configuration="${1}";                            # Backup settings file
-    backup_script="${2}";                                   # Backup script (actually take the backup)
-    backup_log="${3}";                                      # Log file for backup job
+    backup_configuration="${1}";                                # Backup settings file
+    backup_script="${2}";                                       # Backup script (actually take the backup)
+    backup_log="${3}";                                          # Log file for backup job
 
-    account_name="${4}"; account_key="${5}";                # Storage Account 
-    backupFrequency="${6}";                                 # Backup Frequency
-    backupRententionDays="${7}";                            # Backup Retention
-    mongoReplicaSetConnectionString="${8}";                 # Mongo replica set connection string
-    mysqlServerList="${9}";                                 # Mysql Server List
-    databaseType="${10}";                                   # Database Type : mysql|mongo
+    account_name="${4}"; account_key="${5}";                    # Storage Account 
+    backupFrequency="${6}";                                     # Backup Frequency
+    backupRententionDays="${7}";                                # Backup Retention
+    mongoReplicaSetConnectionString="${8}";                     # Mongo replica set connection string
+    mysqlServerList="${9}";                                     # Mysql Server List
+    databaseType="${10}";                                       # Database Type : mysql|mongo
 
-    databaseUser="${11}"; databasePassword="${12}";         # Credentials for accessing the database for backup purposes
-    backupLocalPath="${13}";                                # Database Type : mysql|mongo
+    databaseUser="${11}"; databasePassword="${12}";             # Credentials for accessing the database for backup purposes
+    backupLocalPath="${13}";                                    # Local path where database will be temporarily backed up to
+
     # Optional.
-    tempDatabaseUser="${14}"; tempDatabasePassword="${15}"; # Temporary credentials for accessing the backup (optional)
+    tempDatabaseUser="${14}"; tempDatabasePassword="${15}";     # Temporary credentials for accessing the backup (optional)
+    storageAccountEndpointSuffix=`echo ${16}| base64 --decode`  # Blob storage suffix (defaults to core.windows.net for global azure)
 
     log "Setting up database backup for '${databaseType}' database(s)"
+
+    # default storage account suffix to core.windows.net if not specified
+    if [[ -z "${storageAccountEndpointSuffix// }" ]]; then
+
+        log "Defaulting the storage account suffix to 'core.windows.net'"
+        storageAccountEndpointSuffix="core.windows.net"
+    fi
 
     # For simplicity, we require all required parameters are set
     if [ "$#" -lt 13 ]; then
@@ -993,6 +1002,7 @@ TEMP_DATABASE_USER=${tempDatabaseUser}
 TEMP_DATABASE_PASSWORD=${tempDatabasePassword}
 DATABASE_TYPE=${databaseType}
 BACKUP_LOCAL_PATH=${backupLocalPath}
+AZURE_STORAGEACCOUNT_CONNECTIONSTRING=\"DefaultEndpointsProtocol=https;AccountName=${account_name};AccountKey=${account_key};EndpointSuffix=${storageAccountEndpointSuffix}\"
 EOF"
 
     # this file contains secrets (like storage account key). Secure it

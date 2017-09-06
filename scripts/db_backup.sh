@@ -3,10 +3,14 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
-set -x
+# TODO: add full error handling and notification
+# set -x
 
 # Path to settings file provided as an argument to this script.
 SETTINGS_FILE=
+
+# azure cli version to use (default to 1.0)
+azure_cli_version=1
 
 # From settings file
     DATABASE_TYPE= # mongo|mysql
@@ -16,13 +20,15 @@ SETTINGS_FILE=
     MYSQL_SERVER_LIST=
     DATABASE_USER=
     DATABASE_PASSWORD=
+
     # Optional values. If provided, will add another set of credentials to msyql backup
     TEMP_DATABASE_USER=
     TEMP_DATABASE_PASSWORD=
 
     # Writing to storage
-    AZURE_STORAGE_ACCOUNT=    # from BACKUP_STORAGEACCOUNT_NAME
-    AZURE_STORAGE_ACCESS_KEY= # from BACKUP_STORAGEACCOUNT_KEY
+    AZURE_STORAGE_ACCOUNT=              # from BACKUP_STORAGEACCOUNT_NAME
+    AZURE_STORAGE_ACCESS_KEY=           # from BACKUP_STORAGEACCOUNT_KEY
+    AZURE_STORAGE_CONNECTIONSTRING=     # azure storage account connection string
 
     BACKUP_RETENTIONDAYS=
 
@@ -43,7 +49,8 @@ help()
     echo
     echo "This script $SCRIPT_NAME will backup the database"
     echo "Options:"
-    echo "  -s|--settings-file  Path to settings"
+    echo "  -s|--settings-file   Path to settings"
+    echo "  --azure-cli-version  Azure Cli Version (1 or 2)"
     echo
 }
 
@@ -64,6 +71,20 @@ parse_args()
             -h|--help)
                 help
                 exit 2
+                ;;            
+            --azure-cli-version)
+                azure_cli_version=$2
+                if ! is_valid_arg "1 2" $azure_cli_version; then
+                    echo "Invalid azure cli specified\n"
+                    help
+                    exit 2
+                fi
+                
+                shift # argument
+                ;;            
+            --debug)
+                set -x
+                shift # argument
                 ;;
             *) # unknown option
                 echo "ERROR. Option -${BOLD}$2${NORM} not allowed."
@@ -103,9 +124,12 @@ validate_db_type()
 
 validate_remote_storage()
 {
+    # TODO: may not be necessary since we will instead explicitly pass the parameters and use a connection string instead
     # Exporting for Azure CLI
     export AZURE_STORAGE_ACCOUNT=$BACKUP_STORAGEACCOUNT_NAME   # in <env>.sh AZURE_ACCOUNT_NAME
     export AZURE_STORAGE_ACCESS_KEY=$BACKUP_STORAGEACCOUNT_KEY # in <env>.sh AZURE_ACCOUNT_KEY
+    export AZURE_STORAGE_CONNECTIONSTRING=$AZURE_STORAGEACCOUNT_CONNECTIONSTRING # azure storage account connection string
+
     if [ -z $AZURE_STORAGE_ACCOUNT ] || [ -z $AZURE_STORAGE_ACCESS_KEY ]; then
         log "Azure storage credentials are required"
         help
@@ -223,7 +247,9 @@ create_compressed_db_dump()
 
 copy_db_to_azure_storage()
 {
+    # ensure pre-requisites are installed
     install-azure-cli
+    install-json-processor
 
     pushd $BACKUP_LOCAL_PATH
 
@@ -232,26 +258,60 @@ copy_db_to_azure_storage()
     # AZURE_STORAGE_ACCOUNT and AZURE_STORAGE_ACCESS_KEY are already exported for azure cli's use.
     # FYI, we could use AZURE_STORAGE_CONNECTION_STRING instead.
 
-    sc=$(azure storage container show  $CONTAINER_NAME --json)
+    if [[ $azure_cli_version == "1" ]]; then
+        # cli 1.0
+        sc=$(azure storage container show "${CONTAINER_NAME}" --json)
+    else
+        # cli 2.0
+        sc=$(az storage container show --connection-string "${AZURE_STORAGE_CONNECTIONSTRING}" --name "${CONTAINER_NAME}" -o json)
+    fi
+
     if [[ -z $sc ]]; then
         log "Creating the container... $CONTAINER_NAME"
-        azure storage container create $CONTAINER_NAME
+        if [[ $azure_cli_version == "1" ]]; then
+            # cli 1.0
+            azure storage container create "${CONTAINER_NAME}"
+        else
+            # cli 2.0
+            response=$(az storage container create --connection-string "${AZURE_STORAGE_CONNECTIONSTRING}" --name "${CONTAINER_NAME}" -o json)
+            status=$(echo $response | jq '.created')
+
+            if [[ $status != "true" ]]; then
+                # creation failed
+                log "Unable to create the specified storage container: ${CONTAINER_NAME}"
+                exit 1
+            fi
+        fi
+        
     else
         log "The container $CONTAINER_NAME already exists."
     fi
 
     log "Uploading file... Please wait..."
-    echo
-    result=$(azure storage blob upload $COMPRESSED_FILE $CONTAINER_NAME $COMPRESSED_FILE --json)
+    if [[ $azure_cli_version == "1" ]]; then
+        # cli 1.0
+        result=$(azure storage blob upload $COMPRESSED_FILE $CONTAINER_NAME $COMPRESSED_FILE --json)
 
-    install-json-processor
-    fileName=$(echo $result | jq '.name')
-    fileSize=$(echo $result | jq '.transferSummary.totalSize')    
-    if [ $fileName != "" ] && [ $fileName != null ]
-    then
-        log "$fileName blob file uploaded successfully. Size: $fileSize"
+        # parse the json response
+        fileName=$(echo $result | jq '.name')
+        fileSize=$(echo $result | jq '.transferSummary.totalSize')    
+        if [[ $fileName != "" ]] && [[ $fileName != null ]]; then
+            log "$fileName blob file uploaded successfully. Size: $fileSize"
+        else
+            log "Upload blob file failed"
+        fi
+
     else
-        log "Upload blob file failed"
+        # cli 2.0
+        result=$(az storage blob upload --connection-string "${AZURE_STORAGE_CONNECTIONSTRING}" --file "${COMPRESSED_FILE}" --container-name "${CONTAINER_NAME}" --name "${COMPRESSED_FILE}" -o json)
+
+        # parse the json response
+        etag=$(echo $result | jq '.etag')
+        lastModified=$(echo $result | jq '.lastModified')
+
+        if [[ -z "${etag// }" ]] || [[ -z "${lastModified// }" ]]; then
+            log "Upload blob file failed"
+        fi
     fi
 
     popd
@@ -293,7 +353,13 @@ cleanup_old_remote_files()
     cutoffInSeconds=$(( $currentSeconds - $retentionPeriod ))
 
     # Get file list with lots of meta-data. We'll use this to extract dates.
-    verboseDetails=`azure storage blob list $CONTAINER_NAME --json`
+    if [[ $azure_cli_version == "1" ]]; then
+        # cli 1.0
+        verboseDetails=`azure storage blob list $CONTAINER_NAME --json`
+    else
+        # cli 2.0
+        verboseDetails=`az storage blob list --connection-string "${AZURE_STORAGE_CONNECTIONSTRING}" --container-name $CONTAINER_NAME -o json`
+    fi
 
     # List of files (generally formatted like this: mysql-backup_2017-04-20_03h-00m-01s.tar.gz)
     terminator="\"" # quote
@@ -309,8 +375,17 @@ cleanup_old_remote_files()
         fileDateInSeconds=`date --date="$fileDateString" +%s`
 
         if [ $cutoffInSeconds -ge $fileDateInSeconds ]; then
+            
             log "deleting $fileName"
-            azure storage blob delete -q $CONTAINER_NAME $fileName
+
+            if [[ $azure_cli_version == "1" ]]; then
+                # cli 1.0
+                azure storage blob delete -q $CONTAINER_NAME $fileName
+            else
+                # cli 2.0
+                # failure here isn't critical, so ignoring response
+                az storage blob delete --connection-string "${AZURE_STORAGE_CONNECTIONSTRING}" --container-name "${CONTAINER_NAME}" --name "${fileName}" --o json
+            fi
         else
             log "keeping $fileName"
         fi
@@ -319,11 +394,11 @@ cleanup_old_remote_files()
     set -x
 }
 
-# Parse script argument(s)
-parse_args $@
-
 # log() and other functions
 source_wrapper $UTILITIES_FILE
+
+# Parse script argument(s)
+parse_args $@
 
 # Script self-idenfitication
 print_script_header
@@ -342,8 +417,10 @@ set_path_names
 # Cleanup previous runs.
 cleanup_local_copies
 
+# backup the database and compress it
 create_compressed_db_dump
 
+# upload the compressed backup to azure
 copy_db_to_azure_storage
 
 # Cleanup residue from this run.
