@@ -100,7 +100,7 @@ fix_args()
 
     # The upstream doesn't have the relevant
     # changes to leverage MYSQL_ADMIN_PASSWORD
-    # For details, see edx-configuration commit:
+    # For details, see msft/edx-configuration commit:
     # 65e2668672bda0112a64aabb86cf532ad228c4fa
     if [[ $BRANCH_VERSIONS != edx ]] ; then
         MYSQL_ADMIN_PASSWORD=`harden $MYSQL_ADMIN_PASSWORD`
@@ -193,6 +193,18 @@ get_current_branch()
     echo "$branchInfo"
 }
 
+#todo: switch configuration branch to get_branch after odf_ficOneAndFixSqlPass AND odfFicOne_fixSqlPass are merged
+get_conf_branch()
+{
+    branchInfo=`get_branch`
+
+    if [[ -n "$MYSQL_ADMIN_PASSWORD" ]] ; then
+        branchInfo="odfFicOne_fixSqlPass"
+    fi
+
+    echo "$branchInfo"
+}
+
 harden()
 {
     originalString=$1
@@ -264,7 +276,7 @@ if [[ ! -f scripts/bootstrap.sh ]] ; then
     wget -q https://raw.githubusercontent.com/${MSFT}/oxa-tools/$(get_current_branch)/$bootstrap -O $fileName
     bootstrap=$fileName
 fi
-#todo: switch configuration branch to get_branch after odf_ficOneAndFixSqlPass AND odfFicOne_fixSqlPass are merged
+
 bash $bootstrap \
     --role \
         $TEMPLATE_TYPE \
@@ -279,7 +291,7 @@ bash $bootstrap \
     --edxconfiguration-public-github-projectname \
         `get_conf_project_name` \
     --edxconfiguration-public-github-projectbranch \
-        odfFicOne_fixSqlPass \
+        `get_conf_branch` \
     --edxplatform-public-github-accountname \
         `get_org` \
     --edxplatform-public-github-projectbranch \
