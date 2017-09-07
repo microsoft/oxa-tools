@@ -668,6 +668,19 @@ INSTALLER_PATH="${INSTALLER_BASEPATH}/install.sh"
 DEPLOYMENT_ENV="${CLOUDNAME,,}" 
 OXA_ENV_PATH="${REPO_ROOT}/oxa-tools-config/env/${DEPLOYMENT_ENV}"
 
+# drop the environment configurations
+log "Download configurations from keyvault"
+export HOME=$(dirname ~/.)
+
+if [[ -d $OXA_ENV_PATH ]]; then
+    log "Removing the existing configuration from '${OXA_ENV_PATH}'"
+    rm -rf $OXA_ENV_PATH
+fi
+
+# download configs from keyvault
+powershell -file $INSTALLER_BASEPATH/Process-OxaToolsKeyVaultConfiguration.ps1 -Operation Download -VaultName $KEYVAULT_NAME -AadWebClientId $AAD_WEBCLIENT_ID -AadWebClientAppKey $AAD_WEBCLIENT_APPKEY -AadTenantId $AAD_TENANT_ID -TargetPath $OXA_ENV_PATH -AzureSubscriptionId $AZURE_SUBSCRIPTION_ID -AzureCliVersion $AZURE_CLI_VERSION
+exit_on_error "Failed downloading configurations from keyvault" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
+
 # TODO: downgrade this to position keyvault as the authorititive source 
 # that should remove dependency on deployment-time overrides
 # apply deployment-time parameter overrides
@@ -681,19 +694,6 @@ persist_deployment_time_values
 local encoded_azure_storage_endpoint_suffix=`echo ${AZURE_STORAGE_ENDPOINT_SUFFIX} | base64`
 local storageAccountEndpointSuffix=`get_azure_storage_endpoint_suffix ${encoded_azure_storage_endpoint_suffix}`
 local storage_connection_string=`generate_azure_storage_connection_string "${BACKUP_STORAGEACCOUNT_NAME}" "${BACKUP_STORAGEACCOUNT_KEY}" "${storageAccountEndpointSuffix}"`
-
-# drop the environment configurations
-log "Download configurations from keyvault"
-export HOME=$(dirname ~/.)
-
-if [[ -d $OXA_ENV_PATH ]]; then
-    log "Removing the existing configuration from '${OXA_ENV_PATH}'"
-    rm -rf $OXA_ENV_PATH
-fi
-
-# download configs from keyvault
-powershell -file $INSTALLER_BASEPATH/Process-OxaToolsKeyVaultConfiguration.ps1 -Operation Download -VaultName $KEYVAULT_NAME -AadWebClientId $AAD_WEBCLIENT_ID -AadWebClientAppKey $AAD_WEBCLIENT_APPKEY -AadTenantId $AAD_TENANT_ID -TargetPath $OXA_ENV_PATH -AzureSubscriptionId $AZURE_SUBSCRIPTION_ID -AzureCliVersion $AZURE_CLI_VERSION
-exit_on_error "Failed downloading configurations from keyvault" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
 # create storage container for edxapp:migrate & other reporting features (containers for the database backup will be created dynamically)
 powershell -file $INSTALLER_BASEPATH/Create-StorageContainer.ps1 -AadWebClientId $AAD_WEBCLIENT_ID -AadWebClientAppKey $AAD_WEBCLIENT_APPKEY -AadTenantId $AAD_TENANT_ID -AzureSubscriptionId $AZURE_SUBSCRIPTION_ID -StorageAccountName "${BACKUP_STORAGEACCOUNT_NAME}" -StorageAccountKey "${BACKUP_STORAGEACCOUNT_KEY}" -StorageContainerNames "uploads,reports,tracking" -AzureCliVersion $AZURE_CLI_VERSION -AzureStorageConnectionString $storage_connection_string
