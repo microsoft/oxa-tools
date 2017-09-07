@@ -24,6 +24,12 @@ Name of the storage account where the container will be created
 .PARAMETER StorageContainerNames
 Name(s) of the storage container(s) to create. Use a comma-separated list to specify multiple containers
 
+.PARAMETER AzureCliVersion
+Version of Azure CLI to use
+
+.PARAMETER AzureStorageConnectionString
+Azure storage connection string (in support of custom storage endpoints)
+
 .INPUTS
 None. You cannot pipe objects to Create-StorageContainer.ps1
 
@@ -42,7 +48,9 @@ Param(
         [Parameter(Mandatory=$true)][string]$AzureSubscriptionId,
         [Parameter(Mandatory=$true)][string]$StorageAccountName,
         [Parameter(Mandatory=$true)][string]$StorageAccountKey,
-        [Parameter(Mandatory=$true)][string]$StorageContainerNames
+        [Parameter(Mandatory=$true)][string]$StorageContainerNames,
+        [Parameter(Mandatory=$false)][string][ValidateSet("1","2")]$AzureCliVersion="1",
+        [Parameter(Mandatory=$false)][string]$AzureStorageConnectionString=""
      )
 
 ###########################################
@@ -88,5 +96,19 @@ foreach($storageContainerName in $storageContainerList)
 
     # todo: fall back to azure cli since there are existing issues with installation of azure powershell cmdlets for linux
     # cli doesn't provide clean object returns (json responses are helpful). Therefore, transition as soon as possible
-    azure storage container create --account-name $StorageAccountName --account-key $StorageAccountKey --container $storageContainerName --json
+    if ($AzureCliVersion -eq "1" )
+    {
+        azure storage container create --account-name $StorageAccountName --account-key $StorageAccountKey --container $storageContainerName --json
+    }
+    else 
+    {
+        if ($AzureStorageConnectionString)
+        {
+            az storage container create --account-name $StorageAccountName --account-key $StorageAccountKey --name $storageContainerName --connection-string $AzureStorageConnectionString -o json
+        }
+        else 
+        {
+            az storage container create --account-name $StorageAccountName --account-key $StorageAccountKey --name $storageContainerName -o json
+        }
+    }
 }
