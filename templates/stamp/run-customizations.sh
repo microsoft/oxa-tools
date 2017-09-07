@@ -681,9 +681,12 @@ fi
 powershell -file $INSTALLER_BASEPATH/Process-OxaToolsKeyVaultConfiguration.ps1 -Operation Download -VaultName $KEYVAULT_NAME -AadWebClientId $AAD_WEBCLIENT_ID -AadWebClientAppKey $AAD_WEBCLIENT_APPKEY -AadTenantId $AAD_TENANT_ID -TargetPath $OXA_ENV_PATH -AzureSubscriptionId $AZURE_SUBSCRIPTION_ID -AzureCliVersion $AZURE_CLI_VERSION
 exit_on_error "Failed downloading configurations from keyvault" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
+set -x
+
 # TODO: downgrade this to position keyvault as the authorititive source 
 # that should remove dependency on deployment-time overrides
-# apply deployment-time parameter overrides
+# apply deployment-time parameter overrides. After these updates, the appropriate 
+# override values will be present in AZURE_ACCOUNT_KEY, AZURE_ACCOUNT_NAME
 persist_deployment_time_values
 
 # Generate a storage connection string (primarily to support custom storage endpoints)
@@ -691,15 +694,14 @@ persist_deployment_time_values
 # We expect the storage account suffix (AZURE_STORAGE_ENDPOINT_SUFFIX) to either:
 # 1. have a value (custom storage endpoint)
 # 2. not have a value (default to global azure)
-set -x
 encoded_azure_storage_endpoint_suffix=`echo ${AZURE_STORAGE_ENDPOINT_SUFFIX} | base64`
 storageAccountEndpointSuffix=`get_azure_storage_endpoint_suffix ${encoded_azure_storage_endpoint_suffix}`
-storage_connection_string=`generate_azure_storage_connection_string "${BACKUP_STORAGEACCOUNT_NAME}" "${BACKUP_STORAGEACCOUNT_KEY}" "${storageAccountEndpointSuffix}"`
+storage_connection_string=`generate_azure_storage_connection_string "${AZURE_ACCOUNT_NAME}" "${AZURE_ACCOUNT_KEY}" "${storageAccountEndpointSuffix}"`
 set +x
 
 # create storage container for edxapp:migrate & other reporting features (containers for the database backup will be created dynamically)
-powershell -file $INSTALLER_BASEPATH/Create-StorageContainer.ps1 -AadWebClientId $AAD_WEBCLIENT_ID -AadWebClientAppKey $AAD_WEBCLIENT_APPKEY -AadTenantId $AAD_TENANT_ID -AzureSubscriptionId $AZURE_SUBSCRIPTION_ID -StorageAccountName "${BACKUP_STORAGEACCOUNT_NAME}" -StorageAccountKey "${BACKUP_STORAGEACCOUNT_KEY}" -StorageContainerNames "uploads,reports,tracking" -AzureCliVersion $AZURE_CLI_VERSION -AzureStorageConnectionString "${storage_connection_string}"
-exit_on_error "Failed creating container(s) for edxapp:migrate (uploads,reports,tracking) in '${BACKUP_STORAGEACCOUNT_NAME}'" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
+powershell -file $INSTALLER_BASEPATH/Create-StorageContainer.ps1 -AadWebClientId $AAD_WEBCLIENT_ID -AadWebClientAppKey $AAD_WEBCLIENT_APPKEY -AadTenantId $AAD_TENANT_ID -AzureSubscriptionId $AZURE_SUBSCRIPTION_ID -StorageAccountName "${AZURE_ACCOUNT_NAME}" -StorageAccountKey "${AZURE_ACCOUNT_KEY}" -StorageContainerNames "uploads,reports,tracking" -AzureCliVersion $AZURE_CLI_VERSION -AzureStorageConnectionString "${storage_connection_string}"
+exit_on_error "Failed creating container(s) for edxapp:migrate (uploads,reports,tracking) in '${AZURE_ACCOUNT_NAME}'" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
 # Create a link to the utilities.sh library to be used by the other installer scripts
 ln -s $UTILITIES_PATH "${INSTALLER_BASEPATH}/utilities.sh"
