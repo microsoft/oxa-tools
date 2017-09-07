@@ -98,11 +98,12 @@ fix_args()
     set +x
     MONGO_PASSWORD=`harden $MONGO_PASSWORD`
 
+    #todo: remove false after edx-configuration merge
     # The upstream doesn't have the relevant
     # changes to leverage MYSQL_ADMIN_PASSWORD
     # For details, see msft/edx-configuration commit:
     # 65e2668672bda0112a64aabb86cf532ad228c4fa
-    if [[ $BRANCH_VERSIONS != edx ]] ; then
+    if [[ $BRANCH_VERSIONS != edx ]] && false ; then
         MYSQL_ADMIN_PASSWORD=`harden $MYSQL_ADMIN_PASSWORD`
     fi
 
@@ -193,6 +194,7 @@ get_current_branch()
     echo "$branchInfo"
 }
 
+#todo: remove soon
 #todo: switch configuration branch to get_branch after odf_ficOneAndFixSqlPass AND odfFicOne_fixSqlPass are merged
 get_conf_branch()
 {
@@ -291,7 +293,7 @@ bash $bootstrap \
     --edxconfiguration-public-github-projectname \
         `get_conf_project_name` \
     --edxconfiguration-public-github-projectbranch \
-        `get_conf_branch` \
+        `get_branch` \
     --edxplatform-public-github-accountname \
         `get_org` \
     --edxplatform-public-github-projectbranch \
