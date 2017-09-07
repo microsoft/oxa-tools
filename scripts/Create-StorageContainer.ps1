@@ -92,7 +92,7 @@ Set-AzureSubscriptionContext -AzureSubscriptionId $AzureSubscriptionId
 foreach($storageContainerName in $storageContainerList)
 {
     # todo: add retries for better resiliency
-    Log-Message "Creating Storage Container: $($storageContainerName)" -Context "Create Storage Containers" -NoNewLine
+    Log-Message "Creating Storage Container (Cli: $AzureCliVersion): $($storageContainerName)" -Context "Create Storage Containers"
 
     # todo: fall back to azure cli since there are existing issues with installation of azure powershell cmdlets for linux
     # cli doesn't provide clean object returns (json responses are helpful). Therefore, transition as soon as possible
@@ -104,6 +104,7 @@ foreach($storageContainerName in $storageContainerList)
     {
         if ($AzureStorageConnectionString)
         {
+            Log-Message "Using connection string: $AzureStorageConnectionString" -Context "Create Storage Containers" -NoNewLine
             az storage container create --account-name $StorageAccountName --account-key $StorageAccountKey --name $storageContainerName --connection-string $AzureStorageConnectionString -o json
         }
         else 
