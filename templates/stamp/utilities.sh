@@ -995,7 +995,8 @@ setup_backup()
 
     # Optional.
     local tempDatabaseUser="${14}"; local tempDatabasePassword="${15}";             # Temporary credentials for accessing the backup (optional)
-    local storageAccountEndpointSuffix=`get_azure_storage_endpoint_suffix ${16}`    # Blob storage suffix (defaults to core.windows.net for global azure)
+    local azureCliVersion="${16}"                                                   # Azure Cli version to use
+    local storageAccountEndpointSuffix=`get_azure_storage_endpoint_suffix ${17}`    # Blob storage suffix (defaults to core.windows.net for global azure)
 
     # generate a storage connection string
     local storage_connection_string=`generate_azure_storage_connection_string "${account_name}" "${account_key}" "${storageAccountEndpointSuffix}"`
@@ -1030,7 +1031,7 @@ EOF"
     # create the cron job
     cron_installer_script="${backup_script}.${databaseType}"
     lock_file="${cron_installer_script}.lock"
-    install_command="sudo flock -n ${lock_file} bash ${backup_script} -s ${backup_configuration} >> ${backup_log} 2>&1"
+    install_command="sudo flock -n ${lock_file} bash ${backup_script} -s ${backup_configuration} --azure-cli-version ${azureCliVersion} >> ${backup_log} 2>&1"
     echo $install_command > $cron_installer_script
 
     # secure the file and make it executable

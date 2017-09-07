@@ -336,7 +336,7 @@ cleanup_local_copies()
 
 cleanup_old_remote_files()
 {
-    if [-z $BACKUP_RETENTIONDAYS ]; then
+    if [ -z $BACKUP_RETENTIONDAYS ]; then
         log "No database retention length provided."
         return
     fi
