@@ -691,12 +691,12 @@ persist_deployment_time_values
 # We expect the storage account suffix (AZURE_STORAGE_ENDPOINT_SUFFIX) to either:
 # 1. have a value (custom storage endpoint)
 # 2. not have a value (default to global azure)
-local encoded_azure_storage_endpoint_suffix=`echo ${AZURE_STORAGE_ENDPOINT_SUFFIX} | base64`
-local storageAccountEndpointSuffix=`get_azure_storage_endpoint_suffix ${encoded_azure_storage_endpoint_suffix}`
-local storage_connection_string=`generate_azure_storage_connection_string "${BACKUP_STORAGEACCOUNT_NAME}" "${BACKUP_STORAGEACCOUNT_KEY}" "${storageAccountEndpointSuffix}"`
+encoded_azure_storage_endpoint_suffix=`echo ${AZURE_STORAGE_ENDPOINT_SUFFIX} | base64`
+storageAccountEndpointSuffix=`get_azure_storage_endpoint_suffix ${encoded_azure_storage_endpoint_suffix}`
+storage_connection_string=`generate_azure_storage_connection_string "${BACKUP_STORAGEACCOUNT_NAME}" "${BACKUP_STORAGEACCOUNT_KEY}" "${storageAccountEndpointSuffix}"`
 
 # create storage container for edxapp:migrate & other reporting features (containers for the database backup will be created dynamically)
-powershell -file $INSTALLER_BASEPATH/Create-StorageContainer.ps1 -AadWebClientId $AAD_WEBCLIENT_ID -AadWebClientAppKey $AAD_WEBCLIENT_APPKEY -AadTenantId $AAD_TENANT_ID -AzureSubscriptionId $AZURE_SUBSCRIPTION_ID -StorageAccountName "${BACKUP_STORAGEACCOUNT_NAME}" -StorageAccountKey "${BACKUP_STORAGEACCOUNT_KEY}" -StorageContainerNames "uploads,reports,tracking" -AzureCliVersion $AZURE_CLI_VERSION -AzureStorageConnectionString $storage_connection_string
+powershell -file $INSTALLER_BASEPATH/Create-StorageContainer.ps1 -AadWebClientId $AAD_WEBCLIENT_ID -AadWebClientAppKey $AAD_WEBCLIENT_APPKEY -AadTenantId $AAD_TENANT_ID -AzureSubscriptionId $AZURE_SUBSCRIPTION_ID -StorageAccountName "${BACKUP_STORAGEACCOUNT_NAME}" -StorageAccountKey "${BACKUP_STORAGEACCOUNT_KEY}" -StorageContainerNames "uploads,reports,tracking" -AzureCliVersion $AZURE_CLI_VERSION -AzureStorageConnectionString "${storage_connection_string}"
 exit_on_error "Failed creating container(s) for edxapp:migrate (uploads,reports,tracking) in '${BACKUP_STORAGEACCOUNT_NAME}'" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
 # Create a link to the utilities.sh library to be used by the other installer scripts
