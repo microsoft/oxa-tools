@@ -199,7 +199,7 @@ get_conf_branch()
     branchInfo=`get_branch`
 
     if [[ -n "$MYSQL_ADMIN_PASSWORD" ]] ; then
-        branchInfo="PassFix3"
+        branchInfo="PassFix2"
     fi
 
     echo "$branchInfo"
