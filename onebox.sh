@@ -97,6 +97,7 @@ fix_args()
     set +x
     MONGO_PASSWORD=`harden $MONGO_PASSWORD`
 
+    #todo: remove false after edx-configuration merge
     # The upstream doesn't have the relevant
     # changes to leverage MYSQL_ADMIN_PASSWORD
     # For details, see msft/edx-configuration commit:
