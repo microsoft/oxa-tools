@@ -20,14 +20,14 @@ For example:
 `sudo onebox.sh` OR
 `sudo bash onebox.sh -r devstack -b stable -d hokiePokiePass11`
 
-What's been tested: server edition on azure, desktop edtion in virtualbox VM, docker containers with systemd. Please open an issue if you identify any issues.
+What's been tested: server edition on azure, desktop edtion in virtualbox VM, docker containers with systemd. Please open an "issue" in github if you encounter any problems.
 
 ## Deploying high availability instance (for production-like environments)
 
-documentaiton coming soon
+documentation coming soon
 
 ## todo:
- * 100628 documentation for all types of onebox (fullstack and devstack) deployments
+ * 100628 more documentation for all types of onebox (fullstack and devstack) deployments
  * 100632 re-enable fullstack hyperlink "button" deployment to azure
  * documentation for deploying high availability "STAMP" deployments
  * 100626 there are still a few customizations that aren't applied during onebox installation like sites, themes, etc.
