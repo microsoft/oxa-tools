@@ -21,18 +21,17 @@ DEFAULT_PASSWORD=
 ##########################
 # Settings
 ##########################
-MONGO_USER=oxamongoadmin
+readonly MONGO_USER=oxamongoadmin
 MONGO_PASSWORD=
 
-# Ansible creates "root" user when installing mysql so don't
-# change this username, but we will harden the password.
-readonly MYSQL_ADMIN_USER=root
+# dynamically assigned below
+MYSQL_ADMIN_USER=
 MYSQL_ADMIN_PASSWORD=
 
-MYSQL_USER=oxamysql
+readonly MYSQL_USER=oxamysql
 MYSQL_PASSWORD=
 
-EDXAPP_SU_USERNAME=edx_admin
+readonly EDXAPP_SU_USERNAME=edx_admin
 EDXAPP_SU_PASSWORD=
 
 readonly BASE_URL=$HOSTNAME
@@ -103,7 +102,11 @@ fix_args()
     # changes to leverage MYSQL_ADMIN_PASSWORD
     # For details, see msft/edx-configuration commit:
     # 65e2668672bda0112a64aabb86cf532ad228c4fa
-    if [[ $BRANCH_VERSIONS != edx ]] && false ; then
+    if [[ $BRANCH_VERSIONS == edx ]] ; then
+        MYSQL_ADMIN_USER=root
+        MYSQL_ADMIN_PASSWORD=
+    else
+        MYSQL_ADMIN_USER=lexoxamysqladmin
         MYSQL_ADMIN_PASSWORD=`harden $MYSQL_ADMIN_PASSWORD`
     fi
 
@@ -189,19 +192,6 @@ get_current_branch()
         #todo: uncomment before merge
         #branchInfo=`get_branch useMicrosoftRepo oldDevStyle`
         branchInfo="oxa/df_noConfig"
-    fi
-
-    echo "$branchInfo"
-}
-
-#todo: remove soon
-#todo: switch configuration branch to get_branch after odf_ficOneAndFixSqlPass AND odfFicOne_fixSqlPass are merged
-get_conf_branch()
-{
-    branchInfo=`get_branch`
-
-    if [[ -n "$MYSQL_ADMIN_PASSWORD" ]] ; then
-        branchInfo="odfFicOne_fixSqlPass"
     fi
 
     echo "$branchInfo"
