@@ -336,13 +336,17 @@ retry-command()
         log "STARTING ${message}..."
 
         eval "$command"
-        if [[ $? -eq 0 ]] ; then
+        result=$?
+
+        if [[ $result -eq 0 ]] ; then
             log "SUCCEEDED ${message}!"
             break
         fi
 
         log "FAILED ${message}"
     done
+
+    return $result
 }
 
 #############################################################################
