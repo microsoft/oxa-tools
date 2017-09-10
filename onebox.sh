@@ -67,7 +67,7 @@ parse_args()
         echo "Option '${1}' set with value '"${arg_value}"'"
 
         case "$1" in
-          -r|--role)
+          -r|--role|-s|--stack)
             TEMPLATE_TYPE="${arg_value,,}" # convert to lowercase
             ;;
           -b|--branches)
