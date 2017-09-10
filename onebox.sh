@@ -162,12 +162,15 @@ test_args()
 ##########################
 get_branch()
 {
+    useMsftRepo=$1
+    useOldDevStyle=$2
+
     if [[ $BRANCH_VERSIONS == stable ]] ; then
         echo "oxa/master.fic"
     elif [[ $BRANCH_VERSIONS == release ]] ; then
         echo "oxa/release.fic"
-    elif [[ $BRANCH_VERSIONS == edge ]] || [[ -n $1 ]] ; then
-        if [[ -n $2 ]] ; then
+    elif [[ $BRANCH_VERSIONS == edge ]] || [[ -n $useMsftRepo ]] ; then
+        if [[ -n $useOldDevStyle ]] ; then
             # Legacy switch
             echo "oxa/devfic"
         else
@@ -190,8 +193,8 @@ get_current_branch()
     # Ensure branch information is useful.
     if [[ -z "$branchInfo" ]] || [[ $branchInfo == *"no branch"* ]] || [[ $branchInfo == *"detached"* ]] ; then
         #todo: uncomment before merge
-        #branchInfo=`get_branch useMicrosoftRepo oldDevStyle`
-        branchInfo="oxa/df_noConfig"
+        #branchInfo=`get_branch useMsftRepo oldDevStyle`
+        branchInfo="oxa/df_noConfig4"
     fi
 
     echo "$branchInfo"
@@ -289,7 +292,7 @@ bash $bootstrap \
     --edxplatform-public-github-projectbranch \
         `get_branch` \
     --edxtheme-public-github-projectbranch \
-        `get_branch useMicrosoftRepo` \
+        `get_branch useMsftRepo` \
     --edxversion \
         $EDX_BRANCH \
     --forumversion \
