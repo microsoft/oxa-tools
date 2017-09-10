@@ -1280,9 +1280,13 @@ install-tools()
 {
     machine_role=$(get_machine_role)
 
-    # 1. Setup Tools
+    # Most docker containers don't have sudo pre-installed.
+    install-sudo
+    # "desktop environment" flavors of ubuntu like xubuntu don't come with full ssh, but server edition generaly does"
+    install-ssh
     install-git
-    install-gettext # required for envsubst command
+    # required for envsubst command
+    install-gettext
     set-server-timezone
     install-json-processor
 
