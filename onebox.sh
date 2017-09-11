@@ -191,9 +191,7 @@ get_current_branch()
 
     # Ensure branch information is useful.
     if [[ -z "$branchInfo" ]] || [[ $branchInfo == *"no branch"* ]] || [[ $branchInfo == *"detached"* ]] ; then
-        #todo: uncomment before merge
-        #branchInfo=`get_branch useMsftRepo oldDevStyle`
-        branchInfo="oxa/df_noConfig4"
+        branchInfo=`get_branch useMsftRepo oldDevStyle`
     fi
 
     echo "$branchInfo"
