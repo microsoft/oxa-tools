@@ -81,7 +81,7 @@
             "value": "oxa-tools"
         },
         "oxaToolsGithubBranch": {
-            "value": "{OXATOOLSGITHUBBRANCH}"
+            "value": "{GITHUBBRANCH}"
         },
         "edxConfigurationGithubAccountName": {
             "value": "Microsoft"
@@ -90,7 +90,7 @@
             "value": "edx-configuration"
         },
         "edxConfigurationGithubBranch": {
-            "value": "{OXATOOLSGITHUBBRANCH}"
+            "value": "{GITHUBBRANCH}"
         },
         "edxPlatformGithubAccountName": {
             "value": "microsoft"
@@ -99,7 +99,7 @@
             "value": "edx-platform"
         },
         "edxPlatformGithubBranch": {
-            "value": "{OXATOOLSGITHUBBRANCH}"
+            "value": "{GITHUBBRANCH}"
         },
         "edxThemeGithubAccountName": {
             "value": "microsoft"
@@ -108,7 +108,7 @@
             "value": "edx-theme"
         },
         "edxThemeGithubBranch": {
-            "value": "{OXATOOLSGITHUBBRANCH}"
+            "value": "{GITHUBBRANCH}"
         },
         "ansibleGithubAccountName": {
             "value": "edx"

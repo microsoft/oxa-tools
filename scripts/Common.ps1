@@ -388,13 +388,17 @@ function Create-StorageContainer
     New-AzureStorageContainer -Name $StorageContainerName -Context $storageContext
 }
 
-#################################################################
-#
-# Wrappers for All Azure Cmdlet Calls
-#
-#################################################################
-
-# Command, Activity, Parameters
+## Function: Execute-AzureCommand
+##
+## Purpose: 
+##   one generic call for every wrapped Azure Cmdlet
+##
+## Input: 
+##   InputParameters         Azure Cmdlet & Context Name
+##
+## Output:
+##   nothing
+##
 function Execute-AzureCommand
 {
     param( [Parameter(Mandatory=$true)][hashtable]$InputParameters )
@@ -431,16 +435,14 @@ function Execute-AzureCommand
         try
         {
             Log-Message "Attempt [$($retryAttempt)|$($MaxRetries)] - $($InputParameters['Activity']) started." -Context $Context;
-
             # handle the commands appropriately
             switch ($InputParameters['Command']) 
             {
-
                 "Find-AzureRmResource"
                 {
                     if ($InputParameters['params'] -ne $null)
                     {
-                         $response= Find-AzureRmResource -ResourceGroupNameContains $InputParameters['params'].ResourceGroupNameEquals -ResourceType $InputParameters['params'].ResourceType -Verbose ;  
+                         $response = Find-AzureRmResource -ResourceGroupNameContains $InputParameters['params'].ResourceGroupNameEquals -ResourceType $InputParameters['params'].ResourceType -Verbose ;  
                     }
                     break;
                 }
@@ -449,7 +451,7 @@ function Execute-AzureCommand
                 {
                     if ($InputParameters['Name'] -ne $null)
                     {
-                        $response= Get-AzureRmLoadBalancer -Name $InputParameters['Name'] -ResourceGroupName $InputParameters['ResourceGroup'] -Verbose ;  
+                        $response = Get-AzureRmLoadBalancer -Name $InputParameters['Name'] -ResourceGroupName $InputParameters['ResourceGroup'] -Verbose ;  
                     }
                     break;
                 }
@@ -458,7 +460,7 @@ function Execute-AzureCommand
                 {
                     if ($InputParameters['Name'] -ne $null)
                     {
-                        $response= Get-AzureRmLoadBalancerRuleConfig -LoadBalancer $InputParameters['Name'];
+                        $response = Get-AzureRmLoadBalancerRuleConfig -LoadBalancer $InputParameters['Name'];
                     }
                     break;
                 }
@@ -467,7 +469,7 @@ function Execute-AzureCommand
                 {
                     if ($InputParameters['Name'] -ne $null)
                     {
-                        $response= Remove-AzureRmLoadBalancerRuleConfig -Name $InputParameters['Name'] -LoadBalancer $InputParameters['lbName'] -Verbose;
+                        $response = Remove-AzureRmLoadBalancerRuleConfig -Name $InputParameters['Name'] -LoadBalancer $InputParameters['lbName'] -Verbose;
                     }
                     break;
                 }
@@ -476,7 +478,7 @@ function Execute-AzureCommand
                 {
                     if ($InputParameters['lbName'] -ne $null)
                     {
-                        $response= Set-AzureRmLoadBalancer -LoadBalancer $InputParameters['lbName'] -Verbose;
+                        $response = Set-AzureRmLoadBalancer -LoadBalancer $InputParameters['lbName'] -Verbose;
                     }
                     break;
                 }
@@ -485,7 +487,7 @@ function Execute-AzureCommand
                 {
                     if ($InputParameters['ResourceGroup'] -ne $null)
                     {
-                        $response= Get-AzureRmVmss -ResourceGroupName $InputParameters['ResourceGroup'] -Verbose;
+                        $response = Get-AzureRmVmss -ResourceGroupName $InputParameters['ResourceGroup'] -Verbose;
                     }
                     break;
                 }
@@ -494,7 +496,7 @@ function Execute-AzureCommand
                 {
                     if ($InputParameters['VmssName'] -ne $null)
                     {
-                        $response= Remove-AzureRmVmss -ResourceGroupName $InputParameters['ResourceGroup'] -VMScaleSetName $InputParameters['VmssName'] -Verbose -Force;
+                        $response = Remove-AzureRmVmss -ResourceGroupName $InputParameters['ResourceGroup'] -VMScaleSetName $InputParameters['VmssName'] -Verbose -Force;
                     }
                     break;
                 }
@@ -503,7 +505,7 @@ function Execute-AzureCommand
                 {
                     if ($InputParameters['Name'] -ne $null)
                     {
-                        $response= Remove-AzureRmLoadBalancerBackendAddressPoolConfig -LoadBalancer $InputParameters['LbName'] -Name $InputParameters['Name'] -Verbose;
+                        $response = Remove-AzureRmLoadBalancerBackendAddressPoolConfig -LoadBalancer $InputParameters['LbName'] -Name $InputParameters['Name'] -Verbose;
                     }
                     break;
                 }
@@ -512,7 +514,7 @@ function Execute-AzureCommand
                 {
                     if ($InputParameters['Name'] -ne $null)
                     {
-                        $response= Remove-AzureRmLoadBalancerFrontendIpConfig -Name $InputParameters['Name'] -LoadBalancer $InputParameters['LbName'] -Verbose;
+                        $response = Remove-AzureRmLoadBalancerFrontendIpConfig -Name $InputParameters['Name'] -LoadBalancer $InputParameters['LbName'] -Verbose;
                     }
                     break;
                 }
@@ -521,7 +523,7 @@ function Execute-AzureCommand
                 {
                     if ($InputParameters['LbName'] -ne $null)
                     {
-                        $response= Remove-AzureRmLoadBalancer -ResourceGroupName $InputParameters['ResourceGroup'] -Name $InputParameters['LbName'] -Verbose -Force;
+                        $response = Remove-AzureRmLoadBalancer -ResourceGroupName $InputParameters['ResourceGroup'] -Name $InputParameters['LbName'] -Verbose -Force;
                     }
                     break;
                 }
@@ -530,7 +532,7 @@ function Execute-AzureCommand
                 {
                     if ($InputParameters['Name'] -ne $null)
                     {
-                        $response= Get-AzureRmPublicIpAddress -Name $InputParameters['Name'] -ResourceGroupName $InputParameters['ResourceGroup'] -Verbose;
+                        $response = Get-AzureRmPublicIpAddress -Name $InputParameters['Name'] -ResourceGroupName $InputParameters['ResourceGroup'] -Verbose;
                     }
                     break;
                 }
@@ -539,7 +541,7 @@ function Execute-AzureCommand
                 {
                     if ($InputParameters['Name'] -ne $null)
                     {
-                        $response= Remove-AzureRmPublicIpAddress -ResourceGroupName $InputParameters['ResourceGroup'] -Name $InputParameters['Name'] -Verbose -Force;
+                        $response = Remove-AzureRmPublicIpAddress -ResourceGroupName $InputParameters['ResourceGroup'] -Name $InputParameters['Name'] -Verbose -Force;
                     }
                     break;
                 }
@@ -549,8 +551,7 @@ function Execute-AzureCommand
                     throw "$($InputParameters['Command']) is not a supported call."; 
                     break; 
                 }
-            }
-            
+            }            
             
             Log-Message "Attempt [$($retryAttempt)|$($MaxRetries)] - $($InputParameters['Activity']) completed." -Context $Context;
 
@@ -586,8 +587,7 @@ function Execute-AzureCommand
         #Start-Sleep -Seconds $retryDelay;
     }
 
-    return $response;
-    
+    return $response;    
 }
 
 #################################
@@ -603,43 +603,49 @@ function Execute-AzureCommand
 
 ## Output:
 ##   resourceList
-
 function Get-ResourcesList
 {
     param(      
             [Parameter(Mandatory=$true)][string]$ResourceGroupName        
          )
 
-      [array]$resourceList =@();
-      $resourcesListContext = "Resources";
+    $resourceTypes = @(
+                         "Microsoft.Network/loadBalancers", 
+                         "Microsoft.Network/publicIPAddresses",
+                         "Microsoft.Network/trafficManagerProfiles"
+                      );
+    foreach ($resourceType in $resourceTypes)
+    {
+        $params = @{'ResourceGroupNameEquals' = $ResourceGroupName }                            
+        if ($resourceType -ne '*') 
+        {
+             $params.Add('ResourceType', $resourceType)
+        }
+        
+        # get the azure resources based on provuded resourcetypes in the resourcegroup
+        [array]$response = Get-OxaAzureResources -params $params -Context $resourcesListContext;
 
-     
-      @(
-
-         'Microsoft.Network/loadBalancers'
-         'Microsoft.Network/publicIPAddresses'           
-         'Microsoft.Network/trafficManagerProfiles' 
-       
-      ) | % {
-  
-                $params = @{'ResourceGroupNameEquals' = $ResourceGroupName }
-                            
-  
-                 if ($_ -ne '*') 
-                 {
-                     $params.Add('ResourceType', $_)
-                 }
-                 # get the azure resources based on provuded resourcetypes in the resourcegroup
-                 [array]$response = Get-AzureResources -params $params -Context $resourcesListContext;
-                 if($response -ne $null)
-                 {
-                     [array]$resourceList += $response;
-                 }
-                                
-            }
+        if($response -ne $null)
+        {
+            [array]$resourceList += $response;
+        }                               
+    }
     return $resourceList;
-
 }
+
+#################################
+# Wrapped function
+#################################
+## Function: Get-ResourcesList
+##
+## Purpose: 
+##    To get the resource list using ResourceGroup 
+##
+## Input: 
+##   ResourceGroupName   Name of the Resource group  
+
+## Output:
+##   resourceList
 function Get-AzureResources
 {
     param(
@@ -660,7 +666,7 @@ function Get-AzureResources
     return Execute-AzureCommand -InputParameters $inputParameters;
 }
 
-## Function: Select-DisabledSlot
+## Function: Get-DisabledSlot
 ##
 ## Purpose: 
 ##   selects the disabled Traffic manager endpoint to determine the slot 
@@ -673,88 +679,76 @@ function Get-AzureResources
 ##
 function Get-DisabledSlot($resourceList)
 {
-
     # Assgin the slot names
     [hashtable]$disabledSlot = @{
                                    "EndPoint1" = "endpoint1";
                                    "EndPoint2" = "endpoint2";                                       
                                 };
 
-    $slot="";
+    $slot = "";
     foreach($resource in $resourceList)
     {
         if($resource.resourcetype -eq 'Microsoft.Network/trafficManagerProfiles' )
         {
             $profile = Get-AzureRmTrafficManagerProfile -Name $resource.Name -ResourceGroupName $ResourceGroupName
-     
             foreach( $endpoint in $profile.Endpoints )
             {
                 if ($endpoint.EndpointMonitorStatus -eq "Disabled")
-                {
-           
+                {           
                     if($endpoint.Name.Contains($disabledSlot['EndPoint1']))
                     {
                         $slot="slot1";                      
                     }
-
                     if($endpoint.Name.Contains($disabledSlot['EndPoint2']))
                     {
-                         $slot="slot2";                       
+                        $slot="slot2";                       
                     }
-
                     if($slot -ne $null)
                     {
                         return $slot;
-                    }
-        
-                }
-                
+                    }        
+                }                
             }
          }
     }         
 }
-## Function: Select-DisabledSlot
+
+## Function: Remove-StagingResources
 ##
 ## Purpose: 
-##   selects the disabled Traffic manager endpoint to determine the slot 
+##   To delete the resources from disabled slot
 ##
 ## Input: 
-##   $resourceList  - Azure RM resources
+##    $ResourceGroupName   Name of the Resource group  
 ##   
 ## Output:
-##  $slot name
+##
 function Remove-StagingResources()
 {
- param(
-          [Parameter(Mandatory=$true)][string]$ResourceGroupName
-      )
-
+    param(
+            [Parameter(Mandatory=$true)][string]$ResourceGroupName
+         )
     # Getting Azure resource list from the provided resource group
-    $resourcelist=Get-ResourcesList -ResourceGroupName $ResourceGroupName;
+    $resourcelist = Get-ResourcesList -ResourceGroupName $ResourceGroupName;
     
     # determining the slot by passing Azure resource list from the provided resource group
     $Slot = Get-DisabledSlot -resourceList $resourcelist;
       
     # Filter the resources based on the determined slot
     $targetedResources = $resourceList | Where-Object { $_.ResourceName.Contains($Slot) };
-    
-     if($targetedResources -ne $null)
-     {   
-         foreach($resource in $targetedResources)
-         { 
-              Write-Host "Here is the list of resources targetted to be deleted" ($targetedResources| Format-List | Out-String);
-              #continue;
-
-                    
-              switch ($resource.resourcetype)
-              {  
-                 "Microsoft.Network/loadBalancers"
-                 {
+    if($targetedResources -ne $null)
+       
+        foreach($resource in $targetedResources)
+        { 
+            Write-Host "Here is the list of resources targetted to be deleted" ($targetedResources| Format-List | Out-String);                              
+            switch ($resource.resourcetype)
+            {  
+                "Microsoft.Network/loadBalancers"
+                {
                     $loadbalancerServiceContext = "Load Balancer";
                     $loadbalancerName = $resource.Name;
                     # fetching the loadbalancer object
-                    [object]$loadbalancer = Get-OxaAzureLoadBalancers -Name $loadbalancerName -ResourceGroupName $ResourceGroupName -Context $loadbalancerServiceContext;                                          
-                       
+                    [object]$loadbalancer = Get-OxaAzureLoadBalancers -Name $loadbalancerName -ResourceGroupName $ResourceGroupName -Context $loadbalancerServiceContext;                                      
                     $lbRulesContext = "Load Balancer Rules";  
                     # fetching the loadbalancer rules                                                          
                     $loadBalancerRules = Get-OxaAzureLoadBalancersRules -Name $loadbalancer -Context  $lbRulesContext;
@@ -764,46 +758,41 @@ function Remove-StagingResources()
                         {
                             $loadbalancerRmContext = "Removing Load Balancer Rules";
                             Remove-OxaAzureLoadBalancersRules -Name $loadBalancerRule.Name -LbName $loadbalancer -Context $loadbalancerRmContext;
-
                             Write-Host "Proceeding with deleting $($loadBalancerRule.Name)"
                             $lbSaveContext = "Updating Load Balancer settings";
                             # should save the loadbalancer setttings once we remove the rules from the loadbalancer settings
                             Set-OxaAzureLoadBalancers -LbName $loadbalancer -Context $lbSaveContext;
                         }
-                     }
-                     else
-                     {
-                         Log-Message -Message  "There are no LoadBalancerRules to delete" -LogType Host
-                     } 
- 
-                     [array]$LoadbalancerPools=$Loadbalancer.BackendAddressPools;
-
-                     # fetching id which has VMSS name from loadbalancer banckendIp configurations
-                     #It will be helpful for us to make sure we are deleting targetted VMSS
-                     $vmssLoadBalancerID=$LoadbalancerPools.BackendIpConfigurations.ID;
-                                          
-                     $VmssContext = "Fetching Vmss resources details"; 
-
-                     # fetching the vmss name from loadbalancer frontendpool configurations
-                     $vmssList = Get-OxaAzureVMSS -ResourceGroupName $ResourceGroupName -Context $VmssContext;
+                    }
+                    else
+                    {
+                        Log-Message -Message  "There are no LoadBalancerRules to delete" -LogType Host
+                    } 
+                    
+                    [array]$LoadbalancerPools=$Loadbalancer.BackendAddressPools;
+                    # fetching id which has VMSS name from loadbalancer banckendIp configurations
+                    #It will be helpful for us to make sure we are deleting targetted VMSS
+                    $vmssLoadBalancerID=$LoadbalancerPools.BackendIpConfigurations.ID;                                        
+                    $VmssContext = "Fetching Vmss resources details"; 
+                    # fetching the vmss name from loadbalancer frontendpool configurations
+                    $vmssList = Get-OxaAzureVMSS -ResourceGroupName $ResourceGroupName -Context $VmssContext;
                    
-                     foreach($vmss in $vmssList.Name)
-                     {
-                         # It will be helpful for us to make sure we are deleting targetted VMSS
-                         if($vmssLoadBalancerID -match $vmss) 
-                         {
-                             $VmssRMContext = "Removing Vmss resources details"; 
-                             Write-Host "Proceeding with deleting $($vmss.Name) VMSS"
-                             # Deleting the targetted VMSS once the names match with configured vmss under loadbalancer
-                             Remove-OxaAzureVmss -ResourceGroupName $ResourceGroupName -VmssName $vmss -Context $VmssRMContext ;
-                         }
-                         else
-                         {
-                             Log-Message -Message  "There are no VMSS to delete" -LogType Host
-                         }
-                     }
-                     Log-Message -Message  "I do not fine VMSS in the ResourceGroup $ResourceGroupName" -LogType Host
-
+                    foreach($vmss in $vmssList.Name)
+                    {
+                        # It will be helpful for us to make sure we are deleting targetted VMSS
+                        if($vmssLoadBalancerID -match $vmss) 
+                        {
+                            $VmssRMContext = "Removing Vmss resources details"; 
+                            Write-Host "Proceeding with deleting $($vmss.Name) VMSS"
+                            # Deleting the targetted VMSS once the names match with configured vmss under loadbalancer
+                            Remove-OxaAzureVmss -ResourceGroupName $ResourceGroupName -VmssName $vmss -Context $VmssRMContext ;
+                        }
+                        else
+                        {
+                            Log-Message -Message  "There are no VMSS to delete" -LogType Host
+                        }
+                    }
+                    Log-Message -Message  "I do not fine VMSS in the ResourceGroup $ResourceGroupName" -LogType Host
                     if($LoadbalancerPools.Name -ne $null)
                     {
                         $LbBackEndPoolRMContext = "Removing Load Balancer Backend addresspool configurations"; 
@@ -814,87 +803,81 @@ function Remove-StagingResources()
                         $lbSaveContext = "Updating Load Balancer settings";
                         # should save the loadbalancer setttings once we remove the rules from the loadbalancer settings
                         Set-OxaAzureLoadBalancers -LbName $loadbalancer -Context $lbSaveContext;
-                    }
-                         
+                    }                         
                     else
                     {
                         Log-Message -Message  "There are no LoadBalancerBackEnd pools configurations to delete" -LogType Host
                     }
-
-                    [array]$lbFronendpools= $Loadbalancer.FrontendIpConfigurations;
-                                               
+                    [array]$lbFronendpools= $Loadbalancer.FrontendIpConfigurations;                                               
                     foreach($lbFronendpool in $lbFronendpools)
                     {
                         if($lbFronendpool -ne $null -and $lbFronendpool.Name -notmatch "Preview")
                         {
-                             $lbFrontEndPoolRMContext = "Removing Load balancer FrontEnd Ip pool configurations";
+                            $lbFrontEndPoolRMContext = "Removing Load balancer FrontEnd Ip pool configurations";
+                            Write-Host "Proceeding with deleting LoadBalancerFrontEndIpConfigurations $($lbFronendpool.Name) "
+                            # Deleting the loadbalancerFrontendIP configurations
+                            Remove-OxaAzureLbFrontEndIpConfig -Name $lbFronendpool.Name -LbName $loadbalancer -Context $lbFrontEndPoolRMContext;                                                         
+                            $lbSaveContext = "Updating Load Balancer settings";
 
-                             Write-Host "Proceeding with deleting LoadBalancerFrontEndIpConfigurations $($lbFronendpool.Name) "
-
-                             # Deleting the loadbalancerFrontendIP configurations
-                             Remove-OxaAzureLbFrontEndIpConfig -Name $lbFronendpool.Name -LbName $loadbalancer -Context $lbFrontEndPoolRMContext;
-                                                         
-                             $lbSaveContext = "Updating Load Balancer settings";
-
-                             # should save the loadbalancer setttings once we remove the rules from the loadbalancer settings
-                             Set-OxaAzureLoadBalancers -LbName $loadbalancer -Context $lbSaveContext;
-                        }
-                       
+                            # should save the loadbalancer setttings once we remove the rules from the loadbalancer settings
+                            Set-OxaAzureLoadBalancers -LbName $loadbalancer -Context $lbSaveContext;
+                        }                       
                         else
                         {
-                             Log-Message -Message  "There are no Frontendip configurations to delete" -LogType Host
+                            Log-Message -Message  "There are no Frontendip configurations to delete" -LogType Host
                         }
                     }
-                     if($loadbalancer -ne $null)
-                     {
-                            Write-Host "Proceeding with deleting load balancer $($loadbalancer.Name) "
-                            $lbRMContext = "Remove Load Balancer ";
-                            # Deleting the loadbalancer
-                            Remove-OxaAzureLoadBalancer -ResourceGroupName $ResourceGroupName -LbName $loadbalancerName -Context $lbRMContext;
-                     }
-                     else
-                     {
-                         Log-Message -Message  "There is load balancer selected to be deleted" -LogType Host
-                     } 
-                          
-           }   
-                 
-                 "Microsoft.Network/publicIPAddresses"
-                 {
+                    if($loadbalancer -ne $null)
+                    {
+                        Write-Host "Proceeding with deleting load balancer $($loadbalancer.Name) "
+                        $lbRMContext = "Remove Load Balancer ";
+                        # Deleting the loadbalancer
+                        Remove-OxaAzureLoadBalancer -ResourceGroupName $ResourceGroupName -LbName $loadbalancerName -Context $lbRMContext;
+                    }
+                    else
+                    {
+                        Log-Message -Message  "There is load balancer selected to be deleted" -LogType Host
+                    }                           
+           }  
+                "Microsoft.Network/publicIPAddresses"
+                {
                     if($resource.ResourceType -eq "Microsoft.Network/publicIPAddresses")
                     {
                         $PublicIpAddressContext = "PublicIpAddress";                                        
                        
                         if($resource.ResourceType -ne "Microsoft.Network/loadBalancers")
                         {
-                             # fetching the the cloud services to be deleted
-                             [array]$ipslots = Get-OxaPubicIpAddress -Name $resource.Name -ResourceGroupName $ResourceGroupName -Context $PublicIpAddressContext; 
-                        }
-                        
+                            # fetching the the cloud services to be deleted
+                            [array]$ipslots = Get-OxaPubicIpAddress -Name $resource.Name -ResourceGroupName $ResourceGroupName -Context $PublicIpAddressContext; 
+                        }                        
                         if($ipslots -ne $null )
                         {                               
-                             Remove-OxaPubicIpAddress -Name $ipslots.name -ResourceGroupName $ResourceGroupName -Context $PublicIpAddressContext;                                                           
-                                
+                            Remove-OxaPubicIpAddress -Name $ipslots.name -ResourceGroupName $ResourceGroupName -Context $PublicIpAddressContext;                                                          
                         }
                         else
                         {
-                             Log-Message -Message  "There are no slots to delete" -LogType Host
+                            Log-Message -Message  "There are no slots to delete" -LogType Host
                         } 
-
                      }
-                     break;
-                                   
-                  }              
-           
-              }
-              
-          }
-
-             
-     }
-     Log-Message -Message  "There are no Resources targeted to delete from $($ResourceGroupName)" -LogType Host
-
+                     break;                                   
+                   }             
+                }
+            }             
+    }
+    Log-Message -Message  "There are no Resources targeted to delete from $($ResourceGroupName)" -LogType Host
 }
+
+## Function: Get-OxaAzureLoadBalancers
+##
+## Purpose: 
+##   To find the loadbalancer properties
+##
+## Input: 
+##    $ResourceGroupName   Name of the Resource group  
+##    $Name                Name of the Loadbalancer Name  
+##   
+## Output:
+##
  function Get-OxaAzureLoadBalancers
 {
     param(
@@ -917,7 +900,17 @@ function Remove-StagingResources()
     return Execute-AzureCommand -InputParameters $inputParameters;
 }
 
- function Get-OxaAzureLoadBalancersRules
+## Function: Get-OxaAzureLoadBalancersRules
+##
+## Purpose: 
+##   To find the loadbalancer properties
+##
+## Input: 
+##   $Name     Name of the Loadbalancer  
+##   
+## Output:
+##
+function Get-OxaAzureLoadBalancersRules
 {
     param(
             [Parameter(Mandatory=$true)][Object]$Name,
@@ -937,7 +930,17 @@ function Remove-StagingResources()
     return Execute-AzureCommand -InputParameters $inputParameters;
 }
 
- function Remove-OxaAzureLoadBalancersRules
+## Function: Remove-OxaAzureLoadBalancersRules
+##
+## Purpose: 
+##   To delete the loadbalancer 
+##
+## Input: 
+##   $Name     Name of the Loadbalancer  
+##   
+## Output:
+##
+function Remove-OxaAzureLoadBalancersRules
 {
     param(
             [Parameter(Mandatory=$true)][string]$Name,
@@ -959,7 +962,17 @@ function Remove-StagingResources()
     return Execute-AzureCommand -InputParameters $inputParameters;
 }
 
- function Set-OxaAzureLoadBalancers
+## Function: Set-OxaAzureLoadBalancers
+##
+## Purpose: 
+##   To update the loadbalancer settings
+##
+## Input: 
+##   $LbName     Name of the Loadbalancer  
+##   
+## Output:
+##
+function Set-OxaAzureLoadBalancers
 {
     param(
             [Parameter(Mandatory=$true)][Object]$LbName,
@@ -979,6 +992,16 @@ function Remove-StagingResources()
     return Execute-AzureCommand -InputParameters $inputParameters;
 }
 
+## Function: Get-OxaAzureVMSS
+##
+## Purpose: 
+##   To get the VMSS settings
+##
+## Input: 
+##   $ResourceGroupName     Name of the ResourceGroup  
+##   
+## Output:
+##
 function Get-OxaAzureVMSS
 {
     param(
@@ -999,7 +1022,18 @@ function Get-OxaAzureVMSS
     return Execute-AzureCommand -InputParameters $inputParameters;
 }
 
- function Remove-OxaAzureVmss
+## Function: Remove-OxaAzureVmss
+##
+## Purpose: 
+##   To get the VMSS settings
+##
+## Input: 
+##   $ResourceGroupName     Name of the ResourceGroup  
+##   $VmssName     Name of the VMSS 
+##   
+## Output:
+##
+function Remove-OxaAzureVmss
 {
     param(
             [Parameter(Mandatory=$true)][string]$ResourceGroupName,
@@ -1021,7 +1055,18 @@ function Get-OxaAzureVMSS
     return Execute-AzureCommand -InputParameters $inputParameters;
 }
 
- function Remove-OxaAzureLbBackEndAddressPool
+## Function: Remove-OxaAzureLbBackEndAddressPool
+##
+## Purpose: 
+##   To delete loadbalancer backendAddress pool
+##
+## Input: 
+##   $LbName     Name of the Loadbalancer  
+##   $Name     Name of the Backendaddresspool
+##   
+## Output:
+##
+function Remove-OxaAzureLbBackEndAddressPool
 {
     param(
             [Parameter(Mandatory=$true)][string]$Name,
@@ -1043,7 +1088,18 @@ function Get-OxaAzureVMSS
     return Execute-AzureCommand -InputParameters $inputParameters;
 }
 
- function Remove-OxaAzureLbFrontEndIpConfig
+## Function: Remove-OxaAzureLbFrontEndIpConfig
+##
+## Purpose: 
+##   To delete loadbalancer FrontEndIp Configuration
+##
+## Input: 
+##   $LbName     Name of the Loadbalancer  
+##   $Name     Name of the FrontEndPool
+##   
+## Output:
+##
+function Remove-OxaAzureLbFrontEndIpConfig
 {
     param(
             [Parameter(Mandatory=$true)][string]$Name,
@@ -1065,6 +1121,17 @@ function Get-OxaAzureVMSS
     return Execute-AzureCommand -InputParameters $inputParameters;
 }
 
+## Function: Remove-OxaAzureLoadBalancer
+##
+## Purpose: 
+##   To delete loadbalancer
+##
+## Input: 
+##   $LbName     Name of the Loadbalancer  
+##   $ResourceGroupName     Name of the resourceGroup
+##   
+## Output:
+##
  function Remove-OxaAzureLoadBalancer
 {
     param(
@@ -1087,7 +1154,18 @@ function Get-OxaAzureVMSS
     return Execute-AzureCommand -InputParameters $inputParameters;
 }
 
- function Get-OxaPubicIpAddress
+## Function: Get-OxaPubicIpAddress
+##
+## Purpose: 
+##   To get the publicIPAddresses
+##
+## Input: 
+##   $Name     Name of the VM  
+##   $ResourceGroupName     Name of the resourceGroup
+##   
+## Output:
+##  nothing
+function Get-OxaPubicIpAddress
 {
     param(
             [Parameter(Mandatory=$true)][string]$ResourceGroupName,
@@ -1109,7 +1187,18 @@ function Get-OxaAzureVMSS
     return Execute-AzureCommand -InputParameters $inputParameters;
 }
 
- function Remove-OxaPubicIpAddress
+## Function: Remove-OxaPubicIpAddress
+##
+## Purpose: 
+##   To delete the publicIPAddresses
+##
+## Input: 
+##   $Name     Name of the VM  
+##   $ResourceGroupName     Name of the resourceGroup
+##   
+## Output:nothing
+##
+function Remove-OxaPubicIpAddress
 {
     param(
             [Parameter(Mandatory=$true)][string]$ResourceGroupName,
@@ -1144,7 +1233,7 @@ function Get-OxaAzureVMSS
 ## Output:
 ##   nothing
 ##
- function Delete-Resources($DeploymentType,$Cloud ,$DeploymentStatus)
+function Delete-Resources($DeploymentType,$Cloud ,$DeploymentStatus)
 {
    
    if(($DeploymentType -eq "upgrade") -or ($DeploymentType -eq "swap" -and $Cloud -eq  "bvt" -and $DeploymentStatus.ProvisioningState -ieq "Succeeded"))
@@ -1188,4 +1277,66 @@ function Get-VmssName($ResourceGroupName)
 
     # this return the VMSSID to use as deploymentVersion id
     return $VmssInstanceId;
+}
+
+## Function: Get-LatestChanges
+##
+## Purpose: 
+##    Create a container in the specified storage account
+##
+## Input: 
+##   BranchName       name of the branch
+##   Tag        name of the Tag
+##   enlistmentRootPath     path of the local repo
+##   privateRepoGitAccount     github private account url
+##
+## Output:
+##   nothing
+
+function Get-LatestChanges
+{
+    param(      
+             [Parameter(Mandatory=$true)][string]$BranchName,
+             [Parameter(Mandatory=$false)][string]$Tag,
+             [Parameter(Mandatory=$false)][string]$enlistmentRootPath,
+             [Parameter(Mandatory=$false)][string]$privateRepoGitAccount                
+          )           
+                  
+   if (!(Test-Path -Path $enlistmentRootPath))
+   { 
+       cd $enlistmentRootPath -ErrorAction SilentlyContinue;
+       # Here we are assuming git is already installed and installed path has been set in environment path variable.
+       # SSh key has to be configured with both github & git bash account to authenticate.
+       # Clone TFD Git repository
+       git clone git@github.com:Microsoft/oxa-tools.git -b $BranchName $enlistmentRootPath -q
+   }
+
+   cd $enlistmentRootPath
+   if($tag -eq $null)
+   {
+       git checkout
+       git pull           
+   }
+   else
+   {
+       git checkout $tag -q
+   }
+              
+   if (!(Test-Path -Path $enlistmentRootPath-"config"))
+   { 
+       cd $enlistmentRootPath -ErrorAction SilentlyContinue;
+       # Clone TFD Git repository
+       git clone $privateRepoAccount -b $BranchName $enlistmentRootPath-"config" -q
+   }
+   cd $enlistmentRootPath-"config"
+
+   if($tag -eq $null)
+   {
+       git checkout
+       git pull
+   }
+    else
+   {
+       git checkout $tag -q
+   }
 }

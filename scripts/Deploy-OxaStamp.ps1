@@ -254,7 +254,7 @@ $replacements = @{
                     "MEMCACHESERVER"=$MemcacheServer;
                     "AZURECLIVERSION"=$AzureCliVersion;
                     "DEPLOYMENTVERSIONID"=$DeploymentVersionId;
-                    "OXATOOLSGITHUBBRANCH"=$BranchName;
+                    "GITHUBBRANCH"=$BranchName;
                     "DEPLOYMENTSLOT"=$Slot; 
                     "DEPLOYMENTTYPE"=$DeploymentType;
                 }
