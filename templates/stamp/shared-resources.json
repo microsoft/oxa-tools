@@ -139,7 +139,19 @@
                 "tier": "Standard"
 			}
         },
-                  
+        {
+            "comments": "This is the Service Bus Queue used for store deploymentStatus message",
+            
+            "name": "[parameters('serviceBusSettings').serviceBusQueueName]",
+            "apiVersion": "[parameters('apiSettings').serviceBusApiVersion]",          
+            "type": "Queues",
+            "dependsOn": [
+                "[concat('Microsoft.ServiceBus/namespaces/', parameters('serviceBusSettings').serviceBusNamespaceName)]"
+            ],
+            "properties": {
+                "path": "[parameters('serviceBusSettings').serviceBusQueueName]"
+            }
+        },                  
         {
             "type": "Microsoft.Compute/availabilitySets",
             "name": "[concat(parameters('networkSettings').clusterMongoDataNodeName, parameters('networkSettings').availabilitySetNameSuffix)]",
