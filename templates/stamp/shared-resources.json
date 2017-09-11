@@ -140,8 +140,7 @@
 			}
         },
         {
-            "comments": "This is the Service Bus Queue used for store deploymentStatus message",
-            
+            "comments": "This is the Service Bus Queue used for store deploymentStatus message",            
             "name": "[parameters('serviceBusSettings').serviceBusQueueName]",
             "apiVersion": "[parameters('apiSettings').serviceBusApiVersion]",          
             "type": "Queues",
@@ -149,7 +148,7 @@
                 "[concat('Microsoft.ServiceBus/namespaces/', parameters('serviceBusSettings').serviceBusNamespaceName)]"
             ],
             "properties": {
-                "path": "servicebusqueue"
+                "path": "oxadeploy1-sbqueue"
             }
         },                  
         {
