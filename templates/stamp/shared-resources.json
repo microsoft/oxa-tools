@@ -19,7 +19,13 @@
             "metadata": {
                 "Description": "Storage settings object"
             }
-        }
+        },
+        "serviceBusSettings": {
+            "type": "object",
+            "metadata": {
+                "Description": "Service Bus  settings object"
+            }  
+        }            
     },
     "variables": {
         "loadBalancerIpName": "[concat(parameters('networkSettings').loadbalancerSettings.loadBalancerName, parameters('networkSettings').publicIPAddressNameSuffix)]"
@@ -119,6 +125,30 @@
                 "tier": "Standard"
             },
             "kind": "Storage"
+        },
+        {
+            "comments": "This is the Service Bus Namespace used for deploymentStatus",
+            
+            "name": "[parameters('serviceBusSettings').serviceBusNamespaceName]",
+            "apiVersion": "[parameters('apiSettings').sbapiVersion]",       
+            "type": "Microsoft.ServiceBus/Namespaces",
+            "location": "[variables('location')]",
+            "kind": "Messaging",
+            "sku": {
+                "name": "StandardSku",
+                "tier": "Standard"
+			}
+        },
+        {
+            "comments": "This is the Service Bus Queue used for store deploymentStatus message",
+            
+            "name": "[parameters('serviceBusSettings').serviceBusQueueName]",
+            "apiVersion": "[parameters('apiSettings').sbapiVersion]",          
+            "type": "Queues",
+            "dependsOn": "[concat('Microsoft.ServiceBus/namespaces/', [parameters('serviceBusSettings').serviceBusNamespaceName]]",
+            "properties": {
+                "path": "[parameters('serviceBusSettings').serviceBusQueueName]"
+            }
         },
         {
             "type": "Microsoft.Compute/availabilitySets",
