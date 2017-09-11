@@ -24,7 +24,7 @@ PREVIEW_URL=preview.$BASE_URL
 # deployment configuration
 # URL-building will be replaced by the use of LMS_URL | CMS_URL (above)
 # uri format: [lms|cms]-%%CLUSTERNAME%%-%%DEPLOYMENT_SLOT%%.%%REGION%%.cloudapp.azure.com
-TEMPLATE_TYPE=stamp # stamp|scalable|fullstack|devstack
+TEMPLATE_TYPE=stamp # stamp|fullstack|devstack
 CLUSTERNAME={CLUSTERNAME}
 ADMIN_USER=oxaadmin
 OXA_TOOLS_VERSION=oxa/master.fic
@@ -45,7 +45,7 @@ EDX_VERSION=open-release/ficus.master
 FORUM_VERSION=open-release/ficus.master
 
 # fullstack uses default EMAIL_HOST=localhost
-# config/scalable/scalable.yml, config/stamp/stamp.yml
+# config/stamp/stamp.yml
 EDXAPP_EMAIL_HOST=
 EDXAPP_EMAIL_HOST_USER=
 EDXAPP_EMAIL_HOST_PASSWORD=

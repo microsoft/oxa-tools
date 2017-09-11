@@ -312,7 +312,7 @@ install-mysql-utilities()
 apt-wrapper()
 {
     log "$1 package(s)..."
-    sudo apt-get $1 -y -qq --fix-missing
+    apt $1 -y -qq --fix-missing
 }
 
 retry-command()
@@ -330,19 +330,23 @@ retry-command()
             apt-wrapper "update"
             apt-wrapper "install -f"
             apt-wrapper "upgrade -f"
-            sudo dpkg --configure -a
+            dpkg --configure -a
         fi
 
         log "STARTING ${message}..."
 
         eval "$command"
-        if [[ $? -eq 0 ]] ; then
+        result=$?
+
+        if [[ $result -eq 0 ]] ; then
             log "SUCCEEDED ${message}!"
             break
         fi
 
         log "FAILED ${message}"
     done
+
+    return $result
 }
 
 #############################################################################
@@ -1276,9 +1280,13 @@ install-tools()
 {
     machine_role=$(get_machine_role)
 
-    # 1. Setup Tools
+    # Most docker containers don't have sudo pre-installed.
+    install-sudo
+    # "desktop environment" flavors of ubuntu like xubuntu don't come with full ssh, but server edition generaly does"
+    install-ssh
     install-git
-    install-gettext # required for envsubst command
+    # required for envsubst command
+    install-gettext
     set-server-timezone
     install-json-processor
 
