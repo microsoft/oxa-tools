@@ -145,7 +145,7 @@
             "name": "[parameters('serviceBusSettings').serviceBusQueueName]",
             "apiVersion": "[parameters('apiSettings').sbapiVersion]",          
             "type": "Queues",
-            "dependsOn": "[concat('Microsoft.ServiceBus/namespaces/', parameters('serviceBusSettings').serviceBusNamespaceName)]",
+            "dependsOn": "[resourceId('Microsoft.ServiceBus/Namespaces', parameters('serviceBusSettings').serviceBusNamespaceName)]",
             "properties": {
                 "path": "[parameters('serviceBusSettings').serviceBusQueueName]"
             }
