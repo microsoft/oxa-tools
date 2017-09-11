@@ -431,6 +431,7 @@ edx_installation_playbook()
   # We've been experiencing intermittent failures on ficus. Simply retrying
   # mitigates the problem, but we should solve the underlying cause(s) soon.
   retry-command "$command" "$RETRY_COUNT" "${EDX_ROLE} installation" "fixPackages"
+  exit_on_error "Execution of edX ${EDX_ROLE} playbook failed"
 }
 
 update_fullstack() {
@@ -588,14 +589,7 @@ fi
 log "Starting bootstrap of ${EDX_ROLE} on ${HOSTNAME}"
 
 if [[ "$DEPLOYMENT_ENV" == "dev" ]] ; then
-    # We're deploying a fullstack or devstack to a single-machine (possibly a docker container).
-    # Most docker containers don't have sudo pre-installed.
-    install-sudo
-
-    # "desktop environment" flavors of ubuntu like xubuntu don't come with full ssh, but server edition generaly does"
-    install-ssh
-
-    # git, gettext
+    # sudo, ssh, git, gettext, etc.
     install-tools
 else
     # Deployments to multiple-VMs (STAMP) require a settings file.

@@ -67,7 +67,7 @@ parse_args()
         echo "Option '${1}' set with value '"${arg_value}"'"
 
         case "$1" in
-          -r|--role)
+          -r|--role|-s|--stack)
             TEMPLATE_TYPE="${arg_value,,}" # convert to lowercase
             ;;
           -b|--branches)
@@ -93,28 +93,6 @@ parse_args()
 
 fix_args()
 {
-    # Harden credentials if none were provided.
-    set +x
-    MONGO_PASSWORD=`harden $MONGO_PASSWORD`
-
-    #todo: remove false after edx-configuration merge
-    # The upstream doesn't have the relevant
-    # changes to leverage MYSQL_ADMIN_PASSWORD
-    # For details, see msft/edx-configuration commit:
-    # 65e2668672bda0112a64aabb86cf532ad228c4fa
-    if [[ $BRANCH_VERSIONS == edx ]] ; then
-        MYSQL_ADMIN_USER=root
-        MYSQL_ADMIN_PASSWORD=
-    else
-        MYSQL_ADMIN_USER=lexoxamysqladmin
-        MYSQL_ADMIN_PASSWORD=`harden $MYSQL_ADMIN_PASSWORD`
-    fi
-
-    MYSQL_PASSWORD=`harden $MYSQL_PASSWORD`
-    EDXAPP_SU_PASSWORD=`harden $EDXAPP_SU_PASSWORD`
-    VAGRANT_USER_PASSWORD=$EDXAPP_SU_PASSWORD
-    set -x
-
     # Allow for synonyms
     if [[ $TEMPLATE_TYPE == full ]] || [[ $TEMPLATE_TYPE == fs ]] || [[ $TEMPLATE_TYPE == f ]] ; then
         TEMPLATE_TYPE=fullstack
@@ -132,6 +110,27 @@ fix_args()
     elif [[ $BRANCH_VERSIONS == upstream ]] || [[ $BRANCH_VERSIONS == up ]] || [[ $BRANCH_VERSIONS == ed ]] ; then
         BRANCH_VERSIONS=edx
     fi
+
+    # Harden credentials if none were provided.
+    set +x
+    MONGO_PASSWORD=`harden $MONGO_PASSWORD`
+    MYSQL_PASSWORD=`harden $MYSQL_PASSWORD`
+    EDXAPP_SU_PASSWORD=`harden $EDXAPP_SU_PASSWORD`
+    VAGRANT_USER_PASSWORD=$EDXAPP_SU_PASSWORD
+
+    #todo: remove second condition after edx-configuration merge to releae,master
+    # The upstream doesn't have the relevant
+    # changes to leverage MYSQL_ADMIN_PASSWORD
+    # For details, see msft/edx-configuration commit:
+    # 65e2668672bda0112a64aabb86cf532ad228c4fa
+    if [[ $BRANCH_VERSIONS == edx ]] || [[ $BRANCH_VERSIONS != edge ]]; then
+        MYSQL_ADMIN_USER=root
+        MYSQL_ADMIN_PASSWORD=
+    else
+        MYSQL_ADMIN_USER=lexoxamysqladmin
+        MYSQL_ADMIN_PASSWORD=`harden $MYSQL_ADMIN_PASSWORD`
+    fi
+    set -x
 }
 
 test_args()
@@ -162,12 +161,15 @@ test_args()
 ##########################
 get_branch()
 {
+    useMsftRepo=$1
+    useOldDevStyle=$2
+
     if [[ $BRANCH_VERSIONS == stable ]] ; then
         echo "oxa/master.fic"
     elif [[ $BRANCH_VERSIONS == release ]] ; then
         echo "oxa/release.fic"
-    elif [[ $BRANCH_VERSIONS == edge ]] || [[ -n $1 ]] ; then
-        if [[ -n $2 ]] ; then
+    elif [[ $BRANCH_VERSIONS == edge ]] || [[ -n $useMsftRepo ]] ; then
+        if [[ -n $useOldDevStyle ]] ; then
             # Legacy switch
             echo "oxa/devfic"
         else
@@ -190,8 +192,8 @@ get_current_branch()
     # Ensure branch information is useful.
     if [[ -z "$branchInfo" ]] || [[ $branchInfo == *"no branch"* ]] || [[ $branchInfo == *"detached"* ]] ; then
         #todo: uncomment before merge
-        #branchInfo=`get_branch useMicrosoftRepo oldDevStyle`
-        branchInfo="oxa/df_noConfig"
+        #branchInfo=`get_branch useMsftRepo oldDevStyle`
+        branchInfo="oxa/df_noConfig4"
     fi
 
     echo "$branchInfo"
@@ -289,7 +291,7 @@ bash $bootstrap \
     --edxplatform-public-github-projectbranch \
         `get_branch` \
     --edxtheme-public-github-projectbranch \
-        `get_branch useMicrosoftRepo` \
+        `get_branch useMsftRepo` \
     --edxversion \
         $EDX_BRANCH \
     --forumversion \

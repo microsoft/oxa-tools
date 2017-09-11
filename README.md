@@ -8,7 +8,7 @@ Execute onebox.sh on any Ubuntu 16 machine.
 
 Common parameter argument options: pick a cell from each column. The first row is what happens when no additional parameter arguments are provided.
 
-`--role` or `-r` | `--branches` or `-b` | credential parameter arguments
+`--role` or `-r` or <br/> `--stack` or `-s` | `--branches` or `-b` | credential parameter arguments
 --- | --- | ---
 `fullstack` (default) | `edge` (default) <br/> (will use branches like oxa/dev.fic ) | randomly generated (default)
 `devstack` | `release`  <br/> (will use branches like oxa/release.fic ) | `--default-password` or `-d` <br/> `anyString` (set all passwords to anyString)
