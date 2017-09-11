@@ -130,7 +130,7 @@
             "comments": "This is the Service Bus Namespace used for deploymentStatus",
             
             "name": "[parameters('serviceBusSettings').serviceBusNamespaceName]",
-            "apiVersion": "[parameters('apiSettings').sbapiVersion]",       
+            "apiVersion": "[parameters('apiSettings').serviceBusApiVersion]",       
             "type": "Microsoft.ServiceBus/Namespaces",
             "location": "[variables('location')]",
             "kind": "Messaging",
