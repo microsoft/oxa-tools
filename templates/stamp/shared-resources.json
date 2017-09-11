@@ -149,7 +149,7 @@
                 "[resourceId('Microsoft.ServiceBus/Namespaces', parameters('serviceBusSettings').serviceBusNamespaceName)]"
             ],
             "properties": {
-                "path": "[parameters('serviceBusSettings').serviceBusQueueName]"
+                "path": "[parameters('serviceBusSettings').serviceBusQueueName]",
             }
         },
         {
