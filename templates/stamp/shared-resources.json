@@ -142,7 +142,7 @@
 			}
         },
         {
-            "comments": "This is the Service Bus Namespace used for deploymentStatus message",
+            "comments": "This is the Service Bus Namespace used for deploymentStatus",
             "apiVersion": "[variables('sbVersion')]",     
             "name": "[parameters('serviceBusSettings').serviceBusQueueName]",                   
             "type": "Queues",
