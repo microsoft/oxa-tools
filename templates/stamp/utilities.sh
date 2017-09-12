@@ -1107,6 +1107,23 @@ start_haproxy()
         fi
     done
 
+        # trim the response before assessing emptiness: null /zero-length
+        if [[ -z "${db_response// }" ]];
+        then
+            sleep $wait_time_seconds;
+            ((total_wait_seconds+=$wait_time_seconds))
+
+            if [[ "$total_wait_seconds" -gt "$max_wait_seconds" ]] ;
+            then
+                log "Exceeded the expected wait time for starting up the haproxy server: $total_wait_seconds seconds"
+                exit $ERROR_HAPROXY_STARTUP_FAILED
+            fi
+        else
+            # the server was successfully started and is returning results
+            server_started=1
+        fi
+    done
+
     log "HA Proxy has been started"
 }
 
@@ -1452,7 +1469,7 @@ move_mysql_datadirectory()
 
     # restart apparmor to apply the settings
     os_version=$(lsb_release -rs)
-    if [[ $(echo "$os_version > 16" | bc -l) == 1 ]];
+    if (( $(echo "$os_version > 16" | bc -l) ))
     then
         systemctl restart apparmor
     else
@@ -1468,12 +1485,8 @@ move_mysql_datadirectory()
     ###################################
     #5. Restart the server
 
-    # incase there are config changes (specific to Ubuntu 16+)
-    if [[ $(echo "$os_version > 16" | bc -l) == 1 ]];
-    then
-        systemctl daemon-reload
-        exit_on_error "Could not perform a configuration reload on '${HOSTNAME}' !" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
-    fi
+    # incase there are config changes
+    systemctl daemon-reload
 
     start_mysql $mysql_server_port
     exit_on_error "Could not start mysql server after moving its data directory on '${HOSTNAME}' !" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
