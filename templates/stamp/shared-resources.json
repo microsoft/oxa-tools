@@ -25,11 +25,16 @@
             "metadata": {
                 "Description": "Service Bus  settings object"
             }  
-        }            
+        },   
+        "serviceBusQueueName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the Queue"
+            }
+        },        
     },
     "variables": {
         "loadBalancerIpName": "[concat(parameters('networkSettings').loadbalancerSettings.loadBalancerName, parameters('networkSettings').publicIPAddressNameSuffix)]",
-        "serviceBusQueue": "OxadeploySbQueue"
     },
     "resources": [
         {
@@ -142,12 +147,15 @@
         },
         {
             "comments": "This is the Service Bus Queue used for store deploymentStatus message",            
-            "name": "[variables('serviceBusQueue')]",
+            "name": "[parameters('serviceBusQueueName')]",
             "apiVersion": "[parameters('apiSettings').serviceBusApiVersion]",          
             "type": "Queues",
             "dependsOn": [
-                "[concat('Microsoft.ServiceBus/namespaces/', [variables('serviceBusQueue')]]"
-            ],
+                "[concat('Microsoft.ServiceBus/namespaces/', parameters('serviceBusSettings').serviceBusNamespaceName)]"
+            ], 
+            "properties": {
+                "path": "[parameters('serviceBusQueueName')]"
+            }
         },                  
         {
             "type": "Microsoft.Compute/availabilitySets",
