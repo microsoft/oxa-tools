@@ -145,7 +145,7 @@
             "comments": "This is the Service Bus Namespace used for deploymentStatus message",
             "apiVersion": "[variables('sbVersion')]",     
             "name": "[parameters('serviceBusSettings').serviceBusQueueName]",                   
-            "type": "Microsoft.ServiceBus/Namespaces/Queues",
+            "type": "Queues",
             "dependsOn": [
                 "[concat('Microsoft.ServiceBus/namespaces/', parameters('serviceBusSettings').serviceBusNamespaceName)]"
             ], 
