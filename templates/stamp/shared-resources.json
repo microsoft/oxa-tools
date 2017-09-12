@@ -146,7 +146,7 @@
 			}
         },
         {
-            "comments": "This is the Service Bus Queue used for store deploymentStatus message",            
+                   
             "name": "[parameters('serviceBusQueueName')]",
             "apiVersion": "[parameters('apiSettings').serviceBusApiVersion]",          
             "type": "Queues",
