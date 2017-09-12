@@ -141,7 +141,7 @@
 			}
         },
         {
-            "comments": "This is the Service Bus Namespace used for deploymentStatus",
+            "comments": "This is the Service Bus Namespace used for deploymentStatus message",
             "apiVersion": "[parameters('apiSettings').sbQueueApiVersion]",     
             "name": "[parameters('serviceBusSettings').serviceBusQueueName]",                   
             "type": "Microsoft.ServiceBus/Namespaces/Queues",
