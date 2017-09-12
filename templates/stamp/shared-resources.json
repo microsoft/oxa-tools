@@ -1,5 +1,5 @@
 {
-    "$schema": "http://schema.management.azure.com/schemas/2014-04-01-preview/deploymentTemplate.json#",
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
         "apiSettings": {
@@ -148,7 +148,7 @@
         {
             "apiVersion": "[parameters('apiSettings').serviceBusApiVersion]",      
             "name": "[parameters('serviceBusQueueName')]",                      
-            "type": "Queues",
+            "type": "Microsoft.ServiceBus/Queues",
             "dependsOn": [
                 "[concat('Microsoft.ServiceBus/namespaces/', parameters('serviceBusSettings').serviceBusNamespaceName)]"
             ], 
