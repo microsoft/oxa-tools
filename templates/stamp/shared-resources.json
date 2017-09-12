@@ -148,9 +148,6 @@
             "dependsOn": [
                 "[concat('Microsoft.ServiceBus/namespaces/', [variables('serviceBusQueue')]]"
             ],
-            "properties": {
-                "path": "oxadeploy1-sbqueue"
-            }
         },                  
         {
             "type": "Microsoft.Compute/availabilitySets",
