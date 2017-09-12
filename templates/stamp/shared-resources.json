@@ -30,6 +30,7 @@
     },
     "variables": {
         "loadBalancerIpName": "[concat(parameters('networkSettings').loadbalancerSettings.loadBalancerName, parameters('networkSettings').publicIPAddressNameSuffix)]",
+        "sbVersion": "[providers('Microsoft.ServiceBus', 'namespaces').apiVersions[0]]",
     },
     "resources": [
         {
@@ -131,7 +132,7 @@
             "comments": "This is the Service Bus Namespace used for deploymentStatus",
             
             "name": "[parameters('serviceBusSettings').serviceBusNamespaceName]",
-            "apiVersion": "[parameters('apiSettings').serviceBusApiVersion]",       
+            "apiVersion": "[variables('sbVersion')]",       
             "type": "Microsoft.ServiceBus/Namespaces",
             "location": "[resourceGroup().location]",
             "kind": "Messaging",
@@ -142,7 +143,7 @@
         },
         {
             "comments": "This is the Service Bus Namespace used for deploymentStatus message",
-            "apiVersion": "[parameters('apiSettings').sbQueueApiVersion]",     
+            "apiVersion": "[variables('sbVersion')]",     
             "name": "[parameters('serviceBusSettings').serviceBusQueueName]",                   
             "type": "Microsoft.ServiceBus/Namespaces/Queues",
             "dependsOn": [
