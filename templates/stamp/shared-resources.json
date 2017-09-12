@@ -146,9 +146,8 @@
 			}
         },
         {
-                   
-            "name": "[parameters('serviceBusQueueName')]",
-            "apiVersion": "[parameters('apiSettings').serviceBusApiVersion]",          
+            "apiVersion": "[parameters('apiSettings').serviceBusApiVersion]",      
+            "name": "[parameters('serviceBusQueueName')]",                      
             "type": "Queues",
             "dependsOn": [
                 "[concat('Microsoft.ServiceBus/namespaces/', parameters('serviceBusSettings').serviceBusNamespaceName)]"
