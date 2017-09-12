@@ -146,7 +146,7 @@
             "apiVersion": "[parameters('apiSettings').serviceBusApiVersion]",          
             "type": "Queues",
             "dependsOn": [
-                "[concat('Microsoft.ServiceBus/namespaces/', variables('serviceBusQueue')]"
+                "[concat('Microsoft.ServiceBus/namespaces/', [variables('serviceBusQueue')]]"
             ],
             "properties": {
                 "path": "oxadeploy1-sbqueue"
