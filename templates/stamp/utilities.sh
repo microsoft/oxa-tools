@@ -1491,7 +1491,15 @@ install-tools()
         install-mongodb-shell
         install-mysql-client
 
-        install-powershell
+        # powershell isn't supported on Ubuntu 12
+        short_release_number=`lsb_release -sr`
+        if [[ $(echo "$short_release_number > 14" | bc -l) ]]; then
+            log "Ubuntu ${short_release_number} detected. Proceeding with powershell installation"
+            install-powershell
+        else
+            log "Ubuntu ${short_release_number} detected. Skipping powershell installation"
+        fi
+
         install-azure-cli
         install-azure-cli-2
     fi
