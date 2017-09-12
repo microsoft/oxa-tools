@@ -28,7 +28,8 @@
         }            
     },
     "variables": {
-        "loadBalancerIpName": "[concat(parameters('networkSettings').loadbalancerSettings.loadBalancerName, parameters('networkSettings').publicIPAddressNameSuffix)]"
+        "loadBalancerIpName": "[concat(parameters('networkSettings').loadbalancerSettings.loadBalancerName, parameters('networkSettings').publicIPAddressNameSuffix)]",
+        "serviceBusQueue": "OxadeploySbQueue"
     },
     "resources": [
         {
@@ -141,11 +142,11 @@
         },
         {
             "comments": "This is the Service Bus Queue used for store deploymentStatus message",            
-            "name": "[parameters('serviceBusSettings').serviceBusQueueName]",
+            "name": "[variables('serviceBusQueue')]",
             "apiVersion": "[parameters('apiSettings').serviceBusApiVersion]",          
             "type": "Queues",
             "dependsOn": [
-                "[concat('Microsoft.ServiceBus/namespaces/', parameters('serviceBusSettings').serviceBusNamespaceName)]"
+                "[concat('Microsoft.ServiceBus/namespaces/', variables('serviceBusQueue')]"
             ],
             "properties": {
                 "path": "oxadeploy1-sbqueue"
