@@ -25,13 +25,8 @@
             "metadata": {
                 "Description": "Service Bus  settings object"
             }  
-        },   
-        "serviceBusQueueName": {
-            "type": "string",
-            "metadata": {
-                "description": "Name of the Queue"
-            }
-        }       
+        } 
+             
     },
     "variables": {
         "loadBalancerIpName": "[concat(parameters('networkSettings').loadbalancerSettings.loadBalancerName, parameters('networkSettings').publicIPAddressNameSuffix)]",
@@ -147,13 +142,13 @@
         },
         {
             "apiVersion": "[parameters('apiSettings').serviceBusApiVersion]",      
-            "name": "[parameters('serviceBusQueueName')]",                      
+            "name": "[parameters('serviceBusSettings').serviceBusQueueName]",                   
             "type": "Microsoft.ServiceBus/Queues",
             "dependsOn": [
                 "[concat('Microsoft.ServiceBus/namespaces/', parameters('serviceBusSettings').serviceBusNamespaceName)]"
             ], 
             "properties": {
-                "path": "[parameters('serviceBusQueueName')]"
+                "path": "[parameters('serviceBusSettings').serviceBusQueueName]"
             }
         },                  
         {
