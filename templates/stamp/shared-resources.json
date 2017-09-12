@@ -31,7 +31,7 @@
             "metadata": {
                 "description": "Name of the Queue"
             }
-        },        
+        }       
     },
     "variables": {
         "loadBalancerIpName": "[concat(parameters('networkSettings').loadbalancerSettings.loadBalancerName, parameters('networkSettings').publicIPAddressNameSuffix)]",
