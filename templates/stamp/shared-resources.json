@@ -151,10 +151,8 @@
             "type": "Queues",
             "dependsOn": [
                 "[concat('Microsoft.ServiceBus/namespaces/', parameters('serviceBusSettings').serviceBusNamespaceName)]"
-            ], 
-            "properties": {
-                "path": "[parameters('serviceBusQueueName')]"
-            }
+            ]
+            
         },                  
         {
             "type": "Microsoft.Compute/availabilitySets",
