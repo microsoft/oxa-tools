@@ -409,10 +409,12 @@ function Set-ScriptDefault
             [Parameter(Mandatory=$true)][string]$DefaultValue
          )
 
+    $response = $ScriptParamVal
     if ($ScriptParamVal.Trim().Length -eq 0 -or $ScriptParamVal -eq $null)
     {        
         Log-Message "Falling back to default value: $($DefaultValue) for parameter $($ScriptParamName) since no value was provided"
+        $response = $DefaultValue
     }
 
-    return $DefaultValue
+    return $response
 }

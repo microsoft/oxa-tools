@@ -148,13 +148,13 @@ Import-Module "$($currentPath)/Common.ps1" -Force
 $FullDeploymentArmTemplateFile = Set-ScriptDefault -ScriptParamName "FullDeploymentArmTemplateFile" `
                                     -ScriptParamVal $FullDeploymentArmTemplateFile `
                                     -DefaultValue "$($rootPath)/templates/stamp/stamp-v2.json"
-$FullDeploymentParametersFile = Set-ScriptDefault -ScriptParamName "FullDeploymentArmTemplateFile" `
+$FullDeploymentParametersFile = Set-ScriptDefault -ScriptParamName "FullDeploymentParametersFile" `
                                     -ScriptParamVal $FullDeploymentParametersFile `
                                     -DefaultValue "$($rootPath)/config/stamp/default/parameters.json"
-$KeyVaultDeploymentArmTemplateFile = Set-ScriptDefault -ScriptParamName "FullDeploymentArmTemplateFile" `
+$KeyVaultDeploymentArmTemplateFile = Set-ScriptDefault -ScriptParamName "KeyVaultDeploymentArmTemplateFile" `
                                     -ScriptParamVal $KeyVaultDeploymentArmTemplateFile `
                                     -DefaultValue "$($rootPath)/templates/stamp/stamp-keyvault.json"
-$KeyVaultDeploymentParametersFile = Set-ScriptDefault -ScriptParamName "FullDeploymentArmTemplateFile" `
+$KeyVaultDeploymentParametersFile = Set-ScriptDefault -ScriptParamName "KeyVaultDeploymentParametersFile" `
                                     -ScriptParamVal $KeyVaultDeploymentParametersFile `
                                     -DefaultValue $FullDeploymentParametersFile
 
