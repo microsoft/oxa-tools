@@ -4,7 +4,7 @@
 
 EDXAPP_PLATFORM_NAME: "%%PLATFORM_NAME%%"
 
-EDXAPP_TIME_ZONE: "America/Los_Angeles"
+EDXAPP_TIME_ZONE: "Australia/Melbourne"
 
 # Superuser information
 EDXAPP_SU_PASSWORD: "%%EDXAPP_SU_PASSWORD%%" 
@@ -37,14 +37,14 @@ EDXAPP_COURSE_ABOUT_VISIBILITY_PERMISSION: "see_about_page"
 
 # Password Policy Configuration
 # AT least 8 characters. Must contain at least one lowercase, one uppercase and one symbol.
-EDXAPP_PASSWORD_MIN_LENGTH: 8 
+EDXAPP_PASSWORD_MIN_LENGTH: 4 
 EDXAPP_PASSWORD_MAX_LENGTH: 75
 EDXAPP_PASSWORD_COMPLEXITY: 
   UPPER: 1
   LOWER: 1
-  PUNCTUATION: 1
+  PUNCTUATION: 0
 
-EDXAPP_ENFORCE_PASSWORD_POLICY: true
+EDXAPP_ENFORCE_PASSWORD_POLICY: false
 
 # Adding Disclosure Notice to the marketing url link mapping
 EDXAPP_MKTG_URL_LINK_MAP:
@@ -53,14 +53,13 @@ EDXAPP_MKTG_URL_LINK_MAP:
 # Country made required field in registration.
 EDXAPP_REGISTRATION_EXTRA_FIELDS: 
   city: "hidden"
-  country: "required"
+  country: "optional"
   gender: "optional"
   goals: "optional"
   honor_code: "required"
   level_of_education: "optional"
   mailing_address: "hidden"
   year_of_birth: "hidden"
-  language: "optional"
 
 
 # Enable social sharing icons for courses. For now we are just enabling linkedin. 
@@ -89,7 +88,6 @@ EDXAPP_FEATURES:
   # PREVIEW_LMS_BASE must be localhost for course discovery to work with dns (openedx.slack - 9/14/16 @3:08pm)
   PREVIEW_LMS_BASE: "{{ EDXAPP_PREVIEW_SITE_NAME }}"
   DISABLE_COURSE_CREATION: true
-  DISABLE_LIBRARY_CREATION: true
   ALLOW_ALL_ADVANCED_COMPONENTS: true
   ALLOW_HIDING_DISCUSSION_TAB: true
   CERTIFICATES_ENABLED: true
@@ -122,19 +120,18 @@ EDXAPP_RETRY_ACTIVATION_EMAIL_MAX_ATTEMPTS: 50
 # overriding the default value from 0.5 to 2. 
 EDXAPP_RETRY_ACTIVATION_EMAIL_TIMEOUT: 2
 EDXAPP_SESSION_INACTIVITY_TIMEOUT_IN_SECONDS: 1800
-EDXAPP_X_FRAME_OPTIONS: "SAMEORIGIN"
-EDXAPP_CSRF_COOKIE_SECURE: true
+
 # Configure email addresses
-EDXAPP_BUGS_EMAIL: "microsoftlearning-bugs@microsoft.com"
-EDXAPP_BULK_EMAIL_DEFAULT_FROM_EMAIL: "microsoftlearning-noreply@microsoft.com"
-EDXAPP_CONTACT_EMAIL: "microsoftlearning-info@microsoft.com"
-EDXAPP_DEFAULT_FEEDBACK_EMAIL: "microsoftlearning-feedback@microsoft.com"
-EDXAPP_DEFAULT_FROM_EMAIL: "microsoftlearning-registration@microsoft.com"
-EDXAPP_PAYMENT_SUPPORT_EMAIL: "microsoftlearning-billing@microsoft.com"
-EDXAPP_PRESS_EMAIL: "microsoftlearning-press@microsoft.com"
+EDXAPP_BUGS_EMAIL: "learning-bugs@v-learn.com.au"
+EDXAPP_BULK_EMAIL_DEFAULT_FROM_EMAIL: "learning-noreply@v-learn.com.au"
+EDXAPP_CONTACT_EMAIL: "learning-info@v-learn.com.au"
+EDXAPP_DEFAULT_FEEDBACK_EMAIL: "learning-feedback@v-learn.com.au"
+EDXAPP_DEFAULT_FROM_EMAIL: "learning-registration@v-learn.com.au"
+EDXAPP_PAYMENT_SUPPORT_EMAIL: "learning-billing@v-learn.com.au"
+EDXAPP_PRESS_EMAIL: "learning-press@v-learn.com.au"
 EDXAPP_DEFAULT_SERVER_EMAIL: "%%PLATFORM_EMAIL%%"
-EDXAPP_TECH_SUPPORT_EMAIL: "microsoftlearning-technical@microsoft.com"
-EDXAPP_UNIVERSITY_EMAIL: "microsoftlearning-university@microsoft.com"
+EDXAPP_TECH_SUPPORT_EMAIL: "learning-technical@v-learn.com.au"
+EDXAPP_UNIVERSITY_EMAIL: "learning-university@v-learn.com.au"
 
 EDXAPP_LTI_USER_EMAIL_DOMAIN: "lti.openedx.microsoft.com"
 
@@ -143,6 +140,3 @@ EDXAPP_LTI_USER_EMAIL_DOMAIN: "lti.openedx.microsoft.com"
 
 # Add lms-preview to list sites to configure
 nginx_sites: [certs, cms, lms, lms-preview, forum, xqueue]
-
-#Cookies API url
-EDXAPP_API_COOKIE_URL: "%%EDXAPP_COOKIE_API_URL%%"
