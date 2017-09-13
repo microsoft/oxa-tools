@@ -1,18 +1,33 @@
 # oxa-tools
 
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FMicrosoft%2Foxa-tools%2Fmaster%2Ftemplates%2Fscalable.json" target="_blank">
-    <img src="http://azuredeploy.net/deploybutton.png"/>
-</a>
-<a href="http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2FMicrosoft%2Foxa-tools%2Fmaster%2Ftemplates%2Fscalable.json" target="_blank">
-    <img src="http://armviz.io/visualizebutton.png"/>
-</a>
+Deploying and maintaining Open edX on Azure
 
-To deploy from an edX app VM:
-* wget https://raw.githubusercontent.com/Microsoft/oxa-tools/master/scripts/deploy.sh -O- | bash
+## Deploying single machine instance (for development and test)
 
-Future deployment work:
-* Deploy using ARM CustomScript extension. Work in progress, see /templates.
-* Consider deploying ARM via Azure powershell, possibly from VS ARM project
-* Extensions for specific tasks:
-  * DB migration
-  * Running subset of ansible tags (config, theming, etc)
+Execute onebox.sh on any Ubuntu 16 machine.
+
+Common parameter argument options: pick a cell from each column. The first row is what happens when no additional parameter arguments are provided.
+
+`--role` or `-r` or <br/> `--stack` or `-s` | `--branches` or `-b` | credential parameter arguments
+--- | --- | ---
+`fullstack` (default) | `edge` (default) <br/> (will use branches like oxa/dev.fic ) | randomly generated (default)
+`devstack` | `release`  <br/> (will use branches like oxa/release.fic ) | `--default-password` or `-d` <br/> `anyString` (set all passwords to anyString)
+n/a | `stable`  <br/> (will use branches like oxa/master.fic) | n/a
+ n/a | `edx`  <br/> (will use upstream edx repositories <br/> and open-release/ficus.1 tag) | n/a
+ n/a | edit onebox.sh to specify custom <br/> remote urls and branches directly | edit onebox.sh to specify custom <br/> usernames and passwords directly
+
+For example:
+`sudo onebox.sh` OR
+`sudo bash onebox.sh -r devstack -b stable -d hokiePokiePass11`
+
+What's been tested: server edition on azure, desktop edtion in virtualbox VM, docker containers with systemd. Please open an "issue" in github if you encounter any problems.
+
+## Deploying high availability instance (for production-like environments)
+
+documentation coming soon
+
+## todo:
+ * 100628 more documentation for all types of onebox (fullstack and devstack) deployments
+ * 100632 re-enable fullstack hyperlink "button" deployment to azure
+ * documentation for deploying high availability "STAMP" deployments
+ * 100626 there are still a few customizations that aren't applied during onebox installation like sites, themes, etc.
