@@ -217,6 +217,9 @@ if ($DeploymentVersionId -eq "")
 # We need to determine the slot that needs to be targetted to deploy with the help of Traffic manager end point status
 if($DeploymentType -ne "bootstrap")
 {
+
+    $DeployKeyVault = $false
+
     try
     {
         # Getting Azure resource list from the provided resource group
