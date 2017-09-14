@@ -16,7 +16,10 @@ CERTS_QUEUE_URL: "http://localhost:{{ XQUEUE_HTTP_PORT }}"
 # Database connections - need to confirm connection strings
 ORA_MYSQL_HOST: "%%MYSQL_MASTER_IP%%"
 XQUEUE_MYSQL_HOST: "%%MYSQL_MASTER_IP%%"
+XQUEUE_MYSQL_PORT: "%%MYSQL_MASTER_PORT%%"
+
 EDXAPP_MYSQL_HOST: "%%MYSQL_MASTER_IP%%"
+EDXAPP_MYSQL_PORT: "%%MYSQL_MASTER_PORT%%"
 
 # When bootstrapping multiple VMSS (especially on different versions like dogwood & ficus), we see a case where
 # one VMSS seeds memcache with keys used by both versions of the VMSS. The values for those keys are only right for one version of the VMSS
@@ -61,6 +64,7 @@ COMMON_MYSQL_MIGRATE_PASS: "{{ EDXAPP_MYSQL_PASSWORD }}"
 
 # Required for configuring mysql host for Programs playbook
 PROGRAMS_DATABASE_HOST: "{{ EDXAPP_MYSQL_HOST }}"
+PROGRAMS_DATABASE_PORT: "{{ EDXAPP_MYSQL_PORT }}"
 
 # Required for 'Mysql | Ensure Anonymous user(s) does not exist' check
 MYSQL_ADMIN_USER: "{{ EDXAPP_MYSQL_USER_ADMIN }}"
