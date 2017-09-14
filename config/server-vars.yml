@@ -53,11 +53,11 @@ EDXAPP_MKTG_URL_LINK_MAP:
 # Country made required field in registration.
 EDXAPP_REGISTRATION_EXTRA_FIELDS: 
   city: "hidden"
-  country: "optional"
-  gender: "optional"
-  goals: "optional"
-  honor_code: "required"
-  level_of_education: "optional"
+  country: "hidden"
+  gender: "hidden"
+  goals: "hidden"
+  honor_code: "hidden"
+  level_of_education: "hidden"
   mailing_address: "hidden"
   year_of_birth: "hidden"
 
