@@ -4,7 +4,7 @@ Deploying and maintaining Open edX on Azure
 
 ## Deploying single machine instance (for development and test)
 
-Execute onebox.sh on any Ubuntu 16 machine.
+Execute `onebox.sh` on any Ubuntu 16 machine.
 
 Common parameter argument options: pick a cell from each column. The first row is what happens when no additional parameter arguments are provided.
 
