@@ -1485,9 +1485,11 @@ install-tools()
 
     # Most docker containers don't have sudo pre-installed.
     install-sudo
+
     # "desktop environment" flavors of ubuntu like xubuntu don't come with full ssh, but server edition generaly does"
     install-ssh
     install-git
+
     # required for envsubst command
     install-gettext
     set-server-timezone
@@ -1501,7 +1503,8 @@ install-tools()
 
         # powershell isn't supported on Ubuntu 12
         short_release_number=`lsb_release -sr`
-        if [[ $(echo "$short_release_number > 14" | bc -l) ]]; then
+        if [[ $(echo "$short_release_number > 14" | bc -l) == 1 ]]; 
+        then
             log "Ubuntu ${short_release_number} detected. Proceeding with powershell installation"
             install-powershell
         else
