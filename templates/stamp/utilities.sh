@@ -500,7 +500,7 @@ clean_repository()
 get_machine_role()
 {
     # determine the role of the machine based on its name
-    if [[ $HOSTNAME =~ ^(.*)jb$ ]]; then
+    if [[ $HOSTNAME =~ ^(.*)jb([1-2]?)$ ]]; then
         MACHINE_ROLE="jumpbox"
     elif [[ $HOSTNAME =~ ^(.*)mongo[0-3]{1}$ ]]; then
         MACHINE_ROLE="mongodb"
