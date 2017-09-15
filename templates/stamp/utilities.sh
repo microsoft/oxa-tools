@@ -1153,14 +1153,17 @@ start_mysql()
 
     while [[ $server_started == 0 ]] ;
     do
-        if [[ $(echo "$os_version > 16" | bc -l) ]] ;
+        if [[ $(echo "$os_version > 16" | bc -l) == 1 ]] ;
         then
             systemctl start mysqld
+            exit_on_error "Could not restart mysqld on '${HOSTNAME}' !" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
 
             # enable mysqld on startup
             systemctl enable mysqld
+            exit_on_error "Could not enable mysqld for startup on '${HOSTNAME}' !" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
         else
             service mysql start
+            exit_on_error "Could not restart mysqld on '${HOSTNAME}' !" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
         fi
 
         # Wait for Mysql server to start/initialize for the first time (this may take up to a minute or so)
@@ -1453,7 +1456,7 @@ move_mysql_datadirectory()
 
     # restart apparmor to apply the settings
     os_version=$(lsb_release -rs)
-    if (( $(echo "$os_version > 16" | bc -l) ))
+    if [[ $(echo "$os_version > 16" | bc -l) == 1 ]];
     then
         systemctl restart apparmor
     else
@@ -1469,8 +1472,12 @@ move_mysql_datadirectory()
     ###################################
     #5. Restart the server
 
-    # incase there are config changes
-    systemctl daemon-reload
+    # incase there are config changes (specific to Ubuntu 16+)
+    if [[ $(echo "$os_version > 16" | bc -l) == 1 ]];
+    then
+        systemctl daemon-reload
+        exit_on_error "Could not perform a configuration reload on '${HOSTNAME}' !" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
+    fi
 
     start_mysql $mysql_server_port
     exit_on_error "Could not start mysql server after moving its data directory on '${HOSTNAME}' !" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
