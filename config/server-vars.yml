@@ -140,3 +140,10 @@ EDXAPP_LTI_USER_EMAIL_DOMAIN: "lti.openedx.microsoft.com"
 
 # Add lms-preview to list sites to configure
 nginx_sites: [certs, cms, lms, lms-preview, forum, xqueue]
+
+EDXAPP_EMAIL_BACKEND: 'django.core.mail.backends.smtp.EmailBackend'
+EDXAPP_EMAIL_HOST: 'vlearn-com-au0c.mail.protection.outlook.com'
+EDXAPP_EMAIL_PORT: 25
+EDXAPP_EMAIL_USE_TLS: True
+EDXAPP_EMAIL_HOST_USER: ''
+EDXAPP_EMAIL_HOST_PASSWORD: ''
