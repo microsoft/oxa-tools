@@ -496,7 +496,7 @@ clean_repository()
 get_machine_role()
 {
     # determine the role of the machine based on its name
-    if [[ $HOSTNAME =~ ^(.*)jb$ ]]; then
+    if [[ $HOSTNAME =~ ^(.*)jb([1-2]?)$ ]]; then
         MACHINE_ROLE="jumpbox"
     elif [[ $HOSTNAME =~ ^(.*)mongo[0-3]{1}$ ]]; then
         MACHINE_ROLE="mongodb"
@@ -1149,14 +1149,17 @@ start_mysql()
 
     while [[ $server_started == 0 ]] ;
     do
-        if [[ $(echo "$os_version > 16" | bc -l) ]] ;
+        if [[ $(echo "$os_version > 16" | bc -l) == 1 ]] ;
         then
             systemctl start mysqld
+            exit_on_error "Could not restart mysqld on '${HOSTNAME}' !" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
 
             # enable mysqld on startup
             systemctl enable mysqld
+            exit_on_error "Could not enable mysqld for startup on '${HOSTNAME}' !" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
         else
             service mysql start
+            exit_on_error "Could not restart mysqld on '${HOSTNAME}' !" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
         fi
 
         # Wait for Mysql server to start/initialize for the first time (this may take up to a minute or so)
@@ -1449,7 +1452,7 @@ move_mysql_datadirectory()
 
     # restart apparmor to apply the settings
     os_version=$(lsb_release -rs)
-    if (( $(echo "$os_version > 16" | bc -l) ))
+    if [[ $(echo "$os_version > 16" | bc -l) == 1 ]];
     then
         systemctl restart apparmor
     else
@@ -1465,8 +1468,12 @@ move_mysql_datadirectory()
     ###################################
     #5. Restart the server
 
-    # incase there are config changes
-    systemctl daemon-reload
+    # incase there are config changes (specific to Ubuntu 16+)
+    if [[ $(echo "$os_version > 16" | bc -l) == 1 ]];
+    then
+        systemctl daemon-reload
+        exit_on_error "Could not perform a configuration reload on '${HOSTNAME}' !" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
+    fi
 
     start_mysql $mysql_server_port
     exit_on_error "Could not start mysql server after moving its data directory on '${HOSTNAME}' !" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
@@ -1479,9 +1486,15 @@ install-tools()
 {
     machine_role=$(get_machine_role)
 
-    # 1. Setup Tools
+    # Most docker containers don't have sudo pre-installed.
+    install-sudo
+
+    # "desktop environment" flavors of ubuntu like xubuntu don't come with full ssh, but server edition generaly does"
+    install-ssh
     install-git
-    install-gettext # required for envsubst command
+
+    # required for envsubst command
+    install-gettext
     set-server-timezone
     install-json-processor
 
@@ -1493,7 +1506,8 @@ install-tools()
 
         # powershell isn't supported on Ubuntu 12
         short_release_number=`lsb_release -sr`
-        if [[ $(echo "$short_release_number > 14" | bc -l) ]]; then
+        if [[ $(echo "$short_release_number > 14" | bc -l) == 1 ]]; 
+        then
             log "Ubuntu ${short_release_number} detected. Proceeding with powershell installation"
             install-powershell
         else
