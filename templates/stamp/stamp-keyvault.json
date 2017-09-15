@@ -640,6 +640,15 @@
             "metadata": {
                 "description": "Indicator of whether or not the Mobile Rest Api is enabled for further integration"
             }
+        },
+        "bootstrapJumpbox": {
+            "type": "int",
+            "defaultValue": 0,
+            "minValue": 0,
+            "maxValue": 2,
+            "metadata": {
+                "description": "Zero-based numeric indicator of the Jumpbox used for this bootstrap operation. Zero uses the default *-jb server instead of *-jb[1-2]"
+            }
         }
     },
     "variables": {
