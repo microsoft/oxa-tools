@@ -139,13 +139,13 @@ Param(
 
         [Parameter(Mandatory=$false)][ValidateRange(0,2)][int]$JumpboxNumber=0,
         
-        [Parameter(Mandatory=$true)][string]$BranchName = "oxa/devfic",
+        [Parameter(Mandatory=$false)][string]$BranchName = "oxa/master.fic",
 
-        [Parameter(Mandatory=$true)][ValidateSet("bootstrap", "upgrade", "swap", "")][string]$DeploymentType="upgrade",
+        [Parameter(Mandatory=$false)][ValidateSet("bootstrap", "upgrade", "swap")][string]$DeploymentType="bootstrap",
                 
         [Parameter(Mandatory=$false)][string]$Slot="slot1",
 
-        [Parameter(Mandatory=$true)][ValidateSet("prod", "int", "bvt", "")][string]$Cloud="bvt"
+        [Parameter(Mandatory=$false)][ValidateSet("prod", "int", "bvt")][string]$Cloud="bvt"
 
      )
 
@@ -317,6 +317,8 @@ try
     {
         # kick off full deployment
         # we may need to replace the default resource group name in the parameters file
+        Log-Message "Starting stamp '$DeploymentType' deployment (Branch='$BranchName', Cloud='$Cloud', Slot='$Slot') | $FullDeploymentArmTemplateFile, $tempParametersFile"
+
         $deploymentStatus = New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $FullDeploymentArmTemplateFile -TemplateParameterFile $tempParametersFile -Force -Verbose  
         
         if($DeploymentType -eq "swap" -and $cloud -eq "bvt")

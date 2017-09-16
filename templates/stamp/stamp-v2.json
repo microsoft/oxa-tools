@@ -449,24 +449,6 @@
                 "description": "SKU for the vault"
             }
         },
-        "lmsTrafficManagerStateMetadata": {
-            "type": "array",
-            "metadata": {
-                "description": "Traffic manager status for LMS load balancers endpoints: [0]=Slot1.LoadBalancerEndpointStatus, [1]=Slot2.LoadBalancerEndpointStatus, [2]=Slot1.LoadBalancerEndpointPriority, [3]=Slot2.LoadBalancerEndpointPriority where LoadBalancerStatus=Enabled|Disabled, LoadBalancerEndpointPriority >= 1 and <= 1000"
-            }
-        },
-        "cmsTrafficManagerStateMetadata": {
-            "type": "array",
-            "metadata": {
-                "description": "Traffic manager status for CMS load balancers endpoints: [0]=Slot1.LoadBalancerEndpointStatus, [1]=Slot2.LoadBalancerEndpointStatus, [2]=Slot1.LoadBalancerEndpointPriority, [3]=Slot2.LoadBalancerEndpointPriority where LoadBalancerStatus=Enabled|Disabled, LoadBalancerEndpointPriority >= 1 and <= 1000"
-            }
-        },
-        "previewTrafficManagerStateMetadata": {
-            "type": "array",
-            "metadata": {
-                "description": "Traffic manager status for PREVIEW load balancer endpoints: [0]=Slot1.LoadBalancerEndpointStatus, [1]=Slot2.LoadBalancerEndpointStatus, [2]=Slot1.LoadBalancerEndpointPriority, [3]=Slot2.LoadBalancerEndpointPriority where LoadBalancerStatus=Enabled|Disabled, LoadBalancerEndpointPriority >= 1 and <= 1000"
-            }
-        },
         "smtpServer": {
             "type": "string",
             "metadata": {
@@ -616,13 +598,6 @@
                 "description": "Email address associated with the application"
             }
         },
-        "memcacheServer": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "Memcache server to use for the application servers"
-            }
-        },
         "azureCliVersion": {
             "type": "string",
             "defaultValue": "2",
@@ -649,7 +624,6 @@
             "metadata": {
                 "description": "Zero-based numeric indicator of the Jumpbox used for this bootstrap operation. Zero uses the default *-jb server instead of *-jb[1-2]"
             }
-        }
         },
         "deploymentType": {
             "type": "string",
@@ -678,6 +652,9 @@
 
         "virtualMachineExtensionsApiVersion": "[variables('defaultApiVersion')]",
         "virtualMachineApiVersion": "[variables('defaultApiVersion')]",
+        "slot1Status": "[if(equals(parameters('deploymentSlot'), 'slot1'), 'Enabled','Disabled')]",
+        "slot2Status": "[if(equals(parameters('deploymentSlot'), 'slot2'), 'Enabled','Disabled')]",
+        "memcacheServer": "[if(equals(parameters('deploymentSlot'), 'slot1'), '10.0.0.16','10.0.0.17')]",
 
         "diagnosticStorageAccountName": "[concat(toLower(parameters('clusterName')), 'diagnostics')]",
         "storageAccountName": "[concat(toLower(parameters('clusterName')), 'vhdsa')]",
@@ -803,15 +780,15 @@
                     "monitorConfigPath": "/",
                     "endpoint1": {
                         "target": "[concat('lms-', parameters('clusterName'), '-slot1.',resourceGroup().location, '.cloudapp.azure.com')]",
-                        "status": "[parameters('lmsTrafficManagerStateMetadata')[0]]",
+                        "status": "[variables('slot1Status')]",
                         "location": "[resourceGroup().location]",
-                        "priority": "[parameters('lmsTrafficManagerStateMetadata')[2]]"
+                        "priority": "1"
                     },
                     "endpoint2": {
                         "target": "[concat('lms-', parameters('clusterName'), '-slot2.',resourceGroup().location, '.cloudapp.azure.com')]",
-                        "status": "[parameters('lmsTrafficManagerStateMetadata')[1]]",
+                        "status": "[variables('slot2Status')]",
                         "location": "[resourceGroup().location]",
-                        "priority": "[parameters('lmsTrafficManagerStateMetadata')[3]]"
+                        "priority": "2"
                     }
                 },
 
@@ -821,15 +798,15 @@
                     "monitorConfigPath": "/",
                     "endpoint1": {
                         "target": "[concat('cms-', parameters('clusterName'), '-slot1.',resourceGroup().location, '.cloudapp.azure.com')]",
-                        "status": "[parameters('cmsTrafficManagerStateMetadata')[0]]",
+                        "status": "[variables('slot1Status')]",
                         "location": "[resourceGroup().location]",
-                        "priority": "[parameters('cmsTrafficManagerStateMetadata')[2]]"
+                        "priority": "1"
                     },
                     "endpoint2": {
                         "target": "[concat('cms-', parameters('clusterName'), '-slot2.',resourceGroup().location, '.cloudapp.azure.com')]",
-                        "status": "[parameters('cmsTrafficManagerStateMetadata')[1]]",
+                        "status": "[variables('slot2Status')]",
                         "location": "[resourceGroup().location]",
-                        "priority": "[parameters('cmsTrafficManagerStateMetadata')[3]]"
+                        "priority": "2"
                     }
                 },
 
@@ -839,15 +816,15 @@
                     "monitorConfigPath": "/",
                     "endpoint1": {
                         "target": "[concat('preview-', parameters('clusterName'), '-slot1.',resourceGroup().location, '.cloudapp.azure.com')]",
-                        "status": "[parameters('previewTrafficManagerStateMetadata')[0]]",
+                        "status": "[variables('slot1Status')]",
                         "location": "[resourceGroup().location]",
-                        "priority": "[parameters('previewTrafficManagerStateMetadata')[2]]"
+                        "priority": "1"
                     },
                     "endpoint2": {
                         "target": "[concat('preview-', parameters('clusterName'), '-slot2.',resourceGroup().location, '.cloudapp.azure.com')]",
-                        "status": "[parameters('previewTrafficManagerStateMetadata')[1]]",
+                        "status": "[variables('slot2Status')]",
                         "location": "[resourceGroup().location]",
-                        "priority": "[parameters('previewTrafficManagerStateMetadata')[3]]"
+                        "priority": "2"
                     }
                 }
             },
@@ -1003,7 +980,7 @@
         "authenticationParameters": "[concat(' --enable-thirdparty-auth ', parameters('enableThirdPartyAuth'), ' --aad-loginbutton-text \"', replace(parameters('aadLoginButtonText'), ' ', '_'), '\"')]",
         "databaseParameters": "[concat(' --mongo-adminuser ', parameters('mongoServerAdminUserName'), ' --mongo-adminuserpassword \"', parameters('mongoServerAdminPassword'), '\" --mongo-replicasetkey \"', variables('mongoReplicaSetKey'), '\" --mysql-backupuser ', parameters('mysqlBackupUserName'), ' --mysql-backupuserpassword \"', parameters('mysqlBackupUserPassword'), '\" --mysql-repluser \"', parameters('mysqlServerReplUserName'), '\" --mysql-repluserpassword \"', parameters('mysqlServerReplPassword'), '\" --mysql-adminuser \"', parameters('mysqlServerAdminUserName'), '\" --mysql-adminuserpassword \"', parameters('mysqlServerAdminPassword'), '\" --mysql-repluser \"', parameters('mysqlServerReplUserName'), '\" --mysql-repluserpassword \"', parameters('mysqlServerReplPassword'), '\" --mysql-adminuser \"', parameters('mysqlServerAdminUserName'), '\" --mysql-adminuserpassword \"', parameters('mysqlServerAdminPassword'), '\"')]",
         "edxappParameters": "[concat(' --platform-email \"', parameters('edxPlatformEmail'), '\" --platform-name \"', base64(parameters('edxPlatformName')), '\" --edxapp-superuser \"', parameters('edxappSuperUserName'), '\" --edxapp-superuserpassword \"', parameters('edxappSuperUserPassword'), '\" --edxapp-superuseremail \"', parameters('edxappSuperUserEmail'), '\"')]",
-        "memcacheParameters": "[concat(' --memcache-server \"', base64(parameters('memcacheServer')), '\"')]",
+        "memcacheParameters": "[concat(' --memcache-server \"', base64(variables('memcacheServer')), '\"')]",
         "azureCliParameters": "[concat(' --azurecli-version \"', parameters('azureCliVersion'), '\"')]",
         "jumpboxBootstrapParameters": "[concat(' --bootstrap-jumpbox \"', variables('jumpboxBootstrapIndicator'), '\"')]",
 

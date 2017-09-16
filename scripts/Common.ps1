@@ -418,7 +418,6 @@ function Set-ScriptDefault
 
     return $response
 }
-}
 
 ## Function: Execute-AzureCommand
 ##
@@ -768,8 +767,9 @@ function Remove-StagingResources()
       
     # Filter the resources based on the determined slot
     $targetedResources = $resourceList | Where-Object { $_.ResourceName.Contains($Slot) };
+
     if($targetedResources -ne $null)
-       
+    {
         foreach($resource in $targetedResources)
         { 
             Write-Host "Here is the list of resources targetted to be deleted" ($targetedResources| Format-List | Out-String);                              
@@ -896,6 +896,7 @@ function Remove-StagingResources()
                 }
             }             
     }
+
     Log-Message -Message  "There are no Resources targeted to delete from $($ResourceGroupName)" -LogType Host
 }
 
