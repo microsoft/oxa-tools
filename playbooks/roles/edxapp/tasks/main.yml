@@ -35,7 +35,7 @@
   args:
     chdir: "{{ edxapp_files_path }}/nginx"
   register: bash
-  when: template_type is undefined or template_type != "devstack"
+  when: "{{ NGINX_ENABLE_SSL }}"
 
 # Print the shell tasks's stdout and stderr.
 - debug: var="bash.stdout_lines + [ bash.stderr ]"
@@ -43,7 +43,7 @@
 - name: Restart Nginx to use the new settings
   sudo: yes
   command: service nginx restart
-  when: template_type is undefined or template_type != "devstack"
+  when: "{{ NGINX_ENABLE_SSL }}"
 
 #- name: Apply patch to authenticate user after their reset confirmation goes through
 #  sudo: yes

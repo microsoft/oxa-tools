@@ -79,6 +79,9 @@ A timestamp or other identifier to associate with the VMSS being deployed.
 .PARAMETER EnableMobileRestApi
 An switch to indicate whether or not mobile rest api is turned on
 
+.PARAMETER JumpboxNumber
+Zero-based numeric indicator of the Jumpbox used for this bootstrap operation (0, 1 or 2). If a non-zero indicator is specified, the corresponding jumpbox will be bootstrapped.
+
 .PARAMETER DeploymentType
 A switch to indicate the deployment type (any of bootstrap, upgrade, swap)
 
@@ -104,10 +107,10 @@ Param(
         [Parameter(Mandatory=$true)][string]$AadTenantId,
         [Parameter(Mandatory=$false)][string]$KeyVaultUserObjectId="",
 
-        [Parameter(Mandatory=$true)][string]$KeyVaultDeploymentArmTemplateFile,
+        [Parameter(Mandatory=$false)][string]$KeyVaultDeploymentArmTemplateFile="",
         [Parameter(Mandatory=$false)][string]$KeyVaultDeploymentParametersFile="",
-        [Parameter(Mandatory=$true)][string]$FullDeploymentArmTemplateFile,
-        [Parameter(Mandatory=$true)][string]$FullDeploymentParametersFile,
+        [Parameter(Mandatory=$false)][string]$FullDeploymentArmTemplateFile="",
+        [Parameter(Mandatory=$false)][string]$FullDeploymentParametersFile="",
 
         [Parameter(Mandatory=$true)][string]$ClusterAdministratorEmailAddress,
 
@@ -133,6 +136,8 @@ Param(
         [Parameter(Mandatory=$false)][string]$DeploymentVersionId="",
 
         [Parameter(Mandatory=$false)][switch]$EnableMobileRestApi=$false,
+
+        [Parameter(Mandatory=$false)][ValidateRange(0,2)][int]$JumpboxNumber=0,
         
         [Parameter(Mandatory=$true)][string]$BranchName = "oxa/devfic",
 
@@ -150,14 +155,21 @@ Param(
 
 $invocation = (Get-Variable MyInvocation).Value 
 $currentPath = Split-Path $invocation.MyCommand.Path 
+$rootPath = (get-item $currentPath).parent.FullName
 Import-Module "$($currentPath)/Common.ps1" -Force
 
-# set the default keyvault parameter file (if one isn't specified)
-if ($KeyVaultDeploymentParametersFile.Trim().Length -eq 0)
-{
-    Log-Message "Setting KeyVaultDeploymentParametersFile to FullDeploymentParametersFile"
-    $KeyVaultDeploymentParametersFile = $FullDeploymentParametersFile;
-}
+$FullDeploymentArmTemplateFile = Set-ScriptDefault -ScriptParamName "FullDeploymentArmTemplateFile" `
+                                    -ScriptParamVal $FullDeploymentArmTemplateFile `
+                                    -DefaultValue "$($rootPath)/templates/stamp/stamp-v2.json"
+$FullDeploymentParametersFile = Set-ScriptDefault -ScriptParamName "FullDeploymentParametersFile" `
+                                    -ScriptParamVal $FullDeploymentParametersFile `
+                                    -DefaultValue "$($rootPath)/config/stamp/default/parameters.json"
+$KeyVaultDeploymentArmTemplateFile = Set-ScriptDefault -ScriptParamName "KeyVaultDeploymentArmTemplateFile" `
+                                    -ScriptParamVal $KeyVaultDeploymentArmTemplateFile `
+                                    -DefaultValue "$($rootPath)/templates/stamp/stamp-keyvault.json"
+$KeyVaultDeploymentParametersFile = Set-ScriptDefault -ScriptParamName "KeyVaultDeploymentParametersFile" `
+                                    -ScriptParamVal $KeyVaultDeploymentParametersFile `
+                                    -DefaultValue $FullDeploymentParametersFile
 
 # Login
 $clientSecret = ConvertTo-SecureString -String $AadWebClientAppKey -AsPlainText -Force
@@ -254,6 +266,7 @@ $replacements = @{
                     "MEMCACHESERVER"=$MemcacheServer;
                     "AZURECLIVERSION"=$AzureCliVersion;
                     "DEPLOYMENTVERSIONID"=$DeploymentVersionId;
+                    "JUMPBOXNUMBER"=$JumpboxNumber;
                     "GITHUBBRANCH"=$BranchName;
                     "DEPLOYMENTSLOT"=$Slot; 
                     "DEPLOYMENTTYPE"=$DeploymentType;

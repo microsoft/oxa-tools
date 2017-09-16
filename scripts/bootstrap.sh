@@ -63,20 +63,19 @@ NOTIFICATION_MESSAGE=""
 SECONDARY_LOG="/var/log/bootstrap.csx.log"
 PRIMARY_LOG="/var/log/bootstrap.log"
 
-display_usage() {
-  echo "Usage: $0 [-r|--role {jb|vmss|mongo|mysql|edxapp|fullstack|devstack}] [-e|--environment {dev|bvt|int|prod}] [--cron] --keyvault-name {azure keyvault name} --aad-webclient-id {AAD web application client id} --aad-webclient-appkey {AAD web application client key} --aad-tenant-id {AAD Tenant to authenticate against} --azure-subscription-id {Azure subscription Id}"
+display_usage()
+{
+  echo "Usage: $0 [-r|--role {jb|vmss|mongo|mysql|edxapp|fullstack|devstack}] [-e|--environment {dev|bvt|prod}] [--cron] --keyvault-name {azure keyvault name} --aad-webclient-id {AAD web application client id} --aad-webclient-appkey {AAD web application client key} --aad-tenant-id {AAD Tenant to authenticate against} --azure-subscription-id {Azure subscription Id}"
   exit 1
 }
 
 parse_args() 
 {
-    while [[ "$#" -gt 0 ]]
-    do
+    while [[ "$#" -gt 0 ]] ; do
         arg_value="${2}"
         shift_once=0
 
-        if [[ "${arg_value}" =~ "--" ]]; 
-        then
+        if [[ "${arg_value}" =~ "--" ]] ; then
             arg_value=""
             shift_once=1
         fi
@@ -87,20 +86,12 @@ parse_args()
         case "$1" in
           -r|--role)
             EDX_ROLE="${arg_value,,}" # convert to lowercase
-            if ! is_valid_arg "jb vmss mongo mysql edxapp fullstack devstack" $EDX_ROLE; then
-              echo "Invalid role specified\n"
-              display_usage
-            fi
             ;;
           --retry-count)
             RETRY_COUNT="${arg_value}"
             ;;
           -e|--environment)
             DEPLOYMENT_ENV="${arg_value,,}" # convert to lowercase
-            if ! is_valid_arg "dev bvt int prod" $DEPLOYMENT_ENV; then
-              echo "Invalid environment specified\n"
-              display_usage
-            fi
             ;;
           --cron)
             CRON_MODE=1
@@ -115,7 +106,7 @@ parse_args()
             OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH="${arg_value}"
             ;;
           --edxconfiguration-public-github-accountname)
-            EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME="${arg_value}"
+            EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME="${arg_value,,}" # convert to lowercase
             ;;
           --edxconfiguration-public-github-projectname)
             EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME="${arg_value}"
@@ -175,8 +166,7 @@ parse_args()
 
         shift # past argument or value
 
-        if [ $shift_once -eq 0 ]; 
-        then
+        if [[ $shift_once -eq 0 ]] ; then
             shift # past argument or value
         fi
 
@@ -203,22 +193,13 @@ get_bootstrap_status()
     PRESENCE=0
 
     # check if the bootstrap is finished
-    if [ -e $TARGET_FILE ];
-    then
+    if [[ -e $TARGET_FILE ]] ; then
         # The crumb exists:: bootstrap is done
         PRESENCE=2
     else
         # check if there is an ongoing execution
-        if [ "$EDX_ROLE" == "vmss" ];
-        then
-            # Source the settings
-            # Moving source here reduces the noise in the logs
-            source $OXA_ENV_FILE
-
-            # apply the overridesm
-            if [[ -f $OXA_ENV_OVERRIDE_FILE ]]; then
-                source $OXA_ENV_OVERRIDE_FILE
-            fi
+        if [[ "$EDX_ROLE" == "vmss" ]] ; then
+            source_env
 
             # The crumb doesn't exist:: we need to execute boostrap
             # For VMSS role, we have to wait on the backend Mysql bootstrap operation
@@ -252,50 +233,121 @@ setup_overrides_file()
     setup_deployment_overrides $OXA_ENV_OVERRIDE_FILE $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH $EDX_CONFIGURATION_REPO $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH $EDX_PLATFORM_REPO $EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH $EDX_THEME_REPO $EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH $EDX_VERSION $FORUM_VERSION $EDX_ANSIBLE_REPO $ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH
 }
 
-##
-## Role-independent OXA environment bootstrap
-##
-setup()
+required_value()
 {
-    # There is an implicit pre-requisite for the GIT client to be installed. 
-    # This is already handled in the calling script
-  
+    if [[ -z $2 ]] ; then
+        set +x
+        echo -e "\033[1;36m"
+        echo -e "\n\n  Use onebox.sh for fullstack or devstack instead of invoking bootstrap.sh directly.\n\n"
+        echo -e '\033[0m'
+
+        display_usage
+    fi
+}
+
+verify_state()
+{
+    required_value TEMPLATE_TYPE $TEMPLATE_TYPE
+
+    if ! is_valid_arg "jb vmss mongo mysql edxapp fullstack devstack" $EDX_ROLE ; then
+      echo "Invalid role specified\n"
+      display_usage
+    fi
+
+    if ! is_valid_arg "dev bvt prod" $DEPLOYMENT_ENV ; then
+      echo "Invalid environment specified\n"
+      display_usage
+    fi
+}
+
+fix_jdk()
+{
+    count=`grep -i "8u65" playbooks/roles/oraclejdk/defaults/main.yml | wc -l`
+    if [[ "$count" -gt "0" ]] ; then
+        git cherry-pick -x 0ca865c9b0da42bed83459389ae35e2551860472
+    fi
+}
+
+# We should use the existing oxa-tools enlistment if one exists. This
+#   a) saves us a git clone AND
+#   b) preserves our current branch/changes
+link_oxa_tools_repo()
+{
+    # Is git installed and is this script within a git repo?
+    pushd $CURRENT_PATH
+    if git status > /dev/null 2>&1 ; then
+        # Is the git repo oxa-tools?
+        pushd ..
+        actualRemote=`git config --get remote.origin.url | grep -o 'github.com.*' | sed 's/\.git//g'`
+        count=`echo $OXA_TOOLS_REPO | grep -i $actualRemote | wc -l`
+        if [[ "$count" -gt "0" ]] ; then
+            # Is the repo already at the desired path?
+            pushd ..
+            if [[ -d ${OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME}/.git ]] && [[ `pwd` != $OXA_PATH ]] ; then
+                ln -s `pwd` $OXA_PATH
+            fi
+            popd
+        fi
+        popd
+    fi
+    popd
+}
+
+source_env()
+{
     # populate the deployment environment
+    set -a
     source $OXA_ENV_FILE
-    export $(sed -e 's/#.*$//' $OXA_ENV_FILE | cut -d= -f1)
 
     # apply the overrides
     if [[ -f $OXA_ENV_OVERRIDE_FILE ]]; then
         source $OXA_ENV_OVERRIDE_FILE
     fi
+    set +a
+}
 
+##
+## Role-independent OXA environment bootstrap
+##
+setup()
+{
     export $(sed -e 's/#.*$//' $OXA_ENV_OVERRIDE_FILE | cut -d= -f1)
     export ANSIBLE_REPO=$EDX_ANSIBLE_REPO
-    export ANSIBLE_VERSION=$EDX_ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH
+    export ANSIBLE_VERSION=$ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH
   
     # Sync public repositories using utilities.sh
+    link_oxa_tools_repo
     sync_repo $OXA_TOOLS_REPO $OXA_TOOLS_VERSION $OXA_TOOLS_PATH
     sync_repo $CONFIGURATION_REPO $CONFIGURATION_VERSION $CONFIGURATION_PATH
 
-    # setup theme
+    # aggregate edx configuration with deployment environment expansion
+    # warning: beware of yaml variable dependencies due to order of aggregation
+    pushd $OXA_TOOLS_PATH/config
+    echo "---" > $OXA_PLAYBOOK_CONFIG
+    for config in $TEMPLATE_TYPE/*.yml $DEPLOYMENT_ENV/*.yml $EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME/*.yml *.yml ; do
+        sed -e "s/%%\([^%]*\)%%/$\{\\1\}/g" -e "s/^---.*$//g" $config | envsubst >> $OXA_PLAYBOOK_CONFIG
+    done
+    popd
+
+    #todo:100132 setup theme for onebox installs
     #THEME_PATH="${OXA_PATH}/${EDX_THEME_PUBLIC_GITHUB_PROJECTNAME}"
     #sync_repo $EDX_THEME_REPO $EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH "${THEME_PATH}/${EDX_THEME_NAME}"
     #ln -s $THEME_PATH /edx/app/edxapp/themes
     #chown -R edxapp:edxapp $THEME_PATH
 
-    # run edx bootstrap and install requirements
-    cd $CONFIGURATION_PATH
-    ANSIBLE_BOOTSTRAP_SCRIPT=util/install/ansible-bootstrap.sh
-
-    # in order to support retries, we need to clean the temporary folder where the ansible bootstrap script clones the repository
+    # in order to support retries, we should cleanup residue from previous ansible-bootstrap run
     TEMP_CONFIGURATION_PATH=/tmp/configuration
     if [[ -d $TEMP_CONFIGURATION_PATH ]]; then
-        echo "Removing the temporary configuration path at $TEMP_CONFIGURATION_PATH"
+        log "Removing the temporary configuration path at $TEMP_CONFIGURATION_PATH"
         rm -rf $TEMP_CONFIGURATION_PATH
     else
-        echo "Skipping clean up of $TEMP_CONFIGURATION_PATH"
+        log "Skipping clean up of $TEMP_CONFIGURATION_PATH"
     fi
 
+    # run edx bootstrap and install requirements
+    cd $CONFIGURATION_PATH
+    fix_jdk
+    ANSIBLE_BOOTSTRAP_SCRIPT=util/install/ansible-bootstrap.sh
     bash $ANSIBLE_BOOTSTRAP_SCRIPT
     exit_on_error "Failed executing $ANSIBLE_BOOTSTRAP_SCRIPT"
 
@@ -304,13 +356,6 @@ setup()
 
     # fix OXA environment ownership
     chown -R $ADMIN_USER:$ADMIN_USER $OXA_PATH
-
-    # aggregate edx configuration with deployment environment expansion
-    # warning: beware of yaml variable dependencies due to order of aggregation
-    echo "---" > $OXA_PLAYBOOK_CONFIG
-    for config in $OXA_TOOLS_PATH/config/$TEMPLATE_TYPE/*.yml $OXA_TOOLS_PATH/config/*.yml; do
-        sed -e "s/%%\([^%]*\)%%/$\{\\1\}/g" -e "s/^---.*$//g" $config | envsubst >> $OXA_PLAYBOOK_CONFIG
-    done
 }
 
 update_stamp_jb() 
@@ -381,22 +426,15 @@ edx_installation_playbook()
   systemctl >/dev/null 2>&1
   exit_on_error "Single VM instance of EDX has a hard requirement on systemd and its systemctl functionality"
 
-  # Most docker containers don't have sudo pre-installed
-  install-sudo
-
-  # git, gettext
-  install-tools
-
   command="$ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG vagrant-${EDX_ROLE}.yml"
 
   # We've been experiencing intermittent failures on ficus. Simply retrying
   # mitigates the problem, but we should solve the underlying cause(s) soon.
   retry-command "$command" "$RETRY_COUNT" "${EDX_ROLE} installation" "fixPackages"
+  exit_on_error "Execution of edX ${EDX_ROLE} playbook failed"
 }
 
 update_fullstack() {
-  install-ssh
-
   # edx playbooks - fullstack (single VM)
   edx_installation_playbook
 
@@ -409,14 +447,14 @@ update_fullstack() {
 }
 
 update_devstack() {
-  install-ssh
-
   if ! id -u vagrant > /dev/null 2>&1; then
     # create required vagrant user account to avoid fatal error
     sudo adduser --disabled-password --gecos "" vagrant
 
     # set the vagrant password
-    sudo usermod --password $(echo $VAGRANT_USER_PASSWORD | openssl passwd -1 -stdin) vagrant
+    if [[ -n $VAGRANT_USER_PASSWORD ]] ; then
+      sudo usermod --password $(echo $VAGRANT_USER_PASSWORD | openssl passwd -1 -stdin) vagrant
+    fi
   fi
 
   # create some required directories to avoid fatal errors
@@ -456,25 +494,31 @@ update_devstack() {
 # START CORE EXECUTION
 ###############################################
 
-# source our utilities for logging and other base functions (we need this staged with the installer script)
-# the file needs to be first downloaded from the public repository
+# get current dir
 CURRENT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-UTILITIES_PATH=$CURRENT_PATH/../templates/stamp/utilities.sh
 
-# check if the utilities file exists. If not, bail out.
-if [[ ! -e $UTILITIES_PATH ]]; 
-then  
-    echo :"Utilities not present"
-    exit 3
+# pass existing command line arguments
+parse_args "$@"
+
+# source utilities for logging and other base functions
+cd $CURRENT_PATH/..
+UTILITIES_PATH=templates/stamp/utilities.sh
+
+# check if the utilities file exists. If not, download from the public repository
+if [[ ! -e $UTILITIES_PATH ]] ; then
+    cd $CURRENT_PATH
+    fileName=`basename $UTILITIES_PATH`
+    wget -q https://raw.githubusercontent.com/${OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME}/${OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME}/${OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH}/${UTILITIES_PATH} -O $fileName
+    UTILITIES_PATH=$fileName
 fi
 
 # source the utilities now
 source $UTILITIES_PATH
 
+exit_if_limited_user
+
 # Script self-idenfitication
 print_script_header
-
-parse_args $@ # pass existing command line arguments
 
 ##
 ## Execute role-independent OXA environment bootstrap
@@ -544,6 +588,17 @@ fi
 # Note when we started
 log "Starting bootstrap of ${EDX_ROLE} on ${HOSTNAME}"
 
+if [[ "$DEPLOYMENT_ENV" == "dev" ]] ; then
+    # sudo, ssh, git, gettext, etc.
+    install-tools
+else
+    # Deployments to multiple-VMs (STAMP) require a settings file.
+    # This includes BVT and PROD
+    source_env
+fi
+
+verify_state
+
 setup
 
 ##
@@ -553,7 +608,7 @@ setup
 PATH=$PATH:/edx/bin
 ANSIBLE_PLAYBOOK=ansible-playbook
 OXA_PLAYBOOK=$OXA_TOOLS_PATH/playbooks/oxa_configuration.yml
-OXA_PLAYBOOK_ARGS="-e oxa_tools_path=$OXA_TOOLS_PATH -e oxa_tools_config_path=$OXA_TOOLS_CONFIG_PATH -e template_type=$TEMPLATE_TYPE"
+OXA_PLAYBOOK_ARGS="-e oxa_tools_path=$OXA_TOOLS_PATH -e template_type=$TEMPLATE_TYPE"
 OXA_SSH_ARGS="-u $ADMIN_USER --private-key=/home/$ADMIN_USER/.ssh/id_rsa"
 
 # Fixes error: RPC failed; result=56, HTTP code = 0'
@@ -569,7 +624,7 @@ case "$EDX_ROLE" in
     update_stamp_vmss
     ;;
   edxapp)
-    # scalable and stamp vmss are equivalent; can combine vmss and edxapp once stamp is ready
+    # todo: combine vmss and edxapp cases
     update_stamp_vmss
     ;;
   mongo)

@@ -15,7 +15,8 @@ if [ "$1" == "true" ] || [ "$1" == "True" ]; then
 
 	# Download comprehensive theming from github to folder /edx/app/edxapp/themes/comprehensive 
 	sudo git clone https://github.com/microsoft/edx-theme.git themes -b oxa/master.fic
-	
+
+	# todo:100627 this no longer works on onebox installations (like fullstack and devstack) which don't have oxa-tools-config
 	for i in `ls -d1 /edx/app/edxapp/themes/*/lms/static/images`; do
        sudo cp /oxa/oxa-tools-config/env/$2/*.png $i;
     done
