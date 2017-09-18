@@ -47,7 +47,7 @@ readonly PLATFORM_EMAIL="$EDXAPP_SU_EMAIL"
 
 # The common tag in the upstream to our fork is open-release/ficus.1
 # Specifically: our forks of edx-platform and configuration
-readonly EDX_BRANCH="tags/open-release/ficus.1"
+readonly EDX_BRANCH="tags/open-release/ficus.4"
 
 ##########################
 # Script Parameter Arguments
@@ -182,7 +182,7 @@ get_branch()
     fi
 }
 
-get_plat_branch()
+get_conf_branch()
 {
     if [[ $BRANCH_VERSIONS == edx ]] ; then
         echo "$EDX_BRANCH"
@@ -292,11 +292,11 @@ bash $bootstrap \
     --edxconfiguration-public-github-projectname \
         `get_conf_project_name` \
     --edxconfiguration-public-github-projectbranch \
-        `get_branch` \
+        `get_conf_branch` \
     --edxplatform-public-github-accountname \
         `get_org` \
     --edxplatform-public-github-projectbranch \
-        `get_plat_branch` \
+        `get_branch` \
     --edxtheme-public-github-projectbranch \
         `get_branch useMsftRepo` \
     --edxversion \
