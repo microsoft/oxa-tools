@@ -6,6 +6,7 @@
 # ERROR CODES: 
 # TODO: move to common script
 ERROR_MYSQL_STARTUP_FAILED=2001
+ERROR_MYSQL_SHUTDOWN_FAILED=2002
 
 ERROR_CRONTAB_FAILED=4101
 ERROR_GITINSTALL_FAILED=5101
@@ -1188,17 +1189,46 @@ start_mysql()
 
 stop_mysql()
 {
-    # Find out what PID the Mysql instance is running as (if any)
-    MYSQLPID=`ps -ef | grep '/usr/sbin/mysqld' | grep -v grep | awk '{print $2}'`
-    
-    if [[ ! -z "$MYSQLPID" ]]; then
-        log "Stopping Mysql Server (PID $MYSQLPID)"
-        
-        kill -15 $MYSQLPID
 
-        # Important not to attempt to start the daemon immediately after it was stopped as unclean shutdown may be wrongly perceived
-        sleep 15s
-    fi
+    # we need some resilience here
+    local server_stopped=0
+    local wait_time_seconds=15
+    local max_wait_seconds=$(($wait_time_seconds * 10))
+    local total_wait_seconds=0
+
+    while [[ $server_stopped == 0 ]] ;
+    do
+
+        # Find out what PID the Mysql instance is running as (if any)
+        MYSQLPID=`ps -ef | grep '/usr/sbin/mysqld' | grep -v grep | awk '{print $2}'`
+        
+        if [[ ! -z "$MYSQLPID" ]]; then
+            log "Stopping Mysql Server (PID $MYSQLPID)"
+            
+            kill -15 $MYSQLPID
+
+            # Important not to attempt to start the daemon immediately after it was stopped as unclean shutdown may be wrongly perceived
+            # We expect the sleep to happen below since we are NOT marking the server as stopped until we validate in the 
+            # next iteration
+
+        else
+            log "All Mysql Server Processes are stopped"
+            server_stopped=1
+        fi
+        
+        # if the server isn't yet stopped, wait $wait_time_seconds seconds before retry
+        if [[ $server_stopped == 0 ]] ;
+        then
+            sleep $wait_time_seconds;
+            ((total_wait_seconds+=$wait_time_seconds))
+
+            if [[ "$total_wait_seconds" -gt "$max_wait_seconds" ]] ;
+            then
+                log "Exceeded the expected wait time for stopping the server: $total_wait_seconds seconds"
+                exit $ERROR_MYSQL_SHUTDOWN_FAILED
+            fi
+        fi
+    done   
 }
 
 # restart mysql server (stop and start)
