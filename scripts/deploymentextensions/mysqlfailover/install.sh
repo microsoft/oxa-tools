@@ -33,6 +33,10 @@ mysql_server_port="3306"
 mysql_admin_username=""
 mysql_admin_password=""
 
+# add replication user
+mysql_repl_username=""
+mysql_repl_password=""
+
 # operation mode: query | execute
 operation="query"
 
@@ -98,6 +102,12 @@ parse_args()
           --mysql-admin-password)
             mysql_admin_password="${arg_value}"
             ;;
+          --mysql-repl-username)
+            mysql_repl_username="${arg_value}"
+            ;;
+          --mysql-repl-password)
+            mysql_repl_password="${arg_value}"
+            ;;        
           --new-master-server-ip)
             new_master_server_ip="${arg_value}"
             ;;
@@ -378,13 +388,17 @@ failover_mysql_master()
     local pre_failover_script=`generate_failover_exec_script "prefailover"`
     local post_failover_script=`generate_failover_exec_script "postfailover"`
 
+    # MySQL Utilities mysqlrpladmin version 1.6.1: 
+    # Failover expects --rpl-user or slaves configured with --master-info-repository=TABLE
+    repl_user_credential="${mysql_repl_username}:${mysql_repl_password}"
+
     if [[ $force_failover == 0 ]] ;
     then
         log "Failover is in standard mode"
-        mysqlrpladmin --master="${current_master_connection}" --new-master="${new_master_connection}" --demote-master --slaves="${slaves_connection}" switchover --log="${temp_log_file_1}" --exec-before="${pre_failover_script}" --exec-after="${post_failover_script}" > $temp_log_file_2
+        mysqlrpladmin --master="${current_master_connection}" --new-master="${new_master_connection}" --demote-master --slaves="${slaves_connection}" --rpl-user="${repl_user_credential}" switchover --log="${temp_log_file_1}" --exec-before="${pre_failover_script}" --exec-after="${post_failover_script}" > $temp_log_file_2
     else
         log "Failover is in --force mode"
-        mysqlrpladmin --master="${current_master_connection}" --new-master="${new_master_connection}" --demote-master --slaves="${slaves_connection}" switchover --log="${temp_log_file_1}" --exec-before="${pre_failover_script}" --exec-after="${post_failover_script}" --force > $temp_log_file_2
+        mysqlrpladmin --master="${current_master_connection}" --new-master="${new_master_connection}" --demote-master --slaves="${slaves_connection}" --rpl-user="${repl_user_credential}" switchover --log="${temp_log_file_1}" --exec-before="${pre_failover_script}" --exec-after="${post_failover_script}" --force > $temp_log_file_2
     fi
 
     exit_on_error "Unable to failover from '${current_master_server_ip}' to '${new_master_server_ip}'!" "${ERROR_MYSQL_FAILOVER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}" "${main_logfile}" "${temp_log_file_2}"
