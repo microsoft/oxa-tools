@@ -26,5 +26,8 @@
         "upgradeParameters": {
             "value": "{upgradeParameters}"
         },
+        "targetJumpboxName": {
+            "value": "{targetJumpboxName}"
+        }
     }
 }

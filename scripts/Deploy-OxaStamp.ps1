@@ -82,6 +82,9 @@ An switch to indicate whether or not mobile rest api is turned on
 .PARAMETER DeploymentType
 A switch to indicate the deployment type (any of bootstrap, upgrade, swap)
 
+.PARAMETER JumpboxNumber
+Zero-based numeric indicator of the Jumpbox used for this bootstrap operation (0, 1 or 2). If a non-zero indicator is specified, the corresponding jumpbox will be bootstrapped.
+
 .INPUTS
 None. You cannot pipe objects to Deploy-OxaStamp.ps1
 
@@ -140,8 +143,9 @@ Param(
                 
         [Parameter(Mandatory=$false)][string]$Slot="slot1",
 
-        [Parameter(Mandatory=$true)][ValidateSet("prod", "int", "bvt", "")][string]$Cloud="bvt"
+        [Parameter(Mandatory=$true)][ValidateSet("prod", "int", "bvt", "")][string]$Cloud="bvt",
 
+        [Parameter(Mandatory=$false)][ValidateRange(0,2)][int]$JumpboxNumber=0
      )
 
 #################################
@@ -156,13 +160,13 @@ Import-Module "$($currentPath)/Common.ps1" -Force
 $FullDeploymentArmTemplateFile = Set-ScriptDefault -ScriptParamName "FullDeploymentArmTemplateFile" `
                                     -ScriptParamVal $FullDeploymentArmTemplateFile `
                                     -DefaultValue "$($rootPath)/templates/stamp/stamp-v2.json"
-$FullDeploymentParametersFile = Set-ScriptDefault -ScriptParamName "FullDeploymentArmTemplateFile" `
+$FullDeploymentParametersFile = Set-ScriptDefault -ScriptParamName "FullDeploymentParametersFile" `
                                     -ScriptParamVal $FullDeploymentParametersFile `
                                     -DefaultValue "$($rootPath)/config/stamp/default/parameters.json"
-$KeyVaultDeploymentArmTemplateFile = Set-ScriptDefault -ScriptParamName "FullDeploymentArmTemplateFile" `
+$KeyVaultDeploymentArmTemplateFile = Set-ScriptDefault -ScriptParamName "KeyVaultDeploymentArmTemplateFile" `
                                     -ScriptParamVal $KeyVaultDeploymentArmTemplateFile `
                                     -DefaultValue "$($rootPath)/templates/stamp/stamp-keyvault.json"
-$KeyVaultDeploymentParametersFile = Set-ScriptDefault -ScriptParamName "FullDeploymentArmTemplateFile" `
+$KeyVaultDeploymentParametersFile = Set-ScriptDefault -ScriptParamName "KeyVaultDeploymentParametersFile" `
                                     -ScriptParamVal $KeyVaultDeploymentParametersFile `
                                     -DefaultValue $FullDeploymentParametersFile
 
@@ -267,6 +271,7 @@ $replacements = @{
                     "GITHUBBRANCH"=$BranchName;
                     "DEPLOYMENTSLOT"=$Slot; 
                     "DEPLOYMENTTYPE"=$DeploymentType;
+                    "JUMPBOXNUMBER"=$JumpboxNumber
                 }
 
 # Assumption: if the SMTP server is specified, the rest of its configuration will be specified

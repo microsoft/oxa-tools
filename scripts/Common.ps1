@@ -1292,7 +1292,6 @@ function Get-VmssName($ResourceGroupName)
 ##
 ## Output:
 ##   nothing
-
 function Get-LatestChanges
 {
     param(      
@@ -1339,4 +1338,35 @@ function Get-LatestChanges
    {
        git checkout $tag -q
    }
+}
+
+## Function: Set-ScriptDefault
+##
+## Purpose: 
+##    Validate parameter exists and log a message saying the default was set.
+##
+## Input: 
+##   ScriptParamVal      supplied value of script parameter override if it is null or an empty string
+##   ScriptParamName     name of script parameter being set to default value
+##   DefaultValue        default value provided
+##
+## Output:
+##   The DefaultValue parameter
+##
+function Set-ScriptDefault
+{
+    param(
+            [Parameter(Mandatory=$true)][AllowEmptyString()][string]$ScriptParamVal,
+            [Parameter(Mandatory=$true)][string]$ScriptParamName,
+            [Parameter(Mandatory=$true)][string]$DefaultValue
+         )
+
+    $response = $ScriptParamVal
+    if ($ScriptParamVal.Trim().Length -eq 0 -or $ScriptParamVal -eq $null)
+    {        
+        Log-Message "Falling back to default value: $($DefaultValue) for parameter $($ScriptParamName) since no value was provided"
+        $response = $DefaultValue
+    }
+
+    return $response
 }
