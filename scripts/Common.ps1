@@ -737,7 +737,7 @@ function Remove-StagingResources()
     # Filter the resources based on the determined slot
     $targetedResources = $resourceList | Where-Object { $_.ResourceName.Contains($Slot) };
     if($targetedResources -ne $null)
-       
+    {
         foreach($resource in $targetedResources)
         { 
             Write-Host "Here is the list of resources targetted to be deleted" ($targetedResources| Format-List | Out-String);                              
@@ -1369,4 +1369,36 @@ function Set-ScriptDefault
     }
 
     return $response
+}
+
+## Function: Get-LocalCertificate
+##
+## Purpose: 
+##    Find a certificate in the local cert store with the given subject
+##
+## Input: 
+##   CertSubject  subject to search for in cert store
+##
+## Output:
+##   The Certificate Thumbprint
+##
+function Get-LocalCertificate
+{
+    Param (        
+         [Parameter(Mandatory=$true)][String] $CertSubject            
+         )
+        
+    $cert = (Get-ChildItem cert:\CurrentUser\my\ | Where-Object {$_.Subject -match $CertSubject })
+    
+    if ($cert -is [array])
+    {
+        $cert = $cert[0]
+    }
+
+    Write-Host $cert                 
+    Write-Host "==================================================================="        
+    $Thumbprint = $cert.Thumbprint        
+    Write-Host $Thumbprint
+
+    return $Thumbprint
 }

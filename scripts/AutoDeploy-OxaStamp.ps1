@@ -18,7 +18,8 @@ Param(
     
     [Parameter(Mandatory=$false)][string]$BranchName="oxa/devfic",
     [Parameter(Mandatory=$false)][ValidateSet("bootstrap", "upgrade", "swap")][string]$DeploymentType="upgrade",    
-    [Parameter(Mandatory=$false)][ValidateSet("prod", "int", "bvt")][string]$Cloud="bvt"
+    [Parameter(Mandatory=$false)][ValidateSet("prod", "int", "bvt")][string]$Cloud="bvt",
+    [Parameter(Mandatory=$false)][ValidateSet("CN=int-cert", "CN=int-cert", "CN=int-cert")][string]$CertSubject = "CN=bvt-cert"
 )
 
 #################################
@@ -48,7 +49,7 @@ Log-Message "Setting AzureSubscriptionName and ResourceGroupName from Cloud..."
 switch ($cloud) {
     "prod" {
         $AzureSubscriptionName = "OXAPRODENVIRONMENT"
-        $ResourceGroupName = "lexoxabvtc13"   
+        $ResourceGroupName = "lexoxabvtc13"    
     }
     "int" {
         $AzureSubscriptionName = "OXAINTENVIRONMENT"
@@ -56,7 +57,7 @@ switch ($cloud) {
     }
     "bvt" {
         $AzureSubscriptionName = "OXABVTENVIRONMENT"
-        $ResourceGroupName = "lexoxabvtc13"
+        $ResourceGroupName = "lexoxabvtc13"        
     }
 }
 
@@ -68,11 +69,13 @@ $KeyVaultName = 'BVTKeyVault'
 #                 -ScriptParamVal $KeyVaultName `
 #                 -DefaultValue "$($ResourceGroupName)-kv"
 
+Set-ScriptDefault -ScriptParamName "CertSubject" `
+                -ScriptParamVal $CertSubject `
+                -DefaultValue "CN=$($cloud)-cert"
+
 # Login
-$clientSecret = ConvertTo-SecureString -String $AadWebClientAppKey -AsPlainText -Force
-$aadCredential = New-Object System.Management.Automation.PSCredential($AadWebClientId, $clientSecret)
-Login-AzureRmAccount -SubscriptionName $AzureSubscriptionName #-ServicePrincipal -TenantId $AadTenantId -SubscriptionName $AzureSubscriptionName -Credential $aadCredential -ErrorAction Stop
-# Login-AzureRmAccount -CertificateThumbprint
+$CertificateThumbprint = Get-LocalCertificate -CertSubject $CertSubject
+Login-AzureRmAccount -ServicePrincipal -CertificateThumbprint $CertificateThumbprint -ApplicationId $ApplicationId -TenantId $TenantId
 Set-AzureSubscription -SubscriptionName $AzureSubscriptionName | Out-Null
 
 # $json = Get-Content -Raw "$($currentPath)/params.json" | Out-String | ConvertFrom-Json
