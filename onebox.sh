@@ -182,15 +182,6 @@ get_branch()
     fi
 }
 
-get_conf_branch()
-{
-    if [[ $BRANCH_VERSIONS == edx ]] ; then
-        echo "$EDX_BRANCH"
-    else
-        echo "odf_pythonFix3"
-    fi
-}
-
 get_current_branch()
 {
     prefix='* '
@@ -292,7 +283,7 @@ bash $bootstrap \
     --edxconfiguration-public-github-projectname \
         `get_conf_project_name` \
     --edxconfiguration-public-github-projectbranch \
-        `get_conf_branch` \
+        `get_branch` \
     --edxplatform-public-github-accountname \
         `get_org` \
     --edxplatform-public-github-projectbranch \
