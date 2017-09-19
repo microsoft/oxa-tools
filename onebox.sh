@@ -47,7 +47,7 @@ readonly PLATFORM_EMAIL="$EDXAPP_SU_EMAIL"
 
 # The common tag in the upstream to our fork is open-release/ficus.1
 # Specifically: our forks of edx-platform and configuration
-readonly EDX_BRANCH="tags/open-release/ficus.4"
+readonly EDX_BRANCH="tags/open-release/ficus.1"
 
 ##########################
 # Script Parameter Arguments
@@ -187,7 +187,7 @@ get_conf_branch()
     if [[ $BRANCH_VERSIONS == edx ]] ; then
         echo "$EDX_BRANCH"
     else
-        echo "odf_pythonFix"
+        echo "odf_pythonFix3"
     fi
 }
 

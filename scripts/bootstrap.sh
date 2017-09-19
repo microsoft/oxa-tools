@@ -268,6 +268,15 @@ fix_jdk()
     fi
 }
 
+fix_npm_python()
+{
+    if [[ $EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME == edx ]] ; then
+      if [[ $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH == *"release/ficus"* ]] ; then
+        git cherry-pick -x 075d69e6c7c5330732ec75346d02df32d087aa92
+      fi
+    fi
+}
+
 # We should use the existing oxa-tools enlistment if one exists. This
 #   a) saves us a git clone AND
 #   b) preserves our current branch/changes
@@ -347,6 +356,7 @@ setup()
     # run edx bootstrap and install requirements
     cd $CONFIGURATION_PATH
     fix_jdk
+    fix_npm_python
     ANSIBLE_BOOTSTRAP_SCRIPT=util/install/ansible-bootstrap.sh
     bash $ANSIBLE_BOOTSTRAP_SCRIPT
     exit_on_error "Failed executing $ANSIBLE_BOOTSTRAP_SCRIPT"
