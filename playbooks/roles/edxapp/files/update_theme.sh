@@ -13,7 +13,7 @@ dir_themes=${dir_edxapp}/themes
 
 # Remove if themes folder exists
 if [[ -d $dir_themes ]] ; then
-	sudo rm -fr $dir_themes
+    sudo rm -fr $dir_themes
 fi
 
 cd $dir_edxapp
@@ -23,11 +23,11 @@ sudo git clone $EDX_THEME_REPO $dir_themes -b $THEME_BRANCH
 
 # todo:100627 this doesn't work on onebox installations (fullstack and devstack) which don't use oxa-tools-config
 if [[ -n $ENVIRONMENT ]] ; then
-	for i in `ls -d1 $dir_themes/*/lms/static/images`; do
-		sudo cp /oxa/oxa-tools-config/env/$ENVIRONMENT/*.png $i;
-	done
+    for i in `ls -d1 $dir_themes/*/lms/static/images`; do
+        sudo cp /oxa/oxa-tools-config/env/$ENVIRONMENT/*.png $i;
+    done
 fi
-	
+    
 sudo chown -R edxapp:edxapp $dir_themes
 sudo chmod -R u+rw $dir_themes
 
