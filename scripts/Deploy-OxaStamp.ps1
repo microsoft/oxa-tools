@@ -82,6 +82,9 @@ A timestamp or other identifier to associate with the VMSS being deployed.
 .PARAMETER EnableMobileRestApi
 An switch to indicate whether or not mobile rest api is turned on
 
+.PARAMETER JumpboxNumber
+Zero-based numeric indicator of the Jumpbox used for this bootstrap operation (0, 1 or 2). If a non-zero indicator is specified, the corresponding jumpbox will be bootstrapped.
+
 .INPUTS
 None. You cannot pipe objects to Deploy-OxaStamp.ps1
 
@@ -133,7 +136,9 @@ Param(
 
         [Parameter(Mandatory=$false)][string]$DeploymentVersionId="",
 
-        [Parameter(Mandatory=$false)][switch]$EnableMobileRestApi=$false
+        [Parameter(Mandatory=$false)][switch]$EnableMobileRestApi=$false,
+
+        [Parameter(Mandatory=$false)][ValidateRange(0,2)][int]$JumpboxNumber=0
      )
 
 #################################
@@ -215,7 +220,8 @@ $replacements = @{
                     "EDXAPPSUPERUSEREMAIL"=$EdxAppSuperUserEmail;
                     "MEMCACHESERVER"=$MemcacheServer;
                     "AZURECLIVERSION"=$AzureCliVersion;
-                    "DEPLOYMENTVERSIONID"=$DeploymentVersionId
+                    "DEPLOYMENTVERSIONID"=$DeploymentVersionId;
+                    "JUMPBOXNUMBER"=$JumpboxNumber
                 }
 
 # Assumption: if the SMTP server is specified, the rest of its configuration will be specified
