@@ -1,5 +1,5 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "$schema": "http://schema.management.azure.com/schemas/2014-04-01-preview/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
         "apiSettings": {
@@ -136,7 +136,7 @@
             "location": "[resourceGroup().location]",
             "kind": "Messaging",
             "sku": {
-                "name": "StandardSku",
+                "name": "Standard",
                 "tier": "Standard"
 			}
         },
@@ -149,7 +149,17 @@
                 "[concat('Microsoft.ServiceBus/namespaces/', parameters('serviceBusSettings').serviceBusNamespaceName)]"
             ], 
             "properties": {
-                "path": "[parameters('serviceBusSettings').serviceBusQueueName]"
+				"lockDuration": "PT5M",
+				"maxSizeInMegabytes": "1024",
+				"requiresDuplicateDetection": "false",
+				"requiresSession": "false",
+				"defaultMessageTimeToLive": "P10675199DT2H48M5.4775807S",
+				"deadLetteringOnMessageExpiration": "false",
+				"duplicateDetectionHistoryTimeWindow": "PT10M",
+				"maxDeliveryCount": "10",
+				"autoDeleteOnIdle": "P10675199DT2H48M5.4775807S",
+				"enablePartitioning": "false",
+				"enableExpress": "false"
             }
         },                  
         {
