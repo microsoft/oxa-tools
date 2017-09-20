@@ -342,11 +342,11 @@ setup()
     cd $CONFIGURATION_PATH
     fix_jdk
     ANSIBLE_BOOTSTRAP_SCRIPT=util/install/ansible-bootstrap.sh
-    #bash $ANSIBLE_BOOTSTRAP_SCRIPT
-    #exit_on_error "Failed executing $ANSIBLE_BOOTSTRAP_SCRIPT"
+    bash $ANSIBLE_BOOTSTRAP_SCRIPT
+    exit_on_error "Failed executing $ANSIBLE_BOOTSTRAP_SCRIPT"
 
-    #pip install -r requirements.txt
-    #exit_on_error "Failed pip-installing EdX requirements"
+    pip install -r requirements.txt
+    exit_on_error "Failed pip-installing EdX requirements"
 
     # fix OXA environment ownership
     chown -R $ADMIN_USER:$ADMIN_USER $OXA_PATH
@@ -438,8 +438,8 @@ edx_installation_playbook()
 
   # We've been experiencing intermittent failures on ficus. Simply retrying
   # mitigates the problem, but we should solve the underlying cause(s) soon.
-  #retry-command "$command" "$RETRY_COUNT" "${EDX_ROLE} installation" "fixPackages"
-  #exit_on_error "Execution of edX ${EDX_ROLE} playbook failed"
+  retry-command "$command" "$RETRY_COUNT" "${EDX_ROLE} installation" "fixPackages"
+  exit_on_error "Execution of edX ${EDX_ROLE} playbook failed"
 
   # oxa playbooks - all (single VM)
   $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK $THEME_ARGS -e "edxrole=$EDX_ROLE"
