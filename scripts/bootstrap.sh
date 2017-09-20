@@ -426,7 +426,7 @@ edx_installation_playbook()
   systemctl >/dev/null 2>&1
   exit_on_error "Single VM instance of EDX has a hard requirement on systemd and its systemctl functionality"
 
-  EDXAPP_COMPREHENSIVE_THEME_DIR=`echo EDXAPP_COMPREHENSIVE_THEME_DIRS | tr -d [ | tr -d ] | tr -d " "`
+  EDXAPP_COMPREHENSIVE_THEME_DIR=`echo $EDXAPP_COMPREHENSIVE_THEME_DIRS | tr -d [ | tr -d ] | tr -d " "`
   # When the comprehensive theming dirs is specified, edxapp:migrate task fails with :  ImproperlyConfigured: COMPREHENSIVE_THEME_DIRS
   # As an interim mitigation, create the folder if the path specified is not under the edx-platform directory (where the default themes directory is)
   if [[ -n "${EDXAPP_COMPREHENSIVE_THEME_DIR}" ]] && [[ ! -d "${EDXAPP_COMPREHENSIVE_THEME_DIR}" ]] ; then
