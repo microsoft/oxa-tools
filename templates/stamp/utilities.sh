@@ -1108,23 +1108,6 @@ start_haproxy()
         fi
     done
 
-        # trim the response before assessing emptiness: null /zero-length
-        if [[ -z "${db_response// }" ]];
-        then
-            sleep $wait_time_seconds;
-            ((total_wait_seconds+=$wait_time_seconds))
-
-            if [[ "$total_wait_seconds" -gt "$max_wait_seconds" ]] ;
-            then
-                log "Exceeded the expected wait time for starting up the haproxy server: $total_wait_seconds seconds"
-                exit $ERROR_HAPROXY_STARTUP_FAILED
-            fi
-        else
-            # the server was successfully started and is returning results
-            server_started=1
-        fi
-    done
-
     log "HA Proxy has been started"
 }
 
