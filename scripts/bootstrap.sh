@@ -39,7 +39,7 @@ EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master.fic"
 # There are cases where we want to override the edx-platform repository itself
 EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
 EDX_THEME_PUBLIC_GITHUB_PROJECTNAME="edx-theme"
-EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="pilot"
+EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master.fic"
 EDX_THEME_NAME="default"
 
 # EdX Ansible
@@ -328,12 +328,6 @@ setup()
         sed -e "s/%%\([^%]*\)%%/$\{\\1\}/g" -e "s/^---.*$//g" $config | envsubst >> $OXA_PLAYBOOK_CONFIG
     done
     popd
-
-    #todo:100132 setup theme for onebox installs
-    #THEME_PATH="${OXA_PATH}/${EDX_THEME_PUBLIC_GITHUB_PROJECTNAME}"
-    #sync_repo $EDX_THEME_REPO $EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH "${THEME_PATH}/${EDX_THEME_NAME}"
-    #ln -s $THEME_PATH /edx/app/edxapp/themes
-    #chown -R edxapp:edxapp $THEME_PATH
 
     # in order to support retries, we should cleanup residue from previous ansible-bootstrap run
     TEMP_CONFIGURATION_PATH=/tmp/configuration

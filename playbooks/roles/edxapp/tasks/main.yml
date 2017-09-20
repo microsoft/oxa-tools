@@ -1,10 +1,11 @@
 ---
 - name: Apply theming compile assets workaround
   sudo: yes
-  shell: bash ./update_theme.sh "{{ EDXAPP_ENABLE_COMPREHENSIVE_THEMING }}" "{{ EDXAPP_THEME_ENVIRONMENT }}"
+  shell: bash ./update_theme.sh "{{ EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH }}" "{{ EDX_THEME_REPO }}" "{{ EDXAPP_THEME_ENVIRONMENT }}"
   args:
     chdir: "{{ edxapp_files_path }}"
   register: bash_theme
+  when: "{{ EDXAPP_ENABLE_COMPREHENSIVE_THEMING }}"
 
 # Print the shell tasks's stdout and stderr.
 - debug: var="bash_theme.stdout_lines + [ bash_theme.stderr ]"
