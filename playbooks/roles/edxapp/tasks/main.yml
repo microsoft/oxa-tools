@@ -1,7 +1,7 @@
 ---
 - name: Apply theming compile assets workaround
   sudo: yes
-  shell: bash ./update_theme.sh "{{ EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH }}" "{{ EDX_THEME_REPO }}" "{{ EDXAPP_THEME_ENVIRONMENT }}"
+  shell: bash ./update_theme.sh "{{ theme_branch }}" "{{ theme_repo }}" "{{ EDXAPP_THEME_ENVIRONMENT }}"
   args:
     chdir: "{{ edxapp_files_path }}"
   register: bash_theme
