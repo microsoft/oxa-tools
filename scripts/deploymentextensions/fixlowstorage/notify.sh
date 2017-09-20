@@ -60,8 +60,16 @@ check_usage_threshold()
             # Message
             log "Please cleanup this directory at your earliest convenience."
             log "The top subfolders or subfiles in $directoryPath are:"
-            # Get list of subitems and filesize, sort them, grab top five, indent, newline.
-            echo "`du -sh $directoryPath* 2> /dev/null | grep -v "$remove" | sort -h -r | head -n 5 | sed -e 's/^/  /'`"
+
+            # Get list of subitems and corresponding filesizes in current folder.
+            itemsInFolder=`du -sh $directoryPath* 2> /dev/null`
+
+            if [[ -n $remove ]] ; then
+                itemsInFolder=`echo "$itemsInFolder" | grep -v "$remove"`
+            fi
+
+            # sort results, grab top five, indent.
+            echo "`echo "$itemsInFolder" | sort -h -r | head -n 5 | sed -e 's/^/  /'`"
 
         fi
 
