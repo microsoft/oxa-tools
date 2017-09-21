@@ -85,6 +85,9 @@ A switch to indicate the deployment type (any of bootstrap, upgrade, swap)
 .PARAMETER JumpboxNumber
 Zero-based numeric indicator of the Jumpbox used for this bootstrap operation (0, 1 or 2). If a non-zero indicator is specified, the corresponding jumpbox will be bootstrapped.
 
+.PARAMETER AutoDeploy
+Defaults to false. Set to true if invoked by Start-OxaDeployment
+
 .INPUTS
 None. You cannot pipe objects to Deploy-OxaStamp.ps1
 
@@ -145,7 +148,8 @@ Param(
 
         [Parameter(Mandatory=$true)][ValidateSet("prod", "int", "bvt", "")][string]$Cloud="bvt",
 
-        [Parameter(Mandatory=$false)][ValidateRange(0,2)][int]$JumpboxNumber=0
+        [Parameter(Mandatory=$false)][ValidateRange(0,2)][int]$JumpboxNumber=0,
+        [Parameter(Mandatory=$false)][switch]$AutoDeploy=$false
      )
 
 #################################
@@ -171,10 +175,13 @@ $KeyVaultDeploymentParametersFile = Set-ScriptDefault -ScriptParamName "KeyVault
                                     -DefaultValue $FullDeploymentParametersFile
 
 # Login
-$clientSecret = ConvertTo-SecureString -String $AadWebClientAppKey -AsPlainText -Force
-$aadCredential = New-Object System.Management.Automation.PSCredential($AadWebClientId, $clientSecret)
-Login-AzureRmAccount -ServicePrincipal -TenantId $AadTenantId -SubscriptionName $AzureSubscriptionName -Credential $aadCredential -ErrorAction Stop
-Set-AzureSubscription -SubscriptionName $AzureSubscriptionName | Out-Null
+if (!$AutoDeploy)
+{
+    $clientSecret = ConvertTo-SecureString -String $AadWebClientAppKey -AsPlainText -Force
+    $aadCredential = New-Object System.Management.Automation.PSCredential($AadWebClientId, $clientSecret)
+    Login-AzureRmAccount -ServicePrincipal -TenantId $AadTenantId -SubscriptionName $AzureSubscriptionName -Credential $aadCredential -ErrorAction Stop
+    Set-AzureSubscription -SubscriptionName $AzureSubscriptionName | Out-Null    
+}
 
 # create the resource group
 New-AzureRmResourceGroup -Name $ResourceGroupName -Location $Location -Force
@@ -292,6 +299,9 @@ if ($EnableMobileRestApi -eq $true)
 
 # Update the deployment parameters
 $tempParametersFile = Update-RuntimeParameters -ParametersFile $KeyVaultDeploymentParametersFile -ReplacementHash $replacements;
+
+$DeployKeyVault = $false
+$DeployStamp = $false
 
 try
 {

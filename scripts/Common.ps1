@@ -1384,21 +1384,48 @@ function Set-ScriptDefault
 ##
 function Get-LocalCertificate
 {
-    Param (        
-         [Parameter(Mandatory=$true)][String] $CertSubject            
+    Param(        
+            [Parameter(Mandatory=$true)][String] $CertSubject            
          )
         
     $cert = (Get-ChildItem cert:\CurrentUser\my\ | Where-Object {$_.Subject -match $CertSubject })
     
+    if (!$cert)
+    {
+        throw "Could not find a certificate in the local store with the given subject: $($CertSubject)"
+    }
+
     if ($cert -is [array])
     {
         $cert = $cert[0]
     }
 
-    Write-Host $cert                 
-    Write-Host "==================================================================="        
-    $Thumbprint = $cert.Thumbprint        
-    Write-Host $Thumbprint
+    return $cert.Thumbprint
+}
 
-    return $Thumbprint
+## Function: Get-JsonKeys
+##
+## Purpose: 
+##    Return all top-level keys from a .json file
+##
+## Input: 
+##   TargetPath  Path to .json file
+##
+## Output:
+##   Array of top-level keys
+##
+function Get-KeyVaultKeyNames
+{
+    Param(        
+            [Parameter(Mandatory=$true)][String] $TargetPath            
+         )
+        
+
+    $keys = @()
+    $json = Get-Content -Raw $TargetPath | Out-String | ConvertFrom-Json
+
+    $json.psobject.properties | ForEach-Object {    
+        $keys += $_.Name
+    }    
+    return $keys
 }
