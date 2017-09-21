@@ -219,6 +219,16 @@
             }
         },
         {
+            "apiVersion": "2017-04-01",
+            "name": "[parameters('serviceBusSettings').serviceBusNamespaceName]",
+            "type": "Microsoft.ServiceBus/Namespaces",
+            "location": "[resourceGroup().location]",
+            "sku": {
+            "name": "Standard",
+            "tier": "Standard"
+        },
+        "properties": {},
+        {
             "comments": "Windows Media service",
             "type": "Microsoft.Media/mediaservices",
             "name": "[parameters('storageSettings').mediaServicesAccountName]",
