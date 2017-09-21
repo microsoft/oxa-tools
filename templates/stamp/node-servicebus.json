@@ -11,8 +11,7 @@
     },  
    
   "variables": {
-    "defaultSASKeyName": "RootManageSharedAccessKey",
-    "authRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/authorizationRules', parameters('serviceBusSettings').serviceBusNamespaceName, variables('defaultSASKeyName'))]",
+    "defaultSASKeyName": "RootManageSharedAccessKey",   
 	"sbVersion": "2017-05-01"
   },
   "resources": [
