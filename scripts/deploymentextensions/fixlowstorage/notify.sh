@@ -14,7 +14,43 @@ set -x
     current_script_path="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
     script_name=`basename "$0"`
 
-check_usage_threshold()
+notification()
+{
+    percentUsed="$1"
+    directoryPath="$2"
+
+    # Alert when threshold is exceeded.
+    if (( $(echo "$percentUsed > $usage_threshold_percent" | bc -l) )) ; then
+
+        if [[ $directoryPath == '/' ]] ; then
+            # We're processing the root. Get the full list of OTHER partitions/mounts/drives so we can exclude them.
+            # We do this because each of those partitions/mounts/drives will be processed separately.
+            # Example results: datadisks\|dev\|media\|mnt\|run\|sys
+            remove="`df -l | awk '{ print $6 }' | grep -v -i "mounted\|${directoryPath}$" | cut -d "/" -f2 | sort | uniq | sed ':a;N;$!ba;s/\n/\\\|/g'`"
+        else
+            # Append trailing slash for non-root directories. This is required for the "du" command below AND helps clarify messaging
+            directoryPath="${directoryPath}/"
+            remove=""
+        fi
+
+        # Message
+        log "Please cleanup this directory at your earliest convenience."
+        log "The top subfolders or subfiles in $directoryPath are:"
+
+        # Get list of subitems and corresponding filesizes in current folder.
+        itemsInFolder=`du -sh $directoryPath* 2> /dev/null`
+
+        if [[ -n $remove ]] ; then
+            # Remove other partitions/mounts/drives. Those will be processed separately.
+            itemsInFolder=`echo "$itemsInFolder" | grep -v "$remove"`
+        fi
+
+        # sort results, grab top five, indent.
+        echo "`echo "$itemsInFolder" | sort -h -r | head -n 5 | sed -e 's/^/  /'`"
+    fi
+}
+
+check_usage()
 {
     # List of <usage>%<path>
     # Example output:
@@ -49,35 +85,7 @@ check_usage_threshold()
             continue
         fi
 
-        # Alert when threshold is exceeded.
-        if (( $(echo "$percentUsed > $usage_threshold_percent" | bc -l) )) ; then
-
-            if [[ $directoryPath == '/' ]] ; then
-                # We're processing the root. Get the full list of OTHER partitions/mounts/drives so we can exclude them.
-                # We do this because each of those partitions/mounts/drives will be processed separately.
-                # Example results: datadisks\|dev\|media\|mnt\|run\|sys
-                remove="`df -l | awk '{ print $6 }' | grep -v -i "mounted\|${directoryPath}$" | cut -d "/" -f2 | sort | uniq | sed ':a;N;$!ba;s/\n/\\\|/g'`"
-            else
-                # Append trailing slash for non-root directories. This is required for the "du" command below AND helps clarify messaging
-                directoryPath="${directoryPath}/"
-                remove=""
-            fi
-
-            # Message
-            log "Please cleanup this directory at your earliest convenience."
-            log "The top subfolders or subfiles in $directoryPath are:"
-
-            # Get list of subitems and corresponding filesizes in current folder.
-            itemsInFolder=`du -sh $directoryPath* 2> /dev/null`
-
-            if [[ -n $remove ]] ; then
-                itemsInFolder=`echo "$itemsInFolder" | grep -v "$remove"`
-            fi
-
-            # sort results, grab top five, indent.
-            echo "`echo "$itemsInFolder" | sort -h -r | head -n 5 | sed -e 's/^/  /'`"
-
-        fi
+        notification "$percentUsed" "$directoryPath"
 
         # Newline between exections
         echo
@@ -114,7 +122,7 @@ source_wrapper "rotateLog.sh" || exit 1
 # Pre-conditionals
 exit_if_limited_user
 
-check_usage_threshold
+check_usage
 
 # Restore working directory
 popd
