@@ -8,7 +8,7 @@
 set -x
 
 # Cron Job Setup/Execution
-    script_file=""
+    script_file=""     # remoteCommands.sh
     settings_file=""
     low_storage_log=""
     low_storage_frequency=""
