@@ -34,9 +34,29 @@ invalid_mysql_settings()
 
 rotate_mysql_slow_log()
 {
+    # Disable slow logs before rotation.
+    mysql_command_wrapper "set global slow_query_log=off"
+
+    # Flush slow logs before rotation.
+    mysql_command_wrapper "flush slow logs"
+
+    # Compress
+    file_suffix=$(date +"%Y-%m-%d_%Hh-%Mm-%Ss").tar.gz
+    sudo tar -zcvf "$large_partition/$slowLogPath.$file_suffix" "$slowLogPath"
+
+    # Truncate log
+    echo -n > $slowLogPath
+
+    # Enable slow logs after rotation.
+    mysql_command_wrapper "set global slow_query_log=on"
+}
+
+needs_rotation()
+{
     if invalid_mysql_settings ; then
         log "Missing mysql settings on $HOSTNAME"
-        return
+        #todo:exit on error
+        false
     fi
 
     # Is slow log enabled?
@@ -50,26 +70,14 @@ rotate_mysql_slow_log()
         slowLogSizeInBytes=`du $slowLogPath | tr '\t' '\n' | head -1`
 
         if [[ -n $slowLogSizeInBytes ]] && (( $slowLogSizeInBytes > $file_size_threshold )) ; then
-            # Disable slow logs before rotation.
-            mysql_command_wrapper "set global slow_query_log=off"
-
-            # Flush slow logs before rotation.
-            mysql_command_wrapper "flush slow logs"
-
-            # Compress
-            file_suffix=$(date +"%Y-%m-%d_%Hh-%Mm-%Ss").tar.gz
-            sudo tar -zcvf "$large_partition/$slowLogPath.$file_suffix" "$slowLogPath"
-
-            # Truncate log
-            echo -n > $slowLogPath
-
-            # Enable slow logs after rotation.
-            mysql_command_wrapper "set global slow_query_log=on"
+            true
         else
             log "Nothing to do. Slow query logs are not large enough to rotate out yet."
+            false
         fi
     else
         log "Nothing to do. MySql either isn't installed or slow query logs are not enabled on $HOSTNAME."
+        false
     fi
 }
 
@@ -100,7 +108,11 @@ print_script_header
 # Pre-conditionals
 exit_if_limited_user
 
-rotate_mysql_slow_log
+if needs_rotation ; then
+    rotate_mysql_slow_log
+    #todo: exit on error
+    needs_rotation && exit 1
+fi
 
 # Restore working directory
 popd
