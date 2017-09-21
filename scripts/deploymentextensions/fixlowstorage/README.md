@@ -3,11 +3,10 @@
 
 #### Function
 
-We want to:
-- "Rotate" certain log files which are known to grow large (like mysql's "slow log"). "Rotate" in this case means:
+1. "Rotate" certain log files which are known to grow large (like mysql's "slow log"). "Rotate" in this case means:
    * compress logs AND
    * move to a larger, attached storage
-- Alert (via email) when a machine's partition is running low on storage
+1. Alert (via email) when a machine's partition is running low on storage
 
 #### Implementation and Execution Overview
 
@@ -24,7 +23,20 @@ We want to:
 
 #### Parameters
 
-text
+1. script-file
+1. settings-file
+1. backend-server-list
+1. target-user
+1. paths-to-copy-list
+1. destination-path
+1. remote-command
+1. low-storage-log
+1. low-storage-frequency
+1. usage-threshold-percent
+1. file-size-threshold
+1. mysql-user
+1. mysql-pass
+1. large-partition
 
 #### Usage Example
 
