@@ -17,7 +17,7 @@ set -x
 check_usage_threshold()
 {
     # List of <usage>%<path>
-    # for example:
+    # Example output:
     #   "4%/"
     #   "1%/datadisks/disk1"
     diskUsages=`df -l | awk '{ print $5$6 }' | grep -v -i "use%\|mounted"`
@@ -53,8 +53,9 @@ check_usage_threshold()
         if (( $(echo "$percentUsed > $usage_threshold_percent" | bc -l) )) ; then
 
             if [[ $directoryPath == '/' ]] ; then
-                # Exclude OTHER partitions, mounts, and drives when reporting root
-                # For example: datadisks\|dev\|media\|mnt\|run\|sys
+                # We're processing the root. Get the full list of OTHER partitions/mounts/drives so we can exclude them.
+                # We do this because each of those partitions/mounts/drives will be processed separately.
+                # Example results: datadisks\|dev\|media\|mnt\|run\|sys
                 remove="`df -l | awk '{ print $6 }' | grep -v -i "mounted\|${directoryPath}$" | cut -d "/" -f2 | sort | uniq | sed ':a;N;$!ba;s/\n/\\\|/g'`"
             else
                 # Append trailing slash for non-root directories. This is required for the "du" command below AND helps clarify messaging
