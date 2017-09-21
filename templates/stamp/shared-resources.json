@@ -227,7 +227,8 @@
             "name": "Standard",
             "tier": "Standard"
         },
-        "properties": {},
+        "properties": {}
+        },
         {
             "comments": "Windows Media service",
             "type": "Microsoft.Media/mediaservices",
