@@ -140,6 +140,7 @@
                 "tier": "Standard"
 			}
         },
+        "resources": [
         {
             "comments": "This is the Service Bus Namespace used for deploymentStatus ",
             "apiVersion": "[parameters('apiSettings').sbQueueApiVersion]",     
@@ -161,6 +162,7 @@
 				"enablePartitioning": "false",
 				"enableExpress": "false"
             }
+        ]
         },                  
         {
             "type": "Microsoft.Compute/availabilitySets",
