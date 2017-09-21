@@ -248,7 +248,8 @@
         "name": "Standard",
         "tier": "Standard"
       },
-      "properties": {}"resources": [
+      "properties": {},
+      "resources": [
         {
           "apiVersion": "[parameters('apiSettings').sbQueueApiVersion]",
           "name": "nag-lb2-queue",
