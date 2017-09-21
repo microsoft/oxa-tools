@@ -240,7 +240,7 @@
     ],
     "resources": [
     {
-      "apiVersion": "[parameters('serviceBusSettings').serviceBusApiVersion]",
+      "apiVersion": "[parameters('apiVersion').serviceBusApiVersion]",
       "name": "[parameters('serviceBusSettings').serviceBusNamespaceName]",
       "type": "Microsoft.ServiceBus/Namespaces",
       "location": "[resourceGroup().location]",
@@ -251,7 +251,7 @@
       "properties": {},
       "resources": [
         {
-          "apiVersion": "[parameters('serviceBusSettings').sbQueueApiVersion]",
+          "apiVersion": "[parameters('apiVersion').sbQueueApiVersion]",
           "name": "[parameters('serviceBusSettings').serviceBusQueueName]",
           "type": "Queues",
           "dependsOn": [
