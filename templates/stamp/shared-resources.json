@@ -226,6 +226,7 @@
             "sku": {
             "name": "Standard",
             "tier": "Standard"
+                    }
         },
         {
             "comments": "Windows Media service",
