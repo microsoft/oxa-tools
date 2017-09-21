@@ -157,7 +157,6 @@
             "enablePartitioning": "false",
             "enableExpress": "false"
           }
-        }
      },
      {
            "type": "Microsoft.Compute/availabilitySets",
