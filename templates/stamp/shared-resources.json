@@ -133,7 +133,8 @@
           "type": "Microsoft.ServiceBus/Namespaces",
           "location": "[resourceGroup().location]",
           "sku": {
-            "name": "Standard"
+            "name": "Standard",
+            "tier": "Standard"
         },
           
         {
