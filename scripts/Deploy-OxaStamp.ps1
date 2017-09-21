@@ -82,6 +82,9 @@ A timestamp or other identifier to associate with the VMSS being deployed.
 .PARAMETER EnableMobileRestApi
 An switch to indicate whether or not mobile rest api is turned on
 
+.PARAMETER JumpboxNumber
+Zero-based numeric indicator of the Jumpbox used for this bootstrap operation (0, 1 or 2). If a non-zero indicator is specified, the corresponding jumpbox will be bootstrapped.
+
 .INPUTS
 None. You cannot pipe objects to Deploy-OxaStamp.ps1
 
@@ -104,10 +107,10 @@ Param(
         [Parameter(Mandatory=$true)][string]$AadTenantId,
         [Parameter(Mandatory=$false)][string]$KeyVaultUserObjectId="",
 
-        [Parameter(Mandatory=$true)][string]$KeyVaultDeploymentArmTemplateFile,
+        [Parameter(Mandatory=$false)][string]$KeyVaultDeploymentArmTemplateFile="",
         [Parameter(Mandatory=$false)][string]$KeyVaultDeploymentParametersFile="",
-        [Parameter(Mandatory=$true)][string]$FullDeploymentArmTemplateFile,
-        [Parameter(Mandatory=$true)][string]$FullDeploymentParametersFile,
+        [Parameter(Mandatory=$false)][string]$FullDeploymentArmTemplateFile="",
+        [Parameter(Mandatory=$false)][string]$FullDeploymentParametersFile="",
 
         [Parameter(Mandatory=$true)][string]$ClusterAdministratorEmailAddress,
 
@@ -133,7 +136,9 @@ Param(
 
         [Parameter(Mandatory=$false)][string]$DeploymentVersionId="",
 
-        [Parameter(Mandatory=$false)][switch]$EnableMobileRestApi=$false
+        [Parameter(Mandatory=$false)][switch]$EnableMobileRestApi=$false,
+
+        [Parameter(Mandatory=$false)][ValidateRange(0,2)][int]$JumpboxNumber=0
      )
 
 #################################
@@ -142,14 +147,21 @@ Param(
 
 $invocation = (Get-Variable MyInvocation).Value 
 $currentPath = Split-Path $invocation.MyCommand.Path 
+$rootPath = (get-item $currentPath).parent.FullName
 Import-Module "$($currentPath)/Common.ps1" -Force
 
-# set the default keyvault parameter file (if one isn't specified)
-if ($KeyVaultDeploymentParametersFile.Trim().Length -eq 0)
-{
-    Log-Message "Setting KeyVaultDeploymentParametersFile to FullDeploymentParametersFile"
-    $KeyVaultDeploymentParametersFile = $FullDeploymentParametersFile;
-}
+$FullDeploymentArmTemplateFile = Set-ScriptDefault -ScriptParamName "FullDeploymentArmTemplateFile" `
+                                    -ScriptParamVal $FullDeploymentArmTemplateFile `
+                                    -DefaultValue "$($rootPath)/templates/stamp/stamp-v2.json"
+$FullDeploymentParametersFile = Set-ScriptDefault -ScriptParamName "FullDeploymentParametersFile" `
+                                    -ScriptParamVal $FullDeploymentParametersFile `
+                                    -DefaultValue "$($rootPath)/config/stamp/default/parameters.json"
+$KeyVaultDeploymentArmTemplateFile = Set-ScriptDefault -ScriptParamName "KeyVaultDeploymentArmTemplateFile" `
+                                    -ScriptParamVal $KeyVaultDeploymentArmTemplateFile `
+                                    -DefaultValue "$($rootPath)/templates/stamp/stamp-keyvault.json"
+$KeyVaultDeploymentParametersFile = Set-ScriptDefault -ScriptParamName "KeyVaultDeploymentParametersFile" `
+                                    -ScriptParamVal $KeyVaultDeploymentParametersFile `
+                                    -DefaultValue $FullDeploymentParametersFile
 
 # Login
 $clientSecret = ConvertTo-SecureString -String $AadWebClientAppKey -AsPlainText -Force
@@ -215,7 +227,8 @@ $replacements = @{
                     "EDXAPPSUPERUSEREMAIL"=$EdxAppSuperUserEmail;
                     "MEMCACHESERVER"=$MemcacheServer;
                     "AZURECLIVERSION"=$AzureCliVersion;
-                    "DEPLOYMENTVERSIONID"=$DeploymentVersionId
+                    "DEPLOYMENTVERSIONID"=$DeploymentVersionId;
+                    "JUMPBOXNUMBER"=$JumpboxNumber
                 }
 
 # Assumption: if the SMTP server is specified, the rest of its configuration will be specified

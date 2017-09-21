@@ -1,0 +1,228 @@
+---
+# Modifying Language list. null means language is removed from the list. Others either language is a new added language or display name is changed.
+EDXAPP_ALL_LANGUAGES_OVERRIDE:
+  ab: null
+  ae: null
+  afb: "Arabic, Gulf"
+  agq: "Aghem"
+  an: null
+  apc: "Arabic, Levantine"
+  arn: "Mapudungun"
+  arz: "Arabic, Egyptian"
+  asa: "Asu"
+  ast: "Asturian"
+  av: null
+  ay: null
+  az: null
+  az-Cyrl: "Azerbaijani (Cyrillic)"
+  az-Latn: "Azerbaijani (Latin)"
+  bas: "Basaa"
+  bem: "Bemba"
+  bez: "Bena"
+  bh: null
+  bi: null
+  bin: "Edo"
+  bm: null
+  bm-Latn: "Bamanankan (Latin)"
+  bn: "Bangla"
+  brx: "Bodo"
+  bs: null
+  bs-Cyrl: "Bosnian (Cyrillic)"
+  bs-Latn: "Bosnian (Latin)"
+  byn: "Blin"
+  ca-ES-valencia: "Valencian"
+  ceb: "Cebuano"
+  cgg: "Chiga"
+  ch: null
+  chr-Cher: "Cherokee (Cherokee)"
+  cr: null
+  cv: null
+  dav: "Taita"
+  dgo: "Dogri"
+  dje: "Zarma"
+  dsb: "Lower Sorbian"
+  dua: "Duala"
+  dyo: "Jola-Fonyi"
+  ebu: "Embu"
+  ewo: "Ewondo"
+  ff: null
+  ff-Latn: "Fulah"
+  fil: "Filipino"
+  fur: "Friulian"
+  ga: "Irish"
+  gd: "Scottish Gaelic"
+  gsw: "Swiss German"
+  guz: "Gusii"
+  ha: null
+  ha-Latn: "Hausa (Latin)"
+  haw: "Hawaiian"
+  he: "Hebrew"
+  ho: null
+  hsb: "Upper Sorbian"
+  hz: null
+  ie: null
+  ig: "Igbo"
+  ii: "Yi"
+  ik: null
+  io: null
+  iu: null
+  iu-Cans: "Inuktitut (Canadian Aboriginal Syllabics)"
+  iu-Latn: "Inuktitut (Latin)"
+  iv: "Invariant Language"
+  jgo: "Ngomba"
+  jmc: "Machame"
+  jv: null
+  jv-Latn: "Javanese (Latin)"
+  kab: "Kabyle"
+  kam: "Kamba"
+  kde: "Makonde"
+  kea: "Kabuverdianu"
+  kfr: "Kutchi"
+  kg: null
+  khq: "Koyra Chiini"
+  kj: null
+  kkj: "Kako"
+  kl: "Greenlandic"
+  kln: "Kalenjin"
+  km: "Khmer"
+  kmr-Arab: "Northern Kurdish (Arabic)"
+  kok: "Konkani"
+  ks: null
+  ks-Arab: "Kashmiri (Perso-Arabic)"
+  ksb: "Shambala"
+  ks-Deva: "Kashmiri (Devanagari)"
+  ksf: "Bafia"
+  ksh: "Colognian"
+  ku: null
+  ku-Arab: "Central Kurdish"
+  kv: null
+  ky: "Kyrgyz"
+  la: null
+  lag: "Langi"
+  li: null
+  lkt: "Lakota"
+  lrc: "Northern Luri"
+  luo: "Luo"
+  luy: "Luyia"
+  mai: "Maithili"
+  mas: "Masai"
+  mer: "Meru"
+  mfe: "Morisyen"
+  mgh: "Makhuwa-Meetto"
+  mgo: "Meta'"
+  mh: null
+  mn: null
+  mn-Cyrl: "Mongolian (Cyrillic)"
+  mni: "Manipuri"
+  mn-Mong: "Mongolian (Traditional Mongolian)"
+  moh: "Mohawk"
+  ms: "Malay (Latin)"
+  mua: "Mundang"
+  mww: "Hmong Daw"
+  mzn: "Mazanderani"
+  na: null
+  naq: "Nama"
+  nb: "Norwegian Bokmål"
+  nd: "North Ndebele"
+  nds: "Low German"
+  ng: null
+  nmg: "Kwasio"
+  nnh: "Ngiemboon"
+  no: null
+  nqo: "N’Ko"
+  nr: "South Ndebele"
+  nso: "Sesotho sa Leboa"
+  nus: "Nuer"
+  nv: null
+  ny: null
+  nyn: "Nyankole"
+  oj: null
+  or: "Odia"
+  os: null
+  os-Cyrl: "Ossetic (Cyrillic)"
+  os-Latn: "Ossetic (Latin)"
+  otq: "Querétaro Otomi"
+  pa: null
+  pa-Arab: "Punjabi (Arabic)"
+  pa-Guru: "Punjabi (Gurmukhi)"
+  pap: "Papiamento"
+  pi: null
+  prg: "Prussian"
+  prs: "Dari"
+  ps: "Pashto"
+  pt-BR: "Portuguese (Brazil)"
+  pt-PT: "Portuguese (Portugal)"
+  qps: "Pseudo"
+  quc: "K’iche’"
+  rof: "Rombo"
+  rwk: "Rwa"
+  sah: "Sakha"
+  saq: "Samburu"
+  sat-Deva: "Santali (Devanagari)"
+  sbp: "Sangu"
+  sc: null
+  sd: null
+  sd-Arab: "Sindhi (Arabic)"
+  sd-Deva: "Sindhi (Devanagari)"
+  se: "Northern Sami"
+  seh: "Sena"
+  ses: "Koyraboro Senni"
+  shi-Latn: "Tachelhit (Latin)"
+  shi-Tfng: "Tachelhit (Tifinagh)"
+  sma: "Southern Sami"
+  smj: "Lule Sami"
+  smn: "Inari Sami"
+  sms: "Skolt Sami"
+  sr: null
+  sr-Cyrl: "Serbian (Cyrillic)"
+  sr-Latn: "Serbian (Latin)"
+  ss: "SiSwati"
+  ssy: "Saho"
+  st: "Sesotho"
+  su: null
+  sw: "Kiswahili"
+  swc: "Congo Swahili"
+  syr: "Syriac"
+  teo: "Teso"
+  tg: null
+  tg-Cyrl: "Tajik (Cyrillic)"
+  tig: "Tigre"
+  tk: null
+  tk-Latn: "Turkmen (Latin)"
+  tl: null
+  tn: "Setswana"
+  to: "Tongan"
+  ts: "Xitsonga"
+  tt: null
+  tt-Cyrl: "Tatar (Cyrillic)"
+  tw: null
+  twq: "Tasawaq"
+  tzm-Arab: "Central Atlas Tamazight (Arabic)"
+  tzm-Latn: "Central Atlas Tamazight (Latin)"
+  tzm-Tfng: "Central Atlas Tamazight (Tifinagh)"
+  ug: null
+  ug-Arab: "Uyghur (Arabic)"
+  uz: null
+  uz-Arab: "Uzbek (Perso-Arabic)"
+  uz-Cyrl: "Uzbek (Cyrillic)"
+  uz-Latn: "Uzbek (Latin)"
+  vai-Latn: "Vai (Latin)"
+  vai-Vaii: "Vai (Vai)"
+  vun: "Vunjo"
+  wa: null
+  wae: "Walser"
+  wal: "Wolaytta"
+  xh: "IsiXhosa"
+  xog: "Soga"
+  yav: "Yangben"
+  yua: "Yucatec Maya"
+  yue-Hant: "Cantonese (Traditional)"
+  za: null
+  zgh-Tfng: "Standard Moroccan Tamazight (Tifinagh)"
+  zh: null
+  zh_HANS: null
+  zh_HANT: null
+  zh-Hans: "Chinese (Simplified)"
+  zh-Hant: "Chinese (Traditional)"
+  zu: "IsiZulu"
+
