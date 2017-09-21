@@ -128,40 +128,39 @@
             "kind": "Storage"
         },
         {
-            "comments": "This is the Service Bus Namespace used for deploymentStatus",
-            
-            "name": "[parameters('serviceBusSettings').serviceBusNamespaceName]",
-            "apiVersion": "[parameters('apiSettings').serviceBusApiVersion]",       
-            "type": "Microsoft.ServiceBus/namespaces",
-            "location": "[resourceGroup().location]",
-            "kind": "Messaging",
-            "sku": {
-                "name": "Standard",
-                "tier": "Standard"
-			}
+          "apiVersion": "2017-04-01",
+          "name": "nag-SB1",
+          "type": "Microsoft.ServiceBus/Namespaces",
+          "location": "[resourceGroup().location]",
+          "sku": {
+            "name": "Standard"
         },
+          "properties": {},
+        "resources": [
         {
-            "comments": "This is the Service Bus Namespace used for deploymentStatus ",
-            "apiVersion": "[parameters('apiSettings').sbQueueApiVersion]",     
-            "name": "[parameters('serviceBusSettings').serviceBusQueueName]",                   
+            "apiVersion": "2017-04-01",
+            "name": "nag-SB1-queue",
             "type": "Queues",
             "dependsOn": [
-                "[concat('Microsoft.ServiceBus/namespaces/', parameters('serviceBusSettings').serviceBusNamespaceName)]"
-            ], 
+                         "[concat('Microsoft.ServiceBus/namespaces/', 'nag-SB1')]"
+            ],
             "properties": {
-				"lockDuration": "PT5M",
-				"maxSizeInMegabytes": "1024",
-				"requiresDuplicateDetection": "false",
-				"requiresSession": "false",
-				"defaultMessageTimeToLive": "P10675199DT2H48M5.4775807S",
-				"deadLetteringOnMessageExpiration": "false",
-				"duplicateDetectionHistoryTimeWindow": "PT10M",
-				"maxDeliveryCount": "10",
-				"autoDeleteOnIdle": "P10675199DT2H48M5.4775807S",
-				"enablePartitioning": "false",
-				"enableExpress": "false"
-            }
-        },                  
+            "lockDuration": "PT5M",
+            "maxSizeInMegabytes": "1024",
+            "requiresDuplicateDetection": "false",
+            "requiresSession": "false",
+            "defaultMessageTimeToLive": "P10675199DT2H48M5.4775807S",
+            "deadLetteringOnMessageExpiration": "false",
+            "duplicateDetectionHistoryTimeWindow": "PT10M",
+            "maxDeliveryCount": "10",
+            "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S",
+            "enablePartitioning": "false",
+            "enableExpress": "false"
+          }
+        }
+      ]
+    }
+  ],                  
         {
             "type": "Microsoft.Compute/availabilitySets",
             "name": "[concat(parameters('networkSettings').clusterMongoDataNodeName, parameters('networkSettings').availabilitySetNameSuffix)]",
