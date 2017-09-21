@@ -158,11 +158,9 @@
             "enableExpress": "false"
           }
         }
-      ]
-    },
-                  
-        {
-            "type": "Microsoft.Compute/availabilitySets",
+     },
+     {
+           "type": "Microsoft.Compute/availabilitySets",
             "name": "[concat(parameters('networkSettings').clusterMongoDataNodeName, parameters('networkSettings').availabilitySetNameSuffix)]",
             "apiVersion": "[parameters('apiSettings').availabilitySetApiVersion]",
             "location": "[resourceGroup().location]",
