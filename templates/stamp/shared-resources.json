@@ -32,8 +32,215 @@
         "loadBalancerIpName": "[concat(parameters('networkSettings').loadbalancerSettings.loadBalancerName, parameters('networkSettings').publicIPAddressNameSuffix)]",
     },
     "resources": [
+        {
+            "type": "Microsoft.Network/virtualNetworks",
+            "name": "[parameters('networkSettings').virtualNetworkName]",
+            "apiVersion": "[parameters('apiSettings').apiVersion]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[parameters('networkSettings').addressPrefix]"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[parameters('networkSettings').subnetName]",
+                        "properties": {
+                            "addressPrefix": "[parameters('networkSettings').subnetPrefix]"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "[parameters('storageSettings').storageAccountName]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "[parameters('apiSettings').storageApiVersion]",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "[parameters('storageSettings').storageAccountType]",
+                "tier": "Standard"
+            },
+            "kind": "Storage"
+        },
+        {
+            "name": "[parameters('storageSettings').diagnosticStorageAccountName]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "[parameters('apiSettings').storageApiVersion]",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "[parameters('storageSettings').storageAccountType]",
+                "tier": "Standard"
+            },
+            "kind": "Storage"
+        },
+        {
+            "comments": "This is the secure storage account used for backups and other admin functions",
+
+            "name": "[parameters('storageSettings').secureGenericStorageAccountName]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "[parameters('apiSettings').storageApiVersion]",
+            "location": "[resourceGroup().location]",
+
+            "sku": {
+                "name": "[parameters('storageSettings').storageAccountType]",
+                "tier": "Standard"
+            },
+            "kind": "Storage",
+            "properties": {
+                "encryption": {
+                    "keySource": "Microsoft.Storage",
+                    "services": {
+                        "blob": {
+                            "enabled": true
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "comments": "This is the storage account used for video uploads",
+
+            "name": "[parameters('storageSettings').videoUploadsStorageAccountName]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "[parameters('apiSettings').storageApiVersion]",
+            "location": "[resourceGroup().location]",
+
+            "sku": {
+                "name": "[parameters('storageSettings').storageAccountType]",
+                "tier": "Standard"
+            },
+            "kind": "Storage"
+        },
+        {
+            "comments": "This is the storage account used for WAMS",
+
+            "name": "[parameters('storageSettings').wamsStorageAccountName]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "[parameters('apiSettings').storageApiVersion]",
+            "location": "[resourceGroup().location]",
+
+            "sku": {
+                "name": "[parameters('storageSettings').storageAccountType]",
+                "tier": "Standard"
+            },
+            "kind": "Storage"
+        },
+        {
+            "type": "Microsoft.Compute/availabilitySets",
+            "name": "[concat(parameters('networkSettings').clusterMongoDataNodeName, parameters('networkSettings').availabilitySetNameSuffix)]",
+            "apiVersion": "[parameters('apiSettings').availabilitySetApiVersion]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "platformFaultDomainCount": "[parameters('networkSettings').mongoDataNodesAvailabilitySetFaultDomainCount]",
+                "platformUpdateDomainCount": "[parameters('networkSettings').mongoDataNodeCount]"
+            }
+        },
+        {
+            "type": "Microsoft.Compute/availabilitySets",
+            "name": "[concat(parameters('networkSettings').clusterMysqlDataNodeName, parameters('networkSettings').availabilitySetNameSuffix)]",
+            "apiVersion": "[parameters('apiSettings').availabilitySetApiVersion]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "platformFaultDomainCount": "[parameters('networkSettings').mysqlDataNodesAvailabilitySetFaultDomainCount]",
+                "platformUpdateDomainCount": "[parameters('networkSettings').mysqlDataNodeCount]"
+            }
+        },
+        {
+            "name": "[parameters('networkSettings').mongoNetworkSecurityGroupName]",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "[parameters('apiSettings').apiVersion]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "default-allow-ssh",
+                        "properties": {
+                            "priority": 1000,
+                            "sourceAddressPrefix": "*",
+                            "protocol": "TCP",
+                            "destinationPortRange": "22",
+                            "access": "Allow",
+                            "direction": "Inbound",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*"
+                        }
+                    },
+                    {
+                        "name": "allow-mongodb",
+                        "properties": {
+                            "priority": 2000,
+                            "sourceAddressPrefix": "*",
+                            "protocol": "TCP",
+                            "destinationPortRange": "27017",
+                            "access": "Allow",
+                            "direction": "Inbound",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "[parameters('networkSettings').mysqlNetworkSecurityGroupName]",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "[parameters('apiSettings').apiVersion]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "default-allow-ssh",
+                        "properties": {
+                            "priority": 1000,
+                            "sourceAddressPrefix": "*",
+                            "protocol": "TCP",
+                            "destinationPortRange": "22",
+                            "access": "Allow",
+                            "direction": "Inbound",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*"
+                        }
+                    },
+                    {
+                        "name": "allow-mysql",
+                        "properties": {
+                            "priority": 2000,
+                            "sourceAddressPrefix": "*",
+                            "protocol": "TCP",
+                            "destinationPortRange": "3306",
+                            "access": "Allow",
+                            "direction": "Inbound",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "comments": "Windows Media service",
+            "type": "Microsoft.Media/mediaservices",
+            "name": "[parameters('storageSettings').mediaServicesAccountName]",
+            "apiVersion": "[parameters('apiSettings').mediaServicesApiVersion]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "storageAccounts": [
+                    {
+                        "id": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageSettings').wamsStorageAccountName)]",
+                        "isPrimary": true
+                    }
+                ]
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageSettings').wamsStorageAccountName)]"
+            ]
+        }
+    ],
+    "resources": [
     {
-      "apiVersion": "2017-04-01",
+      "apiVersion": "[parameters('apiSettings').serviceBusApiVersion]",
       "name": "[parameters('serviceBusSettings').serviceBusNamespaceName]",
       "type": "Microsoft.ServiceBus/Namespaces",
       "location": "[resourceGroup().location]",
@@ -41,10 +248,9 @@
         "name": "Standard",
         "tier": "Standard"
       },
-      "properties": {},
-      "resources": [
+      "properties": {}"resources": [
         {
-          "apiVersion": "2017-04-01",
+          "apiVersion": "[parameters('apiSettings').sbQueueApiVersion]",
           "name": "nag-lb2-queue",
           "type": "Queues",
           "dependsOn": [
@@ -67,5 +273,4 @@
       ]
     }
   ],
-   
 }
