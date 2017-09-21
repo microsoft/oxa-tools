@@ -135,8 +135,7 @@
           "sku": {
             "name": "Standard"
         },
-          "properties": {},
-        
+          
         {
             "apiVersion": "2017-04-01",
             "name": "nag-SB1-queue",
