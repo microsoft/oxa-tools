@@ -127,41 +127,7 @@
             },
             "kind": "Storage"
         },
-        {
-            "comments": "This is the Service Bus Namespace used for deploymentStatus",
-            
-            "name": "[parameters('serviceBusSettings').serviceBusNamespaceName]",
-            "apiVersion": "[parameters('apiSettings').serviceBusApiVersion]",       
-            "type": "Microsoft.ServiceBus/namespaces",
-            "location": "[resourceGroup().location]",
-            "kind": "Messaging",
-            "sku": {
-                "name": "Standard",
-                "tier": "Standard"
-			}
-        },
-        {
-            "comments": "This is the Service Bus Namespace used for deploymentStatus ",
-            "apiVersion": "[parameters('apiSettings').sbQueueApiVersion]",     
-            "name": "[parameters('serviceBusSettings').serviceBusQueueName]",                   
-            "type": "Queues",
-            "dependsOn": [
-                "[concat('Microsoft.ServiceBus/namespaces/', parameters('serviceBusSettings').serviceBusNamespaceName)]"
-            ], 
-            "properties": {
-				"lockDuration": "PT5M",
-				"maxSizeInMegabytes": "1024",
-				"requiresDuplicateDetection": "false",
-				"requiresSession": "false",
-				"defaultMessageTimeToLive": "P10675199DT2H48M5.4775807S",
-				"deadLetteringOnMessageExpiration": "false",
-				"duplicateDetectionHistoryTimeWindow": "PT10M",
-				"maxDeliveryCount": "10",
-				"autoDeleteOnIdle": "P10675199DT2H48M5.4775807S",
-				"enablePartitioning": "false",
-				"enableExpress": "false"
-            }        
-        },                  
+                     
         {
             "type": "Microsoft.Compute/availabilitySets",
             "name": "[concat(parameters('networkSettings').clusterMongoDataNodeName, parameters('networkSettings').availabilitySetNameSuffix)]",
