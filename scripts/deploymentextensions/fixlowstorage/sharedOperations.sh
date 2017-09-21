@@ -30,9 +30,11 @@ current_script_path="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 source_wrapper()
 {
-    if [[ -f "$1" ]] ; then
-        echo "Sourcing file $1"
-        source "$1"
+    file="$1"
+
+    if [[ -f $file ]] ; then
+        echo "Sourcing file $file"
+        source "$file"
 
         # The sourced file could have a non-zero (failing) exit code.
         # For example: if the last line of the file is the "false" command.
