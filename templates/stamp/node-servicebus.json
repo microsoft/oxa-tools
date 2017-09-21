@@ -26,7 +26,7 @@
       },
        "resources": [
       {
-          "apiVersion": "2017-04-01",
+          "apiVersion": "2017-05-01",
           "name": "[parameters('serviceBusSettings').serviceBusQueueName]",
           "type": "Queues",
           "dependsOn": [
