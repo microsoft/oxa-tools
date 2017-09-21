@@ -252,7 +252,7 @@
       "resources": [
         {
           "apiVersion": "2017-04-01",
-          "name": "nag-lb2-queue",
+          "name": "nag-lb2-queue1",
           "type": "Queues",
           "dependsOn": [
             "[concat('Microsoft.ServiceBus/namespaces/', parameters('serviceBusSettings').serviceBusNamespaceName)]"
