@@ -26,21 +26,26 @@ check_usage_threshold()
     while read diskUsage ; do
         # Split usage and path
         diskUsageArray=(`echo "$diskUsage" | tr '%' ' '`)
+
+        # Alert for unexpected values (indicative of possible errors in script and/or unexpected cases)
+        if (( ${#diskUsageArray[@]} > 2 )) ; then
+            log "Error in script $script_name. Too many values"
+            log "First extraneous value: ${diskUsageArray[2]}"
+            log "Entire array is ${diskUsageArray[@]}"
+
+            # Let's still check the next partition
+            continue
+        fi
+
         percentUsed=${diskUsageArray[0]}
         directoryPath=${diskUsageArray[1]}
 
         log "Directory $directoryPath on machine $HOSTNAME is using $percentUsed percent of available space"
 
-        # Alert for unexpected values (indicative of possible errors in script and/or unexpected cases)
-        if [[ -n ${diskUsageArray[2]} ]] ; then
-            log "Error in script $script_name. Too many values"
-            log "Extraneous value: ${diskUsageArray[2]}"
-
-            continue
-        fi
         if [[ -z $percentUsed ]] || [[ -z $directoryPath ]] ; then
             log "Error in script $script_name. Missing disk usage percentage or file system path"
 
+            # Let's still check the next partition
             continue
         fi
 
