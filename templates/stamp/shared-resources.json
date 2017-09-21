@@ -236,7 +236,7 @@
                 "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageSettings').wamsStorageAccountName)]"
             ]
         }
-    ]
+    ],
     "resources": [
     {
       "apiVersion": "2017-04-01",
