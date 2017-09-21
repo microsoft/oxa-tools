@@ -15,9 +15,9 @@ set -x
 # Paths and file names.
     current_script_path="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-mysql_command()
+mysql_command_wrapper()
 {
-    command=$1
+    command="$1"
 
     echo "`mysql -u $mysql_user -p$mysql_pass -se "$command"`"
 }
@@ -34,42 +34,50 @@ invalid_mysql_settings()
 
 rotate_mysql_slow_log()
 {
+    # Disable slow logs before rotation.
+    mysql_command_wrapper "set global slow_query_log=off"
+
+    # Flush slow logs before rotation.
+    mysql_command_wrapper "flush slow logs"
+
+    # Compress
+    file_suffix=$(date +"%Y-%m-%d_%Hh-%Mm-%Ss").tar.gz
+    sudo tar -zcvf "$large_partition/$slowLogPath.$file_suffix" "$slowLogPath"
+
+    # Truncate log
+    echo -n > $slowLogPath
+
+    # Enable slow logs after rotation.
+    mysql_command_wrapper "set global slow_query_log=on"
+}
+
+needs_rotation()
+{
     if invalid_mysql_settings ; then
-        log "Missing mysql settings"
-        return;
+        log "Missing mysql settings on $HOSTNAME"
+        #todo:exit on error
+        false
     fi
 
     # Is slow log enabled?
     # This will also prevent execution on machines without mysql
-    isLoggingSlow=`mysql_command "select @@slow_query_log" | tail -1`
-    if [[ $isLoggingSlow == 1 ]] ; then
+    isLoggingSlow=`mysql_command_wrapper "select @@slow_query_log" | tail -1`
+    if (( $isLoggingSlow == 1 )) ; then
         # Get path mysql is writing the slow log to
-        slowLogPath=`mysql_command "select @@slow_query_log_file" | tail -1`
+        slowLogPath=`mysql_command_wrapper "select @@slow_query_log_file" | tail -1`
 
         # Get size of slow log
         slowLogSizeInBytes=`du $slowLogPath | tr '\t' '\n' | head -1`
 
         if [[ -n $slowLogSizeInBytes ]] && (( $slowLogSizeInBytes > $file_size_threshold )) ; then
-            # Disable slow logs before rotation.
-            mysql_command "set global slow_query_log=off"
-
-            # Flush slow logs before rotation.
-            mysql_command "flush slow logs"
-
-            # Compress
-            file_suffix=$(date +"%Y-%m-%d_%Hh-%Mm-%Ss").tar.gz
-            sudo tar -zcvf "$large_partition/$slowLogPath.$file_suffix" "$slowLogPath"
-
-            # Truncate log
-            echo -n > $slowLogPath
-
-            # Enable slow logs after rotation.
-            mysql_command "set global slow_query_log=on"
+            true
         else
             log "Nothing to do. Slow query logs are not large enough to rotate out yet."
+            false
         fi
     else
-        log "Nothing to do. Slow query logs are not enabled."
+        log "Nothing to do. MySql either isn't installed or slow query logs are not enabled on $HOSTNAME."
+        false
     fi
 }
 
@@ -81,7 +89,9 @@ rotate_mysql_slow_log()
 pushd $current_script_path
 
 if [[ -z $mysql_pass ]] ; then
-    source sharedOperations.sh || exit 1
+    shared="sharedOperations.sh"
+    echo "Sourcing file $shared"
+    source $shared || exit 1
 
     # Source utilities. Exit on failure.
     source_utilities || exit 1
@@ -98,7 +108,11 @@ print_script_header
 # Pre-conditionals
 exit_if_limited_user
 
-rotate_mysql_slow_log
+if needs_rotation ; then
+    rotate_mysql_slow_log
+    #todo: exit on error
+    needs_rotation && exit 1
+fi
 
 # Restore working directory
 popd

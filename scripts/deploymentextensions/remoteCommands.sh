@@ -4,7 +4,7 @@
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
 # Convenient wrappers for executing SCP and/or SSH across a collections of machines sequentially.
-# See help() or invoke with -h for further details
+# See help_general() or invoke with -h for further details
 
 # BOTH SCP AND SSH
     backend_server_list=()
@@ -24,7 +24,7 @@
 set -x
 
 # Usage messaging
-help_both()
+help_shared()
 {
     echo
     echo "Cannot batch $1 until the following variables are assigned"
@@ -34,7 +34,7 @@ help_both()
 
 help_scp()
 {
-    help_both "scp"
+    help_shared "scp"
     echo "paths_to_copy_list: List of paths to local files that will be copied to remote machines"
     echo "destination_path:   Remote target folder path for copies (the destination directory)"
     echo
@@ -42,13 +42,13 @@ help_scp()
 
 help_ssh()
 {
-    help_both "ssh"
+    help_shared "ssh"
     echo "remote_command:     Command to execute on remote machines"
     echo "remote_arguments:   Parameters for remote command"
     echo
 }
 
-help()
+help_general()
 {
     echo
     echo "This script $SCRIPT_NAME will executing SCP and/or SSH across a collections of machines sequentially"
@@ -85,12 +85,12 @@ parse_args()
                 shift # argument
                 ;;
             -h|--help)
-                help
+                help_general
                 exit 2
                 ;;
             *) # unknown option
                 echo "ERROR. Option -${BOLD}$2${NORM} not allowed."
-                help
+                help_general
                 exit 2
                 ;;
         esac
