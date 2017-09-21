@@ -136,7 +136,7 @@
             "name": "Standard"
         },
           "properties": {},
-        "resources": [
+        
         {
             "apiVersion": "2017-04-01",
             "name": "nag-SB1-queue",
@@ -159,8 +159,8 @@
           }
         }
       ]
-    }
-  ],                  
+    },
+                  
         {
             "type": "Microsoft.Compute/availabilitySets",
             "name": "[concat(parameters('networkSettings').clusterMongoDataNodeName, parameters('networkSettings').availabilitySetNameSuffix)]",
