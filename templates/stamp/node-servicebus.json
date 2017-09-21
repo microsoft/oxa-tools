@@ -2,12 +2,12 @@
   "$schema": "http://schema.management.azure.com/schemas/2014-04-01-preview/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "serviceBusSettings": {
-      "type": "string",
-      "metadata": {
-        "description": "Service Bus settings"
-      }
-      }
+        "serviceBusSettings": {
+            "type": "object",
+            "metadata": {
+                "Description": "servicebus settings"
+            }
+        }
     },  
    
   "variables": {
