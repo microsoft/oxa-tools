@@ -34,8 +34,9 @@ source_wrapper()
         echo "Sourcing file $1"
         source "$1"
 
-        # The sourced file could have a non-zero (failing) exit code,
-        # but this function is exclusively concerned with whether the
+        # The sourced file could have a non-zero (failing) exit code.
+        # For example: if the last line of the file is the "false" command.
+        # However, this function is exclusively concerned with whether the
         # file can be sourced successfully.
         true
     fi
@@ -48,7 +49,7 @@ source_utilities()
     # expected case
     source_wrapper "utilities.sh" && return
 
-    # created
+    # create link
     actual_utilities_path=$current_script_path/../../../templates/stamp/utilities.sh
     local_utilities_path=$current_script_path/utilities.sh
     ln -s $actual_utilities_path $local_utilities_path

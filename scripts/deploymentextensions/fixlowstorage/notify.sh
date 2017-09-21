@@ -86,7 +86,9 @@ check_usage_threshold()
 # Update working directory
 pushd $current_script_path
 
-source sharedOperations.sh || exit 1
+shared="sharedOperations.sh"
+echo "Sourcing file $shared"
+source $shared || exit 1
 
 # Source utilities. Exit on failure.
 source_utilities || exit 1
@@ -99,8 +101,9 @@ print_script_header
 # Parse commandline arguments
 parse_args "$@"
 
-# Rotate log (if machine support it). Exit on failure.
-source rotateLog.sh || exit 1
+# Rotate log (if machine support it). Exit if file is missing.
+# Rotation will no-op if mysql isn't installed on the machine.
+source_wrapper "rotateLog.sh" || exit 1
 
 # Pre-conditionals
 exit_if_limited_user

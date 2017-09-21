@@ -11,7 +11,9 @@ set -x
 current_script_path="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 pushd $current_script_path
 
-source sharedOperations.sh || exit 1
+shared="sharedOperations.sh"
+echo "Sourcing file $shared"
+source $shared || exit 1
 
 # Source utilities. Exit on failure.
 source_utilities || exit 1

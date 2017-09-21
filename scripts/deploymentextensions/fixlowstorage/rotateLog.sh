@@ -81,7 +81,9 @@ rotate_mysql_slow_log()
 pushd $current_script_path
 
 if [[ -z $mysql_pass ]] ; then
-    source sharedOperations.sh || exit 1
+    shared="sharedOperations.sh"
+    echo "Sourcing file $shared"
+    source $shared || exit 1
 
     # Source utilities. Exit on failure.
     source_utilities || exit 1
