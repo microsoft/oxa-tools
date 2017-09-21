@@ -248,7 +248,8 @@
         "name": "Standard",
         "tier": "Standard"
       },
-      "properties": {},
+      "properties": {}
+      ],
       "resources": [
         {
           "apiVersion": "[parameters('apiSettings').sbQueueApiVersion]",
