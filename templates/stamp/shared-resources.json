@@ -249,7 +249,7 @@
       "resources": [
         {
           "apiVersion": "[parameters('apiSettings').serviceBusApiVersion]",
-          "name": "[parameters('serviceBusSettings').sbQueueName]",
+          "name": "[parameters('serviceBusSettings').serviceBusQueueName]",
           "type": "Queues",
           "dependsOn": [
             "[concat('Microsoft.ServiceBus/namespaces/', parameters('serviceBusSettings').serviceBusNamespaceName)]"
