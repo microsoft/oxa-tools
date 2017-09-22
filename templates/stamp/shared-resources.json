@@ -23,7 +23,7 @@
         "serviceBusSettings": {
             "type": "object",
             "metadata": {
-                "Description": "Service Bus  settings object"
+                "Description": "Service Bus  settings objects"
             }  
         }            
     },
