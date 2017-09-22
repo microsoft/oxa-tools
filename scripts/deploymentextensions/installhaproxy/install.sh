@@ -177,7 +177,7 @@ parse_args()
           --server-connection-timeout)
             server_connection_timeout="${arg_value}"
             ;;
-          --client--communication-timeout)
+          --client-communication-timeout)
             client_communication_timeout="${arg_value}"
             ;;
           --server-communication-timeout)
