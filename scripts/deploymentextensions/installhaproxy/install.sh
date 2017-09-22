@@ -56,6 +56,9 @@ haproxy_initscript="/etc/default/haproxy"
 haproxy_configuration_file="/etc/haproxy/haproxy.cfg"
 haproxy_configuration_template_file="${oxa_tools_repository_path}/scripts/deploymentextensions/${package_name}/haproxy.template.cfg"
 haproxy_probe_interval_sec="1800"
+haproxy_base_log_path="/datadisks/disk1/var/log/haproxy"
+haproxy_log_file="haproxy.log"
+haproxy_errorlog_file="haproxy-errors.log"
 
 # probe Settings
 network_services_file="/etc/services"
@@ -73,6 +76,22 @@ probe_script_installation_directory="/opt"
 probe_script="${probe_script_installation_directory}/${xinet_service_name}"
 
 main_logfile="/var/log/bootstrap.csx.log"
+
+# HA Proxy Log Rotation configs
+total_files_to_keep=7                   # total number of older rotation files to keep 
+max_log_file_age=7                      # max age of older rotation files (in days) to keep
+
+# HA Proxy Connection Timeouts (ms)
+server_connection_timeout=5000          # timeout connecting to the server
+client_communication_timeout=50000      # timeout waiting for communication with client
+server_communication_timeout=50000      # timeout waiting for comunication with server
+
+# Rsyslog & Log Rotate template files
+rsyslog_configuration_file="/etc/rsyslog.d/haproxy.conf"
+rsyslog_configuration_template_file="${oxa_tools_repository_path}/scripts/deploymentextensions/${package_name}/rsyslog.haproxy.template"
+
+logrotate_configuration_file="/etc/logrotate.d/haproxy.custom"
+logrotate_configuration_template_file="${oxa_tools_repository_path}/scripts/deploymentextensions/${package_name}/logrotate.haproxy.template"
 
 #############################################################################
 # parse the command line arguments
@@ -149,6 +168,21 @@ parse_args()
           --debug)
             debug_mode=1
             ;;
+          --total-files-to-keep)
+            total_files_to_keep="${arg_value}"
+            ;;
+          --max-log-file-age)
+            max_log_file_age="${arg_value}"
+            ;;
+          --server-connection-timeout)
+            server_connection_timeout="${arg_value}"
+            ;;
+          --client--communication-timeout)
+            client_communication_timeout="${arg_value}"
+            ;;
+          --server-communication-timeout)
+            server_communication_timeout="${arg_value}"
+            ;;
         esac
 
         shift # past argument or value
@@ -218,6 +252,62 @@ execute_remote_command()
     # run the remote command
     ssh "${remote_execution_target_user}@${remote_execution_server_target}" $remote_command
     exit_on_error "Could not execute the haproxy installer on the remote target: ${remote_execution_server_target} from '${HOSTNAME}' !" "${ERROR_HAPROXY_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
+}
+
+setup_haproxy_base_logging_path()
+{
+    log "Setting up HA Proxy log path"
+
+    if [[ ! -d "${haproxy_base_log_path}" ]];
+    then
+        log "Creating HA Proxy base logging path at '${haproxy_base_log_path}'"
+        mkdir -p "${haproxy_base_log_path}"
+        exit_on_error "Unable to create the HA Proxy base logging path!" "${ERROR_HAPROXY_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
+
+        # update the folder ownership
+        chown -R syslog:syslog "${haproxy_base_log_path}"
+    else
+        log "HA Proxy base logging path already exists at '${haproxy_base_log_path}'"
+    fi
+}
+
+update_rsyslog()
+{
+    log "Configuring Rsyslog for HA Proxy"
+
+    local haproxy_log_path="${1}"
+    local haproxy_error_log_path="${2}"
+
+    # copy the configuration template (possibly overwriting the existing configuration)
+    cp "${rsyslog_configuration_template_file}" "${rsyslog_configuration_file}"
+    exit_on_error "Unable to copy the HA Proxy Rsyslog configuration template!" "${ERROR_HAPROXY_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
+
+    # update key settings
+    sed -i "s#{HaProxyErrorLog}#${haproxy_error_log_path}#I" $rsyslog_configuration_file
+    sed -i "s#{HaProxyLog}#${haproxy_log_path}#I" $rsyslog_configuration_file
+
+    # restart rsyslog to apply configs
+    service rsyslog restart
+    exit_on_error "Unable to restart rsyslog!" "${ERROR_HAPROXY_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
+
+    log "Completed configuration of Rsyslog for HA Proxy"
+}
+
+update_logrotate()
+{
+    log "Configuring Log Rotate for HA Proxy"
+
+    # copy the configuration template (possibly overwriting the existing configuration)
+    cp "${logrotate_configuration_template_file}" "${logrotate_configuration_file}"
+    exit_on_error "Unable to copy the HA Proxy Log Rotate configuration template!" "${ERROR_HAPROXY_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
+
+    # update key settings
+    sed -i "s#{HaProxyErrorLog}#${haproxy_error_log_path}#I" $logrotate_configuration_file
+    sed -i "s#{HaProxyLog}#${haproxy_log_path}#I" $logrotate_configuration_file
+    sed -i "s#{TotalFilesToKeep}#${total_files_to_keep}#I" $logrotate_configuration_file
+    sed -i "s#{MaxLogFileAgeInDays}#${max_log_file_age}#I" $logrotate_configuration_file
+
+    log "Completed configuration of Log Rotate for HA Proxy"
 }
 
 ###############################################
@@ -438,6 +528,20 @@ sed -i "s/{MysqlMasterServerIP}/${mysql_master_server_ip}/I" "${haproxy_configur
 sed -i "s/{MysqlSlave1ServerIP}/${mysql_slave1_server_ip}/I" "${haproxy_configuration_file}"
 sed -i "s/{MysqlSlave2ServerIP}/${mysql_slave2_server_ip}/I" "${haproxy_configuration_file}"
 sed -i "s/{ProbeInterval}/${haproxy_probe_interval_sec}/I" "${haproxy_configuration_file}"
+
+# override connection/communication timeouts
+sed -i "s/{ServerConnectTimeout}/${server_connection_timeout}/I" "${haproxy_configuration_file}"
+sed -i "s/{ClientServerTimeout}/${client_communication_timeout}/I" "${haproxy_configuration_file}"
+sed -i "s/{ClientServerTimeout}/${server_communication_timeout}/I" "${haproxy_configuration_file}"
+
+# setup the logging folders (if necessary)
+setup_haproxy_base_logging_path
+
+# 3.3 Update Rsyslog Configuration
+update_rsyslog "${haproxy_base_log_path}/${haproxy_log_file}" "${haproxy_base_log_path}/${haproxy_errorlog_file}"
+
+# 3.4 Update LogRotate Configuration
+update_logrotate
 
 # 3.3 Start HA Proxy & validate
 start_haproxy "${mysql_admin_username}" "${mysql_admin_password}" "${haproxy_server}" "${haproxy_port}"
