@@ -237,7 +237,7 @@
             ]
         },   
     {
-      "apiVersion": "2017-04-01",
+      "apiVersion": "[parameters('apiSettings').serviceBusApiVersion]",
       "name": "[parameters('serviceBusSettings').serviceBusNamespaceName]",
       "type": "Microsoft.ServiceBus/Namespaces",
       "location": "[resourceGroup().location]",
@@ -248,7 +248,7 @@
       "properties": {},
       "resources": [
         {
-          "apiVersion": "2017-04-01",
+          "apiVersion": "[parameters('apiSettings').serviceBusApiVersion]",
           "name": "nag-lb2-queue",
           "type": "Queues",
           "dependsOn": [
