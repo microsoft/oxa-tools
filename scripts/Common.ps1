@@ -623,7 +623,7 @@ function Get-ResourcesList
         }
         
         # get the azure resources based on provuded resourcetypes in the resourcegroup
-        [array]$response = Get-OxaAzureResources -params $params -Context $resourcesListContext;
+        [array]$response = Get-AzureResources -params $params -Context $resourcesListContext;
 
         if($response -ne $null)
         {
