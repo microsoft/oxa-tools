@@ -235,8 +235,9 @@
             "dependsOn": [
                 "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageSettings').wamsStorageAccountName)]"
             ]
-        },   
-    {
+        }, 
+        "resources": [        
+        {
       "apiVersion": "[parameters('apiSettings').serviceBusApiVersion]",
       "name": "[parameters('serviceBusSettings').serviceBusNamespaceName]",
       "type": "Microsoft.ServiceBus/Namespaces",
@@ -270,5 +271,6 @@
         }
       ]
     }
+    ]
   ]
 }
