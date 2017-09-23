@@ -692,7 +692,7 @@ powershell -file $INSTALLER_BASEPATH/Process-OxaToolsKeyVaultConfiguration.ps1 -
 exit_on_error "Failed downloading configurations from keyvault" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
 # create storage container for edxapp:migrate & other reporting features (containers for the database backup will be created dynamically)
-powershell -file $INSTALLER_BASEPATH/Create-StorageContainer.ps1 -AadWebClientId $AAD_WEBCLIENT_ID -AadWebClientAppKey $AAD_WEBCLIENT_APPKEY -AadTenantId $AAD_TENANT_ID -AzureSubscriptionId $AZURE_SUBSCRIPTION_ID -StorageAccountName "${BACKUP_STORAGEACCOUNT_NAME}" -StorageAccountKey "${BACKUP_STORAGEACCOUNT_KEY}" -StorageContainerNames "uploads,reports,tracking"
+powershell -file $INSTALLER_BASEPATH/Create-StorageContainer.ps1 -AadWebClientId $AAD_WEBCLIENT_ID -AadWebClientAppKey $AAD_WEBCLIENT_APPKEY -AadTenantId $AAD_TENANT_ID -AzureSubscriptionId $AZURE_SUBSCRIPTION_ID -StorageAccountName "${BACKUP_STORAGEACCOUNT_NAME}" -StorageAccountKey "${BACKUP_STORAGEACCOUNT_KEY}" -StorageContainerNames "uploads,reports,tracking"  -AzureCliVersion $AZURE_CLI_VERSION
 exit_on_error "Failed creating container(s) for edxapp:migrate (uploads,reports,tracking) in '${BACKUP_STORAGEACCOUNT_NAME}'" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
 persist_deployment_time_values
