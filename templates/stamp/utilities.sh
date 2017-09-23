@@ -1544,7 +1544,7 @@ install-tools()
             log "Ubuntu ${short_release_number} detected. Skipping powershell installation"
         fi
 
-        install-azure-cli
+        # install-azure-cli
         install-azure-cli-2
     fi
 
