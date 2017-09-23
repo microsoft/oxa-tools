@@ -252,7 +252,7 @@
           "name": "[parameters('serviceBusSettings').serviceBusQueueName]",
           "type": "Queues",
           "dependsOn": [
-            "[concat('Microsoft.ServiceBus/namespaces/', [parameters('serviceBusSettings').serviceBusNamespaceName])]"
+            "[concat('Microsoft.ServiceBus/namespaces/', parameters('serviceBusSettings').serviceBusNamespaceName)]"
           ],
           "properties": {
             "lockDuration": "PT5M",
