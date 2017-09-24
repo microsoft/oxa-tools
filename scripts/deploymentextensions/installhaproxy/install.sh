@@ -297,6 +297,9 @@ update_logrotate()
 {
     log "Configuring Log Rotate for HA Proxy"
 
+    local haproxy_log_path="${1}"
+    local haproxy_error_log_path="${2}"
+
     # copy the configuration template (possibly overwriting the existing configuration)
     cp "${logrotate_configuration_template_file}" "${logrotate_configuration_file}"
     exit_on_error "Unable to copy the HA Proxy Log Rotate configuration template!" "${ERROR_HAPROXY_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
@@ -541,7 +544,7 @@ setup_haproxy_base_logging_path
 update_rsyslog "${haproxy_base_log_path}/${haproxy_log_file}" "${haproxy_base_log_path}/${haproxy_errorlog_file}"
 
 # 3.4 Update LogRotate Configuration
-update_logrotate
+update_logrotate "${haproxy_base_log_path}/${haproxy_log_file}" "${haproxy_base_log_path}/${haproxy_errorlog_file}"
 
 # 3.3 Start HA Proxy & validate
 start_haproxy "${mysql_admin_username}" "${mysql_admin_password}" "${haproxy_server}" "${haproxy_port}"

@@ -2,7 +2,7 @@
 # Two logs are expected: General Logs (HA Proxy traffic) & Error Logs
 # Rotation will happen daily and only 1 week of data will be kept
 
-{HaProxyErrorLog} {HaProxyLog}
+"{HaProxyErrorLog}" "{HaProxyLog}" {
     daily
     rotate {TotalFilesToKeep}
     maxage {MaxLogFileAgeInDays}
