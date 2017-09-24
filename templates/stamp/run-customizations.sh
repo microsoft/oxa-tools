@@ -613,7 +613,7 @@ then
     MOBILE_REST_API_PARAMS="--enable-mobile-rest-api \"${EDXAPP_ENABLE_MOBILE_REST_API}\""
 
     # Jumpbox Bootstrap-Only mode indicator
-    JUMPBOX_BOOTSTRAP_PARAMS="--bootstrap-jumpbox \"${JUMPBOX_BOOTSTRAP}\""
+    JUMPBOX_BOOTSTRAP_PARAMS="--bootstrap-jumpbox \"${BOOTSTRAP_JUMPBOX}\""
 
     # Strip out the spaces for passing it along
     MONGO_BACKUP_FREQUENCY="${MONGO_BACKUP_FREQUENCY// /_}"
