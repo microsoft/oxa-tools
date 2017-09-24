@@ -1192,16 +1192,24 @@ stop_mysql()
     local max_wait_seconds=$(($wait_time_seconds * 10))
     local total_wait_seconds=0
 
+    # restart apparmor to apply the settings
+    os_version=$(lsb_release -rs)
+    
     while [[ $server_stopped == 0 ]] ;
     do
-
         # Find out what PID the Mysql instance is running as (if any)
         MYSQLPID=`ps -ef | grep '/usr/sbin/mysqld' | grep -v grep | awk '{print $2}'`
         
         if [[ ! -z "$MYSQLPID" ]]; then
             log "Stopping Mysql Server (PID $MYSQLPID)"
             
-            kill -15 $MYSQLPID
+            # the approach of stopping mysql using the kill causes a new thread to spawn
+            if [[ $(echo "$os_version > 16" | bc -l) == 1 ]];
+            then
+                systemctl stop  mysql
+            else
+                service mysql stop 
+            fi
 
             # Important not to attempt to start the daemon immediately after it was stopped as unclean shutdown may be wrongly perceived
             # We expect the sleep to happen below since we are NOT marking the server as stopped until we validate in the 
