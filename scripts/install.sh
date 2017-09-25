@@ -98,7 +98,7 @@ help()
     echo "        --azure-subscription-id    Azure subscription id"
     echo "        --cluster-admin-email Email address of the administrator where system and other notifications will be sent"
     echo "        --cluster-name Name of the cluster being bootstrapped"
-}
+ }
 
 # Parse script parameters
 parse_args()
@@ -218,6 +218,9 @@ parse_args()
             --cluster-name)
                 CLUSTER_NAME="${arg_value}"
                 MAIL_SUBJECT="${MAIL_SUBJECT} - ${arg_value,,}"
+                ;;
+            --servicebus-connectionstring)
+                SERVICEBUS_CONNECTIONSTRING="${arg_value}"            
                 ;;
             -h|--help)  # Helpful hints
                 help

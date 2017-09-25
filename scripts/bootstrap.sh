@@ -166,6 +166,9 @@ parse_args()
             CLUSTER_NAME="${arg_value}"
             MAIL_SUBJECT="${MAIL_SUBJECT} - ${arg_value,,}"
             ;;
+          --servicebus-connectionstring)
+            SERVICEBUS_CONNECTIONSTRING="${arg_value}"            
+            ;;
           *)
             # Unknown option encountered
             echo "Option '${BOLD}$1${NORM} ${arg_value}' not allowed."
@@ -455,7 +458,7 @@ update_devstack() {
 ###############################################
 # START CORE EXECUTION
 ###############################################
-
+echo $SERVICEBUS_CONNECTIONSTRING " SERVICEBUS-CONNECTIONSTRING value "
 # source our utilities for logging and other base functions (we need this staged with the installer script)
 # the file needs to be first downloaded from the public repository
 CURRENT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -608,10 +611,10 @@ fi
 # at this point, we have succeeded
 if [ "$EDX_ROLE" == "jb" ] ; 
 then
-    NOTIFICATION_MESSAGE="Installation of the EDX Database was completed successfully."
+    NOTIFICATION_MESSAGE="Installation of the EDX Database was completed successfully $SERVICEBUS_CONNECTIONSTRING"
 elif [ "$EDX_ROLE" == "vmss" ] ;
 then
-    NOTIFICATION_MESSAGE="Installation of the EDX Application (VMSS) was completed successfully."
+    NOTIFICATION_MESSAGE="Installation of the EDX Application (VMSS) was completed successfully. $SERVICEBUS_CONNECTIONSTRING"
 fi
 
 log "${NOTIFICATION_MESSAGE}"

@@ -290,6 +290,9 @@ parse_args()
                 CLUSTER_NAME="${arg_value}"
                 MAIL_SUBJECT="${MAIL_SUBJECT} - ${arg_value,,}"
                 ;;
+            --servicebus-connectionstring)
+                SERVICEBUS_CONNECTIONSTRING="${arg_value}"            
+                ;;
             --cron)
                 CRON_MODE=1
                 ;;
