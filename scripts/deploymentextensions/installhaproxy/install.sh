@@ -87,7 +87,8 @@ client_communication_timeout=50000      # timeout waiting for communication with
 server_communication_timeout=50000      # timeout waiting for comunication with server
 
 # Rsyslog & Log Rotate template files
-rsyslog_configuration_file="/etc/rsyslog.d/haproxy.conf"
+rsyslog_configuration_path="/etc/rsyslog.d"
+rsyslog_configuration_file="${rsyslog_configuration_path}/haproxy.conf"
 rsyslog_configuration_template_file="${oxa_tools_repository_path}/scripts/deploymentextensions/${package_name}/rsyslog.haproxy.template"
 
 logrotate_configuration_file="/etc/logrotate.d/haproxy.custom"
@@ -281,6 +282,20 @@ update_rsyslog()
     # copy the configuration template (possibly overwriting the existing configuration)
     cp "${rsyslog_configuration_template_file}" "${rsyslog_configuration_file}"
     exit_on_error "Unable to copy the HA Proxy Rsyslog configuration template!" "${ERROR_HAPROXY_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
+
+    # scan for additional rsyslog configurations, replacing each with a link to the one copied above
+    for $haproxy_rsyslog_config_file in "${rsyslog_configuration_path}/*-haproxy.conf"; do
+        log "Replacing 'haproxy_rsyslog_config_file' with link to '${rsyslog_configuration_file}'"
+        rm $haproxy_rsyslog_config_file
+        ln -s "${rsyslog_configuration_file}" "${haproxy_rsyslog_config_file}"
+
+        # defensive: make sure the link was created
+        if [[ ! -f "${haproxy_rsyslog_config_file}" ]]; 
+        then
+            log "Unable to set override for configuration file at ${haproxy_rsyslog_config_file}"
+            exit "${ERROR_HAPROXY_INSTALLER_FAILED}"
+        fi
+    done
 
     # update key settings
     sed -i "s#{HaProxyErrorLog}#${haproxy_error_log_path}#I" $rsyslog_configuration_file
