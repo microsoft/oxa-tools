@@ -586,6 +586,28 @@ sync_repo()
 }
 
 #############################################################################
+# Create theme directory before edx playbook
+#############################################################################
+make_theme_dir()
+{
+    EDXAPP_COMPREHENSIVE_THEME_DIR="$1"
+    EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME="$2"
+
+    # When the comprehensive theming dirs is specified, edxapp:migrate task fails with :  ImproperlyConfigured: COMPREHENSIVE_THEME_DIRS
+    # As an interim mitigation, create the folder if the path specified is not under the edx-platform directory (where the default themes directory is)
+    if [[ -n "${EDXAPP_COMPREHENSIVE_THEME_DIR}" ]] && [[ ! -d "${EDXAPP_COMPREHENSIVE_THEME_DIR}" ]] ; then
+        # now check if the path specified is within the default edx-platform/themes directory
+        if [[ "${EDXAPP_COMPREHENSIVE_THEME_DIR}" == *"${EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME}"* ]] ; then
+            log "'${EDXAPP_COMPREHENSIVE_THEME_DIR}' falls under the default theme directory. Skipping creation since the edx-platform clone will create it."
+        else
+            log "Creating comprehensive themeing directory at ${EDXAPP_COMPREHENSIVE_THEME_DIR}"
+            mkdir -p "${EDXAPP_COMPREHENSIVE_THEME_DIR}"
+            chown -R edxapp:edxapp "${EDXAPP_COMPREHENSIVE_THEME_DIR}"
+        fi
+    fi
+}
+
+#############################################################################
 # Is Args Valid 
 #############################################################################
 

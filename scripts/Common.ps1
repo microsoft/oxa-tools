@@ -683,40 +683,42 @@ function Get-AzureResources
 ## Output:
 ##  $slot name
 ##
-function Get-DisabledSlot($resourceList)
+function Get-DisabledSlot( $resourceList,$resourceGroupName )
 {
     # Assgin the slot names
     [hashtable]$disabledSlot = @{
                                    "EndPoint1" = "endpoint1";
                                    "EndPoint2" = "endpoint2";                                       
                                 };
-
-    $slot = "";
-    foreach($resource in $resourceList)
+    try
     {
-        if($resource.resourcetype -eq 'Microsoft.Network/trafficManagerProfiles' )
+        Log-Message "Getting LMS traffic manager profile:"
+        #Getting LMS traffic manager profile to identify the disabled slot
+        $trafficManager = $resourceList -match "Microsoft.Network/trafficManagerProfiles" | Where-Object{ $_ -imatch "LMS" };
+        $trafficManagerProfile = Get-AzureRmTrafficManagerProfile -Name $trafficManager.Name  -ResourceGroupName $resourceGroupName;
+       
+        foreach ( $endpoint in $trafficManagerProfile.Endpoints )
         {
-            $profile = Get-AzureRmTrafficManagerProfile -Name $resource.Name -ResourceGroupName $ResourceGroupName
-            foreach( $endpoint in $profile.Endpoints )
-            {
-                if ($endpoint.EndpointMonitorStatus -eq "Disabled")
-                {           
-                    if($endpoint.Name.Contains($disabledSlot['EndPoint1']))
-                    {
-                        $slot="slot1";                      
-                    }
-                    if($endpoint.Name.Contains($disabledSlot['EndPoint2']))
-                    {
-                        $slot="slot2";                       
-                    }
-                    if($slot -ne $null)
-                    {
-                        return $slot;
-                    }        
-                }                
-            }
-         }
-    }         
+            if ( $endpoint.EndpointMonitorStatus -eq "Disabled" )
+            {           
+                if ( $endpoint.Name.Contains($disabledSlot['EndPoint1'] ))
+                {
+                    $slot="slot1";                      
+                }
+                    
+                if ( $endpoint.Name.Contains($disabledSlot['EndPoint2'] ))
+                {
+                    $slot="slot2";                       
+                }         
+            }                
+        }
+    }
+    catch   
+    {
+        Capture-ErrorStack;
+        throw "Error in identifying the traffic manager profile: $($_.Message)";
+        exit;
+    }
 }
 
 ## Function: Remove-StagingResources
@@ -742,12 +744,13 @@ function Remove-StagingResources()
       
     # Filter the resources based on the determined slot
     $targetedResources = $resourceList | Where-Object { $_.ResourceName.Contains($Slot) };
+
     if($targetedResources -ne $null)
     {
         foreach($resource in $targetedResources)
         { 
             Write-Host "Here is the list of resources targetted to be deleted" ($targetedResources| Format-List | Out-String);                              
-            switch ($resource.resourcetype)
+            switch ( $resource.resourcetype )
             {  
                 "Microsoft.Network/loadBalancers"
                 {
@@ -758,9 +761,9 @@ function Remove-StagingResources()
                     $lbRulesContext = "Load Balancer Rules";  
                     # fetching the loadbalancer rules                                                          
                     $loadBalancerRules = Get-OxaAzureLoadBalancersRules -Name $loadbalancer -Context  $lbRulesContext;
-                    if($loadBalancerRules -ne $null)
+                    if ( $loadBalancerRules -ne $null )
                     {
-                        foreach($loadBalancerRule in $loadBalancerRules)
+                        foreach ( $loadBalancerRule in $loadBalancerRules )
                         {
                             $loadbalancerRmContext = "Removing Load Balancer Rules";
                             Remove-OxaAzureLoadBalancersRules -Name $loadBalancerRule.Name -LbName $loadbalancer -Context $loadbalancerRmContext;
@@ -783,10 +786,10 @@ function Remove-StagingResources()
                     # fetching the vmss name from loadbalancer frontendpool configurations
                     $vmssList = Get-OxaAzureVMSS -ResourceGroupName $ResourceGroupName -Context $VmssContext;
                    
-                    foreach($vmss in $vmssList.Name)
+                    foreach ( $vmss in $vmssList.Name )
                     {
                         # It will be helpful for us to make sure we are deleting targetted VMSS
-                        if($vmssLoadBalancerID -match $vmss) 
+                        if ( $vmssLoadBalancerID -match $vmss ) 
                         {
                             $VmssRMContext = "Removing Vmss resources details"; 
                             Write-Host "Proceeding with deleting $($vmss.Name) VMSS"
@@ -799,7 +802,7 @@ function Remove-StagingResources()
                         }
                     }
                     Log-Message -Message  "I do not fine VMSS in the ResourceGroup $ResourceGroupName" -LogType Host
-                    if($LoadbalancerPools.Name -ne $null)
+                    if ( $LoadbalancerPools.Name -ne $null )
                     {
                         $LbBackEndPoolRMContext = "Removing Load Balancer Backend addresspool configurations"; 
                         Write-Host "Proceeding with deleting LoadBalancerBackendPoolConfigurations $($LoadbalancerPools.Name) "
@@ -815,9 +818,9 @@ function Remove-StagingResources()
                         Log-Message -Message  "There are no LoadBalancerBackEnd pools configurations to delete" -LogType Host
                     }
                     [array]$lbFronendpools= $Loadbalancer.FrontendIpConfigurations;                                               
-                    foreach($lbFronendpool in $lbFronendpools)
+                    foreach ( $lbFronendpool in $lbFronendpools )
                     {
-                        if($lbFronendpool -ne $null -and $lbFronendpool.Name -notmatch "Preview")
+                        if ( $lbFronendpool -ne $null -and $lbFronendpool.Name -notmatch "Preview" )
                         {
                             $lbFrontEndPoolRMContext = "Removing Load balancer FrontEnd Ip pool configurations";
                             Write-Host "Proceeding with deleting LoadBalancerFrontEndIpConfigurations $($lbFronendpool.Name) "
@@ -833,7 +836,7 @@ function Remove-StagingResources()
                             Log-Message -Message  "There are no Frontendip configurations to delete" -LogType Host
                         }
                     }
-                    if($loadbalancer -ne $null)
+                    if ( $loadbalancer -ne $null )
                     {
                         Write-Host "Proceeding with deleting load balancer $($loadbalancer.Name) "
                         $lbRMContext = "Remove Load Balancer ";
@@ -847,16 +850,17 @@ function Remove-StagingResources()
            }  
                 "Microsoft.Network/publicIPAddresses"
                 {
-                    if($resource.ResourceType -eq "Microsoft.Network/publicIPAddresses")
+                    if ( $resource.ResourceType -eq "Microsoft.Network/publicIPAddresses" )
                     {
                         $PublicIpAddressContext = "PublicIpAddress";                                        
                        
-                        if($resource.ResourceType -ne "Microsoft.Network/loadBalancers")
+                        if ( $resource.ResourceType -ne "Microsoft.Network/loadBalancers" )
                         {
                             # fetching the the cloud services to be deleted
                             [array]$ipslots = Get-OxaPubicIpAddress -Name $resource.Name -ResourceGroupName $ResourceGroupName -Context $PublicIpAddressContext; 
-                        }                        
-                        if($ipslots -ne $null )
+                        } 
+                        
+                        if ( $ipslots -ne $null )
                         {                               
                             Remove-OxaPubicIpAddress -Name $ipslots.name -ResourceGroupName $ResourceGroupName -Context $PublicIpAddressContext;                                                          
                         }
@@ -868,7 +872,7 @@ function Remove-StagingResources()
                      break;                                   
                    }             
                 }
-            }             
+            }           
     }
     Log-Message -Message  "There are no Resources targeted to delete from $($ResourceGroupName)" -LogType Host
 }
@@ -1242,7 +1246,7 @@ function Remove-OxaPubicIpAddress
 function Delete-Resources($DeploymentType,$Cloud ,$DeploymentStatus)
 {
    
-   if(($DeploymentType -eq "upgrade") -or ($DeploymentType -eq "swap" -and $Cloud -eq  "bvt" -and $DeploymentStatus.ProvisioningState -ieq "Succeeded"))
+   if (( $DeploymentType -eq "upgrade" ) -or ( $DeploymentType -eq "swap" -and $Cloud -eq  "bvt" -and $DeploymentStatus.ProvisioningState -ieq "Succeeded" ))
     {
         try
         {
@@ -1307,7 +1311,7 @@ function Get-LatestChanges
              [Parameter(Mandatory=$false)][string]$privateRepoGitAccount                
           )           
                   
-   if (!(Test-Path -Path $enlistmentRootPath))
+   if ( !(Test-Path -Path $enlistmentRootPath) )
    { 
        cd $enlistmentRootPath -ErrorAction SilentlyContinue;
        # Here we are assuming git is already installed and installed path has been set in environment path variable.
@@ -1317,7 +1321,8 @@ function Get-LatestChanges
    }
 
    cd $enlistmentRootPath
-   if($tag -eq $null)
+   
+   if ( $tag -eq $null )
    {
        git checkout
        git pull           
@@ -1327,7 +1332,7 @@ function Get-LatestChanges
        git checkout $tag -q
    }
               
-   if (!(Test-Path -Path $enlistmentRootPath-"config"))
+   if ( !(Test-Path -Path $enlistmentRootPath-"config" ))
    { 
        cd $enlistmentRootPath -ErrorAction SilentlyContinue;
        # Clone TFD Git repository
@@ -1335,7 +1340,7 @@ function Get-LatestChanges
    }
    cd $enlistmentRootPath-"config"
 
-   if($tag -eq $null)
+   if ( $tag -eq $null )
    {
        git checkout
        git pull

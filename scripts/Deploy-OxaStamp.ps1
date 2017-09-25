@@ -235,7 +235,7 @@ if($DeploymentType -ne "bootstrap")
         # Getting Azure resource list from the provided resource group
         $resourcelist = Get-ResourcesList -ResourceGroupName $ResourceGroupName;        
         # determining the slot by passing Azure resource list from the provided resource group
-        $Slot = Get-DisabledSlot -resourceList $resourcelist;         
+        $Slot = Get-DisabledSlot -resourceList $resourcelist -resourceGroupName $ResourceGroupName;
     }
     catch
     {

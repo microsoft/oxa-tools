@@ -39,7 +39,7 @@ EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master.fic"
 # There are cases where we want to override the edx-platform repository itself
 EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
 EDX_THEME_PUBLIC_GITHUB_PROJECTNAME="edx-theme"
-EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="pilot"
+EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master.fic"
 EDX_THEME_NAME="default"
 
 # EdX Ansible
@@ -268,6 +268,15 @@ fix_jdk()
     fi
 }
 
+fix_npm_python()
+{
+    if [[ $EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME == edx ]] ; then
+      if [[ $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH == *"release/ficus"* ]] ; then
+        git cherry-pick -x 075d69e6c7c5330732ec75346d02df32d087aa92
+      fi
+    fi
+}
+
 # We should use the existing oxa-tools enlistment if one exists. This
 #   a) saves us a git clone AND
 #   b) preserves our current branch/changes
@@ -329,12 +338,6 @@ setup()
     done
     popd
 
-    #todo:100132 setup theme for onebox installs
-    #THEME_PATH="${OXA_PATH}/${EDX_THEME_PUBLIC_GITHUB_PROJECTNAME}"
-    #sync_repo $EDX_THEME_REPO $EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH "${THEME_PATH}/${EDX_THEME_NAME}"
-    #ln -s $THEME_PATH /edx/app/edxapp/themes
-    #chown -R edxapp:edxapp $THEME_PATH
-
     # in order to support retries, we should cleanup residue from previous ansible-bootstrap run
     TEMP_CONFIGURATION_PATH=/tmp/configuration
     if [[ -d $TEMP_CONFIGURATION_PATH ]]; then
@@ -347,6 +350,7 @@ setup()
     # run edx bootstrap and install requirements
     cd $CONFIGURATION_PATH
     fix_jdk
+    fix_npm_python
     ANSIBLE_BOOTSTRAP_SCRIPT=util/install/ansible-bootstrap.sh
     bash $ANSIBLE_BOOTSTRAP_SCRIPT
     exit_on_error "Failed executing $ANSIBLE_BOOTSTRAP_SCRIPT"
@@ -394,7 +398,7 @@ update_stamp_vmss()
     exit_on_error "Execution of edX sandbox playbook failed" 1 "${SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
   
     # oxa playbooks
-    $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "edxapp"
+    $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK $THEME_ARGS --tags "edxapp"
     exit_on_error "Execution of OXA edxapp playbook failed" 1 "${SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
 }
 
@@ -426,21 +430,23 @@ edx_installation_playbook()
   systemctl >/dev/null 2>&1
   exit_on_error "Single VM instance of EDX has a hard requirement on systemd and its systemctl functionality"
 
-  command="$ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG vagrant-${EDX_ROLE}.yml"
+  EDXAPP_COMPREHENSIVE_THEME_DIR=`echo $EDXAPP_COMPREHENSIVE_THEME_DIRS | tr -d [ | tr -d ] | tr -d " " | tr -d \"`
+  make_theme_dir "$EDXAPP_COMPREHENSIVE_THEME_DIR" "$EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME"
 
   # We've been experiencing intermittent failures on ficus. Simply retrying
   # mitigates the problem, but we should solve the underlying cause(s) soon.
+  command="$ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG vagrant-${EDX_ROLE}.yml"
   retry-command "$command" "$RETRY_COUNT" "${EDX_ROLE} installation" "fixPackages"
   exit_on_error "Execution of edX ${EDX_ROLE} playbook failed"
+
+  # oxa playbooks - all (single VM)
+  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK $THEME_ARGS -e "edxrole=$EDX_ROLE"
+  exit_on_error "Execution of OXA playbook failed"
 }
 
 update_fullstack() {
   # edx playbooks - fullstack (single VM)
   edx_installation_playbook
-
-  # oxa playbooks - all (single VM)
-  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK
-  exit_on_error "Execution of OXA playbook failed"
 
   # get status of edx services
   /edx/bin/supervisorctl status
@@ -484,10 +490,6 @@ update_devstack() {
 
   # edx playbooks - devstack (single VM)
   edx_installation_playbook
-
-  # oxa playbooks - all (single VM)
-  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK -e "edxrole=$EDX_ROLE"
-  exit_on_error "Execution of OXA playbook failed"
 }
 
 ###############################################
@@ -609,6 +611,7 @@ PATH=$PATH:/edx/bin
 ANSIBLE_PLAYBOOK=ansible-playbook
 OXA_PLAYBOOK=$OXA_TOOLS_PATH/playbooks/oxa_configuration.yml
 OXA_PLAYBOOK_ARGS="-e oxa_tools_path=$OXA_TOOLS_PATH -e template_type=$TEMPLATE_TYPE"
+THEME_ARGS="-e theme_branch=$EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH -e theme_repo=$EDX_THEME_REPO"
 OXA_SSH_ARGS="-u $ADMIN_USER --private-key=/home/$ADMIN_USER/.ssh/id_rsa"
 
 # Fixes error: RPC failed; result=56, HTTP code = 0'
