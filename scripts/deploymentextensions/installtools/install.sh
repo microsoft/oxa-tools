@@ -140,7 +140,7 @@ execute_remote_command()
 
     # run the remote command
     ssh "${remote_execution_target_user}@${remote_execution_server_target}" $remote_command
-    exit_on_error "Could not execute the tools installer on the remote target: ${remote_execution_server_target} from '${HOSTNAME}' !" $ERROR_TOOLS_INSTALLER_FAILED, $notification_email_subject $cluster_admin_email
+    exit_on_error "Could not execute the tools installer on the remote target: ${remote_execution_server_target} from '${HOSTNAME}' !" $ERROR_TOOLS_INSTALLER_FAILED $notification_email_subject $cluster_admin_email
 }
 
 ###############################################
