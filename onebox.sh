@@ -27,6 +27,7 @@ MONGO_PASSWORD=
 # dynamically assigned below
 MYSQL_ADMIN_USER=
 MYSQL_ADMIN_PASSWORD=
+EDXAPP_ENABLE_COMPREHENSIVE_THEMING=
 
 readonly MYSQL_USER=oxamysql
 MYSQL_PASSWORD=
@@ -44,6 +45,8 @@ readonly EDXAPP_ENABLE_THIRD_PARTY_AUTH=false
 readonly NGINX_ENABLE_SSL=false
 readonly EDXAPP_SU_EMAIL="${EDXAPP_SU_USERNAME}@${MSFT}.com"
 readonly PLATFORM_EMAIL="$EDXAPP_SU_EMAIL"
+readonly EDXAPP_COMPREHENSIVE_THEME_DIRS='[ "/edx/app/edxapp/themes" ]'
+readonly EDXAPP_DEFAULT_SITE_THEME=comprehensive
 
 # The common tag in the upstream to our fork is open-release/ficus.1
 # Specifically: our forks of edx-platform and configuration
@@ -131,6 +134,12 @@ fix_args()
         MYSQL_ADMIN_PASSWORD=`harden $MYSQL_ADMIN_PASSWORD`
     fi
     set -x
+
+    if [[ $BRANCH_VERSIONS == edx ]] ; then
+        EDXAPP_ENABLE_COMPREHENSIVE_THEMING=false
+    else
+        EDXAPP_ENABLE_COMPREHENSIVE_THEMING=true
+    fi
 }
 
 test_args()
