@@ -161,19 +161,6 @@ $currentPath = Split-Path $invocation.MyCommand.Path
 $rootPath = (get-item $currentPath).parent.FullName
 Import-Module "$($currentPath)/Common.ps1" -Force
 
-$FullDeploymentArmTemplateFile = Set-ScriptDefault -ScriptParamName "FullDeploymentArmTemplateFile" `
-                                    -ScriptParamVal $FullDeploymentArmTemplateFile `
-                                    -DefaultValue "$($rootPath)/templates/stamp/stamp-v2.json"
-$FullDeploymentParametersFile = Set-ScriptDefault -ScriptParamName "FullDeploymentParametersFile" `
-                                    -ScriptParamVal $FullDeploymentParametersFile `
-                                    -DefaultValue "$($rootPath)/config/stamp/default/parameters.json"
-$KeyVaultDeploymentArmTemplateFile = Set-ScriptDefault -ScriptParamName "KeyVaultDeploymentArmTemplateFile" `
-                                    -ScriptParamVal $KeyVaultDeploymentArmTemplateFile `
-                                    -DefaultValue "$($rootPath)/templates/stamp/stamp-keyvault.json"
-$KeyVaultDeploymentParametersFile = Set-ScriptDefault -ScriptParamName "KeyVaultDeploymentParametersFile" `
-                                    -ScriptParamVal $KeyVaultDeploymentParametersFile `
-                                    -DefaultValue $FullDeploymentParametersFile
-
 # Login
 if (!$AutoDeploy)
 {
@@ -189,6 +176,18 @@ New-AzureRmResourceGroup -Name $ResourceGroupName -Location $Location -Force
 ######################################################
 # Setup parameters for dynamic arm template creation
 ######################################################
+$FullDeploymentArmTemplateFile = Set-ScriptDefault -ScriptParamName "FullDeploymentArmTemplateFile" `
+    -ScriptParamVal $FullDeploymentArmTemplateFile `
+    -DefaultValue "$($rootPath)/templates/stamp/stamp-v2.json"
+$FullDeploymentParametersFile = Set-ScriptDefault -ScriptParamName "FullDeploymentParametersFile" `
+    -ScriptParamVal $FullDeploymentParametersFile `
+    -DefaultValue "$($rootPath)/config/stamp/default/parameters.json"
+$KeyVaultDeploymentArmTemplateFile = Set-ScriptDefault -ScriptParamName "KeyVaultDeploymentArmTemplateFile" `
+    -ScriptParamVal $KeyVaultDeploymentArmTemplateFile `
+    -DefaultValue "$($rootPath)/templates/stamp/stamp-keyvault.json"
+$KeyVaultDeploymentParametersFile = Set-ScriptDefault -ScriptParamName "KeyVaultDeploymentParametersFile" `
+    -ScriptParamVal $KeyVaultDeploymentParametersFile `
+    -DefaultValue $FullDeploymentParametersFile
 
 # todo: move this to a supporting function 
 # Set default value for the Platform Email address
@@ -234,10 +233,9 @@ if($DeploymentType -ne "bootstrap")
     try
     {
         # Getting Azure resource list from the provided resource group
-        $resourcelist = Get-ResourcesList -ResourceGroupName $ResourceGroupName;
-
+        $resourcelist = Get-ResourcesList -ResourceGroupName $ResourceGroupName;        
         # determining the slot by passing Azure resource list from the provided resource group
-        $Slot = Get-DisabledSlot -resourceList $resourcelist;                     
+        $Slot = Get-DisabledSlot -resourceList $resourcelist;         
     }
     catch
     {
@@ -299,9 +297,6 @@ if ($EnableMobileRestApi -eq $true)
 
 # Update the deployment parameters
 $tempParametersFile = Update-RuntimeParameters -ParametersFile $KeyVaultDeploymentParametersFile -ReplacementHash $replacements;
-
-$DeployKeyVault = $false
-$DeployStamp = $false
 
 try
 {

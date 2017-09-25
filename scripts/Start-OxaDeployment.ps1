@@ -57,32 +57,37 @@ Build all solutions locally
 #>
 
 param( 
-         [Parameter(Mandatory=$false)][string]$enlistmentRootPath = "C:\oxa-tools_autodeploy"
-        ,[Parameter(Mandatory=$false)][ValidateSet("prod", "int", "bvt", "")][string]$Cloud="bvt"
-        ,[Parameter(Mandatory=$false)][string]$BranchName = "oxa/devfic"
-        ,[Parameter(Mandatory=$false)][ValidateSet("bootstrap", "upgrade", "swap", "")][string]$DeploymentType="upgrade",
+        [Parameter(Mandatory=$false)][string]$enlistmentRootPath = "C:\oxa-tools_autodeploy",
+        [Parameter(Mandatory=$false)][ValidateSet("prod", "int", "bvt", "")][string]$Cloud="bvt",
+        [Parameter(Mandatory=$false)][string]$BranchName = "oxa/devfic",
+        [Parameter(Mandatory=$false)][ValidateSet("bootstrap", "upgrade", "swap", "")][string]$DeploymentType="upgrade",
 
         [Parameter(Mandatory=$true)][string]$AadWebClientId,    
         [Parameter(Mandatory=$true)][string]$AadTenantId,
-        [Parameter(Mandatory=$true)][string]$TargetPath
+        [Parameter(Mandatory=$true)][string]$TargetPath,
+
+        [Parameter(Mandatory=$false)][string]$KeyVaultDeploymentArmTemplateFile="",
+        [Parameter(Mandatory=$false)][string]$KeyVaultDeploymentParametersFile="",
+        [Parameter(Mandatory=$false)][string]$FullDeploymentArmTemplateFile="",
+        [Parameter(Mandatory=$false)][string]$FullDeploymentParametersFile="",
 
         # settings override file path
-        ,[Parameter(Mandatory=$false)][string]$SettingsOverride
+        [Parameter(Mandatory=$false)][string]$SettingsOverride,
         
         # deployment flow controls
-        ,[Parameter(Mandatory=$false)][switch]$AsyncMode 
-        ,[Parameter(Mandatory=$false)][string]$Resume
-        ,[Parameter(Mandatory=$false)][switch]$DisableTranscripting          
+        [Parameter(Mandatory=$false)][switch]$AsyncMode,
+        [Parameter(Mandatory=$false)][string]$Resume,
+        [Parameter(Mandatory=$false)][switch]$DisableTranscripting,
 
         # seconds delay between failure attempts/retries
-        ,[Parameter(Mandatory=$false)][int]$RetryDelaySeconds = 30
-        ,[Parameter(Mandatory=$false)][int]$MaxRetries = 5
+        [Parameter(Mandatory=$false)][int]$RetryDelaySeconds = 30,
+        [Parameter(Mandatory=$false)][int]$MaxRetries = 5,
 
         # during debugging, only notify admins
-        ,[Parameter(Mandatory=$false)][switch]$NotifyOnlyAdmins
+        [Parameter(Mandatory=$false)][switch]$NotifyOnlyAdmins,
 
         # adding support alias: Test Team, Leads, FTEs, etc
-        ,[Parameter(Mandatory=$false)][string]$SupportCC = "",
+        [Parameter(Mandatory=$false)][string]$SupportCC = "",
         [Parameter(Mandatory=$false)][ValidateSet("CN=prod-cert", "CN=int-cert", "CN=bvt-cert")][string]$CertSubject = "CN=bvt-cert",
         [Parameter(Mandatory=$false)][string]$AzureSubscriptionName,
         [Parameter(Mandatory=$false)][string]$ResourceGroupName,
@@ -139,12 +144,12 @@ Log-Message "AzureSubscriptionName => $($AzureSubscriptionName)"
 Log-Message "ResourceGroupName => $($ResourceGroupName)"
 
 $KeyVaultName = Set-ScriptDefault -ScriptParamName "KeyVaultName" `
--ScriptParamVal $KeyVaultName `
--DefaultValue "$($ResourceGroupName)-kv"
+    -ScriptParamVal $KeyVaultName `
+    -DefaultValue "$($ResourceGroupName)-kv"
 
 $CertSubject = Set-ScriptDefault -ScriptParamName "CertSubject" `
--ScriptParamVal $CertSubject `
--DefaultValue "CN=$($Cloud)-cert"
+    -ScriptParamVal $CertSubject `
+    -DefaultValue "CN=$($Cloud)-cert"
 
 # Login
 $CertificateThumbprint = Get-LocalCertificate -CertSubject $CertSubject
@@ -200,7 +205,7 @@ while ($attempt -lt $maxRetries)
 
         & $DeployScriptPath @KeyVaultParameters @ExtraParameters        
       
-        #We will assume deployment is completed at this step
+        # We will assume deployment is completed at this step
         break;
      }
     catch
@@ -213,7 +218,6 @@ while ($attempt -lt $maxRetries)
         # send the failure notification
         if ($env:DisableEmails -eq $false)
         {
-            #Send-Message -recipient $ClusterAdministratorEmailAddress -messageBody $errorDump -subject $messageSubject -smtpUserPassword $SmtpAuthenticationUserPassword -smtpUserName $SmtpAuthenticationUser -NonHtml;
             Send-Message -Recipients $KeyVaultParameters.ClusterAdministratorEmailAddress -messageBody $errorDump -subject $messageSubject -smtpUserName $KeyVaultParameters.SmtpAuthenticationUser -smtpUserPassword $KeyVaultParameters.SmtpAuthenticationUserPassword -NonHtml;
         }
 

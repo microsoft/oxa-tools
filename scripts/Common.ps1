@@ -614,6 +614,10 @@ function Get-ResourcesList
                          "Microsoft.Network/publicIPAddresses",
                          "Microsoft.Network/trafficManagerProfiles"
                       );
+
+    [array]$resourceList = $()
+    $resourcesListContext = "Getting OXA Azure resources"
+
     foreach ($resourceType in $resourceTypes)
     {
         $params = @{'ResourceGroupNameEquals' = $ResourceGroupName }                            
@@ -623,20 +627,21 @@ function Get-ResourcesList
         }
         
         # get the azure resources based on provuded resourcetypes in the resourcegroup
-        [array]$response = Get-OxaAzureResources -params $params -Context $resourcesListContext;
+        [array]$response = Get-AzureResources -params $params -Context $resourcesListContext;
 
         if($response -ne $null)
         {
-            [array]$resourceList += $response;
+            $resourceList += $response;
         }                               
     }
+
     return $resourceList;
 }
 
 #################################
 # Wrapped function
 #################################
-## Function: Get-ResourcesList
+## Function: Get-AzureResources
 ##
 ## Purpose: 
 ##    To get the resource list using ResourceGroup 
@@ -656,14 +661,15 @@ function Get-AzureResources
 
     # prepare the inputs
     [hashtable]$inputParameters = @{
-                                        "params" =$params
+                                        "params" = $params
                                         "Command" = "Find-AzureRmResource";
-                                        "Activity" = "Fetching Azure Resources $($params.ResourceType) from Resource Group '$($ResourceGroupName)'"
+                                        "Activity" = "Fetching Azure Resources $($params.ResourceType) from Resource Group '$($params.ResourceGroupNameEquals)'"
                                         "ExecutionContext" = $Context
                                    };
 
     # this call doesn't require special error handling
-    return Execute-AzureCommand -InputParameters $inputParameters;
+    $response = Execute-AzureCommand -InputParameters $inputParameters;
+    return $response
 }
 
 ## Function: Get-DisabledSlot
