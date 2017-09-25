@@ -284,9 +284,9 @@ update_rsyslog()
     exit_on_error "Unable to copy the HA Proxy Rsyslog configuration template!" "${ERROR_HAPROXY_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
     # scan for additional rsyslog configurations, replacing each with a link to the one copied above
-    for $haproxy_rsyslog_config_file in "${rsyslog_configuration_path}/*-haproxy.conf"; do
-        log "Replacing 'haproxy_rsyslog_config_file' with link to '${rsyslog_configuration_file}'"
-        rm $haproxy_rsyslog_config_file
+    for haproxy_rsyslog_config_file in "${rsyslog_configuration_path}/*-haproxy.conf"; do
+        log "Replacing '${haproxy_rsyslog_config_file}' with link to '${rsyslog_configuration_file}'"
+        rm "${haproxy_rsyslog_config_file}"
         ln -s "${rsyslog_configuration_file}" "${haproxy_rsyslog_config_file}"
 
         # defensive: make sure the link was created
