@@ -134,6 +134,8 @@ configure_datadisks()
     # Stripe all of the data 
     log "Formatting and configuring the data disks"
 
+    local mount_point=${1:-"/datadisks"}
+
     # vm-disk-utils-0.1 can install mdadm which installs postfix. The postfix
     # installation cannot be made silent using the techniques that keep the
     # mdadm installation quiet: a) -y AND b) DEBIAN_FRONTEND=noninteractive.
@@ -141,7 +143,22 @@ configure_datadisks()
     echo "postfix postfix/main_mailer_type select No configuration" | debconf-set-selections
     apt-get install -y postfix
 
-    bash ./vm-disk-utils-0.1.sh -b $DATA_DISKS -s
+    # check if the disk utilities exists
+    if [[ ! -f ./vm-disk-utils-0.1.sh ]];
+    then
+        # download the utility
+        pushd /tmp
+        wget https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/shared_scripts/ubuntu/vm-disk-utils-0.1.sh
+
+        # execute the setup
+        bash ./vm-disk-utils-0.1.sh -b "${mount_point}" -s
+
+        # clean up
+        rm ./vm-disk-utils-0.1.sh
+        popd
+    else
+        bash ./vm-disk-utils-0.1.sh -b "${mount_point}" -s
+    fi
 }
 
 #############################################################################

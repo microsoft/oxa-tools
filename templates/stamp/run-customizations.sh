@@ -62,6 +62,9 @@ NOTIFICATION_MESSAGE=""
 SECONDARY_LOG="/var/log/bootstrap.csx.log"
 PRIMARY_LOG="/var/log/bootstrap.log"
 
+# Attached Storage Mount
+data_disk_mount_point="/datadisks"
+
 # Database Backup Parameters
 BACKUP_STORAGEACCOUNT_NAME=""
 BACKUP_STORAGEACCOUNT_KEY=""
@@ -69,7 +72,7 @@ MONGO_BACKUP_FREQUENCY="0 0 * * *"      # At every 00:00 (midnight)
 MYSQL_BACKUP_FREQUENCY="11 */4 * * *"   # At minute 11 past every 4th hour.
 MONGO_BACKUP_RETENTIONDAYS="30"
 MYSQL_BACKUP_RETENTIONDAYS="30"
-BACKUP_LOCAL_PATH="/datadisks/disk1/var/tmp"
+BACKUP_LOCAL_PATH="${data_disk_mount_point}/disk1/var/tmp"
 
 # Microsoft Sample course
 EDXAPP_IMPORT_KITCHENSINK_COURSE=false;
@@ -688,8 +691,13 @@ ln -s $UTILITIES_PATH "${INSTALLER_BASEPATH}/utilities.sh"
 # Setup Backups
 #####################################
 
-if [ "$MACHINE_ROLE" == "jumpbox" ];
+if [[ "$MACHINE_ROLE" == "jumpbox" ]];
 then
+
+    # configure any attached storage
+    configure_datadisks "${data_disk_mount_point}"
+
+    # configure backup
     log "Starting backup configuration on '${HOSTNAME}' as a member in the '${MACHINE_ROLE}' role"
 
     # These are fixed values

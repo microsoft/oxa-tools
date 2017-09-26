@@ -338,7 +338,7 @@ EOF
 }
 
 # Step 1: Configuring Disks"
-configure_datadisks
+configure_datadisks "${DATA_DISKS}"
 
 # Step 2 : Tuning System"
 tune_memory

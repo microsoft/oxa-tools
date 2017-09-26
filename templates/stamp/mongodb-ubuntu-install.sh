@@ -355,7 +355,7 @@ configure_db_users()
 }
 
 # Step 1
-configure_datadisks
+configure_datadisks "${DATA_DISKS}"
 
 # Step 2
 tune_memory
