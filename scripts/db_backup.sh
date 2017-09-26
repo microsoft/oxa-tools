@@ -221,13 +221,13 @@ create_compressed_db_dump()
     # 1. Execute the backup
     if [[ "$DATABASE_TYPE" == "mysql" ]];
     then
-        add_temp_mysql_user $MYSQL_SERVER
+        add_temp_mysql_user $MYSQL_SERVER_IP
 
         # execute dump of all databases
-        mysqldump -u $DATABASE_USER -p$DATABASE_PASSWORD -h $MYSQL_SERVER -P $MYSQL_SERVER_PORT --all-databases --single-transaction --set-gtid-purged=OFF --triggers --routines --events > $BACKUP_PATH
+        mysqldump -u $DATABASE_USER -p$DATABASE_PASSWORD -h $MYSQL_SERVER_IP -P $MYSQL_SERVER_PORT --all-databases --single-transaction --set-gtid-purged=OFF --triggers --routines --events > $BACKUP_PATH
         exit_on_error "Unable to backup ${DATABASE_TYPE}!" "${ERROR_DB_BACKUP_FAILED}" "${notification_email_subject}" "${CLUSTER_ADMIN_EMAIL}" "${main_logfile}"
 
-        remove_temp_mysql_user $MYSQL_SERVER
+        remove_temp_mysql_user $MYSQL_SERVER_IP
 
     elif [[ "$DATABASE_TYPE" == "mongo" ]];
     then

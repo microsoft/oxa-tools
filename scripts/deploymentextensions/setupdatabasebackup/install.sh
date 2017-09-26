@@ -296,7 +296,7 @@ log "Setting up mysql backup"
 database_type="mysql"
 database_backup_log="/var/log/db_backup_${database_type}.log"
 setup_backup "${installer_basepath}/backup_configuration_${database_type}.sh" "${database_backup_script}" "${database_backup_log}" "${backup_storageaccount_name}" \
-    "${backup_storageaccount_key}" "${mysql_backup_frequency}" "${mysql_backup_retentiondays}" "${mongo_replicaset_connectionstring}" "${mysql_server_list}" \
+    "${backup_storageaccount_key}" "${mysql_backup_frequency}" "${mysql_backup_retentiondays}" "${mongo_replicaset_connectionstring}" "${mysql_server}" \
     "${database_type}" "${mysql_admin_username}" "${mysql_admin_password}" "${backup_local_path}" "${mysql_server_port}" "${cluster_admin_email}" "${azure_cli_version}" \
     "${encoded_backup_storageaccount_endpoint_suffix}" "${mysql_backup_user}" "${mysql_backup_password}"
 
@@ -307,7 +307,7 @@ log "Setting up mongo backup"
 database_type="mongo"
 database_backup_log="/var/log/db_backup_${database_type}.log"
 setup_backup "${installer_basepath}/backup_configuration_${database_type}.sh" "${database_backup_script}" "${database_backup_log}" "${backup_storageaccount_name}" \
-    "${backup_storageaccount_key}" "${mongo_backup_frequency}" "${mongo_backup_retentiondays}" "${mongo_replicaset_connectionstring}" "${mysql_server_list}" \
+    "${backup_storageaccount_key}" "${mongo_backup_frequency}" "${mongo_backup_retentiondays}" "${mongo_replicaset_connectionstring}" "${mysql_server}" \
     "${database_type}" "${mongo_admin_username}" "${mongo_admin_password}" "${backup_local_path}" "${mysql_server_port}" "${cluster_admin_email}" "${azure_cli_version}" \
     "${encoded_backup_storageaccount_endpoint_suffix}" "${mongo_backup_user}" "${mongo_backup_password}"
 
