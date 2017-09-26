@@ -187,7 +187,7 @@
                     "fileUris": "[parameters('customSettings').vmScripts]"
                 },
                 "protectedSettings": {
-                    "commandToExecute": "[replace(parameters('customSettings').customInstallerCommandToExecute, parameters('customSettings').storageKeyPlaceholder, parameters('customSettings').secureGenericStorageAccountKey)]",                    
+                    "commandToExecute": "[replace(parameters('customSettings').customInstallerCommandToExecute, parameters('customSettings').storageKeyPlaceholder, parameters('customSettings').secureGenericStorageAccountKey),parameters('customSettings').sbPlaceholder, parameters('customSettings').serviceBusConnectionStringPlaceholder)]",                    
                     
                     }
             }
