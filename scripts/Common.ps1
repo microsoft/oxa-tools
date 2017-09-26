@@ -623,7 +623,7 @@ function Get-ResourcesList
         }
         
         # get the azure resources based on provuded resourcetypes in the resourcegroup
-        [array]$response = Get-OxaAzureResources -params $params -Context $resourcesListContext;
+        [array]$response = Get-AzureResources -params $params -Context $resourcesListContext;
 
         if($response -ne $null)
         {
@@ -636,7 +636,7 @@ function Get-ResourcesList
 #################################
 # Wrapped function
 #################################
-## Function: Get-ResourcesList
+## Function: Get-AzureResources
 ##
 ## Purpose: 
 ##    To get the resource list using ResourceGroup 
@@ -647,6 +647,37 @@ function Get-ResourcesList
 ## Output:
 ##   resourceList
 function Get-AzureResources
+{
+    param(
+            [Parameter(Mandatory=$true)][object]$params,
+            [Parameter(Mandatory=$true)][string]$Context,
+            [Parameter(Mandatory=$false)][int]$MaxRetries=3
+         )
+
+    # prepare the inputs
+    [hashtable]$inputParameters = @{
+                                        "params" =$params
+                                        "Command" = "Find-AzureRmResource";
+                                        "Activity" = "Fetching Azure Resources $($params.ResourceType) from Resource Group '$($ResourceGroupName)'"
+                                        "ExecutionContext" = $Context
+                                   };
+
+    # this call doesn't require special error handling
+    return Execute-AzureCommand -InputParameters $inputParameters;
+}
+
+## Function: Get-OxaAzureResources
+##
+## Purpose: 
+##   selects the disabled Traffic manager endpoint to determine the slot 
+##
+## Input: 
+##   $resourceList  - Azure RM resources
+##   
+## Output:
+##  $slot name
+##
+function Get-OxaAzureResources
 {
     param(
             [Parameter(Mandatory=$true)][object]$params,
@@ -737,7 +768,7 @@ function Remove-StagingResources()
     # Filter the resources based on the determined slot
     $targetedResources = $resourceList | Where-Object { $_.ResourceName.Contains($Slot) };
     if($targetedResources -ne $null)
-       
+    {   
         foreach($resource in $targetedResources)
         { 
             Write-Host "Here is the list of resources targetted to be deleted" ($targetedResources| Format-List | Out-String);                              
