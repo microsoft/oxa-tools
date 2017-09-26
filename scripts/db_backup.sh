@@ -3,19 +3,19 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
-set -x
-
 # Path to settings file provided as an argument to this script.
 SETTINGS_FILE=
 
-# From settings file
+# From settings file (these variables will be populated with values from the sourced settings file)
     DATABASE_TYPE= # mongo|mysql
 
     # Reading from database machines
     MONGO_REPLICASET_CONNECTIONSTRING=
-    MYSQL_SERVER_LIST=
+    MYSQL_SERVER_IP=
+    MYSQL_SERVER_PORT=3306
     DATABASE_USER=
     DATABASE_PASSWORD=
+
     # Optional values. If provided, will add another set of credentials to msyql backup
     TEMP_DATABASE_USER=
     TEMP_DATABASE_PASSWORD=
@@ -26,16 +26,29 @@ SETTINGS_FILE=
 
     BACKUP_RETENTIONDAYS=
 
+    # email address for all backup notifications
+    CLUSTER_ADMIN_EMAIL=""
+
 # Paths and file names.
     BACKUP_LOCAL_PATH=
     TMP_QUERY_ADD="query.add.sql"
     TMP_QUERY_REMOVE="query.remove.sql"
     CURRENT_SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
     UTILITIES_FILE=$CURRENT_SCRIPT_PATH/../templates/stamp/utilities.sh
+
     # Derived from DATABASE_TYPE
     CONTAINER_NAME=
     COMPRESSED_FILE=
     BACKUP_PATH=
+
+    # this is the file for logging all backup operations
+    main_logfile=""
+
+    # emailsubject for all backup notifications
+    notification_email_subject=""
+
+    # debug mode: 0=set +x, 1=set -x
+    debug_mode=0
 
 help()
 {
@@ -64,6 +77,9 @@ parse_args()
             -h|--help)
                 help
                 exit 2
+                ;;
+            --debug)
+                debug_mode=1
                 ;;
             *) # unknown option
                 echo "ERROR. Option -${BOLD}$2${NORM} not allowed."
@@ -159,7 +175,6 @@ EOF
         sed -i "s/{TEMP_DATABASE_USER}/${TEMP_DATABASE_USER}/I" $TMP_QUERY_ADD
         sed -i "s/{TEMP_DATABASE_PASSWORD}/${TEMP_DATABASE_PASSWORD}/I" $TMP_QUERY_ADD
 
-        install-mysql-client
         mysql -u $DATABASE_USER -p$DATABASE_PASSWORD -h $1 < $TMP_QUERY_ADD
     fi
 }
@@ -181,50 +196,52 @@ EOF
 
         sed -i "s/{TEMP_DATABASE_USER}/${TEMP_DATABASE_USER}/I" $TMP_QUERY_REMOVE
 
-        install-mysql-client
         mysql -u $DATABASE_USER -p$DATABASE_PASSWORD -h $1 < $TMP_QUERY_REMOVE
     fi
 }
 
 create_compressed_db_dump()
 {
+    # this is the actual backup operation
+    log "Backing up '$DATABASE_TYPE' database to local file system"
+    
     pushd $BACKUP_LOCAL_PATH
+    
+    # set the log file & notification
+    main_logfile="/var/log/db_backup_${DATABASE_TYPE}.log"
+    notification_email_subject="OXA Backup - ${DATABASE_TYPE} Databases"
 
-    log "Copying entire $DATABASE_TYPE database to local file system"
-    if [ "$DATABASE_TYPE" == "mysql" ]
+    # 1. Execute the backup
+    if [[ "$DATABASE_TYPE" == "mysql" ]];
     then
-        #todo: add error conditioning to loop. we're currently just using the first one and assuming success
-        mysql_servers=(`echo $MYSQL_SERVER_LIST | tr , ' ' `)
-        for ip in "${mysql_servers[@]}"; do
-            add_temp_mysql_user $ip
+        add_temp_mysql_user $MYSQL_SERVER
 
-            install-mysql-dump
-            mysqldump -u $DATABASE_USER -p$DATABASE_PASSWORD -h $ip --all-databases --single-transaction > $BACKUP_PATH
+        # execute dump of all databases
+        mysqldump -u $DATABASE_USER -p$DATABASE_PASSWORD -h $MYSQL_SERVER -P $MYSQL_SERVER_PORT --all-databases --single-transaction --set-gtid-purged=OFF --triggers --routines --events > $BACKUP_PATH
+        exit_on_error "Unable to backup ${DATABASE_TYPE}!" "${ERROR_DB_BACKUP_FAILED}" "${notification_email_subject}" "${CLUSTER_ADMIN_EMAIL}" "${main_logfile}"
 
-            remove_temp_mysql_user $ip
+        remove_temp_mysql_user $MYSQL_SERVER
 
-            break;
-        done
-
-    elif [ "$DATABASE_TYPE" == "mongo" ]
+    elif [[ "$DATABASE_TYPE" == "mongo" ]];
     then
-        install-mongodb-tools
         mongodump -u $DATABASE_USER -p $DATABASE_PASSWORD --host $MONGO_REPLICASET_CONNECTIONSTRING --db edxapp --authenticationDatabase master -o $BACKUP_PATH
-
+        exit_on_error "Unable to backup ${DATABASE_TYPE}!" "${ERROR_DB_BACKUP_FAILED}" "${notification_email_subject}" "${CLUSTER_ADMIN_EMAIL}" "${main_logfile}"
     fi
 
-    exit_on_error "Failed to connect to database OR failed to create backup file."
+    # 2. Compress the backup
+    # log the file size for future tracking
+    log "Compressing the backup"
 
-    log "Compressing entire $DATABASE_TYPE database"
+    preCompressFileSize=`stat --printf="%s" $BACKUP_PATH`
     tar -zcvf $COMPRESSED_FILE $BACKUP_PATH
+    postCompressFileSize=`stat --printf="%s" $COMPRESSED_FILE`
 
+    log "Uncompressed '$DATABASE_TYPE' database = $preCompressFileSize bytes. Compressed = $postCompressFileSize bytes"
     popd
 }
 
 copy_db_to_azure_storage()
 {
-    install-azure-cli
-
     pushd $BACKUP_LOCAL_PATH
 
     log "Upload the backup $DATABASE_TYPE file to azure blob storage"
@@ -244,7 +261,6 @@ copy_db_to_azure_storage()
     echo
     result=$(azure storage blob upload $COMPRESSED_FILE $CONTAINER_NAME $COMPRESSED_FILE --json)
 
-    install-json-processor
     fileName=$(echo $result | jq '.name')
     fileSize=$(echo $result | jq '.transferSummary.totalSize')    
     if [ $fileName != "" ] && [ $fileName != null ]
@@ -322,13 +338,19 @@ cleanup_old_remote_files()
 # Parse script argument(s)
 parse_args $@
 
+# debug mode support
+if [[ $debug_mode == 1 ]];
+then
+    set -x
+fi
+
 # log() and other functions
 source_wrapper $UTILITIES_FILE
 
 # Script self-idenfitication
 print_script_header
 
-log "Begin execution of $DATABASE_TYPE backup script using ${DATABASE_TYPE}dump command."
+log "Begin execution of $DATABASE_TYPE backup script using '${DATABASE_TYPE}' dump command."
 
 # Settings
 source_wrapper $SETTINGS_FILE
@@ -338,6 +360,14 @@ exit_if_limited_user
 validate_settings
 
 set_path_names
+
+# install requisite tools (if necessary)
+log "Conditionally installing requisite tools for backup operations"
+install-mysql-client
+install-mysql-dump
+install-mongodb-tools
+install-azure-cli
+install-json-processor
 
 # Cleanup previous runs.
 cleanup_local_copies
@@ -351,3 +381,5 @@ cleanup_local_copies
 
 # Cleanup old remote files
 cleanup_old_remote_files
+
+log "Backup complete!"
