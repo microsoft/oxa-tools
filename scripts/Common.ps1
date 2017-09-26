@@ -614,6 +614,10 @@ function Get-ResourcesList
                          "Microsoft.Network/publicIPAddresses",
                          "Microsoft.Network/trafficManagerProfiles"
                       );
+
+    [array]$resourceList = $()
+    $resourcesListContext = "Getting OXA Azure resources"
+
     foreach ($resourceType in $resourceTypes)
     {
         $params = @{'ResourceGroupNameEquals' = $ResourceGroupName }                            
@@ -627,16 +631,17 @@ function Get-ResourcesList
 
         if($response -ne $null)
         {
-            [array]$resourceList += $response;
+            $resourceList += $response;
         }                               
     }
+
     return $resourceList;
 }
 
 #################################
 # Wrapped function
 #################################
-## Function: Get-ResourcesList
+## Function: Get-AzureResources
 ##
 ## Purpose: 
 ##    To get the resource list using ResourceGroup 
@@ -656,14 +661,15 @@ function Get-AzureResources
 
     # prepare the inputs
     [hashtable]$inputParameters = @{
-                                        "params" =$params
+                                        "params" = $params
                                         "Command" = "Find-AzureRmResource";
-                                        "Activity" = "Fetching Azure Resources $($params.ResourceType) from Resource Group '$($ResourceGroupName)'"
+                                        "Activity" = "Fetching Azure Resources $($params.ResourceType) from Resource Group '$($params.ResourceGroupNameEquals)'"
                                         "ExecutionContext" = $Context
                                    };
 
     # this call doesn't require special error handling
-    return Execute-AzureCommand -InputParameters $inputParameters;
+    $response = Execute-AzureCommand -InputParameters $inputParameters;
+    return $response
 }
 
 ## Function: Get-DisabledSlot
@@ -738,9 +744,10 @@ function Remove-StagingResources()
       
     # Filter the resources based on the determined slot
     $targetedResources = $resourceList | Where-Object { $_.ResourceName.Contains($Slot) };
-    if ( $targetedResources -ne $null )
-       
-        foreach ( $resource in $targetedResources )
+
+    if($targetedResources -ne $null)
+    {
+        foreach($resource in $targetedResources)
         { 
             Write-Host "Here is the list of resources targetted to be deleted" ($targetedResources| Format-List | Out-String);                              
             switch ( $resource.resourcetype )
@@ -865,7 +872,7 @@ function Remove-StagingResources()
                      break;                                   
                    }             
                 }
-            }             
+            }           
     }
     Log-Message -Message  "There are no Resources targeted to delete from $($ResourceGroupName)" -LogType Host
 }
@@ -1373,4 +1380,63 @@ function Set-ScriptDefault
     }
 
     return $response
+}
+
+## Function: Get-LocalCertificate
+##
+## Purpose: 
+##    Find a certificate in the local cert store with the given subject
+##
+## Input: 
+##   CertSubject  subject to search for in cert store
+##
+## Output:
+##   The Certificate Thumbprint
+##
+function Get-LocalCertificate
+{
+    Param(        
+            [Parameter(Mandatory=$true)][String] $CertSubject            
+         )
+        
+    $cert = (Get-ChildItem cert:\CurrentUser\my\ | Where-Object {$_.Subject -match $CertSubject })
+    
+    if (!$cert)
+    {
+        throw "Could not find a certificate in the local store with the given subject: $($CertSubject)"
+    }
+
+    if ($cert -is [array])
+    {
+        $cert = $cert[0]
+    }
+
+    return $cert.Thumbprint
+}
+
+## Function: Get-JsonKeys
+##
+## Purpose: 
+##    Return all top-level keys from a .json file
+##
+## Input: 
+##   TargetPath  Path to .json file
+##
+## Output:
+##   Array of top-level keys
+##
+function Get-KeyVaultKeyNames
+{
+    Param(        
+            [Parameter(Mandatory=$true)][String] $TargetPath            
+         )
+        
+
+    $keys = @()
+    $json = Get-Content -Raw $TargetPath | Out-String | ConvertFrom-Json
+
+    $json.psobject.properties | ForEach-Object {    
+        $keys += $_.Name
+    }    
+    return $keys
 }
