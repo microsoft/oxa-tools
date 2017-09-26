@@ -104,3 +104,5 @@ EDXAPP_GRADE_STORAGE_CLASS: "openedx.core.storage.AzureStorageExtended"
 nginx_sites: [certs, cms, lms, lms-preview, forum, xqueue]
 
 EDXAPP_COMPREHENSIVE_THEME_DIRS: %%COMBINED_LOGIN_REGISTRATION%%
+
+EDXAPP_ENABLE_COMBINED_LOGIN_REGISTRATION: %%COMBINED_LOGIN_REGISTRATION%%
