@@ -43,7 +43,7 @@ mysql_backup_password=""
 # mongo backup settings
 mongo_backup_frequency="0 0 * * *"      # At every 00:00 (midnight)
 mongo_backup_retentiondays=7
-mongo_admin_user=""
+mongo_admin_username=""
 mongo_admin_password=""
 mongo_backup_user=""
 mongo_backup_password=""
@@ -136,8 +136,8 @@ parse_args()
             --mongo-backup-retentiondays)
                 mongo_backup_retentiondays="${arg_value}"
                 ;;
-            --mongo-admin-user)
-                mongo_admin_user="${arg_value}"
+            --mongo-admin-username)
+                mongo_admin_username="${arg_value}"
                 ;;
             --mongo-admin-password)
                 mongo_admin_password="${arg_value}"
@@ -206,7 +206,7 @@ validate_args()
     fi
 
     # mysql credentials (user name/password)
-    if [[ -z $mongo_admin_user ]] || [[ -z $mongo_admin_password ]]; 
+    if [[ -z $mongo_admin_username ]] || [[ -z $mongo_admin_password ]]; 
     then
         log "Invalid mongo credentials specified. You must provide both a user name and password for mongo"
         exit $ERROR_DB_BACKUPSETUP_FAILED
@@ -223,7 +223,7 @@ validate_args()
     if [[ -z $mongo_backup_user ]];
     then
         log "Defaulting mongo backup user credentials to the main credential specified"
-        mongo_backup_user="${mongo_admin_user}"
+        mongo_backup_user="${mongo_admin_username}"
         mongo_backup_password="${mongo_admin_password}"
     fi
 
@@ -296,7 +296,7 @@ database_type="mongo"
 database_backup_log="/var/log/db_backup_${database_type}.log"
 setup_backup "${installer_basepath}/backup_configuration_${database_type}.sh" "${database_backup_script}" "${database_backup_log}" "${backup_storageaccount_name}" \
     "${backup_storageaccount_key}" "${MONGO_BACKUP_FREQUENCY}" "${MONGO_BACKUP_RETENTIONDAYS}" "${mongo_replicaset_connectionstring}" "${mysql_server_list}" \
-    "${database_type}" "${mongo_admin_user}" "${mongo_admin_password}" "${backup_local_path}" "${mysql_server_port}" "${cluster_admin_email}" "${AZURE_CLI_VERSION}" "${mongo_backup_user}" "${mongo_backup_password}"
+    "${database_type}" "${mongo_admin_username}" "${mongo_admin_password}" "${backup_local_path}" "${mysql_server_port}" "${cluster_admin_email}" "${AZURE_CLI_VERSION}" "${mongo_backup_user}" "${mongo_backup_password}"
 
 exit_on_error "Failed setting up the Mongo Database backup" 1 "${notification_email_subject} Failed" $cluster_admin_email $main_logfile
 
