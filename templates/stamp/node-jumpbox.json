@@ -170,6 +170,8 @@
                 }
             }
         },
+        
+        
         {
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "name": "[concat(parameters('networkSettings').clusterJumpBoxName, '/installoxa')]",
@@ -187,8 +189,7 @@
                     "fileUris": "[parameters('customSettings').vmScripts]"
                 },
                 "protectedSettings": {
-                    "commandToExecute": "[replace(parameters('customSettings').customInstallerCommandToExecute, parameters('customSettings').storageKeyPlaceholder, parameters('customSettings').secureGenericStorageAccountKey)]",
-                    "commandTo": "[replace(parameters('customSettings').customInstallerCommandToExecute, parameters('customSettings').sbPlaceholder, parameters('customSettings').serviceBusConnectionStringPlaceholder)]"                                        
+                    "commandToExecute": "[replace(parameters('customSettings').customInstallerCommandToExecute, parameters('customSettings').storageKeyPlaceholder, parameters('customSettings').secureGenericStorageAccountKey)]"                    
                     
                     }
             }
