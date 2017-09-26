@@ -1012,9 +1012,10 @@ setup_backup()
     backupLocalPath="${13}";                                # Database Type : mysql|mongo
     mysqlServerPort="${14:-3306}"                           # Communication port for mysql server (default 3306)
     clusterAdminEmail="${15}"                               # Email address to which backup notifications will be sent
+    azureCliVersion="${16:-1}"                                 # Azure Cli Version to use for backup operationss
 
     # Optional.
-    tempDatabaseUser="${16}"; tempDatabasePassword="${17}"; # Temporary credentials for accessing the backup (optional)
+    tempDatabaseUser="${17}"; tempDatabasePassword="${18}"; # Temporary credentials for accessing the backup (optional)
 
     log "Setting up database backup for '${databaseType}' database(s)"
 
@@ -1039,6 +1040,7 @@ TEMP_DATABASE_PASSWORD=${tempDatabasePassword}
 DATABASE_TYPE=${databaseType}
 BACKUP_LOCAL_PATH=${backupLocalPath}
 CLUSTER_ADMIN_EMAIL=${clusterAdminEmail}
+AZURE_CLI_VERSION=${azureCliVersion}
 EOF"
 
     # this file contains secrets (like storage account key). Secure it

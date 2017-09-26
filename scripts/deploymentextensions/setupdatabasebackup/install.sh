@@ -48,6 +48,9 @@ mongo_admin_password=""
 mongo_backup_user=""
 mongo_backup_password=""
 
+# Azure cli version (default to 1.0)
+azure_cli_version=1
+
 #############################################################################
 # parse the command line arguments
 
@@ -144,7 +147,13 @@ parse_args()
                 ;;
             --mongo-backup-password)
                 mongo_backup_password="${arg_value}"
-                ;;
+                ;;            
+            --azure-cli-version)
+                azure_cli_version=$2
+                if ! is_valid_arg "1 2" $azure_cli_version; then
+                    echo "Invalid azure cli specified. Only versions 1 & 2 are supported\n"
+                    exit 2
+                fi
         esac
 
         shift # past argument or value
@@ -277,7 +286,7 @@ database_type="mysql"
 database_backup_log="/var/log/db_backup_${database_type}.log"
 setup_backup "${installer_basepath}/backup_configuration_${database_type}.sh" "${database_backup_script}" "${database_backup_log}" "${backup_storageaccount_name}" \
     "${backup_storageaccount_key}" "${mysql_backup_frequency}" "${mysql_backup_retentiondays}" "${mongo_replicaset_connectionstring}" "${mysql_server_list}" \
-    "${database_type}" "${mysql_admin_user}" "${mysql_admin_password}" "${backup_local_path}" "${mysql_server_port}" "${cluster_admin_email}" "${mysql_backup_user}" "${mysql_backup_password}"
+    "${database_type}" "${mysql_admin_user}" "${mysql_admin_password}" "${backup_local_path}" "${mysql_server_port}" "${cluster_admin_email}" "${AZURE_CLI_VERSION}" "${mysql_backup_user}" "${mysql_backup_password}"
 
 exit_on_error "Failed setting up the Mysql Database backup" 1 "${notification_email_subject} Failed" $cluster_admin_email $PRIMARY_LOG $SECONDARY_LOG
 
@@ -287,7 +296,7 @@ database_type="mongo"
 database_backup_log="/var/log/db_backup_${database_type}.log"
 setup_backup "${installer_basepath}/backup_configuration_${database_type}.sh" "${database_backup_script}" "${database_backup_log}" "${backup_storageaccount_name}" \
     "${backup_storageaccount_key}" "${MONGO_BACKUP_FREQUENCY}" "${MONGO_BACKUP_RETENTIONDAYS}" "${mongo_replicaset_connectionstring}" "${mysql_server_list}" \
-    "${database_type}" "${mongo_admin_user}" "${mongo_admin_password}" "${backup_local_path}" "${mysql_server_port}" "${cluster_admin_email}" "${mongo_backup_user}" "${mongo_backup_password}"
+    "${database_type}" "${mongo_admin_user}" "${mongo_admin_password}" "${backup_local_path}" "${mysql_server_port}" "${cluster_admin_email}" "${AZURE_CLI_VERSION}" "${mongo_backup_user}" "${mongo_backup_password}"
 
 exit_on_error "Failed setting up the Mongo Database backup" 1 "${notification_email_subject} Failed" $cluster_admin_email $main_logfile
 
