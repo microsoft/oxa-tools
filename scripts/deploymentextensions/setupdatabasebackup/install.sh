@@ -35,7 +35,7 @@ backup_local_path="/datadisks/disk1"
 # mysql backup settings
 mysql_backup_frequency="11 */4 * * *"   # At minute 11 past every 4th hour.
 mysql_backup_retentiondays=7
-mysql_admin_user=""
+mysql_admin_username=""
 mysql_admin_password=""
 mysql_backup_user=""
 mysql_backup_password=""
@@ -117,8 +117,8 @@ parse_args()
             --mysql-backup-retentiondays)
                 mysql_backup_retentiondays="${arg_value}"
                 ;;
-            --mysql-admin-user)
-                mysql_admin_user="${arg_value}"
+            --mysql-admin-username)
+                mysql_admin_username="${arg_value}"
                 ;;
             --mysql-admin-password)
                 mysql_admin_password="${arg_value}"
@@ -199,7 +199,7 @@ validate_args()
     fi
 
     # mysql credentials (user name/password)
-    if [[ -z $mysql_admin_user ]] || [[ -z $mysql_admin_password ]]; 
+    if [[ -z $mysql_admin_username ]] || [[ -z $mysql_admin_password ]]; 
     then
         log "Invalid mysql credentials specified. You must provide both a user name and password for mysql"
         exit $ERROR_DB_BACKUPSETUP_FAILED
@@ -216,7 +216,7 @@ validate_args()
     if [[ -z $mysql_backup_user ]];
     then
         log "Defaulting mysql backup user credentials to the main credential specified"
-        mysql_backup_user="${mysql_admin_user}"
+        mysql_backup_user="${mysql_admin_username}"
         mysql_backup_password="${mysql_admin_password}"
     fi
 
@@ -286,7 +286,7 @@ database_type="mysql"
 database_backup_log="/var/log/db_backup_${database_type}.log"
 setup_backup "${installer_basepath}/backup_configuration_${database_type}.sh" "${database_backup_script}" "${database_backup_log}" "${backup_storageaccount_name}" \
     "${backup_storageaccount_key}" "${mysql_backup_frequency}" "${mysql_backup_retentiondays}" "${mongo_replicaset_connectionstring}" "${mysql_server_list}" \
-    "${database_type}" "${mysql_admin_user}" "${mysql_admin_password}" "${backup_local_path}" "${mysql_server_port}" "${cluster_admin_email}" "${AZURE_CLI_VERSION}" "${mysql_backup_user}" "${mysql_backup_password}"
+    "${database_type}" "${mysql_admin_username}" "${mysql_admin_password}" "${backup_local_path}" "${mysql_server_port}" "${cluster_admin_email}" "${AZURE_CLI_VERSION}" "${mysql_backup_user}" "${mysql_backup_password}"
 
 exit_on_error "Failed setting up the Mysql Database backup" 1 "${notification_email_subject} Failed" $cluster_admin_email $PRIMARY_LOG $SECONDARY_LOG
 
