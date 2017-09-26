@@ -31,6 +31,7 @@ mongo_replicaset_name=""
 backup_storageaccount_name=""
 backup_storageaccount_key=""
 backup_local_path="/datadisks/disk1"
+backup_storageaccount_endpoint_suffix="core.windows.net"
 
 # mysql backup settings
 mysql_backup_frequency="11 */4 * * *"   # At minute 11 past every 4th hour.
@@ -107,7 +108,10 @@ parse_args()
             --backup-storageaccount-key)
                 backup_storageaccount_key="${arg_value}"
                 ;;
-            --backup_local_path)
+            --backup-storageaccount-endpointsuffix)
+                backup_storageaccount_endpoint_suffix="${arg_value}"
+                ;;
+            --backup-local-path)
                 backup_local_path="${arg_value}"
                 ;;
             # mysql backup settings
@@ -154,6 +158,10 @@ parse_args()
                     echo "Invalid azure cli specified. Only versions 1 & 2 are supported\n"
                     exit 2
                 fi
+                ;;
+            --debug)
+                debug_mode=1
+                ;;
         esac
 
         shift # past argument or value
@@ -280,23 +288,28 @@ mongo_server_list=`echo ${encoded_mongo_server_list} | base64 --decode`
 mongo_replicaset_connectionstring="${mongo_replicaset_name}/${mongo_server_list}"
 database_backup_script="${installer_basepath}/db_backup.sh"
 
+# storage account endpoint suffix
+encoded_backup_storageaccount_endpoint_suffix=`echo ${backup_storageaccount_endpoint_suffix} | base64`
+
 # Setup mysql backup
 log "Setting up mysql backup"
 database_type="mysql"
 database_backup_log="/var/log/db_backup_${database_type}.log"
 setup_backup "${installer_basepath}/backup_configuration_${database_type}.sh" "${database_backup_script}" "${database_backup_log}" "${backup_storageaccount_name}" \
     "${backup_storageaccount_key}" "${mysql_backup_frequency}" "${mysql_backup_retentiondays}" "${mongo_replicaset_connectionstring}" "${mysql_server_list}" \
-    "${database_type}" "${mysql_admin_username}" "${mysql_admin_password}" "${backup_local_path}" "${mysql_server_port}" "${cluster_admin_email}" "${AZURE_CLI_VERSION}" "${mysql_backup_user}" "${mysql_backup_password}"
+    "${database_type}" "${mysql_admin_username}" "${mysql_admin_password}" "${backup_local_path}" "${mysql_server_port}" "${cluster_admin_email}" "${azure_cli_version}" \
+    "${encoded_backup_storageaccount_endpoint_suffix}" "${mysql_backup_user}" "${mysql_backup_password}"
 
-exit_on_error "Failed setting up the Mysql Database backup" 1 "${notification_email_subject} Failed" $cluster_admin_email $PRIMARY_LOG $SECONDARY_LOG
+exit_on_error "Failed setting up the Mysql Database backup" 1 "${notification_email_subject} Failed" $cluster_admin_email $main_logfile
 
 # Setup mongo backup
 log "Setting up mongo backup"
 database_type="mongo"
 database_backup_log="/var/log/db_backup_${database_type}.log"
 setup_backup "${installer_basepath}/backup_configuration_${database_type}.sh" "${database_backup_script}" "${database_backup_log}" "${backup_storageaccount_name}" \
-    "${backup_storageaccount_key}" "${MONGO_BACKUP_FREQUENCY}" "${MONGO_BACKUP_RETENTIONDAYS}" "${mongo_replicaset_connectionstring}" "${mysql_server_list}" \
-    "${database_type}" "${mongo_admin_username}" "${mongo_admin_password}" "${backup_local_path}" "${mysql_server_port}" "${cluster_admin_email}" "${AZURE_CLI_VERSION}" "${mongo_backup_user}" "${mongo_backup_password}"
+    "${backup_storageaccount_key}" "${mongo_backup_frequency}" "${mongo_backup_retentiondays}" "${mongo_replicaset_connectionstring}" "${mysql_server_list}" \
+    "${database_type}" "${mongo_admin_username}" "${mongo_admin_password}" "${backup_local_path}" "${mysql_server_port}" "${cluster_admin_email}" "${azure_cli_version}" \
+    "${encoded_backup_storageaccount_endpoint_suffix}" "${mongo_backup_user}" "${mongo_backup_password}"
 
 exit_on_error "Failed setting up the Mongo Database backup" 1 "${notification_email_subject} Failed" $cluster_admin_email $main_logfile
 

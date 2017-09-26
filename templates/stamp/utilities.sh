@@ -1011,28 +1011,57 @@ EOF
 # Setup Backup Parameters
 #############################################################################
 
+generate_azure_storage_connection_string()
+{
+    local account_name="${1}"
+    local account_key="${2}"
+    local endpoint_suffix="${3}"
+
+    echo "DefaultEndpointsProtocol=https;AccountName=${account_name};AccountKey=${account_key};EndpointSuffix=${storageAccountEndpointSuffix}"
+}
+
+get_azure_storage_endpoint_suffix()
+{
+    local suffix=`echo ${1}| base64 --decode`
+    
+    # default storage account suffix to core.windows.net if not specified
+    if [[ -z "${suffix// }" ]]; then
+
+        log "Defaulting the storage account suffix to 'core.windows.net'"
+        suffix="core.windows.net"
+    fi
+
+    echo $suffix
+}
+
 setup_backup()
 {
     # collect the parameters
-    backup_configuration="${1}";                            # Backup settings file
-    backup_script="${2}";                                   # Backup script (actually take the backup)
-    backup_log="${3}";                                      # Log file for backup job
+    local backup_configuration="${1}";                                              # Backup settings file
+    local backup_script="${2}";                                                     # Backup script (actually take the backup)
+    local backup_log="${3}";                                                        # Log file for backup job
 
-    account_name="${4}"; account_key="${5}";                # Storage Account 
-    backupFrequency="${6}";                                 # Backup Frequency
-    backupRententionDays="${7}";                            # Backup Retention
-    mongoReplicaSetConnectionString="${8}";                 # Mongo replica set connection string
-    mysqlServerIp="${9}";                                     # Mysql Server Ip (or HA Proxy Ip)
-    databaseType="${10}";                                   # Database Type : mysql|mongo
+    local account_name="${4}";                                                      # Storage Account credentials
+    local account_key="${5}";
+    local backupFrequency="${6}";                                                   # Backup Frequency
+    local backupRententionDays="${7}";                                              # Backup Retention
+    local mongoReplicaSetConnectionString="${8}";                                   # Mongo replica set connection string
+    local mysqlServerIp="${9}";                                                     # Mysql Server Ip (or HA Proxy Ip)
+    local databaseType="${10}";                                                     # Database Type : mysql|mongo
 
-    databaseUser="${11}"; databasePassword="${12}";         # Credentials for accessing the database for backup purposes
-    backupLocalPath="${13}";                                # Database Type : mysql|mongo
-    mysqlServerPort="${14:-3306}"                           # Communication port for mysql server (default 3306)
-    clusterAdminEmail="${15}"                               # Email address to which backup notifications will be sent
-    azureCliVersion="${16:-1}"                                 # Azure Cli Version to use for backup operationss
-
+    local databaseUser="${11}";                                                     # Credentials for accessing the database for backup purposes
+    local databasePassword="${12}";                           
+    local backupLocalPath="${13}";                                                  # Database Type : mysql|mongo
+    local mysqlServerPort="${14:-3306}"                                             # Communication port for mysql server (default 3306)
+    local clusterAdminEmail="${15}"                                                 # Email address to which backup notifications will be sent
+    local azureCliVersion="${16:-1}"                                                # Azure Cli Version to use for backup operations
+	
     # Optional.
-    tempDatabaseUser="${17}"; tempDatabasePassword="${18}"; # Temporary credentials for accessing the backup (optional)
+    local storageAccountEndpointSuffix=`get_azure_storage_endpoint_suffix ${17}`    # Blob storage suffix (defaults to core.windows.net for global azure)
+    tempDatabaseUser="${18}"; tempDatabasePassword="${19}";                         # Temporary credentials for accessing the backup (optional)
+    
+    # generate a storage connection string
+    local storage_connection_string=`generate_azure_storage_connection_string "${account_name}" "${account_key}" "${storageAccountEndpointSuffix}"`
 
     log "Setting up database backup for '${databaseType}' database(s)"
 
@@ -1058,6 +1087,7 @@ DATABASE_TYPE=${databaseType}
 BACKUP_LOCAL_PATH=${backupLocalPath}
 CLUSTER_ADMIN_EMAIL=${clusterAdminEmail}
 AZURE_CLI_VERSION=${azureCliVersion}
+AZURE_STORAGEACCOUNT_CONNECTIONSTRING=\"${storage_connection_string}\"
 EOF"
 
     # this file contains secrets (like storage account key). Secure it
