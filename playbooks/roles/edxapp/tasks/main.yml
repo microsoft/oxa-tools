@@ -1,10 +1,11 @@
 ---
 - name: Apply theming compile assets workaround
   sudo: yes
-  shell: bash ./update_theme.sh "{{ EDXAPP_ENABLE_COMPREHENSIVE_THEMING }}" "{{ EDXAPP_THEME_ENVIRONMENT }}"
+  shell: bash ./update_theme.sh "{{ theme_branch }}" "{{ theme_repo }}" "{{ EDXAPP_THEME_ENVIRONMENT }}"
   args:
     chdir: "{{ edxapp_files_path }}"
   register: bash_theme
+  when: "{{ EDXAPP_ENABLE_COMPREHENSIVE_THEMING }}"
 
 # Print the shell tasks's stdout and stderr.
 - debug: var="bash_theme.stdout_lines + [ bash_theme.stderr ]"
@@ -35,7 +36,7 @@
   args:
     chdir: "{{ edxapp_files_path }}/nginx"
   register: bash
-  when: template_type is undefined or template_type != "devstack"
+  when: "{{ NGINX_ENABLE_SSL }}"
 
 # Print the shell tasks's stdout and stderr.
 - debug: var="bash.stdout_lines + [ bash.stderr ]"
@@ -43,7 +44,7 @@
 - name: Restart Nginx to use the new settings
   sudo: yes
   command: service nginx restart
-  when: template_type is undefined or template_type != "devstack"
+  when: "{{ NGINX_ENABLE_SSL }}"
 
 #- name: Apply patch to authenticate user after their reset confirmation goes through
 #  sudo: yes
