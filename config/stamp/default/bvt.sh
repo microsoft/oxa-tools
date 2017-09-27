@@ -26,6 +26,7 @@ PREVIEW_URL=preview.$BASE_URL
 # uri format: [lms|cms]-%%CLUSTERNAME%%-%%DEPLOYMENT_SLOT%%.%%REGION%%.cloudapp.azure.com
 TEMPLATE_TYPE=stamp # stamp|scalable|fullstack|devstack
 CLUSTERNAME={CLUSTERNAME}
+SERVICEBUS_CONNECTIONSTRING={SERVICEBUS_CONNECTIONSTRING}
 ADMIN_USER=oxaadmin
 OXA_TOOLS_VERSION=oxa/master.fic
 
