@@ -1,0 +1,16 @@
+# Log rotation configuration for HA Proxy Logs
+# Two logs are expected: General Logs (HA Proxy traffic) & Error Logs
+# Rotation will happen daily and only 1 week of data will be kept
+
+"{HaProxyErrorLog}" "{HaProxyLog}" {
+    daily
+    rotate {TotalFilesToKeep}
+    maxage {MaxLogFileAgeInDays}
+    missingok
+    notifempty
+    compress
+    delaycompress
+    postrotate
+        invoke-rc.d rsyslog rotate >/dev/null 2>&1 || true
+    endscript
+}

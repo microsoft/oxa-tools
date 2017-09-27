@@ -1,0 +1,11 @@
+$ModLoad imudp
+$UDPServerAddress 127.0.0.1
+$UDPServerRun 514
+
+#  Log all haproxy related events with a high severity in errors log
+#  except haproxy-flags CD--
+if ( $programname contains 'haproxy' and ($syslogseverity < 4 ) and not ($msg contains ' CD-- ' ) ) then -{HaProxyErrorLog}
+
+# Log all other haproxy related events with a lower severity. 
+if ( $programname contains 'haproxy' and ( ($syslogseverity >= 4 /* 4=notice */ ) ) ) then -{HaProxyLog}
+& ~
