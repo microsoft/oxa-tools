@@ -3,19 +3,19 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
-set -x
-
 # Path to settings file provided as an argument to this script.
 SETTINGS_FILE=
 
-# From settings file
+# From settings file (these variables will be populated with values from the sourced settings file)
     DATABASE_TYPE= # mongo|mysql
 
     # Reading from database machines
     MONGO_REPLICASET_CONNECTIONSTRING=
-    MYSQL_SERVER_LIST=
+    MYSQL_SERVER_IP=
+    MYSQL_SERVER_PORT=3306
     DATABASE_USER=
     DATABASE_PASSWORD=
+
     # Optional values. If provided, will add another set of credentials to msyql backup
     TEMP_DATABASE_USER=
     TEMP_DATABASE_PASSWORD=
@@ -26,16 +26,32 @@ SETTINGS_FILE=
 
     BACKUP_RETENTIONDAYS=
 
+    # email address for all backup notifications
+    CLUSTER_ADMIN_EMAIL=""
+
+    # Azure Cli version (default to 1.0)
+    AZURE_CLI_VERSION=1
+
 # Paths and file names.
     BACKUP_LOCAL_PATH=
     TMP_QUERY_ADD="query.add.sql"
     TMP_QUERY_REMOVE="query.remove.sql"
     CURRENT_SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
     UTILITIES_FILE=$CURRENT_SCRIPT_PATH/../templates/stamp/utilities.sh
+
     # Derived from DATABASE_TYPE
     CONTAINER_NAME=
     COMPRESSED_FILE=
     BACKUP_PATH=
+
+    # this is the file for logging all backup operations
+    main_logfile=""
+
+    # emailsubject for all backup notifications
+    notification_email_subject=""
+
+    # debug mode: 0=set +x, 1=set -x
+    debug_mode=0
 
 help()
 {
@@ -43,7 +59,8 @@ help()
     echo
     echo "This script $SCRIPT_NAME will backup the database"
     echo "Options:"
-    echo "  -s|--settings-file  Path to settings"
+    echo "  -s|--settings-file   Path to settings"
+    echo "  --azure-cli-version  Azure Cli Version (1 or 2)"
     echo
 }
 
@@ -64,6 +81,9 @@ parse_args()
             -h|--help)
                 help
                 exit 2
+                ;;         
+            --debug)
+                debug_mode=1
                 ;;
             *) # unknown option
                 echo "ERROR. Option -${BOLD}$2${NORM} not allowed."
@@ -103,9 +123,12 @@ validate_db_type()
 
 validate_remote_storage()
 {
+    # TODO: may not be necessary since we will instead explicitly pass the parameters and use a connection string instead
     # Exporting for Azure CLI
     export AZURE_STORAGE_ACCOUNT=$BACKUP_STORAGEACCOUNT_NAME   # in <env>.sh AZURE_ACCOUNT_NAME
     export AZURE_STORAGE_ACCESS_KEY=$BACKUP_STORAGEACCOUNT_KEY # in <env>.sh AZURE_ACCOUNT_KEY
+    export AZURE_STORAGE_CONNECTIONSTRING=$AZURE_STORAGEACCOUNT_CONNECTIONSTRING # azure storage account connection string
+
     if [ -z $AZURE_STORAGE_ACCOUNT ] || [ -z $AZURE_STORAGE_ACCESS_KEY ]; then
         log "Azure storage credentials are required"
         help
@@ -159,7 +182,6 @@ EOF
         sed -i "s/{TEMP_DATABASE_USER}/${TEMP_DATABASE_USER}/I" $TMP_QUERY_ADD
         sed -i "s/{TEMP_DATABASE_PASSWORD}/${TEMP_DATABASE_PASSWORD}/I" $TMP_QUERY_ADD
 
-        install-mysql-client
         mysql -u $DATABASE_USER -p$DATABASE_PASSWORD -h $1 < $TMP_QUERY_ADD
     fi
 }
@@ -181,50 +203,52 @@ EOF
 
         sed -i "s/{TEMP_DATABASE_USER}/${TEMP_DATABASE_USER}/I" $TMP_QUERY_REMOVE
 
-        install-mysql-client
         mysql -u $DATABASE_USER -p$DATABASE_PASSWORD -h $1 < $TMP_QUERY_REMOVE
     fi
 }
 
 create_compressed_db_dump()
 {
+    # this is the actual backup operation
+    log "Backing up '$DATABASE_TYPE' database to local file system"
+    
     pushd $BACKUP_LOCAL_PATH
+    
+    # set the log file & notification
+    main_logfile="/var/log/db_backup_${DATABASE_TYPE}.log"
+    notification_email_subject="OXA Backup - ${DATABASE_TYPE} Databases"
 
-    log "Copying entire $DATABASE_TYPE database to local file system"
-    if [ "$DATABASE_TYPE" == "mysql" ]
+    # 1. Execute the backup
+    if [[ "$DATABASE_TYPE" == "mysql" ]];
     then
-        #todo: add error conditioning to loop. we're currently just using the first one and assuming success
-        mysql_servers=(`echo $MYSQL_SERVER_LIST | tr , ' ' `)
-        for ip in "${mysql_servers[@]}"; do
-            add_temp_mysql_user $ip
+        add_temp_mysql_user $MYSQL_SERVER_IP
 
-            install-mysql-dump
-            mysqldump -u $DATABASE_USER -p$DATABASE_PASSWORD -h $ip --all-databases --single-transaction > $BACKUP_PATH
+        # execute dump of all databases
+        mysqldump -u $DATABASE_USER -p$DATABASE_PASSWORD -h $MYSQL_SERVER_IP -P $MYSQL_SERVER_PORT --all-databases --single-transaction --set-gtid-purged=OFF --triggers --routines --events > $BACKUP_PATH
+        exit_on_error "Unable to backup ${DATABASE_TYPE}!" "${ERROR_DB_BACKUP_FAILED}" "${notification_email_subject}" "${CLUSTER_ADMIN_EMAIL}" "${main_logfile}"
 
-            remove_temp_mysql_user $ip
+        remove_temp_mysql_user $MYSQL_SERVER_IP
 
-            break;
-        done
-
-    elif [ "$DATABASE_TYPE" == "mongo" ]
+    elif [[ "$DATABASE_TYPE" == "mongo" ]];
     then
-        install-mongodb-tools
         mongodump -u $DATABASE_USER -p $DATABASE_PASSWORD --host $MONGO_REPLICASET_CONNECTIONSTRING --db edxapp --authenticationDatabase master -o $BACKUP_PATH
-
+        exit_on_error "Unable to backup ${DATABASE_TYPE}!" "${ERROR_DB_BACKUP_FAILED}" "${notification_email_subject}" "${CLUSTER_ADMIN_EMAIL}" "${main_logfile}"
     fi
 
-    exit_on_error "Failed to connect to database OR failed to create backup file."
+    # 2. Compress the backup
+    # log the file size for future tracking
+    log "Compressing the backup"
 
-    log "Compressing entire $DATABASE_TYPE database"
+    preCompressFileSize=`stat --printf="%s" $BACKUP_PATH`
     tar -zcvf $COMPRESSED_FILE $BACKUP_PATH
+    postCompressFileSize=`stat --printf="%s" $COMPRESSED_FILE`
 
+    log "Uncompressed '$DATABASE_TYPE' database = $preCompressFileSize bytes. Compressed = $postCompressFileSize bytes"
     popd
 }
 
 copy_db_to_azure_storage()
 {
-    install-azure-cli
-
     pushd $BACKUP_LOCAL_PATH
 
     log "Upload the backup $DATABASE_TYPE file to azure blob storage"
@@ -232,26 +256,62 @@ copy_db_to_azure_storage()
     # AZURE_STORAGE_ACCOUNT and AZURE_STORAGE_ACCESS_KEY are already exported for azure cli's use.
     # FYI, we could use AZURE_STORAGE_CONNECTION_STRING instead.
 
-    sc=$(azure storage container show  $CONTAINER_NAME --json)
+    if [[ $AZURE_CLI_VERSION == "1" ]]; then
+        # cli 1.0
+        sc=$(azure storage container show "${CONTAINER_NAME}" --json)
+    else
+        # cli 2.0
+        sc=$(az storage container show --connection-string "${AZURE_STORAGE_CONNECTIONSTRING}" --name "${CONTAINER_NAME}" -o json)
+    fi
+
     if [[ -z $sc ]]; then
         log "Creating the container... $CONTAINER_NAME"
-        azure storage container create $CONTAINER_NAME
+        if [[ $AZURE_CLI_VERSION == "1" ]]; then
+            # cli 1.0
+            azure storage container create "${CONTAINER_NAME}"
+        else
+            # cli 2.0
+            response=$(az storage container create --connection-string "${AZURE_STORAGE_CONNECTIONSTRING}" --name "${CONTAINER_NAME}" -o json)
+            status=$(echo $response | jq '.created')
+
+            if [[ $status != "true" ]]; then
+                # creation failed
+                log "Unable to create the specified storage container: ${CONTAINER_NAME}"
+                exit 1
+            fi
+        fi
+        
     else
         log "The container $CONTAINER_NAME already exists."
     fi
 
     log "Uploading file... Please wait..."
-    echo
-    result=$(azure storage blob upload $COMPRESSED_FILE $CONTAINER_NAME $COMPRESSED_FILE --json)
+    if [[ $AZURE_CLI_VERSION == "1" ]]; then
+        # cli 1.0
+        result=$(azure storage blob upload $COMPRESSED_FILE $CONTAINER_NAME $COMPRESSED_FILE --json)
 
-    install-json-processor
-    fileName=$(echo $result | jq '.name')
-    fileSize=$(echo $result | jq '.transferSummary.totalSize')    
-    if [ $fileName != "" ] && [ $fileName != null ]
-    then
-        log "$fileName blob file uploaded successfully. Size: $fileSize"
+        # parse the json response
+        fileName=$(echo $result | jq '.name')
+        fileSize=$(echo $result | jq '.transferSummary.totalSize')    
+        if [[ $fileName != "" ]] && [[ $fileName != null ]]; then
+            log "$fileName blob file uploaded successfully. Size: $fileSize"
+        else
+			# TODO: take action on blob upload failure
+            log "Upload blob file failed"
+        fi
+
     else
-        log "Upload blob file failed"
+        # cli 2.0
+        result=$(az storage blob upload --connection-string "${AZURE_STORAGE_CONNECTIONSTRING}" --file "${COMPRESSED_FILE}" --container-name "${CONTAINER_NAME}" --name "${COMPRESSED_FILE}" -o json)
+
+        # parse the json response
+        etag=$(echo $result | jq '.etag')
+        lastModified=$(echo $result | jq '.lastModified')
+
+        if [[ -z "${etag// }" ]] || [[ -z "${lastModified// }" ]]; then
+			# TODO: take action on blob upload failure
+            log "Upload blob file failed"
+        fi
     fi
 
     popd
@@ -276,7 +336,7 @@ cleanup_local_copies()
 
 cleanup_old_remote_files()
 {
-    if [-z $BACKUP_RETENTIONDAYS ]; then
+    if [ -z $BACKUP_RETENTIONDAYS ]; then
         log "No database retention length provided."
         return
     fi
@@ -293,7 +353,13 @@ cleanup_old_remote_files()
     cutoffInSeconds=$(( $currentSeconds - $retentionPeriod ))
 
     # Get file list with lots of meta-data. We'll use this to extract dates.
-    verboseDetails=`azure storage blob list $CONTAINER_NAME --json`
+    if [[ $AZURE_CLI_VERSION == "1" ]]; then
+        # cli 1.0
+        verboseDetails=`azure storage blob list $CONTAINER_NAME --json`
+    else
+        # cli 2.0
+        verboseDetails=`az storage blob list --connection-string "${AZURE_STORAGE_CONNECTIONSTRING}" --container-name $CONTAINER_NAME -o json`
+    fi
 
     # List of files (generally formatted like this: mysql-backup_2017-04-20_03h-00m-01s.tar.gz)
     terminator="\"" # quote
@@ -308,9 +374,17 @@ cleanup_old_remote_files()
         fileDateString=`echo "$fileName" | grep -o "[0-9].*$terminator" | sed "s/$terminator//g" | sed "s/h-\|m-/:/g" | tr '_' ' '`
         fileDateInSeconds=`date --date="$fileDateString" +%s`
 
-        if [ $cutoffInSeconds -ge $fileDateInSeconds ]; then
+        if [[ $cutoffInSeconds -ge $fileDateInSeconds ]]; then
             log "deleting $fileName"
-            azure storage blob delete -q $CONTAINER_NAME $fileName
+
+            if [[ $AZURE_CLI_VERSION == "1" ]]; then
+                # cli 1.0
+                azure storage blob delete -q $CONTAINER_NAME $fileName
+            else
+                # cli 2.0
+                # failure here isn't critical, so ignoring response
+                az storage blob delete --connection-string "${AZURE_STORAGE_CONNECTIONSTRING}" --container-name "${CONTAINER_NAME}" --name "${fileName}" --o json
+            fi
         else
             log "keeping $fileName"
         fi
@@ -322,13 +396,19 @@ cleanup_old_remote_files()
 # Parse script argument(s)
 parse_args $@
 
+# debug mode support
+if [[ $debug_mode == 1 ]];
+then
+    set -x
+fi
+
 # log() and other functions
 source_wrapper $UTILITIES_FILE
 
 # Script self-idenfitication
 print_script_header
 
-log "Begin execution of $DATABASE_TYPE backup script using ${DATABASE_TYPE}dump command."
+log "Begin execution of $DATABASE_TYPE backup script using '${DATABASE_TYPE}' dump command."
 
 # Settings
 source_wrapper $SETTINGS_FILE
@@ -338,6 +418,21 @@ exit_if_limited_user
 validate_settings
 
 set_path_names
+
+# install requisite tools (if necessary)
+log "Conditionally installing requisite tools for backup operations"
+install-mysql-client
+install-mysql-dump
+install-mongodb-tools
+
+if [[ $AZURE_CLI_VERSION == "1" ]]; 
+then
+    install-azure-cli
+else
+    install-azure-cli-2
+fi
+
+install-json-processor
 
 # Cleanup previous runs.
 cleanup_local_copies
@@ -351,3 +446,5 @@ cleanup_local_copies
 
 # Cleanup old remote files
 cleanup_old_remote_files
+
+log "Backup complete!"

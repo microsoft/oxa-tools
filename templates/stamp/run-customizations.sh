@@ -62,6 +62,9 @@ NOTIFICATION_MESSAGE=""
 SECONDARY_LOG="/var/log/bootstrap.csx.log"
 PRIMARY_LOG="/var/log/bootstrap.log"
 
+# Attached Storage Mount
+data_disk_mount_point="/datadisks"
+
 # Database Backup Parameters
 BACKUP_STORAGEACCOUNT_NAME=""
 BACKUP_STORAGEACCOUNT_KEY=""
@@ -69,7 +72,7 @@ MONGO_BACKUP_FREQUENCY="0 0 * * *"      # At every 00:00 (midnight)
 MYSQL_BACKUP_FREQUENCY="11 */4 * * *"   # At minute 11 past every 4th hour.
 MONGO_BACKUP_RETENTIONDAYS="30"
 MYSQL_BACKUP_RETENTIONDAYS="30"
-BACKUP_LOCAL_PATH="/datadisks/disk1/var/tmp"
+BACKUP_LOCAL_PATH="${data_disk_mount_point}/disk1/var/tmp"
 
 # Microsoft Sample course
 EDXAPP_IMPORT_KITCHENSINK_COURSE=false;
@@ -672,14 +675,28 @@ if [[ -d $OXA_ENV_PATH ]]; then
     rm -rf $OXA_ENV_PATH
 fi
 
+# download configs from keyvault
 powershell -file $INSTALLER_BASEPATH/Process-OxaToolsKeyVaultConfiguration.ps1 -Operation Download -VaultName $KEYVAULT_NAME -AadWebClientId $AAD_WEBCLIENT_ID -AadWebClientAppKey $AAD_WEBCLIENT_APPKEY -AadTenantId $AAD_TENANT_ID -TargetPath $OXA_ENV_PATH -AzureSubscriptionId $AZURE_SUBSCRIPTION_ID -AzureCliVersion $AZURE_CLI_VERSION
 exit_on_error "Failed downloading configurations from keyvault" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
-# create storage container for edxapp:migrate & other reporting features (containers for the database backup will be created dynamically)
-powershell -file $INSTALLER_BASEPATH/Create-StorageContainer.ps1 -AadWebClientId $AAD_WEBCLIENT_ID -AadWebClientAppKey $AAD_WEBCLIENT_APPKEY -AadTenantId $AAD_TENANT_ID -AzureSubscriptionId $AZURE_SUBSCRIPTION_ID -StorageAccountName "${BACKUP_STORAGEACCOUNT_NAME}" -StorageAccountKey "${BACKUP_STORAGEACCOUNT_KEY}" -StorageContainerNames "uploads,reports,tracking"
-exit_on_error "Failed creating container(s) for edxapp:migrate (uploads,reports,tracking) in '${BACKUP_STORAGEACCOUNT_NAME}'" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
-
+# TODO: downgrade this to position keyvault as the authorititive source 
+# that should remove dependency on deployment-time overrides
+# apply deployment-time parameter overrides. After these updates, the appropriate 
+# override values will be present in AZURE_ACCOUNT_KEY, AZURE_ACCOUNT_NAME
 persist_deployment_time_values
+
+# Generate a storage connection string (primarily to support custom storage endpoints)
+# At this point, we have sourced the cloud configuration file.
+# We expect the storage account suffix (AZURE_STORAGE_ENDPOINT_SUFFIX) to either:
+# 1. have a value (custom storage endpoint)
+# 2. not have a value (default to global azure)
+encoded_azure_storage_endpoint_suffix=`echo ${AZURE_STORAGE_ENDPOINT_SUFFIX} | base64`
+storageAccountEndpointSuffix=`get_azure_storage_endpoint_suffix ${encoded_azure_storage_endpoint_suffix}`
+storage_connection_string=`generate_azure_storage_connection_string "${AZURE_ACCOUNT_NAME}" "${AZURE_ACCOUNT_KEY}" "${storageAccountEndpointSuffix}"`
+
+# create storage container for edxapp:migrate & other reporting features (containers for the database backup will be created dynamically)
+powershell -file $INSTALLER_BASEPATH/Create-StorageContainer.ps1 -AadWebClientId $AAD_WEBCLIENT_ID -AadWebClientAppKey $AAD_WEBCLIENT_APPKEY -AadTenantId $AAD_TENANT_ID -AzureSubscriptionId $AZURE_SUBSCRIPTION_ID -StorageAccountName "${AZURE_ACCOUNT_NAME}" -StorageAccountKey "${AZURE_ACCOUNT_KEY}" -StorageContainerNames "uploads,reports,tracking" -AzureCliVersion $AZURE_CLI_VERSION -AzureStorageConnectionString "${storage_connection_string}"
+exit_on_error "Failed creating container(s) for edxapp:migrate (uploads,reports,tracking) in '${AZURE_ACCOUNT_NAME}'" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
 # Create a link to the utilities.sh library to be used by the other installer scripts
 ln -s $UTILITIES_PATH "${INSTALLER_BASEPATH}/utilities.sh"
@@ -688,24 +705,46 @@ ln -s $UTILITIES_PATH "${INSTALLER_BASEPATH}/utilities.sh"
 # Setup Backups
 #####################################
 
-if [ "$MACHINE_ROLE" == "jumpbox" ];
+if [[ "$MACHINE_ROLE" == "jumpbox" ]];
 then
+
+    # configure any attached storage
+    configure_datadisks "${data_disk_mount_point}"
+
+    # configure backup
     log "Starting backup configuration on '${HOSTNAME}' as a member in the '${MACHINE_ROLE}' role"
 
     # These are fixed values
     MONGO_REPLICASET_CONNECTIONSTRING="${MONGO_REPLICASET_NAME}/${MONGO_SERVER_LIST}"
     DATABASE_BACKUP_SCRIPT="${INSTALLER_BASEPATH}/db_backup.sh"
 
+    if [[ -z $MYSQL_MASTER_PORT ]]; 
+    then
+        # defensive
+        # if for some reason this value isn't specified, default it to a known mysql port
+        MYSQL_MASTER_PORT=3306
+    fi
+
     # Setup mysql backup
     DATABASE_TYPE_TO_BACKUP="mysql"
     DATABASE_BACKUP_LOG="/var/log/db_backup_${DATABASE_TYPE_TO_BACKUP}.log"
-    setup_backup "${INSTALLER_BASEPATH}/backup_configuration_${DATABASE_TYPE_TO_BACKUP}.sh" "${DATABASE_BACKUP_SCRIPT}" "${DATABASE_BACKUP_LOG}" "${BACKUP_STORAGEACCOUNT_NAME}" "${BACKUP_STORAGEACCOUNT_KEY}" "${MYSQL_BACKUP_FREQUENCY}" "${MYSQL_BACKUP_RETENTIONDAYS}" "${MONGO_REPLICASET_CONNECTIONSTRING}" "${MYSQL_SERVER_LIST}" "${DATABASE_TYPE_TO_BACKUP}" "${MYSQL_ADMIN_USER}" "${MYSQL_ADMIN_PASSWORD}" "${BACKUP_LOCAL_PATH}" "${MYSQL_TEMP_USER}" "${MYSQL_TEMP_PASSWORD}"
+    setup_backup "${INSTALLER_BASEPATH}/backup_configuration_${DATABASE_TYPE_TO_BACKUP}.sh" "${DATABASE_BACKUP_SCRIPT}" "${DATABASE_BACKUP_LOG}" \
+                "${BACKUP_STORAGEACCOUNT_NAME}" "${BACKUP_STORAGEACCOUNT_KEY}" "${MYSQL_BACKUP_FREQUENCY}" "${MYSQL_BACKUP_RETENTIONDAYS}" \
+                "${MONGO_REPLICASET_CONNECTIONSTRING}" "${MYSQL_MASTER_IP}" "${DATABASE_TYPE_TO_BACKUP}" "${MYSQL_ADMIN_USER}" "${MYSQL_ADMIN_PASSWORD}" \
+                "${BACKUP_LOCAL_PATH}" "${MYSQL_MASTER_PORT}" "${CLUSTER_ADMIN_EMAIL}" "${AZURE_CLI_VERSION}" "${encoded_azure_storage_endpoint_suffix}" \
+                "${MYSQL_TEMP_USER}" "${MYSQL_TEMP_PASSWORD}"
+    
     exit_on_error "Failed setting up the Mysql Database backup" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
     # Setup mongo backup
     DATABASE_TYPE_TO_BACKUP="mongo"
     DATABASE_BACKUP_LOG="/var/log/db_backup_${DATABASE_TYPE_TO_BACKUP}.log"
-    setup_backup "${INSTALLER_BASEPATH}/backup_configuration_${DATABASE_TYPE_TO_BACKUP}.sh" "${DATABASE_BACKUP_SCRIPT}" "${DATABASE_BACKUP_LOG}" "${BACKUP_STORAGEACCOUNT_NAME}" "${BACKUP_STORAGEACCOUNT_KEY}" "${MONGO_BACKUP_FREQUENCY}" "${MONGO_BACKUP_RETENTIONDAYS}" "${MONGO_REPLICASET_CONNECTIONSTRING}" "${MYSQL_SERVER_LIST}" "${DATABASE_TYPE_TO_BACKUP}" "${MONGO_USER}" "${MONGO_PASSWORD}" "${BACKUP_LOCAL_PATH}" "${MONGO_USER}" "${MONGO_PASSWORD}"
+    setup_backup "${INSTALLER_BASEPATH}/backup_configuration_${DATABASE_TYPE_TO_BACKUP}.sh" "${DATABASE_BACKUP_SCRIPT}" "${DATABASE_BACKUP_LOG}" \
+                "${BACKUP_STORAGEACCOUNT_NAME}" "${BACKUP_STORAGEACCOUNT_KEY}" "${MONGO_BACKUP_FREQUENCY}" "${MONGO_BACKUP_RETENTIONDAYS}" \
+                "${MONGO_REPLICASET_CONNECTIONSTRING}" "${MYSQL_MASTER_IP}" "${DATABASE_TYPE_TO_BACKUP}" "${MONGO_USER}" "${MONGO_PASSWORD}" \
+                "${BACKUP_LOCAL_PATH}" "${MYSQL_MASTER_PORT}" "${CLUSTER_ADMIN_EMAIL}" "${AZURE_CLI_VERSION}" "${encoded_azure_storage_endpoint_suffix}" \
+                "${MONGO_USER}" "${MONGO_PASSWORD}"
+
     exit_on_error "Failed setting up the Mongo Database backup" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 fi
 
