@@ -193,7 +193,7 @@
                     "fileUris": "[parameters('customSettings').vmScripts]"
                 },
                 "protectedSettings": {
-                    "commandToExecute": "variables('commandToExecuteSb')"                   
+                    "commandToExecute": "[variables('commandToExecuteSb')]"                   
                     
                     }
             }
