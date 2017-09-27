@@ -35,6 +35,10 @@
             }
         }
     },
+    "variables": {
+        "commandToExecute": "[replace(parameters('customSettings').customInstallerCommandToExecute, parameters('customSettings').storageKeyPlaceholder, parameters('customSettings').secureGenericStorageAccountKey)]",
+        "commandToExecuteSb": "[concat(variables('commandToExecute'), parameters('customSettings').sbPlaceholder, parameters('customSettings').sbConnectionString))]" 
+    },        
     "resources": [
         {
             "name": "[parameters('networkSettings').jbNetworkSecurityGroupName]",
@@ -189,7 +193,7 @@
                     "fileUris": "[parameters('customSettings').vmScripts]"
                 },
                 "protectedSettings": {
-                    "commandToExecute": "[replace(parameters('customSettings').customInstallerCommandToExecute, parameters('customSettings').storageKeyPlaceholder, parameters('customSettings').secureGenericStorageAccountKey)]"                    
+                    "commandToExecute": "variables('commandToExecuteSb')"                   
                     
                     }
             }

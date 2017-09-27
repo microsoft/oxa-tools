@@ -263,11 +263,7 @@
           "properties": {
             "lockDuration": "PT5M",
             "maxSizeInMegabytes": "1024"           
-          },
-          "protectedSettings": {
-                    "commandToExecute": "[replace(parameters('customSettings').customInstallerCommandToExecute, parameters('customSettings').sbPlaceholder, parameters('customSettings').serviceBusConnectionStringPlaceholder)]"                    
-                    
-            }
+          }
         }
       ]
     }
