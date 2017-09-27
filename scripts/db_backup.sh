@@ -3,6 +3,8 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
+# Dumps DB to azure storage AND removes old backups.
+
 set -x
 
 # Path to settings file provided as an argument to this script.
@@ -20,14 +22,15 @@ SETTINGS_FILE=
     TEMP_DATABASE_USER=
     TEMP_DATABASE_PASSWORD=
 
-    # Writing to storage
+    # Writing to local storage
+    BACKUP_LOCAL_PATH=
+
+    # Writing to remote storage
     AZURE_STORAGE_ACCOUNT=    # from BACKUP_STORAGEACCOUNT_NAME
     AZURE_STORAGE_ACCESS_KEY= # from BACKUP_STORAGEACCOUNT_KEY
-
     BACKUP_RETENTIONDAYS=
 
 # Paths and file names.
-    BACKUP_LOCAL_PATH=
     TMP_QUERY_ADD="query.add.sql"
     TMP_QUERY_REMOVE="query.remove.sql"
     CURRENT_SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -42,6 +45,7 @@ help()
     SCRIPT_NAME=`basename "$0"`
     echo
     echo "This script $SCRIPT_NAME will backup the database"
+    echo
     echo "Options:"
     echo "  -s|--settings-file  Path to settings"
     echo
@@ -78,7 +82,7 @@ parse_args()
 
 source_wrapper()
 {
-    if [ -f "$1" ]
+    if [[ -f "$1" ]]
     then
         echo "Sourcing file $1"
         source "$1"
