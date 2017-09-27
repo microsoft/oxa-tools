@@ -37,7 +37,7 @@
     },
     "variables": {
         "commandToExecute": "[replace(parameters('customSettings').customInstallerCommandToExecute, parameters('customSettings').storageKeyPlaceholder, parameters('customSettings').secureGenericStorageAccountKey)]",
-        "commandToExecuteSb": "[concat(variables('commandToExecute'), parameters('customSettings').sbPlaceholder, parameters('customSettings').sbConnectionString)]" 
+        "commandToExecuteSb": "variables('commandToExecute'), parameters('customSettings').sbPlaceholder, parameters('customSettings').sbConnectionString)" 
     },        
     "resources": [
         {
