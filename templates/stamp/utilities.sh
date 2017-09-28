@@ -340,14 +340,15 @@ retry-command()
         if [[ -n "$fix_packages" ]] ; then
             apt-wrapper "update"
             apt-wrapper "install -f"
-            apt-wrapper "upgrade -f"
             dpkg --configure -a
         fi
 
         log "STARTING ${message}..."
 
-        eval "$command"
+        set -o pipefail
+        eval "$command" | tee /var/tmp/${a}.txt
         result=$?
+        set +o pipefail
 
         if [[ $result -eq 0 ]] ; then
             log "SUCCEEDED ${message}!"
