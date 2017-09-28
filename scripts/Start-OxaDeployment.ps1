@@ -136,7 +136,7 @@ switch ($Cloud) {
     }
     "bvt" {
         $AzureSubscriptionName = "OXABVTENVIRONMENT"
-        $ResourceGroupName = "lexoxabvtc14"        
+        $ResourceGroupName = "lexoxabvtc16"        
     }
 }
 

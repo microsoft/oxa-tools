@@ -178,7 +178,7 @@ New-AzureRmResourceGroup -Name $ResourceGroupName -Location $Location -Force
 ######################################################
 $FullDeploymentArmTemplateFile = Set-ScriptDefault -ScriptParamName "FullDeploymentArmTemplateFile" `
     -ScriptParamVal $FullDeploymentArmTemplateFile `
-    -DefaultValue "$($rootPath)/templates/stamp/stamp-v2.json"
+    -DefaultValue "$($rootPath)/templates/stamp/stamp-v3.json"
 $FullDeploymentParametersFile = Set-ScriptDefault -ScriptParamName "FullDeploymentParametersFile" `
     -ScriptParamVal $FullDeploymentParametersFile `
     -DefaultValue "$($rootPath)/config/stamp/default/parameters.json"

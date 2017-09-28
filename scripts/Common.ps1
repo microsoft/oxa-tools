@@ -683,7 +683,7 @@ function Get-AzureResources
 ## Output:
 ##  $slot name
 ##
-function Get-DisabledSlot( $resourceList,$resourceGroupName )
+function Get-DisabledSlot($resourceList, $resourceGroupName)
 {
     # Assgin the slot names
     [hashtable]$disabledSlot = @{
@@ -691,11 +691,11 @@ function Get-DisabledSlot( $resourceList,$resourceGroupName )
                                    "EndPoint2" = "endpoint2";                                       
                                 };
     try
-    {
+    { 
         Log-Message "Getting LMS traffic manager profile:"
-        #Getting LMS traffic manager profile to identify the disabled slot
+        # Getting LMS traffic manager profile to identify the disabled slot
         $trafficManager = $resourceList -match "Microsoft.Network/trafficManagerProfiles" | Where-Object{ $_ -imatch "LMS" };
-        $trafficManagerProfile = Get-AzureRmTrafficManagerProfile -Name $trafficManager.Name  -ResourceGroupName $resourceGroupName;
+        $trafficManagerProfile = Get-AzureRmTrafficManagerProfile -Name $trafficManager.Name -ResourceGroupName $resourceGroupName;
        
         foreach ( $endpoint in $trafficManagerProfile.Endpoints )
         {
@@ -719,6 +719,13 @@ function Get-DisabledSlot( $resourceList,$resourceGroupName )
         throw "Error in identifying the traffic manager profile: $($_.Message)";
         exit;
     }
+
+    if (!$slot)
+    {
+        $slot = "slot1"
+    }
+
+    return $slot
 }
 
 ## Function: Remove-StagingResources
@@ -740,8 +747,8 @@ function Remove-StagingResources()
     $resourcelist = Get-ResourcesList -ResourceGroupName $ResourceGroupName;
     
     # determining the slot by passing Azure resource list from the provided resource group
-    $Slot = Get-DisabledSlot -resourceList $resourcelist;
-      
+    $Slot = Get-DisabledSlot -resourceList $resourcelist -resourceGroupName $ResourceGroupName;
+
     # Filter the resources based on the determined slot
     $targetedResources = $resourceList | Where-Object { $_.ResourceName.Contains($Slot) };
 
@@ -1243,10 +1250,10 @@ function Remove-OxaPubicIpAddress
 ## Output:
 ##   nothing
 ##
-function Delete-Resources($DeploymentType,$Cloud ,$DeploymentStatus)
+function Delete-Resources($DeploymentType, $Cloud, $ResourceGroupName)
 {
    
-   if (( $DeploymentType -eq "upgrade" ) -or ( $DeploymentType -eq "swap" -and $Cloud -eq  "bvt" -and $DeploymentStatus.ProvisioningState -ieq "Succeeded" ))
+   if (( $DeploymentType -eq "upgrade" ) -or ( $DeploymentType -eq "swap" -and $Cloud -eq  "bvt"))
     {
         try
         {
