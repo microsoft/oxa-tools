@@ -8,6 +8,7 @@
 set -axe
 
 readonly MSFT="microsoft"
+readonly EDX="edx"
 
 ##########################
 # Script Defaults that can be overriden via
@@ -53,6 +54,7 @@ MYSQL_ADMIN_USER=
 MYSQL_ADMIN_PASSWORD=
 EDXAPP_ENABLE_COMPREHENSIVE_THEMING=
 COMBINED_LOGIN_REGISTRATION=
+NGINX_SITES=
 
 # The common tag in the upstream to our
 # forks (edx-platform and configuration)
@@ -156,26 +158,35 @@ set_dynamic_vars()
     EDXAPP_SU_PASSWORD=`harden $EDXAPP_SU_PASSWORD`
     VAGRANT_USER_PASSWORD=$EDXAPP_SU_PASSWORD
 
-    #todo: remove second condition after edx-configuration merge to releae,master
     # The upstream doesn't have the relevant
     # changes to leverage MYSQL_ADMIN_PASSWORD
     # For details, see msft/edx-configuration commit:
     # 65e2668672bda0112a64aabb86cf532ad228c4fa
-    if [[ $BRANCH_VERSIONS == edx ]] || [[ $BRANCH_VERSIONS != edge ]]; then
-        MYSQL_ADMIN_USER=root
-        MYSQL_ADMIN_PASSWORD=
-    else
+    if [[ $BRANCH_VERSIONS == edge ]]; then
         MYSQL_ADMIN_USER=lexoxamysqladmin
         MYSQL_ADMIN_PASSWORD=`harden $MYSQL_ADMIN_PASSWORD`
+    else
+        MYSQL_ADMIN_USER=root
+        MYSQL_ADMIN_PASSWORD=
     fi
     set -x
 
-    if [[ $BRANCH_VERSIONS == edx ]] ; then
-        EDXAPP_ENABLE_COMPREHENSIVE_THEMING=false
-        COMBINED_LOGIN_REGISTRATION=true
-    else
-        EDXAPP_ENABLE_COMPREHENSIVE_THEMING=true
-        COMBINED_LOGIN_REGISTRATION=false
+    case "$BRANCH_VERSIONS" in
+        edx_f|edx_g)
+            EDXAPP_ENABLE_COMPREHENSIVE_THEMING=false
+            COMBINED_LOGIN_REGISTRATION=true
+            NGINX_SITES='[certs, cms, lms, forum, xqueue]'
+        ;;
+        *)
+            EDXAPP_ENABLE_COMPREHENSIVE_THEMING=true
+            COMBINED_LOGIN_REGISTRATION=false
+            # Microsoft repositories support the lms-preview subdomain.
+            NGINX_SITES='[certs, cms, lms, lms-preview, forum, xqueue]'
+        ;;
+    esac
+
+    if [[ $BRANCH_VERSIONS == edx_g ]] ; then
+        EDX_BRANCH="tags/open-release/ginkgo.1"
     fi
 }
 
@@ -191,15 +202,20 @@ test_args()
         exit 1
     fi
 
-    if [[ $BRANCH_VERSIONS != stable ]] && [[ $BRANCH_VERSIONS != release ]] && [[ $BRANCH_VERSIONS != edge ]] && [[ $BRANCH_VERSIONS != edx ]] ; then
-        set +x
-        echo -e "\033[1;36m"
-        echo -e "\n BRANCH_VERSIONS is set to $BRANCH_VERSIONS"
-        echo -e " but should be stable OR release OR edge OR edx .\n"
-        echo -e " Use the -b param argument.\n"
-        echo -e '\033[0m'
-        exit 1
-    fi
+    echo -e "\n BRANCH_VERSIONS is set to $BRANCH_VERSIONS"
+    case "$BRANCH_VERSIONS" in
+        stable|release|edge|edx_f|edx_g)
+            echo ""
+        ;;
+        *)
+            set +x
+            echo -e "\033[1;36m"
+            echo -e " but should be stable OR release OR edge OR edx .\n"
+            echo -e " Use the -b param argument.\n"
+            echo -e '\033[0m'
+            exit 1
+        ;;
+    esac
 }
 
 ##########################
@@ -222,10 +238,8 @@ get_branch()
         else
             echo "oxa/dev.fic"
         fi
-    elif [[ $BRANCH_VERSIONS == edx ]] ; then
-        echo "$EDX_BRANCH"
     else
-        test_args
+        echo "$EDX_BRANCH"
     fi
 }
 
@@ -266,30 +280,26 @@ harden()
 
 get_org()
 {
-    if [[ $BRANCH_VERSIONS == edx ]] ; then
-        echo "$BRANCH_VERSIONS"
-    else
-        echo "$MSFT"
-    fi
+    case "$BRANCH_VERSIONS" in
+        edx_f|edx_g)
+            echo "$EDX"
+        ;;
+        *)
+            echo "$MSFT"
+        ;;
+    esac
 }
 
 get_conf_project_name()
 {
-    if [[ $BRANCH_VERSIONS == edx ]] ; then
-        echo "configuration"
-    else
-        echo "edx-configuration"
-    fi
-}
-
-update_nginx_sites()
-{
-    if [[ $BRANCH_VERSIONS == edx ]] ; then
-        NGINX_SITES='[certs, cms, lms, forum, xqueue]'
-    else
-        # Microsoft repositories support the lms-preview subdomain.
-        NGINX_SITES='[certs, cms, lms, lms-preview, forum, xqueue]'
-    fi
+    case "$BRANCH_VERSIONS" in
+        edx_f|edx_g)
+            echo "configuration"
+        ;;
+        *)
+            echo "edx-configuration"
+        ;;
+    esac
 }
 
 ##########################
@@ -336,7 +346,21 @@ install-with-oxa()
 
 install-with-edx-native()
 {
-    #todo:
+    # from https://openedx.atlassian.net/wiki/spaces/OpenOPS/pages/146440579/Native+Open+edX+Ubuntu+16.04+64+bit+Installation
+
+    # 1. Set the OPENEDX_RELEASE variable:
+    OPENEDX_RELEASE=$EDX_BRANCH
+
+    # 2. Bootstrap the Ansible installation:
+    wget https://raw.githubusercontent.com/${EDX}/$(get_conf_project_name)/$OPENEDX_RELEASE/util/install/ansible-bootstrap.sh -O - | sudo bash
+
+    # 3. (Optional) If this is a new installation, randomize the passwords:
+    wget https://raw.githubusercontent.com/${EDX}/$(get_conf_project_name)/$OPENEDX_RELEASE/util/install/generate-passwords.sh -O - | bash
+
+    #todo: 3a link file to /oxa/oxa.yml
+
+    # 4. Install Open edX:
+    wget https://raw.githubusercontent.com/${EDX}/$(get_conf_project_name)/$OPENEDX_RELEASE/util/install/sandbox.sh -O - | bash
 }
 
 ##########################
@@ -352,7 +376,9 @@ parse_args "$@"
 test_args
 
 set_dynamic_vars
-
-update_nginx_sites
-
-install-with-oxa
+ 
+if [[ $TEMPLATE_TYPE == fullstack ]] && [[ $BRANCH_VERSIONS == edx_g ]] ; then
+    install-with-edx-native
+else
+    install-with-oxa
+fi
