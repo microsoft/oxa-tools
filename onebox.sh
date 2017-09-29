@@ -14,6 +14,7 @@ readonly MSFT="microsoft"
 # - parameter arguments OR
 # - assignment here
 ##########################
+
 TEMPLATE_TYPE=fullstack # fullstack or devstack
 BRANCH_VERSIONS=edge    # edge or release or stable or edx
 DEFAULT_PASSWORD=
@@ -21,14 +22,9 @@ DEFAULT_PASSWORD=
 ##########################
 # Settings
 ##########################
+
 readonly MONGO_USER=oxamongoadmin
 MONGO_PASSWORD=
-
-# dynamically assigned below
-MYSQL_ADMIN_USER=
-MYSQL_ADMIN_PASSWORD=
-EDXAPP_ENABLE_COMPREHENSIVE_THEMING=
-COMBINED_LOGIN_REGISTRATION=
 
 readonly MYSQL_USER=oxamysql
 MYSQL_PASSWORD=
@@ -49,13 +45,24 @@ readonly PLATFORM_EMAIL="$EDXAPP_SU_EMAIL"
 readonly EDXAPP_COMPREHENSIVE_THEME_DIRS='[ "/edx/app/edxapp/themes" ]'
 readonly EDXAPP_DEFAULT_SITE_THEME=comprehensive
 
-# The common tag in the upstream to our fork is open-release/ficus.1
-# Specifically: our forks of edx-platform and configuration
-readonly EDX_BRANCH="tags/open-release/ficus.1"
+##########################
+# Dynamic settings. Assigned later on based on onebox.sh param arguments.
+##########################
+
+MYSQL_ADMIN_USER=
+MYSQL_ADMIN_PASSWORD=
+EDXAPP_ENABLE_COMPREHENSIVE_THEMING=
+COMBINED_LOGIN_REGISTRATION=
+
+# The common tag in the upstream to our
+# forks (edx-platform and configuration)
+# is ficus.1
+EDX_BRANCH="tags/open-release/ficus.1"
 
 ##########################
 # Script Parameter Arguments
 ##########################
+
 parse_args() 
 {
     while [[ "$#" -gt 0 ]] ; do
@@ -171,6 +178,7 @@ test_args()
 ##########################
 # Helpers
 ##########################
+
 get_branch()
 {
     useMsftRepo=$1
@@ -257,6 +265,52 @@ update_nginx_sites()
     fi
 }
 
+##########################
+# Core Installation Operation
+##########################
+
+install-with-oxa()
+{
+    # get current dir
+    CURRENT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+    bootstrap="scripts/bootstrap.sh"
+    if [[ ! -f scripts/bootstrap.sh ]] ; then
+        fileName=`basename $bootstrap`
+        wget -q https://raw.githubusercontent.com/${MSFT}/oxa-tools/$(get_current_branch)/$bootstrap -O $fileName
+        bootstrap=$fileName
+    fi
+
+    bash $bootstrap \
+        --role \
+            $TEMPLATE_TYPE \
+        --retry-count \
+            5 \
+        --environment \
+            "dev" \
+        --oxatools-public-github-projectbranch \
+            `get_current_branch` \
+        --edxconfiguration-public-github-accountname \
+            `get_org` \
+        --edxconfiguration-public-github-projectname \
+            `get_conf_project_name` \
+        --edxconfiguration-public-github-projectbranch \
+            `get_branch` \
+        --edxplatform-public-github-accountname \
+            `get_org` \
+        --edxplatform-public-github-projectbranch \
+            `get_branch` \
+        --edxtheme-public-github-projectbranch \
+            `get_branch useMsftRepo` \
+        --edxversion \
+            $EDX_BRANCH \
+        --forumversion \
+            $EDX_BRANCH
+}
+
+install-with-edx-native()
+{
+    #todo:
+}
 
 ##########################
 # Execution Starts
@@ -272,37 +326,4 @@ test_args
 
 update_nginx_sites
 
-# get current dir
-CURRENT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-bootstrap="scripts/bootstrap.sh"
-if [[ ! -f scripts/bootstrap.sh ]] ; then
-    fileName=`basename $bootstrap`
-    wget -q https://raw.githubusercontent.com/${MSFT}/oxa-tools/$(get_current_branch)/$bootstrap -O $fileName
-    bootstrap=$fileName
-fi
-
-bash $bootstrap \
-    --role \
-        $TEMPLATE_TYPE \
-    --retry-count \
-        5 \
-    --environment \
-        "dev" \
-    --oxatools-public-github-projectbranch \
-        `get_current_branch` \
-    --edxconfiguration-public-github-accountname \
-        `get_org` \
-    --edxconfiguration-public-github-projectname \
-        `get_conf_project_name` \
-    --edxconfiguration-public-github-projectbranch \
-        `get_branch` \
-    --edxplatform-public-github-accountname \
-        `get_org` \
-    --edxplatform-public-github-projectbranch \
-        `get_branch` \
-    --edxtheme-public-github-projectbranch \
-        `get_branch useMsftRepo` \
-    --edxversion \
-        $EDX_BRANCH \
-    --forumversion \
-        $EDX_BRANCH
+install-with-oxa
