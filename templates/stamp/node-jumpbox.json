@@ -34,11 +34,7 @@
                 "Description": "Custom settings object"
             }
         }
-    },
-    "variables": {
-        "commandToExecute": "[replace(parameters('customSettings').customInstallerCommandToExecute, parameters('customSettings').storageKeyPlaceholder, parameters('customSettings').secureGenericStorageAccountKey)]",
-        "commandToExecuteSb": "variables('commandToExecute'),[replace(parameters('customSettings').customInstallerCommandToExecute,  parameters('customSettings').sbPlaceholder, parameters('customSettings').sbConnectionString))]" 
-    },        
+    },           
     "resources": [
         {
             "name": "[parameters('networkSettings').jbNetworkSecurityGroupName]",
@@ -193,7 +189,7 @@
                     "fileUris": "[parameters('customSettings').vmScripts]"
                 },
                 "protectedSettings": {
-                    "commandToExecute": "[variables('commandToExecuteSb')]"                   
+                    "commandToExecute": "[replace(parameters('customSettings').customInstallerCommandToExecute, parameters('customSettings').storageKeyPlaceholder, parameters('customSettings').secureGenericStorageAccountKey)]"              
                     
                     }
             }
