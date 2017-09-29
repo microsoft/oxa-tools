@@ -316,10 +316,12 @@ retry-command()
             dpkg --configure -a
         fi
 
+        install-unbuffer
+
         log "STARTING ${message}..."
 
         set -o pipefail
-        eval "$command" | tee /var/tmp/${a}.txt
+        unbuffer $command | tee /var/tmp/${a}.txt
         result=$?
         set +o pipefail
 
@@ -346,6 +348,20 @@ install-sudo()
     fi
 
     install-wrapper "sudo"
+}
+
+#############################################################################
+# Setup expect-dev (for unbuffer)
+#############################################################################
+
+install-unbuffer()
+{
+    if type unbuffer >/dev/null 2>&1 ; then
+        log "unbuffer already installed"
+        return
+    fi
+
+    install-wrapper "expect-dev"
 }
 
 #############################################################################
