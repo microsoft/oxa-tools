@@ -79,10 +79,12 @@ parse_args()
 
         case "$1" in
           -r|--role|-s|--stack)
-            TEMPLATE_TYPE="${arg_value,,}" # convert to lowercase
+            # convert to lowercase
+            TEMPLATE_TYPE=`parse_template "${arg_value,,}"`
             ;;
           -b|--branches)
-            BRANCH_VERSIONS="${arg_value,,}" # convert to lowercase
+            # convert to lowercase
+            BRANCH_VERSIONS=`parse_branch "${arg_value,,}"`
             ;;
           -d|--default-password)
             DEFAULT_PASSWORD="${arg_value}"
@@ -102,28 +104,51 @@ parse_args()
     done
 }
 
-fix_args()
+parse_template()
 {
-    # Allow for synonyms
-    if [[ $TEMPLATE_TYPE == full ]] || [[ $TEMPLATE_TYPE == fs ]] || [[ $TEMPLATE_TYPE == f ]] ; then
-        TEMPLATE_TYPE=fullstack
-    elif [[ $TEMPLATE_TYPE == dev ]] || [[ $TEMPLATE_TYPE == ds ]] || [[ $TEMPLATE_TYPE == d ]] ; then
-        TEMPLATE_TYPE=devstack
-    fi
+    userInput="$1"
 
-    # Allow for synonyms
-    if [[ $BRANCH_VERSIONS == production ]] || [[ $BRANCH_VERSIONS == prod ]] || [[ $BRANCH_VERSIONS == master ]]; then
-        BRANCH_VERSIONS=stable
-    elif [[ $BRANCH_VERSIONS == pre ]] || [[ $BRANCH_VERSIONS == bvt ]] || [[ $BRANCH_VERSIONS == int ]] ; then
-        BRANCH_VERSIONS=release
-    elif [[ $BRANCH_VERSIONS == development ]] || [[ $BRANCH_VERSIONS == dev ]] || [[ $BRANCH_VERSIONS == beta ]] ; then
-        BRANCH_VERSIONS=edge
-    elif [[ $BRANCH_VERSIONS == upstream ]] || [[ $BRANCH_VERSIONS == up ]] || [[ $BRANCH_VERSIONS == ed ]] || [[ $BRANCH_VERSIONS == edx_ficus ]] ; then
-        BRANCH_VERSIONS=edx
-    elif [[ $BRANCH_VERSIONS == ginkgo ]] || [[ $BRANCH_VERSIONS == up_g ]] || [[ $BRANCH_VERSIONS == ed_g ]] || [[ $BRANCH_VERSIONS == edx_ginkgo ]] ; then
-        BRANCH_VERSIONS=edx_g
-    fi
+    case "$userInput" in
+        full|fs|f)
+            echo "fullstack"
+        ;;
+        dev|ds|d)
+            echo "devstack"
+        ;;
+        *)
+            echo "$userInput"
+        ;;
+    esac
+}
 
+parse_branch()
+{
+    userInput="$1"
+
+    case "$userInput" in
+        production|prod|master)
+            echo "stable"
+        ;;
+        pre|bvt|int)
+            echo "release"
+        ;;
+        development|dev|beta)
+            echo "edge"
+        ;;
+        ficus|up|ed|f|edx_ficus|edx|upstream)
+            echo "edx_f"
+        ;;
+        ginkgo|up_g|ed_g|g|edx_ginkgo)
+            echo "edx_g"
+        ;;
+        *)
+            echo "$userInput"
+        ;;
+    esac
+}
+
+set_dynamic_vars()
+{
     # Harden credentials if none were provided.
     set +x
     MONGO_PASSWORD=`harden $MONGO_PASSWORD`
@@ -323,8 +348,10 @@ apt update -qq
 apt install -y -qq pwgen wget
 
 parse_args "$@"
-fix_args
+
 test_args
+
+set_dynamic_vars
 
 update_nginx_sites
 
