@@ -77,7 +77,6 @@ EDXAPP_IMPORT_KITCHENSINK_COURSE=false;
 # Comprehensive Theming
 EDXAPP_ENABLE_COMPREHENSIVE_THEMING=false
 EDXAPP_COMPREHENSIVE_THEME_DIR=""
-EDXAPP_DEFAULT_THEME_DIR="/edx/app/edxapp/edx-platform"
 EDXAPP_DEFAULT_SITE_THEME=""
 
 # Third Party Authentication (ie: AAD)
@@ -613,7 +612,7 @@ then
     MOBILE_REST_API_PARAMS="--enable-mobile-rest-api \"${EDXAPP_ENABLE_MOBILE_REST_API}\""
 
     # Jumpbox Bootstrap-Only mode indicator
-    JUMPBOX_BOOTSTRAP_PARAMS="--bootstrap-jumpbox \"${BOOTSTRAP_JUMPBOX}\""
+    JUMPBOX_BOOTSTRAP_PARAMS="--bootstrap-jumpbox \"${JUMPBOX_BOOTSTRAP}\""
 
     # Strip out the spaces for passing it along
     MONGO_BACKUP_FREQUENCY="${MONGO_BACKUP_FREQUENCY// /_}"
@@ -650,23 +649,8 @@ exit_on_error "Configuring the mailer failed"
 # 1. Setup Tools
 install-tools
 
-if [ "$MACHINE_ROLE" == "jumpbox" ] || [ "$MACHINE_ROLE" == "vmss" ];
-then
-
-    # When the comprehensive theming dirs is specified, edxapp:migrate task fails with :  ImproperlyConfigured: COMPREHENSIVE_THEME_DIRS
-    # As an interim mitigation, create the folder if the path specified is not under the edx-platform directory (where the default themes directory is)
-    if [ ! -z "${EDXAPP_COMPREHENSIVE_THEME_DIR}" ] && [ ! -d "${EDXAPP_COMPREHENSIVE_THEME_DIR}" ]; 
-    then
-        # now check if the path specified is within the default edx-platform/themes directory
-        if [[ "${EDXAPP_COMPREHENSIVE_THEME_DIR}" =~ "${EDXAPP_DEFAULT_THEME_DIR}" ]]; 
-        then
-            log "'${EDXAPP_COMPREHENSIVE_THEME_DIR}' falls under the default theme directory. Skipping creation since the edx-platform clone will create it."
-        else
-            log "Creating comprehensive themeing directory at ${EDXAPP_COMPREHENSIVE_THEME_DIR}"
-            mkdir -p "${EDXAPP_COMPREHENSIVE_THEME_DIR}"
-            chown -R edxapp:edxapp "${EDXAPP_COMPREHENSIVE_THEME_DIR}"
-        fi
-    fi
+if [[ "$MACHINE_ROLE" == "jumpbox" ]] || [[ "$MACHINE_ROLE" == "vmss" ]] ; then
+    make_theme_dir "$EDXAPP_COMPREHENSIVE_THEME_DIR" "$EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME"
 fi
 
 # 2. Install & Configure the infrastructure & EdX applications

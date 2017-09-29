@@ -323,7 +323,7 @@ install-mysql-utilities()
 apt-wrapper()
 {
     log "$1 package(s)..."
-    sudo apt-get $1 -y -qq --fix-missing
+    apt $1 -y -qq --fix-missing
 }
 
 retry-command()
@@ -341,19 +341,23 @@ retry-command()
             apt-wrapper "update"
             apt-wrapper "install -f"
             apt-wrapper "upgrade -f"
-            sudo dpkg --configure -a
+            dpkg --configure -a
         fi
 
         log "STARTING ${message}..."
 
         eval "$command"
-        if [[ $? -eq 0 ]] ; then
+        result=$?
+
+        if [[ $result -eq 0 ]] ; then
             log "SUCCEEDED ${message}!"
             break
         fi
 
         log "FAILED ${message}"
     done
+
+    return $result
 }
 
 #############################################################################
@@ -579,6 +583,28 @@ sync_repo()
 
     exit_on_error "Failed checking out branch $repo_version from repository $repo_url in $repo_path"
     popd
+}
+
+#############################################################################
+# Create theme directory before edx playbook
+#############################################################################
+make_theme_dir()
+{
+    EDXAPP_COMPREHENSIVE_THEME_DIR="$1"
+    EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME="$2"
+
+    # When the comprehensive theming dirs is specified, edxapp:migrate task fails with :  ImproperlyConfigured: COMPREHENSIVE_THEME_DIRS
+    # As an interim mitigation, create the folder if the path specified is not under the edx-platform directory (where the default themes directory is)
+    if [[ -n "${EDXAPP_COMPREHENSIVE_THEME_DIR}" ]] && [[ ! -d "${EDXAPP_COMPREHENSIVE_THEME_DIR}" ]] ; then
+        # now check if the path specified is within the default edx-platform/themes directory
+        if [[ "${EDXAPP_COMPREHENSIVE_THEME_DIR}" == *"${EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME}"* ]] ; then
+            log "'${EDXAPP_COMPREHENSIVE_THEME_DIR}' falls under the default theme directory. Skipping creation since the edx-platform clone will create it."
+        else
+            log "Creating comprehensive themeing directory at ${EDXAPP_COMPREHENSIVE_THEME_DIR}"
+            mkdir -p "${EDXAPP_COMPREHENSIVE_THEME_DIR}"
+            chown -R edxapp:edxapp "${EDXAPP_COMPREHENSIVE_THEME_DIR}"
+        fi
+    fi
 }
 
 #############################################################################
