@@ -321,7 +321,7 @@ install-with-oxa()
         --role \
             $TEMPLATE_TYPE \
         --retry-count \
-            5 \
+            9 \
         --environment \
             "dev" \
         --oxatools-public-github-projectbranch \
@@ -359,8 +359,10 @@ install-with-edx-native()
 
     #todo: 3a link file to /oxa/oxa.yml
 
+    #todo: improve retry
     # 4. Install Open edX:
-    wget https://raw.githubusercontent.com/${EDX}/$(get_conf_project_name)/$OPENEDX_RELEASE/util/install/sandbox.sh -O - | bash
+    wget https://raw.githubusercontent.com/${EDX}/$(get_conf_project_name)/$OPENEDX_RELEASE/util/install/sandbox.sh -O sandbox.sh
+    bash sandbox.sh || bash sandbox.sh || bash sandbox.sh || bash sandbox.sh || bash sandbox.sh || bash sandbox.sh || bash sandbox.sh || bash sandbox.sh || bash sandbox.sh
 }
 
 ##########################
