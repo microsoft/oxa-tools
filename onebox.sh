@@ -118,8 +118,10 @@ fix_args()
         BRANCH_VERSIONS=release
     elif [[ $BRANCH_VERSIONS == development ]] || [[ $BRANCH_VERSIONS == dev ]] || [[ $BRANCH_VERSIONS == beta ]] ; then
         BRANCH_VERSIONS=edge
-    elif [[ $BRANCH_VERSIONS == upstream ]] || [[ $BRANCH_VERSIONS == up ]] || [[ $BRANCH_VERSIONS == ed ]] ; then
+    elif [[ $BRANCH_VERSIONS == upstream ]] || [[ $BRANCH_VERSIONS == up ]] || [[ $BRANCH_VERSIONS == ed ]] || [[ $BRANCH_VERSIONS == edx_ficus ]] ; then
         BRANCH_VERSIONS=edx
+    elif [[ $BRANCH_VERSIONS == ginkgo ]] || [[ $BRANCH_VERSIONS == up_g ]] || [[ $BRANCH_VERSIONS == ed_g ]] || [[ $BRANCH_VERSIONS == edx_ginkgo ]] ; then
+        BRANCH_VERSIONS=edx_g
     fi
 
     # Harden credentials if none were provided.
