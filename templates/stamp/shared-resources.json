@@ -238,7 +238,7 @@
         },   
     {
       "apiVersion": "[parameters('apiSettings').serviceBusApiVersion]",
-      "name": "[parameters('serviceBusSettings').ServiceBusNameSpace]",
+      "name": "[parameters('serviceBusSettings').serviceBusNameSpace]",
       "type": "Microsoft.ServiceBus/Namespaces",
       "location": "[resourceGroup().location]",
       "sku": {
@@ -252,7 +252,7 @@
           "name": "[parameters('serviceBusSettings').serviceBusQueueName]",
           "type": "Queues",
           "dependsOn": [
-            "[concat('Microsoft.ServiceBus/namespaces/', parameters('serviceBusSettings').ServiceBusNameSpace)]"
+            "[concat('Microsoft.ServiceBus/namespaces/', parameters('serviceBusSettings').serviceBusNameSpace)]"
           ],
           "properties": {
             "lockDuration": "PT5M",
