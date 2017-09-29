@@ -361,6 +361,7 @@ install-with-edx-native()
 
     #todo: improve retry
     # 4. Install Open edX:
+    set +e
     wget https://raw.githubusercontent.com/${EDX}/$(get_conf_project_name)/$OPENEDX_RELEASE/util/install/sandbox.sh -O sandbox.sh
     bash sandbox.sh || bash sandbox.sh || bash sandbox.sh || bash sandbox.sh || bash sandbox.sh || bash sandbox.sh || bash sandbox.sh || bash sandbox.sh || bash sandbox.sh
 }
