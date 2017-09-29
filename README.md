@@ -13,7 +13,8 @@ Common parameter argument options: pick a cell from each column. The first row i
 `fullstack` (default) | `edge` (default) <br/> (will use branches like oxa/dev.fic ) | randomly generated (default)
 `devstack` | `release`  <br/> (will use branches like oxa/release.fic ) | `--default-password` or `-d` <br/> `anyString` (set all passwords to anyString)
 n/a | `stable`  <br/> (will use branches like oxa/master.fic) | n/a
- n/a | `edx`  <br/> (will use upstream edx repositories <br/> and open-release/ficus.1 tag) | n/a
+ n/a | `ficus`  <br/> (will use upstream edx repositories <br/> and open-release/ficus.1 tag) | n/a
+ n/a | `ginkgo`  <br/> (will use upstream edx repositories <br/> and open-release/ginkgo.1 tag) | n/a
  n/a | edit onebox.sh to specify custom <br/> remote urls and branches directly | edit onebox.sh to specify custom <br/> usernames and passwords directly
 
 For example:
