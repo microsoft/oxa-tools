@@ -9,6 +9,15 @@
         "clusterNameDomainName": {
             "type": "string"
         },
+        "serviceBusNameSpace": {
+            "type": "string"            
+        },
+        "serviceBusQueueName": {
+            "type": "string"
+        },
+        "defaultSASKeyName": {
+            "value": "RootManageSharedAccessKey"           
+        },
         "osFamilySpec": {
             "type": "string",
             "defaultValue": "ubuntu",
@@ -656,12 +665,10 @@
         "mediaServicesAccountName": "[concat(toLower(parameters('clusterName')), 'wamsmedia')]",
         "storageAccountType": "Standard_LRS",
         "storageContainer": "[concat('https://', variables('storageAccountName'),'.blob.core.windows.net/vhds/')]",
-        "serviceBusNamespaceName": "[concat(parameters('clusterName'), '-sb3' )]",
         "sbQueueName": "[concat(parameters('clusterName'), '-queue3' )]",
-        "location": "[resourceGroup().location]",
-        "defaultSASKeyName": "RootManageSharedAccessKey",
-        "authRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/authorizationRules', variables('serviceBusNamespaceName'), variables('defaultSASKeyName'))]",        
-        
+        "location": "[resourceGroup().location]",        
+        "authRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/authorizationRules', parameters('serviceBusNameSpace'), parameters('defaultSASKeyName'))]",    
+                
         "loadBalancerName": "[concat(parameters('clusterName'), '-lb-', parameters('deploymentSlot'))]",
         "virtualNetworkName": "[concat(parameters('clusterName'), '-vnet')]",
         "subnetName": "[concat(parameters('clusterName'), '-subnet')]",
@@ -847,8 +854,8 @@
             "mediaServicesAccountName": "[variables('mediaServicesAccountName')]"
         },
         "serviceBusSettings": {
-            "serviceBusNamespaceName": "[variables('serviceBusNamespaceName')]",
-            "serviceBusQueueName": "[variables('sbQueueName')]"  
+            "serviceBusNameSpace": "[parameters('serviceBusNameSpace')]",
+            "serviceBusQueueName": "[parameters('serviceBusQueueName')]"  
         },
         "apiSettings": {
             "apiVersion": "[variables('apiVersion')]",
@@ -892,7 +899,7 @@
         "secureGenericStorageAccountKey": "PLACEHOLDER_KEY",
         "sbPlaceholder": "SBCONNECTION_HOLDER",
         "backupParameters": "[concat(' --storage-account-key ', variables('secureGenericStorageAccountKey'),' --storage-account-name ', variables('secureGenericStorageAccountName'), ' --mongo-backup-frequency \"', replace(parameters('mongoBackupFrequency'), ' ', '_'), '\" --mysql-backup-frequency \"', replace(parameters('mysqlBackupFrequency'), ' ', '_'), '\" --mongo-backup-retention-days ', parameters('mongoBackupRetentionDays'), ' --mysql-backup-retention-days ', parameters('mysqlBackupRetentionDays'))]",
-        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' --cluster-name ', parameters('clusterName'), ' --servicebus-connectionstring ', variables('sbPlaceholder'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'), variables('backupParameters'), variables('customInstallerOutputRedirect'))]",
+        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'), variables('backupParameters'), variables('customInstallerOutputRedirect'))]",
 
         "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources.json')]",
         "keyvaultTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-keyvault.json')]"

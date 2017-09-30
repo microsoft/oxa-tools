@@ -6,6 +6,15 @@
             "type": "string",
             "maxLength": 12
         },
+        "serviceBusNameSpace": {
+            "type": "string"
+        },
+        "serviceBusQueueName": {
+            "type": "string"
+        },
+        "defaultSASKeyName": {
+            "value": "RootManageSharedAccessKey"           
+        },
         "clusterNameDomainName": {
             "type": "string"
         },
@@ -655,12 +664,9 @@
         "wamsStorageAccountName": "[concat(toLower(parameters('clusterName')), 'wamssa')]",
         "mediaServicesAccountName": "[concat(toLower(parameters('clusterName')), 'wamsmedia')]",
         "storageAccountType": "Standard_LRS",
-        "storageContainer": "[concat('https://', variables('storageAccountName'),'.blob.core.windows.net/vhds/')]",
-        "serviceBusNamespaceName": "[concat(parameters('clusterName'), '-sb3')]",
-        "sbQueueName": "[concat(parameters('clusterName'), '-queue')]",
-        "location": "[resourceGroup().location]",
-        "defaultSASKeyName": "RootManageSharedAccessKey",
-        "authRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/authorizationRules', variables('serviceBusNamespaceName'), variables('defaultSASKeyName'))]",
+        "storageContainer": "[concat('https://', variables('storageAccountName'),'.blob.core.windows.net/vhds/')]",        
+        "location": "[resourceGroup().location]",        
+        "authRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/authorizationRules', parameters('serviceBusNameSpace'), parameters('defaultSASKeyName'))]",       
         "loadBalancerName": "[concat(parameters('clusterName'), '-lb-', parameters('deploymentSlot'))]",
         "virtualNetworkName": "[concat(parameters('clusterName'), '-vnet')]",
         "subnetName": "[concat(parameters('clusterName'), '-subnet')]",
@@ -882,8 +888,8 @@
             "mediaServicesAccountName": "[variables('mediaServicesAccountName')]"
         },
         "serviceBusSettings": {
-            "serviceBusNamespaceName": "[variables('serviceBusNamespaceName')]",
-            "serviceBusQueueName": "[variables('sbQueueName')]"            
+            "serviceBusNameSpace": "[parameters('serviceBusNameSpace')]",
+            "serviceBusQueueName": "[parameters('serviceBusQueueName')]"            
         },
         "jumpboxMachineSettings": {
             "vmSize": "[parameters('jumpBoxVmSize')]",
@@ -981,7 +987,7 @@
         "memcacheParameters": "[concat(' --memcache-server \"', base64(variables('memcacheServer')), '\"')]",
         "azureCliParameters": "[concat(' --azurecli-version \"', parameters('azureCliVersion'), '\"')]",
         "sbConnectionString": "SBCONNECTION_HOLDER",
-        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' --cluster-name ', parameters('clusterName'), ' --servicebus-connectionstring ', variables('sbConnectionString'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'), variables('backupParameters'), variables('sampleCourseParameters'), variables('comprehensiveThemingParameters'), variables('authenticationParameters'), variables('customInstallerDomainOverrideParameters'), variables('databaseParameters'), variables('edxappParameters'), variables('memcacheParameters'), variables('azureCliParameters'), variables('customInstallerMobileRestApiParameters'), variables('customInstallerOutputRedirect'))]",
+        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'), variables('backupParameters'), variables('sampleCourseParameters'), variables('comprehensiveThemingParameters'), variables('authenticationParameters'), variables('customInstallerDomainOverrideParameters'), variables('databaseParameters'), variables('edxappParameters'), variables('memcacheParameters'), variables('azureCliParameters'), variables('customInstallerMobileRestApiParameters'), variables('customInstallerOutputRedirect'))]",
 
         "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources.json')]",
         "jumpboxTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-jumpbox.json')]",
@@ -1393,11 +1399,11 @@
             "type": "string",
             "value": "[parameters('deploymentType')]"
         },       
-        "NamespaceConnectionString": {
+        "namespaceConnectionString": {
             "type": "string",
             "value": "[listkeys(variables('authRuleResourceId'), variables('sbapiVersion')).primaryConnectionString]"
         },
-        "SharedAccessPolicyPrimaryKey": {
+        "sharedAccessPolicyPrimaryKey": {
             "type": "string",
             "value": "[listkeys(variables('authRuleResourceId'), variables('sbapiVersion')).primaryKey]"
         }

@@ -252,6 +252,15 @@
         },
         "deploymentType": {
             "value": "{DEPLOYMENTTYPE}"
+        },
+        "serviceBusNameSpace": {
+            "value": "{CLUSTERNAME}-sb1"
+        },
+        "serviceBusQueueName": {
+            "value": "{CLUSTERNAME}-sb2"
+        },
+        "defaultSASKeyName": {
+            "value": "RootManageSharedAccessKey"           
         }
     }
 }
