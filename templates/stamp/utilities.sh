@@ -547,7 +547,7 @@ sync_repo()
     else
         pushd $repo_path
 
-        sudo git pull --all --tags --prune
+        sudo git fetch --all --tags --prune
         exit_on_error "Failed syncing repository $repo_url to $repo_path"
 
         popd
