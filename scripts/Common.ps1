@@ -1,4 +1,5 @@
-﻿##  Function: Log-Message
+﻿#[Reflection.Assembly]::LoadWithPartialName('system.web') | out-null
+##  Function: Log-Message
 ##
 ##  Purpose: Write a message to a log file
 ##
@@ -614,6 +615,7 @@ function Get-ResourcesList
                          "Microsoft.Network/publicIPAddresses",
                          "Microsoft.Network/trafficManagerProfiles"
                       );
+    $resourcesListContext = " Resources List " 
     foreach ($resourceType in $resourceTypes)
     {
         $params = @{'ResourceGroupNameEquals' = $ResourceGroupName }                            
@@ -1371,3 +1373,178 @@ function Get-LatestChanges
        git checkout $tag -q
    }
 }
+
+## Function: Get-DeploymentStatus
+##
+## Purpose: 
+##    To capture the deployment status after ARM provisioning
+##
+## Input: 
+##   ResourceGroupName : ResourceGroup Name
+##   NameSpace :  ServiceBus Namespace
+##   QueueName :  Queue Name
+##
+## Output:
+##   response
+
+function Get-DeployymentStatus ( $Namespace, $QueueName , $Saskey , $defaultSASKeyName )
+{
+
+    Log-Message "Receiving deployment status from $($Namespace)"
+    $messageContent = @();
+    $MessageCount = 0;
+
+    #checking Namespace
+    if($Namespace)
+    {
+        try
+        {
+            # Rest api url to receive messages from Service bus queue
+            $SbRecieveRestUrl = "https://$($Namespace).servicebus.windows.net/$($QueueName)/messages/head"
+   
+            # Generating SAS token to authenticate Service bus Queue to receive messages
+            $AuthorizedSasToken = Generate-SasToken $Saskey $defaultSASKeyName $SbRecieveRestUrl;
+
+            # Assigning generated SAS token to Service bus rest api headers to authorize
+            $headers = @{'Authorization'=$AuthorizedSasToken}        
+            
+            # check for message
+           [bool]$checkMessage = $true;
+            while($checkMessage)
+            {
+                # invoking service bus queue rest api message url
+                $MessageQueue = Invoke-WebRequest -Method DELETE -Uri $SbRecieveRestUrl -Headers $headers;
+                if (![string]::IsNullOrEmpty($MessageQueue.content))
+                {
+                    $messageContent += $MessageQueue.content;
+                    $MessageCount++;  
+                }       
+                else
+                {
+                    $checkMessage = $false;
+                }
+
+             }
+        }
+        catch 
+        {
+             Log-Message "Rest API call failed for $($ServiceBusRecieveUrl)"
+        }
+            
+    }
+    else
+    {
+        Log-Message "Serive bus value is empty"
+    }
+    return $MessageCount;
+}
+
+## Function:Generate-SasToken
+##
+## Purpose: 
+##    To capture the deployment status after ARM provisioning
+##
+## Input: 
+##   Saskey : SharedAccess Key extracted from Service Bus -ARM Template output value
+##   defaultSASKeyName :  Shared Access Rule Name -ARM Template output value
+##
+## Output:
+##   SasToken
+
+function Generate-SasToken ( $Saskey,$defaultSASKeyName,$SbRecieveRestUrl )
+{
+    
+    Log-Message "Generating SAS token for using $($defaultSASKeyName)" 
+
+    #checking SASKey Value    
+    if($Saskey)
+    { 
+        try
+        {  
+            # Setting expiry date
+            $sinceEpoch = (Get-Date).ToUniversalTime() - ([datetime]'1/1/1970')
+            $weekInSeconds = 7 * 24 * 60 * 60
+            $expiry = [System.Convert]::ToString([int]($sinceEpoch.TotalSeconds) + $weekInSeconds)
+       
+            #Encoding Service Bus Name space Rest api messaging url
+            $encodedResourceUri = [System.Web.HttpUtility]::UrlEncode($SbRecieveRestUrl)
+            $encodedResourceUri = [uri]::EscapeUriString($SbRecieveRestUrl)
+
+            #Setting up expiry date
+            $stringToSign = $encodedResourceUri + "`n" + $expiry
+            $stringToSignBytes = [System.Text.Encoding]::UTF8.GetBytes($stringToSign)
+       
+            #Encoding Service bus SharedAccess Primary key pulled from ARM template
+            $keyBytes = [System.Text.Encoding]::UTF8.GetBytes($Saskey)
+   
+            #Encoding Signature by HMACSHA256
+            $hmac = [System.Security.Cryptography.HMACSHA256]::new($keyBytes)
+            $hashOfStringToSign = $hmac.ComputeHash($stringToSignBytes)
+
+            $signature = [System.Convert]::ToBase64String($hashOfStringToSign)
+            $encodedSignature = [System.Web.HttpUtility]::UrlEncode($signature)   
+   
+            Log-Message "generating the SAS token for - $($SbRecieveRestUrl)"
+
+            #Generating SAS token
+            $SasToken = "SharedAccessSignature sr=$encodedResourceUri&sig=$encodedSignature&se=$expiry&skn=$($defaultSASKeyName)";
+        }
+        catch
+        {
+             Log-Message "Error in generating SAS token - $($SasToken)"
+        }
+     }
+     else
+     {
+         Log-Message " No SASkey Value is passed through."
+     
+     }    
+     return $SasToken;
+}
+
+## Function: Start-SmartSleep
+##
+## Purpose: 
+##    Start a sleep routine that wakes up at precise intervals
+##
+## Input: 
+##   WaitGranularityMinutes - interval in minutes to periodically wake up and check if wait interval is met
+##   WaitIntervalHours      - hourly interval for waiting up and continuing execution
+## 
+## Output:
+##   Nothing
+##
+function Start-SmartSleep
+{
+    param(
+            [Parameter(Mandatory=$true)][int]$WaitGranularityMinutes,
+            [Parameter(Mandatory=$true)][int]$WaitIntervalHours                    
+         )
+
+    [bool]$continueSleep = $true;
+    while ($continueSleep)
+    {
+        # check the current time and if we are at the expected wait interval hours, awake from persistent sleep 
+        # and look for work
+        # there is an additional condition, which while unlikely, must be accounted for: we must wait only up to 'WaitForChangeCutoff' minutes
+        # thereafter, we will wait until the next deployment interval
+
+        $currentTime = Get-Date;
+        
+        # sleep for a couple of minutes
+        Start-Sleep -Seconds ($WaitGranularityMinutes*60);
+
+        # check if we need to wake up
+        if (($currentTime.Hour % $WaitIntervalHours) -eq 0 )
+        {
+            # we are within wait interval & within wait cutoff
+            # awake and get some work done
+            $continueSleep = $false;   
+        }
+    }
+}
+
+
+
+
+

@@ -139,8 +139,10 @@ Param(
         [Parameter(Mandatory=$true)][ValidateSet("bootstrap", "upgrade", "swap", "")][string]$DeploymentType="upgrade",
                 
         [Parameter(Mandatory=$false)][string]$Slot="slot1",
+        [Parameter(Mandatory=$false)][string]$defaultSASKeyName = "RootManageSharedAccessKey",
 
-        [Parameter(Mandatory=$true)][ValidateSet("prod", "int", "bvt", "")][string]$Cloud="bvt"
+        [Parameter(Mandatory=$true)][ValidateSet("prod", "int", "bvt", "")][string]$Cloud="bvt",
+        [Parameter(Mandatory=$false)][string]$AutoDeploy=$true
 
      )
 
@@ -164,9 +166,15 @@ $clientSecret = ConvertTo-SecureString -String $AadWebClientAppKey -AsPlainText 
 $aadCredential = New-Object System.Management.Automation.PSCredential($AadWebClientId, $clientSecret)
 Login-AzureRmAccount -ServicePrincipal -TenantId $AadTenantId -SubscriptionName $AzureSubscriptionName -Credential $aadCredential -ErrorAction Stop
 Set-AzureSubscription -SubscriptionName $AzureSubscriptionName | Out-Null
+   
+#setup default wait interval & granularity
+[int]$waitIntervalHours = 1;
+[int]$WaitGranularityMinutes = 1;  
+[int]$deployedVmssCount = 1;
 
 # create the resource group
 New-AzureRmResourceGroup -Name $ResourceGroupName -Location $Location -Force
+
 
 ######################################################
 # Setup parameters for dynamic arm template creation
@@ -256,7 +264,7 @@ $replacements = @{
                     "DEPLOYMENTVERSIONID"=$DeploymentVersionId;
                     "GITHUBBRANCH"=$BranchName;
                     "DEPLOYMENTSLOT"=$Slot; 
-                    "DEPLOYMENTTYPE"=$DeploymentType;
+                    "DEPLOYMENTTYPE"=$DeploymentType;                    
                 }
 
 # Assumption: if the SMTP server is specified, the rest of its configuration will be specified
@@ -305,11 +313,38 @@ try
         # kick off full deployment
         # we may need to replace the default resource group name in the parameters file
         $deploymentStatus = New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $FullDeploymentArmTemplateFile -TemplateParameterFile $tempParametersFile -Force -Verbose  
-        
-        if($DeploymentType -eq "swap" -and $cloud -eq "bvt")
-        {
-            Log-Message "Deleting the resources from $ResourceGroupName since $cloud has been completed"
-            Delete-Resources -DeploymentType $DeploymentType -Cloud $Cloud -ResourceGroupName $ResourceGroupName -DeploymentStatus $deploymentStatus;
+       
+        if ($AutoDeploy)
+        {                       
+           
+            #Capturing ARM Template output values
+            $Namespace = $deploymentStatus.Parameters.serviceBusNameSpace.value;
+            $QueueName = $deploymentStatus.Parameters.serviceBusQueueName.value;
+            $Saskey = $deploymentStatus.outputs.sharedAccessPolicyPrimaryKey.value;
+
+             while ($deployedVmssCount -ge 1)
+             {  
+                
+                 Log-Message -Message "Starting smart sleep until the  deployment staus received: wait $($waitGranularityMinutes) min(s), WaitIntervalHours:$($waitIntervalHours)"
+
+                 Start-SmartSleep -WaitGranularityMinutes $waitGranularityMinutes -WaitIntervalHours $waitIntervalHours
+
+                 #waiting for deployment status
+                 $deploymentMessageCount = Get-DeployymentStatus $Namespace $QueueName $Saskey $defaultSASKeyName;
+
+                 if($deploymentMessageCount -ge 1)
+                 {
+                    $deployedVmssCount--;
+                 }
+                
+                # sleep for a couple of minutes 
+                 [int]$WaitGranularityMinutes = 2;
+       
+             }
+                   
+             Log-Message "Deleting the resources from $ResourceGroupName since $cloud has been completed"
+
+             #Delete-Resources -DeploymentType $DeploymentType -Cloud $Cloud -ResourceGroupName $ResourceGroupName -DeploymentStatus $deploymentStatus;
         }   
     }
 }

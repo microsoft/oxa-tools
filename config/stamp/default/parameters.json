@@ -258,9 +258,6 @@
         },
         "serviceBusQueueName": {
             "value": "{CLUSTERNAME}-sb2"
-        },
-        "defaultSASKeyName": {
-            "value": "RootManageSharedAccessKey"           
-        }
+        }        
     }
 }

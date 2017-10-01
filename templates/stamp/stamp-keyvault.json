@@ -14,10 +14,7 @@
         },
         "serviceBusQueueName": {
             "type": "string"
-        },
-        "defaultSASKeyName": {
-            "value": "RootManageSharedAccessKey"           
-        },
+        },        
         "osFamilySpec": {
             "type": "string",
             "defaultValue": "ubuntu",
@@ -666,8 +663,9 @@
         "storageAccountType": "Standard_LRS",
         "storageContainer": "[concat('https://', variables('storageAccountName'),'.blob.core.windows.net/vhds/')]",
         "sbQueueName": "[concat(parameters('clusterName'), '-queue3' )]",
-        "location": "[resourceGroup().location]",        
-        "authRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/authorizationRules', parameters('serviceBusNameSpace'), parameters('defaultSASKeyName'))]",    
+        "location": "[resourceGroup().location]",  
+        "defaultSASKeyName": "RootManageSharedAccessKey",
+        "authRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/authorizationRules', parameters('serviceBusNameSpace'), variables('defaultSASKeyName'))]",   
                 
         "loadBalancerName": "[concat(parameters('clusterName'), '-lb-', parameters('deploymentSlot'))]",
         "virtualNetworkName": "[concat(parameters('clusterName'), '-vnet')]",

@@ -12,9 +12,6 @@
         "serviceBusQueueName": {
             "type": "string"
         },
-        "defaultSASKeyName": {
-            "value": "RootManageSharedAccessKey"           
-        },
         "clusterNameDomainName": {
             "type": "string"
         },
@@ -664,9 +661,10 @@
         "wamsStorageAccountName": "[concat(toLower(parameters('clusterName')), 'wamssa')]",
         "mediaServicesAccountName": "[concat(toLower(parameters('clusterName')), 'wamsmedia')]",
         "storageAccountType": "Standard_LRS",
+        "defaultSASKeyName": "RootManageSharedAccessKey",
         "storageContainer": "[concat('https://', variables('storageAccountName'),'.blob.core.windows.net/vhds/')]",        
         "location": "[resourceGroup().location]",        
-        "authRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/authorizationRules', parameters('serviceBusNameSpace'), parameters('defaultSASKeyName'))]",       
+        "authRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/authorizationRules', parameters('serviceBusNameSpace'), variables('defaultSASKeyName'))]",       
         "loadBalancerName": "[concat(parameters('clusterName'), '-lb-', parameters('deploymentSlot'))]",
         "virtualNetworkName": "[concat(parameters('clusterName'), '-vnet')]",
         "subnetName": "[concat(parameters('clusterName'), '-subnet')]",
