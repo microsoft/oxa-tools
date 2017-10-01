@@ -336,7 +336,7 @@ retry-command()
 
         # Don't continue if ansible failed at the same play twice in a row
         if [[ $command == *"ansible"* ]] ; then
-            tasksOfCur=`grep -o ",.* total tasks" $logPath | grep -o ":.*" | grep -o "[0-9]*"`
+            tasksOfCur=`grep -o ",.* total tasks" $logPath | grep -o "[0-9]*"`
 
             if [[ -n $tasksOfPrev ]] && (( $tasksOfCur == $tasksOfPrev )) ; then
                 log "Same failure as previous attempt. "
@@ -579,8 +579,6 @@ sync_repo()
 
     exit_on_error "Failed checking out branch $repo_version from repository $repo_url in $repo_path"
     popd
-
-    #todo: if branch then pull
 }
 
 #############################################################################
