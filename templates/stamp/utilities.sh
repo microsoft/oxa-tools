@@ -306,6 +306,7 @@ retry-command()
     optionalDescription="$3"
     fix_packages="$4"
 
+    tasksOfPrev=
     for (( a=1; a<=$retry_count; a++ )) ; do
         message="$optionalDescription attempt number: $a"
 
@@ -321,7 +322,8 @@ retry-command()
         log "STARTING ${message}..."
 
         set -o pipefail
-        unbuffer $command | tee /var/tmp/${a}.txt
+        logPath="/var/tmp/${a}.txt"
+        unbuffer $command | tee $logPath
         result=$?
         set +o pipefail
 
@@ -331,6 +333,18 @@ retry-command()
         fi
 
         log "FAILED ${message}"
+
+        # Don't continue if ansible failed at the same play twice in a row
+        if [[ $command == *"ansible"* ]] ; then
+            tasksOfCur=`grep -o ",.* total tasks" $logPath | grep -o ":.*" | grep -o "[0-9]*"`
+
+            if [[ -n $tasksOfPrev ]] && (( $tasksOfCur == $tasksOfPrev )) ; then
+                log "Same failure as previous attempt. "
+                break
+            fi
+
+            tasksOfPrev=$tasksOfCur
+        fi
     done
 
     return $result
@@ -565,6 +579,8 @@ sync_repo()
 
     exit_on_error "Failed checking out branch $repo_version from repository $repo_url in $repo_path"
     popd
+
+    #todo: if branch then pull
 }
 
 #############################################################################
