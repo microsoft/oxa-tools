@@ -307,6 +307,7 @@ retry-command()
     fix_packages="$4"
 
     tasksOfPrev=
+    haveUpgraded=
     for (( a=1; a<=$retry_count; a++ )) ; do
         message="$optionalDescription attempt number: $a"
 
@@ -334,13 +335,23 @@ retry-command()
 
         log "FAILED ${message}"
 
-        # Don't continue if ansible failed at the same play twice in a row
+        # Don't continue if ansible failed at the same play twice in a row.
+        # The same error will likely happen for each remaining iteration.
         if [[ $command == *"ansible"* ]] ; then
             tasksOfCur=`grep -o ",.* total tasks" $logPath | grep -o "[0-9]*"`
 
             if [[ -n $tasksOfPrev ]] && (( $tasksOfCur == $tasksOfPrev )) ; then
-                log "Same failure as previous attempt. "
-                break
+                log "Same failure as previous attempt."
+
+                if [[ -z $haveUpgraded ]] ; then
+                    # See if upgrading apt packages solves the failure.
+                    # This technique has resolved some fullstack failures.
+                    apt-wrapper "upgrade -f"
+                    haveUpgraded="true"
+                else
+                    # Give up.
+                    break
+                fi
             fi
 
             tasksOfPrev=$tasksOfCur

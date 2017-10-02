@@ -331,7 +331,7 @@ install-with-oxa()
         --role \
             $TEMPLATE_TYPE \
         --retry-count \
-            9 \
+            7 \
         --environment \
             "dev" \
         --oxatools-public-github-projectbranch \
