@@ -388,11 +388,11 @@ install-with-edx-native()
 
     # 3b Enable retry
     local utilities=`wget_wrapper "templates/stamp/utilities.sh" "${MSFT}" "oxa-tools" "$(get_current_branch)"`
-    source utilities
+    source $utilities
 
     # 4. Install Open edX:
     local sandbox=`wget_wrapper "util/install/sandbox.sh" "${EDX}" "$(get_conf_project_name)" "$OPENEDX_RELEASE"`
-    retry-command "$sandbox" 8 "$sandbox" "fixPackages"
+    retry-command "bash $sandbox" 8 "$sandbox" "fixPackages"
 }
 
 ##########################
