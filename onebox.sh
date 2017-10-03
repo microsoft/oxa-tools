@@ -12,9 +12,10 @@ readonly MSFT="microsoft"
 readonly EDX="edx"
 readonly USE_MSFT="useMsftRepo"
 readonly USE_FICUS="useFicusTag"
-readonly FICUS1="tags/open-release/ficus.1"
-readonly FICUS4="tags/open-release/ficus.4"
-readonly GINKGO1="tags/open-release/ginkgo.1"
+readonly TAGS="tags/"
+readonly FICUS1="${TAGS}open-release/ficus.1"
+readonly FICUS4="${TAGS}open-release/ficus.4"
+readonly GINKGO1="${TAGS}open-release/ginkgo.1"
 
 ##########################
 # Script Defaults that can be overriden via
@@ -246,7 +247,6 @@ get_branch()
     elif [[ $BRANCH_VERSIONS == edx_g ]] && [[ $override == $USE_FICUS ]] ; then
         # GINKGO1 edx-configuration doesn't work. Use ficus4 instead.
         # Devstack fails because elastic search fails to initialize
-        # Fullstack fails because vagrant-fullstack.yml was removed in March 2017.
         echo "$FICUS4"
     else
         echo "$EDX_BRANCH"
@@ -331,7 +331,7 @@ install-with-oxa()
         --role \
             $TEMPLATE_TYPE \
         --retry-count \
-            7 \
+            8 \
         --environment \
             "dev" \
         --oxatools-public-github-projectbranch \
@@ -357,10 +357,9 @@ install-with-oxa()
 install-with-edx-native()
 {
     # from https://openedx.atlassian.net/wiki/spaces/OpenOPS/pages/146440579/Native+Open+edX+Ubuntu+16.04+64+bit+Installation
-    #todo: use $EDX_BRANCH as part of urls
 
     # 1. Set the OPENEDX_RELEASE variable:
-    OPENEDX_RELEASE=$EDX_BRANCH
+    OPENEDX_RELEASE=${EDX_BRANCH#$TAGS}
 
     # 2. Bootstrap the Ansible installation:
     wget https://raw.githubusercontent.com/${EDX}/$(get_conf_project_name)/$OPENEDX_RELEASE/util/install/ansible-bootstrap.sh -O - | sudo bash
@@ -391,10 +390,8 @@ test_args
 
 set_dynamic_vars
  
-# vagrant-fullstack.yml was removed in March 2017 so we need
-# to begin using something like install-with-edx-native instead
-# todo: remove "false" precondition and $USE_FICUS after the elastic search bug is resolved
-if false && [[ $TEMPLATE_TYPE == fullstack ]] && [[ $BRANCH_VERSIONS == edx_g ]] ; then
+# vagrant-fullstack.yml was removed in March 2017 so we use sandbox.sh
+if [[ $TEMPLATE_TYPE == fullstack ]] && [[ $BRANCH_VERSIONS == edx_g ]] ; then
     install-with-edx-native
 else
     install-with-oxa
