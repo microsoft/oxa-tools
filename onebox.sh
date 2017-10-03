@@ -312,20 +312,33 @@ get_conf_project_name()
     esac
 }
 
+wget_wrapper()
+{
+    local expectedPath="$1"
+    local org="$2"
+    local project="$3"
+    local branch="$4"
+
+    # Check if the file exists. If not, download from the public repository
+    if [[ -f "$expectedPath" ]] ; then
+        echo "$expectedPath"
+    else
+        local fileName=`basename $expectedPath`
+        if [[ ! -f "$fileName" ]] ; then
+            wget -q https://raw.githubusercontent.com/${org}/${project}/${branch}/$expectedPath -O $fileName
+        fi
+
+        echo "$fileName"
+    fi
+}
+
 ##########################
 # Core Installation Operation
 ##########################
 
 install-with-oxa()
 {
-    # get current dir
-    CURRENT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-    bootstrap="scripts/bootstrap.sh"
-    if [[ ! -f scripts/bootstrap.sh ]] ; then
-        fileName=`basename $bootstrap`
-        wget -q https://raw.githubusercontent.com/${MSFT}/oxa-tools/$(get_current_branch)/$bootstrap -O $fileName
-        bootstrap=$fileName
-    fi
+    bootstrap=`wget_wrapper "scripts/bootstrap.sh" "${MSFT}" "oxa-tools" "$(get_current_branch)"`
 
     bash $bootstrap \
         --role \
@@ -362,18 +375,19 @@ install-with-edx-native()
     OPENEDX_RELEASE=${EDX_BRANCH#$TAGS}
 
     # 2. Bootstrap the Ansible installation:
-    wget https://raw.githubusercontent.com/${EDX}/$(get_conf_project_name)/$OPENEDX_RELEASE/util/install/ansible-bootstrap.sh -O - | sudo bash
+    local ans_bootstrap=`wget_wrapper "util/install/ansible-bootstrap.sh" "${EDX}" "$(get_conf_project_name)" "$OPENEDX_RELEASE"`
+    sudo bash $ans_bootstrap
 
     # 3. (Optional) If this is a new installation, randomize the passwords:
-    wget https://raw.githubusercontent.com/${EDX}/$(get_conf_project_name)/$OPENEDX_RELEASE/util/install/generate-passwords.sh -O - | bash
+    local gen_pass=`wget_wrapper "util/install/generate-passwords.sh" "${EDX}" "$(get_conf_project_name)" "$OPENEDX_RELEASE"`
+    bash $gen_pass
 
     #todo: 3a link file to /oxa/oxa.yml
 
     #todo: improve retry
     # 4. Install Open edX:
-    set +e
-    wget https://raw.githubusercontent.com/${EDX}/$(get_conf_project_name)/$OPENEDX_RELEASE/util/install/sandbox.sh -O sandbox.sh
-    bash sandbox.sh || bash sandbox.sh || bash sandbox.sh || bash sandbox.sh || bash sandbox.sh || bash sandbox.sh || bash sandbox.sh || bash sandbox.sh || bash sandbox.sh
+    local sandbox=`wget_wrapper "util/install/sandbox.sh" "${EDX}" "$(get_conf_project_name)" "$OPENEDX_RELEASE"`
+    bash $sandbox
 }
 
 ##########################
