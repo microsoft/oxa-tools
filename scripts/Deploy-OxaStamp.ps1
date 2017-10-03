@@ -73,17 +73,20 @@ Email address associated with the application
 .PARAMETER AzureCliVersion
 Version of Azure CLI to use
 
-.PARAMETER MemcacheServer
-IP Address of the Memcache Server the application servers will use. It is assumed Memcache is configured and is running on the default port of 11211
-
 .PARAMETER DeploymentVersionId
 A timestamp or other identifier to associate with the VMSS being deployed.
 
 .PARAMETER EnableMobileRestApi
 An switch to indicate whether or not mobile rest api is turned on
 
+.PARAMETER DeploymentType
+A switch to indicate the deployment type (any of bootstrap, upgrade, swap)
+
 .PARAMETER JumpboxNumber
 Zero-based numeric indicator of the Jumpbox used for this bootstrap operation (0, 1 or 2). If a non-zero indicator is specified, the corresponding jumpbox will be bootstrapped.
+
+.PARAMETER AutoDeploy
+Defaults to false. Set to true if invoked by Start-OxaDeployment
 
 .INPUTS
 None. You cannot pipe objects to Deploy-OxaStamp.ps1
@@ -132,13 +135,21 @@ Param(
         [Parameter(Mandatory=$false)][string]$EdxAppSuperUserEmail="",
 
         [Parameter(Mandatory=$false)][string][ValidateSet("1","2")]$AzureCliVersion="1",
-        [Parameter(Mandatory=$false)][string]$MemcacheServer="10.0.0.16",
-
+       
         [Parameter(Mandatory=$false)][string]$DeploymentVersionId="",
 
         [Parameter(Mandatory=$false)][switch]$EnableMobileRestApi=$false,
+        
+        [Parameter(Mandatory=$true)][string]$BranchName = "oxa/devfic",
 
-        [Parameter(Mandatory=$false)][ValidateRange(0,2)][int]$JumpboxNumber=0
+        [Parameter(Mandatory=$true)][ValidateSet("bootstrap", "upgrade", "swap", "")][string]$DeploymentType="upgrade",
+                
+        [Parameter(Mandatory=$false)][string]$Slot="slot1",
+
+        [Parameter(Mandatory=$true)][ValidateSet("prod", "int", "bvt", "")][string]$Cloud="bvt",
+
+        [Parameter(Mandatory=$false)][ValidateRange(0,2)][int]$JumpboxNumber=0,
+        [Parameter(Mandatory=$false)][switch]$AutoDeploy=$false
      )
 
 #################################
@@ -150,24 +161,14 @@ $currentPath = Split-Path $invocation.MyCommand.Path
 $rootPath = (get-item $currentPath).parent.FullName
 Import-Module "$($currentPath)/Common.ps1" -Force
 
-$FullDeploymentArmTemplateFile = Set-ScriptDefault -ScriptParamName "FullDeploymentArmTemplateFile" `
-                                    -ScriptParamVal $FullDeploymentArmTemplateFile `
-                                    -DefaultValue "$($rootPath)/templates/stamp/stamp-v2.json"
-$FullDeploymentParametersFile = Set-ScriptDefault -ScriptParamName "FullDeploymentParametersFile" `
-                                    -ScriptParamVal $FullDeploymentParametersFile `
-                                    -DefaultValue "$($rootPath)/config/stamp/default/parameters.json"
-$KeyVaultDeploymentArmTemplateFile = Set-ScriptDefault -ScriptParamName "KeyVaultDeploymentArmTemplateFile" `
-                                    -ScriptParamVal $KeyVaultDeploymentArmTemplateFile `
-                                    -DefaultValue "$($rootPath)/templates/stamp/stamp-keyvault.json"
-$KeyVaultDeploymentParametersFile = Set-ScriptDefault -ScriptParamName "KeyVaultDeploymentParametersFile" `
-                                    -ScriptParamVal $KeyVaultDeploymentParametersFile `
-                                    -DefaultValue $FullDeploymentParametersFile
-
 # Login
-$clientSecret = ConvertTo-SecureString -String $AadWebClientAppKey -AsPlainText -Force
-$aadCredential = New-Object System.Management.Automation.PSCredential($AadWebClientId, $clientSecret)
-Login-AzureRmAccount -ServicePrincipal -TenantId $AadTenantId -SubscriptionName $AzureSubscriptionName -Credential $aadCredential -ErrorAction Stop
-Set-AzureSubscription -SubscriptionName $AzureSubscriptionName | Out-Null
+if (!$AutoDeploy)
+{
+    $clientSecret = ConvertTo-SecureString -String $AadWebClientAppKey -AsPlainText -Force
+    $aadCredential = New-Object System.Management.Automation.PSCredential($AadWebClientId, $clientSecret)
+    Login-AzureRmAccount -ServicePrincipal -TenantId $AadTenantId -SubscriptionName $AzureSubscriptionName -Credential $aadCredential -ErrorAction Stop
+    Set-AzureSubscription -SubscriptionName $AzureSubscriptionName | Out-Null    
+}
 
 # create the resource group
 New-AzureRmResourceGroup -Name $ResourceGroupName -Location $Location -Force
@@ -175,6 +176,18 @@ New-AzureRmResourceGroup -Name $ResourceGroupName -Location $Location -Force
 ######################################################
 # Setup parameters for dynamic arm template creation
 ######################################################
+$FullDeploymentArmTemplateFile = Set-ScriptDefault -ScriptParamName "FullDeploymentArmTemplateFile" `
+    -ScriptParamVal $FullDeploymentArmTemplateFile `
+    -DefaultValue "$($rootPath)/templates/stamp/stamp-v3.json"
+$FullDeploymentParametersFile = Set-ScriptDefault -ScriptParamName "FullDeploymentParametersFile" `
+    -ScriptParamVal $FullDeploymentParametersFile `
+    -DefaultValue "$($rootPath)/config/stamp/default/parameters.json"
+$KeyVaultDeploymentArmTemplateFile = Set-ScriptDefault -ScriptParamName "KeyVaultDeploymentArmTemplateFile" `
+    -ScriptParamVal $KeyVaultDeploymentArmTemplateFile `
+    -DefaultValue "$($rootPath)/templates/stamp/stamp-keyvault.json"
+$KeyVaultDeploymentParametersFile = Set-ScriptDefault -ScriptParamName "KeyVaultDeploymentParametersFile" `
+    -ScriptParamVal $KeyVaultDeploymentParametersFile `
+    -DefaultValue $FullDeploymentParametersFile
 
 # todo: move this to a supporting function 
 # Set default value for the Platform Email address
@@ -211,6 +224,38 @@ if ($DeploymentVersionId -eq "")
     $DeploymentVersionId=$(get-date -f "yyyyMMddHms")
 }
 
+# We need to determine the slot that needs to be targetted to deploy with the help of Traffic manager end point status
+if($DeploymentType -ne "bootstrap")
+{
+
+    $DeployKeyVault = $false
+
+    try
+    {
+        # Getting Azure resource list from the provided resource group
+        $resourcelist = Get-ResourcesList -ResourceGroupName $ResourceGroupName;        
+        # determining the slot by passing Azure resource list from the provided resource group
+        $Slot = Get-DisabledSlot -resourceList $resourcelist -resourceGroupName $ResourceGroupName;
+    }
+    catch
+    {
+        Capture-ErrorStack;
+        throw "Determing the slot has been failed.Please check the Traffic manager endpoint status: $($_.Message)";
+        exit;        
+    }
+    if($DeploymentType -eq "upgrade")
+    {
+        Log-Message "Proceeding with the deleting the resources from ResourceGroup: $ResourceGroupName and cloud: $Cloud"
+        Delete-Resources $DeploymentType -Cloud $Cloud -ResourceGroupName $ResourceGroupName;
+    }
+    if($DeploymentType -eq "swap")
+    {
+        Log-Message "Proceeding with the getting VMSS Name to replace as deploymentVersion ID from resource group: $ResourceGroupName."
+        $DeploymentVersionId = Get-VmssName -ResourceGroupName $ResourceGroupName;
+    }
+    
+}
+
 # Prep the variables we want to use for replacement
 $replacements = @{ 
                     "CLUSTERNAME"=$ResourceGroupName;  
@@ -228,6 +273,9 @@ $replacements = @{
                     "MEMCACHESERVER"=$MemcacheServer;
                     "AZURECLIVERSION"=$AzureCliVersion;
                     "DEPLOYMENTVERSIONID"=$DeploymentVersionId;
+                    "GITHUBBRANCH"=$BranchName;
+                    "DEPLOYMENTSLOT"=$Slot; 
+                    "DEPLOYMENTTYPE"=$DeploymentType;
                     "JUMPBOXNUMBER"=$JumpboxNumber
                 }
 
@@ -257,7 +305,7 @@ try
         # provision the keyvault
         # we may need to replace the default resource group name in the parameters file
         Log-Message "Cluster: $ResourceGroupName | Template: $KeyVaultDeploymentArmTemplateFile | Parameters file: $($tempParametersFile)"
-        $provisioningOperation = New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $KeyVaultDeploymentArmTemplateFile -TemplateParameterFile $tempParametersFile -Force -Verbose  
+        $provisioningOperation = New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $KeyVaultDeploymentArmTemplateFile -TemplateParameterFile $tempParametersFile -Force -Verbose
     
         if ($provisioningOperation.ProvisioningState -ine "Succeeded")
         {
@@ -276,7 +324,13 @@ try
     {
         # kick off full deployment
         # we may need to replace the default resource group name in the parameters file
-        New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $FullDeploymentArmTemplateFile -TemplateParameterFile $tempParametersFile -Force -Verbose  
+        $deploymentStatus = New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $FullDeploymentArmTemplateFile -TemplateParameterFile $tempParametersFile -Force -Verbose  
+        
+        if($DeploymentType -eq "swap" -and $cloud -eq "bvt")
+        {
+            Log-Message "Deleting the resources from $ResourceGroupName since $cloud has been completed"
+            Delete-Resources -DeploymentType $DeploymentType -Cloud $Cloud -ResourceGroupName $ResourceGroupName -DeploymentStatus $deploymentStatus;
+        }   
     }
 }
 catch

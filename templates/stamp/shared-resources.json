@@ -19,7 +19,13 @@
             "metadata": {
                 "Description": "Storage settings object"
             }
-        }
+        },
+        "serviceBusSettings": {
+            "type": "object",
+            "metadata": {
+                "Description": "Service Bus  settings object"
+            }  
+        }            
     },
     "variables": {
         "loadBalancerIpName": "[concat(parameters('networkSettings').loadbalancerSettings.loadBalancerName, parameters('networkSettings').publicIPAddressNameSuffix)]"
@@ -120,6 +126,31 @@
             },
             "kind": "Storage"
         },
+        {
+            "comments": "This is the Service Bus Namespace used for deploymentStatus",
+            
+            "name": "[parameters('serviceBusSettings').serviceBusNamespaceName]",
+            "apiVersion": "[parameters('apiSettings').serviceBusApiVersion]",       
+            "type": "Microsoft.ServiceBus/Namespaces",
+            "location": "[resourceGroup().location]",
+            "kind": "Messaging",
+            "sku": {
+                "name": "StandardSku",
+                "tier": "Standard"
+			}
+        },
+        {
+            "comments": "This is the Service Bus Queue used for store deploymentStatus message",            
+            "name": "[parameters('serviceBusSettings').serviceBusQueueName]",
+            "apiVersion": "[parameters('apiSettings').serviceBusApiVersion]",          
+            "type": "Queues",
+            "dependsOn": [
+                "[concat('Microsoft.ServiceBus/namespaces/', parameters('serviceBusSettings').serviceBusNamespaceName)]"
+            ],
+            "properties": {
+                "path": "oxadeploy1-sbqueue"
+            }
+        },                  
         {
             "type": "Microsoft.Compute/availabilitySets",
             "name": "[concat(parameters('networkSettings').clusterMongoDataNodeName, parameters('networkSettings').availabilitySetNameSuffix)]",
