@@ -378,11 +378,13 @@ install-with-edx-native()
     local ans_bootstrap=`wget_wrapper "util/install/ansible-bootstrap.sh" "${EDX}" "$(get_conf_project_name)" "$OPENEDX_RELEASE"`
     sudo bash $ans_bootstrap
 
-    # 3. (Optional) If this is a new installation, randomize the passwords:
+    # todo: 3a reconcile this w/ -d
+
+    # 3b (Optional) If this is a new installation, randomize the passwords:
     local gen_pass=`wget_wrapper "util/install/generate-passwords.sh" "${EDX}" "$(get_conf_project_name)" "$OPENEDX_RELEASE"`
     bash $gen_pass
 
-    #todo: 3a link file to /oxa/oxa.yml
+    #todo: 3c link file to /oxa/oxa.yml
 
     # 3b Enable retry
     local utilities=`wget_wrapper "templates/stamp/utilities.sh" "${MSFT}" "oxa-tools" "$(get_current_branch)"`
