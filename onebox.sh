@@ -378,9 +378,8 @@ install-with-edx-native()
     local ans_bootstrap=`wget_wrapper "util/install/ansible-bootstrap.sh" "${EDX}" "$(get_conf_project_name)" "$OPENEDX_RELEASE"`
     sudo bash $ans_bootstrap
 
-    # todo: 3a reconcile this w/ -d
-
-    # 3b (Optional) If this is a new installation, randomize the passwords:
+    # 3. (Optional) If this is a new installation, randomize the passwords:
+    # todo: reconcile this w/ -d
     local gen_pass=`wget_wrapper "util/install/generate-passwords.sh" "${EDX}" "$(get_conf_project_name)" "$OPENEDX_RELEASE"`
     bash $gen_pass
 
@@ -394,6 +393,10 @@ install-with-edx-native()
     local sandbox=`wget_wrapper "util/install/sandbox.sh" "${EDX}" "$(get_conf_project_name)" "$OPENEDX_RELEASE"`
     set +e
     retry-command "bash $sandbox" 8 "$sandbox" "fixPackages"
+    set -e
+
+    # get status of edx services
+    /edx/bin/supervisorctl status
 }
 
 ##########################
