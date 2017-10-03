@@ -392,6 +392,7 @@ install-with-edx-native()
 
     # 4. Install Open edX:
     local sandbox=`wget_wrapper "util/install/sandbox.sh" "${EDX}" "$(get_conf_project_name)" "$OPENEDX_RELEASE"`
+    set +e
     retry-command "bash $sandbox" 8 "$sandbox" "fixPackages"
 }
 
