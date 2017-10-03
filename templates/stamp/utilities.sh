@@ -301,13 +301,13 @@ install-wrapper()
 
 retry-command()
 {
-    command="$1"
-    retry_count="$2"
-    optionalDescription="$3"
-    fix_packages="$4"
+    local command="$1"
+    local retry_count="$2"
+    local optionalDescription="$3"
+    local fix_packages="$4"
 
-    tasksOfPrev=
-    haveUpgraded=
+    local tasksOfPrev=
+    local alreadyUpgraded=
     for (( a=1; a<=$retry_count; a++ )) ; do
         message="$optionalDescription attempt number: $a"
 
@@ -323,9 +323,9 @@ retry-command()
         log "STARTING ${message}..."
 
         set -o pipefail
-        logPath="/var/tmp/${a}.txt"
+        local logPath="/var/tmp/${a}.txt"
         unbuffer $command | tee $logPath
-        result=$?
+        local result=$?
         set +o pipefail
 
         if [[ $result -eq 0 ]] ; then
@@ -337,17 +337,17 @@ retry-command()
 
         # Don't continue if ansible failed at the same play twice in a row.
         # The same error will likely happen for each remaining iteration.
-        if [[ $command == *"ansible"* ]] ; then
-            tasksOfCur=`grep -o ",.* total tasks" $logPath | grep -o "[0-9]*"`
+        if [[ $command == *"ansible"* ]] || [[ $command == *"sandbox"* ]] ; then
+            local tasksOfCur=`grep -o ",.* total tasks" $logPath | grep -o "[0-9]*"`
 
             if [[ -n $tasksOfPrev ]] && (( $tasksOfCur == $tasksOfPrev )) ; then
                 log "Same failure as previous attempt."
 
-                if [[ -z $haveUpgraded ]] ; then
+                if [[ -z $alreadyUpgraded ]] && [[ -n "$fix_packages" ]] ; then
                     # See if upgrading apt packages solves the failure.
                     # This technique has resolved some fullstack failures.
                     apt-wrapper "upgrade -f"
-                    haveUpgraded="true"
+                    alreadyUpgraded="true"
                 else
                     # Give up.
                     break
