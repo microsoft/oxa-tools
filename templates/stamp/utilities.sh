@@ -743,7 +743,7 @@ install-powershell()
 
     # execute the installer
     bash ~/powershell_installer.sh
-        exit_on_error "Powershell installation failed ${HOSTNAME} !" $ERROR_POWERSHELLINSTALL_FAILED
+    exit_on_error "Powershell installation failed ${HOSTNAME} !" $ERROR_POWERSHELLINSTALL_FAILED
 }
 
 #############################################################################
