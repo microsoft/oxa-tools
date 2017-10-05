@@ -8,85 +8,108 @@ This script deploys the OXA Stamp. It supports a clean infrastructure bootstrap 
 This script assumes you have already have an AzureRM authenticated session
 
 .PARAMETER AzureSubscriptionName
-Name of the azure subscription to use
+Name of the azure subscription to use.
 
 .PARAMETER ResourceGroupName
-Name of the azure resource group name
+Name of the azure resource group name.
 
 .PARAMETER Location
-Location of the resource group. See https://azure.microsoft.com/en-us/regions/ for details
+Location of the resource group. See https://azure.microsoft.com/en-us/regions/ for details.
 
 .PARAMETER TargetPath
-Directory path holding the secrets for populating keyvault. Only files in this directory will be uploaded as secrets. Recursion is not supported
+Directory path holding the secrets for populating keyvault. Only files in this directory will be uploaded as secrets. Recursion is not supported.
 
 .PARAMETER ConfigurationPrefix
-Prefix prepended to the secret names for categorization purposes
+Prefix prepended to the secret names for categorization purposes.
 
 .PARAMETER AadWebClientId
-The azure active directory web application Id for authentication
+The azure active directory web application Id for authentication.
 
 .PARAMETER AadWebClientAppKey
-The azure active directory web application key for authentication
+The azure active directory web application key for authentication.
 
 .PARAMETER AadTenantId
-The azure active directory tenant id for authentication
+The azure active directory tenant id for authentication.
 
 .PARAMETER KeyVaultUserObjectId
-Object id of the user to be granted full keyvault access. If no value is specified, the service principal (AadWebClientId) object id will be used
+Object id of the user to be granted full keyvault access. If no value is specified, the service principal (AadWebClientId) object id will be used.
 
 .PARAMETER KeyVaultDeploymentArmTemplateFile
-Path to the arm template for bootstrapping keyvault
+Path to the arm template for bootstrapping keyvault.
 
 .PARAMETER KeyVaultDeploymentParametersFile
-Path to the deployment parameters file for the keyvault arm deployment
+Path to the deployment parameters file for the keyvault arm deployment.
+
+.PARAMETER FullDeploymentArmTemplateFile
+Path to the arm template for bootstrapping keyvault.
+
+.PARAMETER FullDeploymentParametersFile
+Path to the deployment parameters file for the keyvault arm deployment.
 
 .PARAMETER ClusterAdministratorEmailAddress
-E-mail address of the cluster administrator. Notification email during bootstrap will be sent here. OS notifications will also be sent to this address
+E-mail address of the cluster administrator. Notification email during bootstrap will be sent here. OS notifications will also be sent to this address.
 
-.PARAMETER FullDeploymentArmTemplateFile
-Path to the arm template for bootstrapping keyvault
+.PARAMETER DeployKeyVault
+A switch indicating whether or not keyvault will be deployed.
 
-.PARAMETER FullDeploymentArmTemplateFile
-Path to the deployment parameters file for the keyvault arm deployment
+.PARAMETER DeployStamp
+A switch indicating whether or not stamp will be deployed.
 
 .PARAMETER SmtpServer
-SMTP Server to use for deployment and other notifications (it is assumed the server supports TLS)
+SMTP Server to use for deployment and other notifications (it is assumed the server supports TLS).
 
 .PARAMETER SmtpServerPort
-SMTP Server port used for connection
+SMTP Server port used for connection.
 
 .PARAMETER SmtpAuthenticationUser
-SMTP Server user name to authenticate with
+SMTP Server user name to authenticate with.
 
 .PARAMETER SmtpAuthenticationUserPassword
-Password for the SMTP Server user to authenticate with
+Password for the SMTP Server user to authenticate with.
 
 .PARAMETER ServiceAccountPassword
-Password to use for creating backend service accounts (Mysql, Mongo admin users)
+Password to use for creating backend service accounts (Mysql, Mongo admin users).
 
 .PARAMETER PlatformName
-Name used to identify the application
+Name used to identify the application.
 
 .PARAMETER PlatformEmailAddress
-Email address associated with the application
+Email address associated with the application.
+
+.PARAMETER EdxAppSuperUserName
+User name to be setup as superuser for the EdX application.
+
+.PARAMETER EdxAppSuperUserPassword
+User Password to be used for the EdX application.
+
+.PARAMETER EdxAppSuperUserEmail
+Email address to be associated with the superuser for the EdX application.
 
 .PARAMETER AzureCliVersion
-Version of Azure CLI to use
+Version of Azure CLI to use.
 
 .PARAMETER DeploymentVersionId
 A timestamp or other identifier to associate with the VMSS being deployed.
 
 .PARAMETER EnableMobileRestApi
-An switch to indicate whether or not mobile rest api is turned on
+A switch to indicate whether or not mobile rest api is turned on.
+
+[Parameter(Mandatory=$true)][string]$BranchName = "oxa/devfic",
 
 .PARAMETER DeploymentType
-A switch to indicate the deployment type (any of bootstrap, upgrade, swap)
+Type of deployment being executed. 
+
+The supported Types are:
+1. bootstrap:   a first time installation.
+2. upgrade:     any installation following bootstrap
+3. swap:        switching live traffic from one installation to an upgraded one
+4. cleanup:     deleting all resources associated with an older installation
 
 .PARAMETER JumpboxNumber
 Zero-based numeric indicator of the Jumpbox used for this bootstrap operation (0, 1 or 2). If a non-zero indicator is specified, the corresponding jumpbox will be bootstrapped.
 
-.PARAMETER AutoDeploy
-Defaults to false. Set to true if invoked by Start-OxaDeployment
+.PARAMETER MaxRetries
+Maximum number of retries this call makes before failing. This defaults to 3.
 
 .INPUTS
 None. You cannot pipe objects to Deploy-OxaStamp.ps1
@@ -140,16 +163,15 @@ Param(
 
         [Parameter(Mandatory=$false)][switch]$EnableMobileRestApi=$false,
         
-        [Parameter(Mandatory=$true)][string]$BranchName = "oxa/devfic",
+        [Parameter(Mandatory=$false)][string]$BranchName = "oxa/master.fic",
 
-        [Parameter(Mandatory=$true)][ValidateSet("bootstrap", "upgrade", "swap", "")][string]$DeploymentType="upgrade",
-                
-        [Parameter(Mandatory=$false)][string]$Slot="slot1",
+        [Parameter(Mandatory=$false)][ValidateSet("bootstrap", "upgrade", "swap", "cleanup")][string]$DeploymentType="bootstrap",
 
-        [Parameter(Mandatory=$true)][ValidateSet("prod", "int", "bvt", "")][string]$Cloud="bvt",
+        [Parameter(Mandatory=$false)][ValidateSet("prod", "int", "bvt")][string]$Cloud="bvt",
 
         [Parameter(Mandatory=$false)][ValidateRange(0,2)][int]$JumpboxNumber=0,
-        [Parameter(Mandatory=$false)][switch]$AutoDeploy=$false
+
+        [Parameter(Mandatory=$false)][int]$MaxRetries=3
      )
 
 #################################
@@ -161,12 +183,15 @@ $currentPath = Split-Path $invocation.MyCommand.Path
 $rootPath = (get-item $currentPath).parent.FullName
 Import-Module "$($currentPath)/Common.ps1" -Force
 
+# TODO: why the exclusion from auto deploy
 # Login
 if (!$AutoDeploy)
 {
     $clientSecret = ConvertTo-SecureString -String $AadWebClientAppKey -AsPlainText -Force
     $aadCredential = New-Object System.Management.Automation.PSCredential($AadWebClientId, $clientSecret)
     Login-AzureRmAccount -ServicePrincipal -TenantId $AadTenantId -SubscriptionName $AzureSubscriptionName -Credential $aadCredential -ErrorAction Stop
+
+    # TODO: do we need this?
     Set-AzureSubscription -SubscriptionName $AzureSubscriptionName | Out-Null    
 }
 
@@ -218,43 +243,48 @@ if (!$KeyVaultUserObjectId)
     $KeyVaultUserObjectId = $principal.Id
 }
 
-# check for the DeploymentVersionId
-if ($DeploymentVersionId -eq "")
+
+###########################################
+# 1. Get Target Deployment Slot
+###########################################
+
+# Getting Azure resource list from the provided resource group
+$resourcelist = Get-OxaNetworkResources -ResourceGroupName $ResourceGroupName -MaxRetries $MaxRetries;
+
+# determining the slot by passing Azure resource list from the provided resource group (if any)
+$targetDeploymentSlot = Get-OxaDisabledDeploymentSlot -resourceList $resourcelist -resourceGroupName $ResourceGroupName -MaxRetries $MaxRetries;
+
+######################################################################################
+# 2. Delete Target Deployment Slot: only for DeploymentType=Upgrade | Cleanup
+######################################################################################
+
+if($DeploymentType -eq "upgrade" -or $DeploymentType -eq "cleanup")
 {
-    $DeploymentVersionId=$(get-date -f "yyyyMMddHms")
-}
+    # upgrade deployment: delete any resource that may exist in the target slot before starting
+    Log-Message "Deleting the resources from ResourceGroup='$($ResourceGroupName)' and cloud='$($Cloud)'";
+    $response = Remove-OxaDeploymentSlot -DeploymentType $DeploymentType -ResourceGroupName $ResourceGroupName -TargetDeploymentSlot $targetDeploymentSlot -NetworkResourceList $resourcelist -MaxRetries $MaxRetries;
 
-# We need to determine the slot that needs to be targetted to deploy with the help of Traffic manager end point status
-if($DeploymentType -ne "bootstrap")
-{
-
-    $DeployKeyVault = $false
-
-    try
+    # TODO: process the response
+    if ( !$response )
     {
-        # Getting Azure resource list from the provided resource group
-        $resourcelist = Get-ResourcesList -ResourceGroupName $ResourceGroupName;        
-        # determining the slot by passing Azure resource list from the provided resource group
-        $Slot = Get-DisabledSlot -resourceList $resourcelist -resourceGroupName $ResourceGroupName;
-    }
-    catch
-    {
-        Capture-ErrorStack;
-        throw "Determing the slot has been failed.Please check the Traffic manager endpoint status: $($_.Message)";
-        exit;        
-    }
-    if($DeploymentType -eq "upgrade")
-    {
-        Log-Message "Proceeding with the deleting the resources from ResourceGroup: $ResourceGroupName and cloud: $Cloud"
-        Delete-Resources $DeploymentType -Cloud $Cloud -ResourceGroupName $ResourceGroupName;
-    }
-    if($DeploymentType -eq "swap")
-    {
-        Log-Message "Proceeding with the getting VMSS Name to replace as deploymentVersion ID from resource group: $ResourceGroupName."
-        $DeploymentVersionId = Get-VmssName -ResourceGroupName $ResourceGroupName;
+        throw "Unable to remove all azure resources associated with the specified deployment slot: $($TargetDeploymentSlot)"
     }
     
+    # this is a terminal step for DeploymentType=cleanup
+    if ( $DeploymentType -eq "cleanup" )
+    {
+        # there is nothing else for clean up to do, stop
+        Log-Message "Cleanup deployment is done!";
+        return;
+    }
 }
+
+###########################################
+# 3. Deploy
+###########################################
+
+# Get the appropriate DeploymentVersionId for the deployment type
+$DeploymentVersionId = Get-DefaultDeploymentVersionId -DeploymentType $DeploymentType -DeploymentVersionId $DeploymentVersionId -MaxRetries $MaxRetries -ResourceGroupName $ResourceGroupName;
 
 # Prep the variables we want to use for replacement
 $replacements = @{ 
@@ -274,7 +304,7 @@ $replacements = @{
                     "AZURECLIVERSION"=$AzureCliVersion;
                     "DEPLOYMENTVERSIONID"=$DeploymentVersionId;
                     "GITHUBBRANCH"=$BranchName;
-                    "DEPLOYMENTSLOT"=$Slot; 
+                    "DEPLOYMENTSLOT"=$targetDeploymentSlot; 
                     "DEPLOYMENTTYPE"=$DeploymentType;
                     "JUMPBOXNUMBER"=$JumpboxNumber
                 }
@@ -297,20 +327,23 @@ if ($EnableMobileRestApi -eq $true)
 
 # Update the deployment parameters
 $tempParametersFile = Update-RuntimeParameters -ParametersFile $KeyVaultDeploymentParametersFile -ReplacementHash $replacements;
+Log-Message "Completed processing of parameters.json" -ClearLineAfter;
 
 try
 {
-    if ($DeployKeyVault)
+    # we don't need to deploy keyvault when DeploymentType=swap
+    if ($DeployKeyVault -and $DeploymentType -ine "swap")
     {
         # provision the keyvault
         # we may need to replace the default resource group name in the parameters file
-        Log-Message "Cluster: $ResourceGroupName | Template: $KeyVaultDeploymentArmTemplateFile | Parameters file: $($tempParametersFile)"
-        $provisioningOperation = New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $KeyVaultDeploymentArmTemplateFile -TemplateParameterFile $tempParametersFile -Force -Verbose
+        # TODO: wrap this 
+        Log-Message "Key Vault Deployment - Cluster: $ResourceGroupName | Template: $KeyVaultDeploymentArmTemplateFile | Parameters file: $($tempParametersFile)";
+        $provisioningOperation = New-OxaResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $KeyVaultDeploymentArmTemplateFile -TemplateParameterFile $tempParametersFile -MaxRetries $MaxRetries;
     
         if ($provisioningOperation.ProvisioningState -ine "Succeeded")
         {
             $provisioningOperation
-            throw "Unable to provision the resource group $($ResourceGroupName)"
+            throw "Unable to execute the KeyVault Deployment to $($ResourceGroupName)"
         }
 
         # pre-populate the keyvault
@@ -324,13 +357,14 @@ try
     {
         # kick off full deployment
         # we may need to replace the default resource group name in the parameters file
-        $deploymentStatus = New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $FullDeploymentArmTemplateFile -TemplateParameterFile $tempParametersFile -Force -Verbose  
+        Log-Message "Stamp Deployment - Cluster: $ResourceGroupName | Template: $KeyVaultDeploymentArmTemplateFile | Parameters file: $($tempParametersFile)"
+        $deploymentStatus = New-OxaResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $FullDeploymentArmTemplateFile -TemplateParameterFile $tempParametersFile -MaxRetries $MaxRetries;
         
-        if($DeploymentType -eq "swap" -and $cloud -eq "bvt")
+        if ($deploymentStatus.ProvisioningState -ine "Succeeded")
         {
-            Log-Message "Deleting the resources from $ResourceGroupName since $cloud has been completed"
-            Delete-Resources -DeploymentType $DeploymentType -Cloud $Cloud -ResourceGroupName $ResourceGroupName -DeploymentStatus $deploymentStatus;
-        }   
+            $provisioningOperation
+            throw "Unable to execute the Stamp Deployment to $($ResourceGroupName)"
+        }
     }
 }
 catch
