@@ -111,6 +111,15 @@ Zero-based numeric indicator of the Jumpbox used for this bootstrap operation (0
 .PARAMETER MaxRetries
 Maximum number of retries this call makes before failing. This defaults to 3.
 
+.PARAMETER DeployedVmssCount
+Maximum number of vmss(s) that are targetted to deploy
+
+.PARAMETER waitIntervalHours
+Maximum number of vmss(s) that are targetted to deploy
+
+.PARAMETER WaitGranularityMinutes
+Maximum number of vmss(s) that are targetted to deploy
+
 .INPUTS
 None. You cannot pipe objects to Deploy-OxaStamp.ps1
 
@@ -171,8 +180,15 @@ Param(
 
         [Parameter(Mandatory=$false)][ValidateRange(0,2)][int]$JumpboxNumber=0,
 
-        [Parameter(Mandatory=$false)][int]$MaxRetries=3
-     )
+        [Parameter(Mandatory=$false)][int]$MaxRetries=3,
+        
+        [Parameter(Mandatory=$false)][int]$DeployedVmssCount=1,
+        
+        [Parameter(Mandatory=$false)][int] [int]$waitIntervalHours = 1,
+        
+        [Parameter(Mandatory=$false)][int][int]$WaitGranularityMinutes = 10 
+    
+    )
 
 #################################
 # ENTRY POINT
@@ -359,6 +375,29 @@ try
         # we may need to replace the default resource group name in the parameters file
         Log-Message "Stamp Deployment - Cluster: $ResourceGroupName | Template: $KeyVaultDeploymentArmTemplateFile | Parameters file: $($tempParametersFile)"
         $deploymentStatus = New-OxaResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $FullDeploymentArmTemplateFile -TemplateParameterFile $tempParametersFile -MaxRetries $MaxRetries;
+        
+        #Capturing ARM Template output values
+        $SbNameSpace = $deploymentStatus.Parameters.serviceBusNameSpace.value;
+        $SbQueueName = $deploymentStatus.Parameters.serviceBusQueueName.value;
+        $Saskey = $deploymentStatus.outputs.sharedAccessPolicyPrimaryKey.value;
+        
+        #fetching deployment status
+        while ($DeployedVmssCount -ge 1)
+        {  
+            Log-Message -Message "Starting smart sleep until the  deployment staus received: wait $($waitGranularityMinutes) min(s), WaitIntervalHours:$($waitIntervalHours)"
+            Start-SmartSleep -WaitGranularityMinutes $waitGranularityMinutes -WaitIntervalHours $waitIntervalHours
+
+            #waiting for deployment status
+            $deploymentMessageCount = Get-DeployymentStatus $SbNameSpace $SbQueueName $Saskey $DefaultSASKeyName;
+
+            if($deploymentMessageCount -ge 1)
+            {
+                $DeployedVmssCount--;
+            }
+            # sleep for a couple of minutes 
+            [int]$WaitGranularityMinutes = 2;
+   
+        }  
         
         if ($deploymentStatus.ProvisioningState -ine "Succeeded")
         {

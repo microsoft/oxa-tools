@@ -127,31 +127,6 @@
             "kind": "Storage"
         },
         {
-            "comments": "This is the Service Bus Namespace used for deploymentStatus",
-            
-            "name": "[parameters('serviceBusSettings').serviceBusNamespaceName]",
-            "apiVersion": "[parameters('apiSettings').serviceBusApiVersion]",       
-            "type": "Microsoft.ServiceBus/Namespaces",
-            "location": "[resourceGroup().location]",
-            "kind": "Messaging",
-            "sku": {
-                "name": "StandardSku",
-                "tier": "Standard"
-			}
-        },
-        {
-            "comments": "This is the Service Bus Queue used for store deploymentStatus message",            
-            "name": "[parameters('serviceBusSettings').serviceBusQueueName]",
-            "apiVersion": "[parameters('apiSettings').serviceBusApiVersion]",          
-            "type": "Queues",
-            "dependsOn": [
-                "[concat('Microsoft.ServiceBus/namespaces/', parameters('serviceBusSettings').serviceBusNamespaceName)]"
-            ],
-            "properties": {
-                "path": "oxadeploy1-sbqueue"
-            }
-        },                  
-        {
             "type": "Microsoft.Compute/availabilitySets",
             "name": "[concat(parameters('networkSettings').clusterMongoDataNodeName, parameters('networkSettings').availabilitySetNameSuffix)]",
             "apiVersion": "[parameters('apiSettings').availabilitySetApiVersion]",
@@ -260,6 +235,32 @@
             "dependsOn": [
                 "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageSettings').wamsStorageAccountName)]"
             ]
+        },   
+        {
+            "comments": "Service bus Service",
+            "apiVersion": "[parameters('apiSettings').serviceBusApiVersion]",
+            "name": "[parameters('serviceBusSettings').serviceBusNameSpace]",
+            "type": "Microsoft.ServiceBus/Namespaces",
+            "location": "[resourceGroup().location]",
+                "sku": {
+                    "name": "Standard",
+                    "tier": "Standard"
+                },
+            "properties": {},
+            "resources": [
+            {
+                "apiVersion": "[parameters('apiSettings').serviceBusApiVersion]",
+                "name": "[parameters('serviceBusSettings').serviceBusQueueName]",
+                "type": "Queues",
+                "dependsOn": [
+                    "[concat('Microsoft.ServiceBus/namespaces/', parameters('serviceBusSettings').serviceBusNameSpace)]"
+            ],
+            "properties": {
+            "lockDuration": "PT5M",
+            "maxSizeInMegabytes": "1024"           
+          }
         }
-    ]
+      ]
+    }
+  ]
 }
