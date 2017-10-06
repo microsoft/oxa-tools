@@ -9,6 +9,12 @@
         "clusterNameDomainName": {
             "type": "string"
         },
+        "serviceBusNameSpace": {
+            "type": "string"            
+        },
+        "serviceBusQueueName": {
+            "type": "string"
+        },        
         "osFamilySpec": {
             "type": "string",
             "defaultValue": "ubuntu",
@@ -649,7 +655,8 @@
         "trafficManagerApiversion": "2015-11-01",
         "mediaServicesApiVersion": "2015-10-01",
         "storageApiVersion": "2016-01-01",
-
+        "sbApiVersion": "2017-04-01",
+        
         "virtualMachineExtensionsApiVersion": "[variables('defaultApiVersion')]",
         "virtualMachineApiVersion": "[variables('defaultApiVersion')]",
         "slot1Status": "[if(equals(parameters('deploymentSlot'), 'slot1'), 'Enabled','Disabled')]",
@@ -664,7 +671,11 @@
         "mediaServicesAccountName": "[concat(toLower(parameters('clusterName')), 'wamsmedia')]",
         "storageAccountType": "Standard_LRS",
         "storageContainer": "[concat('https://', variables('storageAccountName'),'.blob.core.windows.net/vhds/')]",
-
+        "sbQueueName": "[concat(parameters('clusterName'), '-queue3' )]",
+        "location": "[resourceGroup().location]",  
+        "defaultSASKeyName": "RootManageSharedAccessKey",
+        "authRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/authorizationRules', parameters('serviceBusNameSpace'), variables('defaultSASKeyName'))]",   
+                
         "loadBalancerName": "[concat(parameters('clusterName'), '-lb-', parameters('deploymentSlot'))]",
         "virtualNetworkName": "[concat(parameters('clusterName'), '-vnet')]",
         "subnetName": "[concat(parameters('clusterName'), '-subnet')]",
@@ -849,6 +860,10 @@
             "wamsStorageAccountName": "[variables('wamsStorageAccountName')]",
             "mediaServicesAccountName": "[variables('mediaServicesAccountName')]"
         },
+        "serviceBusSettings": {
+            "serviceBusNameSpace": "[parameters('serviceBusNameSpace')]",
+            "serviceBusQueueName": "[parameters('serviceBusQueueName')]"  
+        },
         "apiSettings": {
             "apiVersion": "[variables('apiVersion')]",
             "storageApiVersion": "[variables('storageApiVersion')]",
@@ -860,7 +875,8 @@
             "insightsApiVersion": "[variables('insightsApiVersion')]",
             "keyVaultApiversion": "[variables('keyVaultApiversion')]",
             "trafficManagerApiversion": "[variables('trafficManagerApiversion')]",
-            "mediaServicesApiVersion": "[variables('mediaServicesApiVersion')]"
+            "mediaServicesApiVersion": "[variables('mediaServicesApiVersion')]",
+            "serviceBusApiVersion": "[variables('sbapiVersion')]"            
         },
         "keyVaultSettings": {
             "enabledForDeployment": "[variables('keyVaultEnabledForDeployment')]",
@@ -934,6 +950,9 @@
                     },
                     "apiSettings": {
                         "value": "[variables('apiSettings')]"
+                    },
+                    "serviceBusSettings": {
+                        "value": "[variables('serviceBusSettings')]"
                     },
                     "storageSettings": {
                         "value": "[variables('storageSettings')]"

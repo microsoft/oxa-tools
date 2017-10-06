@@ -2012,3 +2012,193 @@ function New-OxaResourceGroupDeployment
     # this call doesn't require special error handling
     return Start-AzureCommand -InputParameters $inputParameters;
 }
+
+<#
+.SYNOPSIS
+Gets the latest deployment status from all available VMSS(s).
+
+.DESCRIPTION
+Gets the latest deployment status from all available VMSS(s).
+
+.PARAMETER SbNameSpace
+Name of the Azure Service bus resource
+
+.PARAMETER SbQueueName
+Name of the Azure Service bus Queue resource
+
+.PARAMETER Saskey
+Service bus authorization primary key
+
+.PARAMETER defaultSASKeyName
+Name of the Azure Service bus authorization rule
+
+.OUTPUTS
+System.String. Get-DeployymentStatus returns the deployment status messages recieved from all vmss(s).
+#>
+function Get-DeployymentStatus ( $SbNameSpace, $SbQueueName , $Saskey , $defaultSASKeyName )
+{
+
+    Log-Message "Receiving deployment status from $($SbNameSpace)"
+    $messageContent = @();
+    $messageCount = 0;
+
+    #checking SbNameSpace
+    if($SbNameSpace)
+    {
+        try
+        {
+            # Rest api url to receive messages from Service bus queue
+            $SbRecieveRestUrl = "https://$($SbNameSpace).servicebus.windows.net/$($SbQueueName)/messages/head"
+   
+            # Generating SAS token to authenticate Service bus Queue to receive messages
+            $AuthorizedSasToken = Generate-SasToken $Saskey $defaultSASKeyName $SbRecieveRestUrl;
+
+            # Assigning generated SAS token to Service bus rest api headers to authorize
+            $Headers = @{'Authorization'=$AuthorizedSasToken}        
+            
+            # check for message
+           [bool]$checkMessage = $true;
+            while($checkMessage)
+            {
+                # invoking service bus queue rest api message url
+               [object]$MessageQueue = Invoke-WebRequest -Method DELETE -Uri $SbRecieveRestUrl -Headers $Headers;
+
+                if (![string]::IsNullOrEmpty($MessageQueue.content))
+                {
+                    $messageContent += $MessageQueue.content;
+                    $messageCount++;  
+                }       
+                else
+                {
+                    $checkMessage = $false;
+                }
+
+             }
+        }
+        catch 
+        {
+             Log-Message "Rest API call failed for $($ServiceBusRecieveUrl)"
+        }
+            
+    }
+    else
+    {
+        Log-Message "Serive bus value is empty"
+    }
+    return $messageCount;
+}
+
+<#
+.SYNOPSIS
+Generates the SAS token with Service bus rest api url.
+
+.DESCRIPTION
+Generates the SAS token with Service bus rest api url.
+
+.PARAMETER Saskey
+Service bus authorization primary key
+
+.PARAMETER defaultSASKeyName
+Name of the Azure Service bus authorization rule
+
+.PARAMETER SbRecieveRestUrl
+Service bus rest api url to receive messages from the queue.
+
+.OUTPUTS
+System.String. Generate-SasToken returns SAS token generated for Service bus rest api recieve message url.
+#>
+function Generate-SasToken ( $Saskey,$defaultSASKeyName,$SbRecieveRestUrl )
+{
+    
+    Log-Message "Generating SAS token for using $($defaultSASKeyName)" 
+
+    #checking SASKey Value    
+    if($Saskey)
+    { 
+        try
+        {  
+            # Setting expiry date
+            $sinceEpoch = (Get-Date).ToUniversalTime() - ([datetime]'1/1/1970')
+            $weekInSeconds = 7 * 24 * 60 * 60
+            $expiry = [System.Convert]::ToString([int]($sinceEpoch.TotalSeconds) + $weekInSeconds)
+       
+            #Encoding Service Bus Name space Rest api messaging url
+            $encodedResourceUri = [System.Web.HttpUtility]::UrlEncode($SbRecieveRestUrl)
+            $encodedResourceUri = [uri]::EscapeUriString($SbRecieveRestUrl)
+
+            #Setting up expiry date
+            $stringToSign = $encodedResourceUri + "`n" + $expiry
+            $stringToSignBytes = [System.Text.Encoding]::UTF8.GetBytes($stringToSign)
+       
+            #Encoding Service bus SharedAccess Primary key pulled from ARM template
+            $keyBytes = [System.Text.Encoding]::UTF8.GetBytes($Saskey)
+   
+            #Encoding Signature by HMACSHA256
+            $hmac = [System.Security.Cryptography.HMACSHA256]::new($keyBytes)
+            $hashOfStringToSign = $hmac.ComputeHash($stringToSignBytes)
+
+            $signature = [System.Convert]::ToBase64String($hashOfStringToSign)
+            $encodedSignature = [System.Web.HttpUtility]::UrlEncode($signature)   
+   
+            Log-Message "generating the SAS token for - $($SbRecieveRestUrl)"
+
+            #Generating SAS token
+            $SasToken = "SharedAccessSignature sr=$encodedResourceUri&sig=$encodedSignature&se=$expiry&skn=$($defaultSASKeyName)";
+        }
+        catch
+        {
+             Log-Message "Error in generating SAS token - $($SasToken)"
+        }
+    }
+    else
+    {
+       Log-Message " No SASkey Value is passed through."
+     
+    }    
+    return $SasToken;
+}
+
+<#
+.SYNOPSIS
+ Start a sleep routine that wakes up at precise intervals.
+
+.DESCRIPTION
+ Start a sleep routine that wakes up at precise intervals.
+
+.PARAMETER WaitGranularityMinutes
+Interval in minutes to periodically wake up and check if wait interval is met
+
+.PARAMETER WaitIntervalHours
+ Hourly interval for waiting up and continuing execution
+
+.OUTPUTS
+ Nothing
+#>
+function Start-SmartSleep
+{
+    param(
+            [Parameter(Mandatory=$true)][int]$WaitGranularityMinutes,
+            [Parameter(Mandatory=$true)][int]$WaitIntervalHours                    
+         )
+
+   [bool]$continueSleep = $true;
+    while ($continueSleep)
+    {
+        # check the current time and if we are at the expected wait interval hours, awake from persistent sleep 
+        # and look for work
+        # thereafter, we will wait until the next VMSS deployment status interval
+
+        $currentTime = Get-Date;
+        
+        # sleep for a couple of minutes
+        Start-Sleep -Seconds ($WaitGranularityMinutes*60);
+
+        # check if we need to wake up
+        if (($currentTime.Hour % $WaitIntervalHours) -eq 0 )
+        {
+            # we are within wait interval
+            # awake and get some work done
+            $continueSleep = $false;   
+        }
+    }
+}

@@ -6,7 +6,16 @@
             "type": "string",
             "maxLength": 12
         },
+        "serviceBusNameSpace": {
+            "type": "string"
+        },
+        "serviceBusQueueName": {
+            "type": "string"
+        },
         "clusterNameDomainName": {
+            "type": "string"
+        },
+        "sbPrimaryKey": {
             "type": "string"
         },
         "osFamilySpec": {
@@ -649,7 +658,8 @@
         "trafficManagerApiversion": "2015-11-01",
         "mediaServicesApiVersion": "2015-10-01",
         "storageApiVersion": "2016-01-01",
-
+        "sbapiVersion": "2017-04-01",
+        
         "virtualMachineExtensionsApiVersion": "[variables('defaultApiVersion')]",
         "virtualMachineApiVersion": "[variables('defaultApiVersion')]",
         "slot1Status": "[if(equals(parameters('deploymentSlot'), 'slot1'), 'Enabled','Disabled')]",
@@ -663,8 +673,10 @@
         "wamsStorageAccountName": "[concat(toLower(parameters('clusterName')), 'wamssa')]",
         "mediaServicesAccountName": "[concat(toLower(parameters('clusterName')), 'wamsmedia')]",
         "storageAccountType": "Standard_LRS",
-        "storageContainer": "[concat('https://', variables('storageAccountName'),'.blob.core.windows.net/vhds/')]",
-
+        "defaultSASKeyName": "RootManageSharedAccessKey",
+        "storageContainer": "[concat('https://', variables('storageAccountName'),'.blob.core.windows.net/vhds/')]",        
+        "location": "[resourceGroup().location]",        
+        "authRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/authorizationRules', parameters('serviceBusNameSpace'), variables('defaultSASKeyName'))]",       
         "loadBalancerName": "[concat(parameters('clusterName'), '-lb-', parameters('deploymentSlot'))]",
         "virtualNetworkName": "[concat(parameters('clusterName'), '-vnet')]",
         "subnetName": "[concat(parameters('clusterName'), '-subnet')]",
@@ -886,6 +898,10 @@
             "wamsStorageAccountName": "[variables('wamsStorageAccountName')]",
             "mediaServicesAccountName": "[variables('mediaServicesAccountName')]"
         },
+        "serviceBusSettings": {
+            "serviceBusNameSpace": "[parameters('serviceBusNameSpace')]",
+            "serviceBusQueueName": "[parameters('serviceBusQueueName')]"            
+        },
         "jumpboxMachineSettings": {
             "vmSize": "[parameters('jumpBoxVmSize')]",
             "osImageReference": {
@@ -940,7 +956,8 @@
             "insightsApiVersion": "[variables('insightsApiVersion')]",
             "keyVaultApiversion": "[variables('keyVaultApiversion')]",
             "trafficManagerApiversion": "[variables('trafficManagerApiversion')]",
-            "mediaServicesApiVersion": "[variables('mediaServicesApiVersion')]"
+            "mediaServicesApiVersion": "[variables('mediaServicesApiVersion')]",
+            "serviceBusApiVersion": "[variables('sbapiVersion')]"          
         },
         "keyVaultSettings": {
             "enabledForDeployment": "[variables('keyVaultEnabledForDeployment')]",
@@ -1069,6 +1086,9 @@
                     },
                     "storageSettings": {
                         "value": "[variables('storageSettings')]"
+                    },
+                    "serviceBusSettings": {
+                        "value": "[variables('serviceBusSettings')]"
                     }
                 }
             }
@@ -1388,6 +1408,10 @@
         "deploymentType": {
             "type": "string",
             "value": "[parameters('deploymentType')]"
+        },    
+        "sharedAccessPolicyPrimaryKey": {
+            "type": "string",
+            "value": "[listkeys(variables('authRuleResourceId'), variables('sbapiVersion')).primaryKey]"
         }
     }
 }

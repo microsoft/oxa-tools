@@ -252,6 +252,12 @@
         },
         "deploymentType": {
             "value": "{DEPLOYMENTTYPE}"
-        }
+        },
+        "serviceBusNameSpace": {
+            "value": "sb-{DEPLOYMENTVERSIONID}"
+        },
+        "serviceBusQueueName": {
+            "value": "sbq-{DEPLOYMENTVERSIONID}"
+        }        
     }
 }
