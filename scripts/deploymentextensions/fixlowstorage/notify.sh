@@ -5,14 +5,32 @@
 
 # Detects low partition storage (then sends notification)
 
-set -x
-
 # Settings
-    usage_threshold_percent=33 # Default to a third of the disk.
+    usage_threshold_percent=1 # Default to a third of the disk.
 
 # Paths and file names.
     current_script_path="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
     script_name=`basename "$0"`
+
+wget_wrapper()
+{
+    local expectedPath="$1"
+    local org="$2"
+    local project="$3"
+    local branch="$4"
+
+    # Check if the file exists. If not, download from the public repository
+    if [[ -f "$expectedPath" ]] ; then
+        echo "$expectedPath"
+    else
+        local fileName=`basename $expectedPath`
+        if [[ ! -f "$fileName" ]] ; then
+            wget -q https://raw.githubusercontent.com/${org}/${project}/${branch}/$expectedPath -O $fileName
+        fi
+
+        echo "$fileName"
+    fi
+}
 
 notification()
 {
@@ -34,7 +52,7 @@ notification()
         fi
 
         # Message
-        log "Please cleanup this directory at your earliest convenience."
+        log "Please cleanup $directoryPath at your earliest convenience."
         log "The top subfolders or subfiles in $directoryPath are:"
 
         # Get list of subitems and corresponding filesizes in current folder.
@@ -97,27 +115,15 @@ check_usage()
 # START CORE EXECUTION
 ###############################################
 
-# Update working directory
+# Update working directory and source utilities
 pushd $current_script_path
-
-shared="sharedOperations.sh"
-echo "Sourcing file $shared"
-source $shared || exit 1
-
-# Source utilities. Exit on failure.
-source_utilities || exit 1
+utilitiesPath=$(wget_wrapper "templates/stamp/utilities.sh" "Microsoft" "oxa-tools" "oxa/dev.fic")
+source $utilitiesPath
 
 log "Checking for low disk space"
 
 # Script self-idenfitication
 print_script_header
-
-# Parse commandline arguments
-parse_args "$@"
-
-# Rotate log (if machine support it). Exit if file is missing.
-# Rotation will no-op if mysql isn't installed on the machine.
-source_wrapper "rotateLog.sh" || exit 1
 
 # Pre-conditionals
 exit_if_limited_user
