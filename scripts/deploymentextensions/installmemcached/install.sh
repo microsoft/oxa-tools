@@ -191,7 +191,12 @@ install-memcached
 # Configure memcache to take connections over the local network
 # By default, memcache is enabled for localhost-only access.
 # This configuration needs to be turned off to enable local network access 
+log "Configuring Memcached"
 memcached_config_file="/etc/memcached.conf"
 sed -i '/^-l.*/s/^/#/g' $memcached_config_file
+
+log "Restarting Memcached to apply settings"
+service memcached restart
+exit_on_error "Could not restart memcached on '${HOSTNAME}'!" "${ERROR_MEMCACHED_INSTALLER_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
 log "Completed memcache installation for ${HOSTNAME}" " " 2
