@@ -942,7 +942,7 @@ function Remove-OxaNetworkLoadBalancerResource
     ############################################
     # 4. Remove the LoadBalancer Frontend Pool
     Log-Message "$($loadbalancer.FrontendIpConfigurations.Count) frontend address pool(s) retrieved for '$($loadbalancer.Name)' loadbalancer.";
-    $loadbalancer = Remove-OxaLoadBalancerFrontEndIpConfigs -LoadBalancerFrontendIpConfigurations $loadbalancer.FrontendIpConfigurations -LoadBalancer $loadbalancer  -MaxRetries $MaxRetries;
+    $loadbalancer = Remove-OxaLoadBalancerFrontEndIpConfigs -LoadBalancerFrontendIpConfigurations $loadbalancer.FrontendIpConfigurations -LoadBalancer $loadbalancer -MaxRetries $MaxRetries;
 
     if ( !$loadbalancer )
     {
@@ -950,8 +950,6 @@ function Remove-OxaNetworkLoadBalancerResource
     }
     
     ############################################
-
-
     # 5. Remove the LoadBalancer
     $response = Remove-OxaLoadBalancer -ResourceGroupName $ResourceGroupName -Name $loadbalancer.Name  -MaxRetries $MaxRetries;
 
@@ -975,7 +973,10 @@ Remove all frontend ip configurations for a load balancer.
 Array of FrontEnd Ip Configurations.
 
 .PARAMETER LoadBalancer
-Name of the load balancer
+Name of the load balancer.
+
+.PARAMETER MaxRetries
+Maximum number of retries this call makes before failing. This defaults to 3.
 
 .OUTPUTS
 System.Boolean. Remove-OxaDeploymentSlotResources returns a boolean indicator of whether or not the delete operation succeeded.
@@ -984,7 +985,8 @@ function Remove-OxaLoadBalancerFrontEndIpConfigs
 {
     param(
             [Parameter(Mandatory=$true)][array]$LoadBalancerFrontendIpConfigurations,
-            [Parameter(Mandatory=$true)][object]$LoadBalancer
+            [Parameter(Mandatory=$true)][object]$LoadBalancer,
+            [Parameter(Mandatory=$false)][int]$MaxRetries=3
          )
 
     # TODO: exclude preview since it throws an unexpected error while attempting to delete it.
