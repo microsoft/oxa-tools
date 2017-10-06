@@ -29,6 +29,7 @@ ERROR_MYSQL_MOVE_DATADIRECTORY_INSTALLER_FAILED=7210
 ERROR_XINETD_INSTALLER_FAILED=7301
 ERROR_TOOLS_INSTALLER_FAILED=7401
 ERROR_SSHKEYROTATION_INSTALLER_FAILED=7501
+ERROR_MEMCACHED_INSTALLER_FAILED=7601
 
 # Mysql failover related errors
 ERROR_MYSQL_FAILOVER_INVALIDPROXYPORT=7601
@@ -1668,4 +1669,22 @@ copy_bits()
     # set appropriate permissions on the required installer files
     ssh -o "${ssh_options}" "${bitscopy_target_user}@${bitscopy_target_server}" "sudo chmod 600 ~/install.sh && sudo chmod 600 ~/utilities.sh"
     exit_on_error "Unable to update permissions on the installer files copied to '${bitscopy_target_server}'!" "${error_code}" "${copyerror_mail_subject}" "${copyerror_mail_receiver}"
+}
+
+#############################################################################
+# Memcache
+#############################################################################
+
+install-memcached()
+{
+    # Ensure that gettext (which includes envsubst) is installed
+    if [[ $(dpkg-query -W -f='${Status}' memcached 2>/dev/null | grep -c "ok installed") -eq 0 ]] ; then
+        apt-wrapper "update"
+        apt-wrapper "install memcached"
+        exit_on_error "Failed to install the Memcached package on ${HOSTNAME} !"
+
+        log "Get Text installed"
+    else
+        log "Memcache is already installed"
+    fi
 }
