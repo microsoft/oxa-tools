@@ -1677,14 +1677,16 @@ copy_bits()
 
 install-memcached()
 {
-    # Ensure that gettext (which includes envsubst) is installed
-    if [[ $(dpkg-query -W -f='${Status}' memcached 2>/dev/null | grep -c "ok installed") -eq 0 ]] ; then
-        apt-wrapper "update"
-        apt-wrapper "install memcached"
-        exit_on_error "Failed to install the Memcached package on ${HOSTNAME} !"
-
-        log "Get Text installed"
+    if type memcached >/dev/null 2>&1; then
+        log "Memcached is already installed"
     else
-        log "Memcache is already installed"
+        log "Updating Repository"
+        apt-get update -y -qq
+
+        log "Installing Memcached"
+        apt-get install -y memcached
+        exit_on_error "Failed to install the Memcached on ${HOSTNAME} !" $ERROR_MEMCACHED_INSTALLER_FAILED
+
+        log "Installed Memcached successfully."
     fi
 }
