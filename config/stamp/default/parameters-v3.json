@@ -81,7 +81,7 @@
             "value": "oxa-tools"
         },
         "oxaToolsGithubBranch": {
-            "value": "oxa/devfic"
+            "value": "{GITHUBBRANCH}"
         },
         "edxConfigurationGithubAccountName": {
             "value": "Microsoft"
