@@ -6,16 +6,7 @@
             "type": "string",
             "maxLength": 12
         },
-        "serviceBusNameSpace": {
-            "type": "string"
-        },
-        "serviceBusQueueName": {
-            "type": "string"
-        },
         "clusterNameDomainName": {
-            "type": "string"
-        },
-        "sbPrimaryKey": {
             "type": "string"
         },
         "osFamilySpec": {
@@ -658,7 +649,7 @@
         "trafficManagerApiversion": "2015-11-01",
         "mediaServicesApiVersion": "2015-10-01",
         "storageApiVersion": "2016-01-01",
-        "sbapiVersion": "2017-04-01",
+        "servicebusApiVersion": "2017-04-01",
         
         "virtualMachineExtensionsApiVersion": "[variables('defaultApiVersion')]",
         "virtualMachineApiVersion": "[variables('defaultApiVersion')]",
@@ -673,10 +664,7 @@
         "wamsStorageAccountName": "[concat(toLower(parameters('clusterName')), 'wamssa')]",
         "mediaServicesAccountName": "[concat(toLower(parameters('clusterName')), 'wamsmedia')]",
         "storageAccountType": "Standard_LRS",
-        "defaultSASKeyName": "RootManageSharedAccessKey",
-        "storageContainer": "[concat('https://', variables('storageAccountName'),'.blob.core.windows.net/vhds/')]",        
-        "location": "[resourceGroup().location]",        
-        "authRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/authorizationRules', parameters('serviceBusNameSpace'), variables('defaultSASKeyName'))]",       
+        "storageContainer": "[concat('https://', variables('storageAccountName'),'.blob.core.windows.net/vhds/')]",
         "loadBalancerName": "[concat(parameters('clusterName'), '-lb-', parameters('deploymentSlot'))]",
         "virtualNetworkName": "[concat(parameters('clusterName'), '-vnet')]",
         "subnetName": "[concat(parameters('clusterName'), '-subnet')]",
@@ -703,6 +691,11 @@
         "keyVaultEnabledForVolumeEncryption": true,
         "keyVaultTenantId": "[subscription().subscriptionId]",
 
+        "defaultSASKeyName": "RootManageSharedAccessKey",
+        "serviceBusNameSpace": "[concat(parameters('clusterName'), '-sb-', parameters('deploymentVersionId'))]",
+        "serviceBusQueueName": "[concat(parameters('clusterName'), '-sbq-', parameters('deploymentVersionId'))]",
+        "authRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/authorizationRules', variables('serviceBusNameSpace'), variables('defaultSASKeyName'))]",
+        
         "resourcesToDeploy": {
             "bootstrap": {
                 "sharedResources": true,
@@ -899,8 +892,8 @@
             "mediaServicesAccountName": "[variables('mediaServicesAccountName')]"
         },
         "serviceBusSettings": {
-            "serviceBusNameSpace": "[parameters('serviceBusNameSpace')]",
-            "serviceBusQueueName": "[parameters('serviceBusQueueName')]"            
+            "serviceBusNameSpace": "[variables('serviceBusNameSpace')]",
+            "serviceBusQueueName": "[variables('serviceBusQueueName')]"            
         },
         "jumpboxMachineSettings": {
             "vmSize": "[parameters('jumpBoxVmSize')]",
@@ -957,7 +950,7 @@
             "keyVaultApiversion": "[variables('keyVaultApiversion')]",
             "trafficManagerApiversion": "[variables('trafficManagerApiversion')]",
             "mediaServicesApiVersion": "[variables('mediaServicesApiVersion')]",
-            "serviceBusApiVersion": "[variables('sbapiVersion')]"          
+            "serviceBusApiVersion": "[variables('servicebusApiVersion')]"          
         },
         "keyVaultSettings": {
             "enabledForDeployment": "[variables('keyVaultEnabledForDeployment')]",
@@ -1408,10 +1401,18 @@
         "deploymentType": {
             "type": "string",
             "value": "[parameters('deploymentType')]"
-        },    
+        },
         "sharedAccessPolicyPrimaryKey": {
             "type": "string",
-            "value": "[listkeys(variables('authRuleResourceId'), variables('sbapiVersion')).primaryKey]"
+            "value": "[listkeys(variables('authRuleResourceId'), variables('servicebusApiVersion')).primaryKey]"
+        },
+        "serviceBusNameSpace": {
+            "type": "string",
+            "value": "[variables('serviceBusNameSpace')]"
+        },
+        "serviceBusQueueName": {
+            "type": "string",
+            "value": "[variables('serviceBusQueueName')]"
         }
     }
 }

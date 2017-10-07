@@ -111,14 +111,8 @@ Zero-based numeric indicator of the Jumpbox used for this bootstrap operation (0
 .PARAMETER MaxRetries
 Maximum number of retries this call makes before failing. This defaults to 3.
 
-.PARAMETER DeployedVmssCount
-Maximum number of vmss(s) that are targetted to deploy
-
-.PARAMETER waitIntervalHours
-Maximum number of vmss(s) that are targetted to deploy
-
-.PARAMETER WaitGranularityMinutes
-Maximum number of vmss(s) that are targetted to deploy
+.PARAMETER AutoDeploy
+Switch indicating whether or not AutoDeploy mode is enabled
 
 .INPUTS
 None. You cannot pipe objects to Deploy-OxaStamp.ps1
@@ -182,13 +176,25 @@ Param(
 
         [Parameter(Mandatory=$false)][int]$MaxRetries=3,
         
-        [Parameter(Mandatory=$false)][int]$DeployedVmssCount=1,
-        
-        [Parameter(Mandatory=$false)][int] [int]$waitIntervalHours = 1,
-        
-        [Parameter(Mandatory=$false)][int][int]$WaitGranularityMinutes = 10 
-    
+        [Parameter(Mandatory=$false)][switch]$AutoDeploy=$false
     )
+
+###########################################
+# Error Trapper
+# Gracefully handle all errors here
+###########################################
+
+trap [Exception]
+{
+
+    # support low level exception handling
+    Capture-ErrorStack -ForceStop
+
+    # we expect a calling script to be listening to what we are doing here. 
+    # therefore, we will throw a fit here as a signal to them.
+    # this should trigger and catch and resume
+    throw "Deployment Failed: $($_)";
+}
 
 #################################
 # ENTRY POINT
@@ -376,33 +382,49 @@ try
         Log-Message "Stamp Deployment - Cluster: $ResourceGroupName | Template: $KeyVaultDeploymentArmTemplateFile | Parameters file: $($tempParametersFile)"
         $deploymentStatus = New-OxaResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $FullDeploymentArmTemplateFile -TemplateParameterFile $tempParametersFile -MaxRetries $MaxRetries;
         
-        #Capturing ARM Template output values
-        $SbNameSpace = $deploymentStatus.Parameters.serviceBusNameSpace.value;
-        $SbQueueName = $deploymentStatus.Parameters.serviceBusQueueName.value;
-        $Saskey = $deploymentStatus.outputs.sharedAccessPolicyPrimaryKey.value;
-        
-        #fetching deployment status
-        while ($DeployedVmssCount -ge 1)
-        {  
-            Log-Message -Message "Starting smart sleep until the  deployment staus received: wait $($waitGranularityMinutes) min(s), WaitIntervalHours:$($waitIntervalHours)"
-            Start-SmartSleep -WaitGranularityMinutes $waitGranularityMinutes -WaitIntervalHours $waitIntervalHours
+        # output the full deployment status
+        $deploymentStatus;
 
-            #waiting for deployment status
-            $deploymentMessageCount = Get-DeployymentStatus $SbNameSpace $SbQueueName $Saskey $DefaultSASKeyName;
-
-            if($deploymentMessageCount -ge 1)
-            {
-                $DeployedVmssCount--;
-            }
-            # sleep for a couple of minutes 
-            [int]$WaitGranularityMinutes = 2;
-   
-        }  
-        
+        # check if the ARM template deployment completed successfully
         if ($deploymentStatus.ProvisioningState -ine "Succeeded")
         {
-            $provisioningOperation
             throw "Unable to execute the Stamp Deployment to $($ResourceGroupName)"
+        }
+        else
+        {
+            Log-Message "The ARM template deployment completed successfully."
+        }
+
+        # bootstrap is a terminal step. Upgrade is not a terminal step: it still needs swap and cleanup
+        # if requested, wait for the upgrade to complete to enable execution of autodeploy
+        if ($AutoDeploy -and $DeploymentType -ieq "upgrade")
+        {
+            #fetching deployment status
+            Log-Message "Waiting until remote cluster bootstrap completes." -NoNewLine;
+
+            $allServersDeployed = $false;
+            [int]$expectedDeployedInstanceCount = $deploymentStatus.Parameters.autoScaleCapacityDefault.value;
+            [array]$deployedInstances = @();
+
+            while ($allServersDeployed -eq $false)
+            {            
+                # bootstrap=2hrs, upgrade=1hr, swap < 15mins
+                # check every 5-minutes
+                Start-Sleep -Seconds 300;
+
+                # Waiting for deployment status
+                $deployedInstances += Get-DeploymentStatus -ServiceBusNamespace $deploymentStatus.outputs.serviceBusNameSpace.value `
+                                                           -ServiceBusQueueName $deploymentStatus.outputs.serviceBusQueueName.value `
+                                                           -Saskey $deploymentStatus.outputs.sharedAccessPolicyPrimaryKey.value;
+
+                # the array of deployed instances may not be unique
+                [array]$uniqueInstancesDeployed = $deployedInstances | Select-Object -Unique
+                
+                $allServersDeployed = ($uniqueInstancesDeployed.Count -eq $expectedDeployedInstanceCount)
+                Log-Message "." -NoNewLine -SkipTimestamp;
+            }
+
+            Log-Message "Done!" -SkipTimestamp -ClearLineAfter;
         }
     }
 }
@@ -414,5 +436,5 @@ catch
 finally
 {
     Log-Message "Cleaning up temporary parameter file"
-    Remove-Item -Path $tempParametersFile;
+    # Remove-Item -Path $tempParametersFile;
 }

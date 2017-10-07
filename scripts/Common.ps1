@@ -88,23 +88,13 @@ function Capture-ErrorStack
     }
 
     [int]$decoratorLength = 75;
-    [string]$message1 = "";
-    [string]$message2 = "";
 
+    $lastError = $global:Error[0];
+    $message1 = "Error [$($lastError.Exception.GetType().FullName)]:`r`n`r`n"
+    $message1 += "$($lastError.Exception.Message)`r`n`r`n";
 
-    $lastErrors = @($global:Error[0])
+    $message2 = $lastError.Exception | format-list -force | Out-String;
     
-    foreach ($lastError in $lastErrors)
-    {
-        $message1 = "Error: $($lastError.Exception.Message)`r`n";
-        $message1 += $lastError.InvocationInfo | Format-List * | Out-String;
-        
-        foreach($exception in $lastError.Exception)
-        {
-            $message2 = $exception | Format-List * -Force | Out-String;
-        }
-    }
-
     $errorMessage = "`r`n`r`n";
     $errorMessage += "#" * $decoratorLength;
     $errorMessage += "`r`nERROR ENCOUNTERED`r`n";
@@ -113,8 +103,7 @@ function Capture-ErrorStack
 
     if ($message2 -ne "")
     {
-        $errorMessage += "#" * $decoratorLength;
-        $errorMessage += "`r`n$($message2)";
+        $errorMessage += "`r`n`r`n$($message2)";
     }
 
     if ($ForceStop)
@@ -2015,77 +2004,74 @@ function New-OxaResourceGroupDeployment
 
 <#
 .SYNOPSIS
-Gets the latest deployment status from all available VMSS(s).
+Gets the deployment completion message from all VMSS instances being deployed.
 
 .DESCRIPTION
-Gets the latest deployment status from all available VMSS(s).
+Gets the deployment completion message from all VMSS instances being deployed.
 
-.PARAMETER SbNameSpace
+.PARAMETER ServiceBusNamespace
 Name of the Azure Service bus resource
 
-.PARAMETER SbQueueName
+.PARAMETER ServiceBusQueueName
 Name of the Azure Service bus Queue resource
 
 .PARAMETER Saskey
 Service bus authorization primary key
 
-.PARAMETER defaultSASKeyName
-Name of the Azure Service bus authorization rule
+.PARAMETER SharedAccessPolicyName
+Name of the shared access policy
 
 .OUTPUTS
-System.String. Get-DeployymentStatus returns the deployment status messages recieved from all vmss(s).
+System.Array. Get-DeployymentStatus returns an array containing names of VMSS instances that have been successfully deployed.
 #>
-function Get-DeployymentStatus ( $SbNameSpace, $SbQueueName , $Saskey , $defaultSASKeyName )
+function Get-DeploymentStatus
 {
+    param(
+            [Parameter(Mandatory=$true)][string]$ServiceBusNamespace,
+            [Parameter(Mandatory=$true)][string]$ServiceBusQueueName,
+            [Parameter(Mandatory=$true)][string]$Saskey,
+            [Parameter(Mandatory=$false)][string]$SharedAccessPolicyName="RootManageSharedAccessKey"
+         )
 
-    Log-Message "Receiving deployment status from $($SbNameSpace)"
-    $messageContent = @();
-    $messageCount = 0;
+    Log-Message "Receiving deployment status from $($ServiceBusNamespace)";
+    $messages = @();
 
-    #checking SbNameSpace
-    if($SbNameSpace)
+    # Rest api url to receive messages from Service bus queue
+    # https://docs.microsoft.com/en-us/rest/api/servicebus/peek-lock-message-non-destructive-read
+    $servicebusPeekLockRequestUrl = "https://$($ServiceBusNamespace).servicebus.windows.net/$($ServiceBusQueueName)/messages/head";
+    
+    # Generating SAS token to authenticate Service bus Queue to receive messages
+    $authorizedSasToken = Get-SasToken $Saskey $defaultSASKeyName $servicebusPeekLockRequestUrl;
+
+    if (!$authorizedSasToken)
     {
-        try
-        {
-            # Rest api url to receive messages from Service bus queue
-            $SbRecieveRestUrl = "https://$($SbNameSpace).servicebus.windows.net/$($SbQueueName)/messages/head"
-   
-            # Generating SAS token to authenticate Service bus Queue to receive messages
-            $AuthorizedSasToken = Generate-SasToken $Saskey $defaultSASKeyName $SbRecieveRestUrl;
-
-            # Assigning generated SAS token to Service bus rest api headers to authorize
-            $Headers = @{'Authorization'=$AuthorizedSasToken}        
-            
-            # check for message
-           [bool]$checkMessage = $true;
-            while($checkMessage)
-            {
-                # invoking service bus queue rest api message url
-               [object]$MessageQueue = Invoke-WebRequest -Method DELETE -Uri $SbRecieveRestUrl -Headers $Headers;
-
-                if (![string]::IsNullOrEmpty($MessageQueue.content))
-                {
-                    $messageContent += $MessageQueue.content;
-                    $messageCount++;  
-                }       
-                else
-                {
-                    $checkMessage = $false;
-                }
-
-             }
-        }
-        catch 
-        {
-             Log-Message "Rest API call failed for $($ServiceBusRecieveUrl)"
-        }
-            
+        throw "Could not generate a SAS Token."
     }
-    else
+
+    # Assigning generated SAS token to Service bus rest api headers to authorize
+    $headers = @{'Authorization'=$authorizedSasToken};
+    
+    # keep peeking until there is no message
+    $getMessage = $true;
+
+    while($getMessage)
     {
-        Log-Message "Serive bus value is empty"
+        # invoking service bus queue rest api message url
+        $messageQueue = Invoke-WebRequest -Method POST -Uri $servicebusPeekLockRequestUrl -Headers $Headers;
+
+        if (![string]::IsNullOrEmpty($messageQueue.content))
+        {
+            $messages += $messageQueue.content;
+        }       
+        else
+        {
+            $getMessage = $false;
+        }
     }
-    return $messageCount;
+
+    # Return all messages retrieved.
+    # We expect the message body to contain the name of the server being deployed
+    return $messages;
 }
 
 <#
@@ -2098,107 +2084,52 @@ Generates the SAS token with Service bus rest api url.
 .PARAMETER Saskey
 Service bus authorization primary key
 
-.PARAMETER defaultSASKeyName
+.PARAMETER SharedAccessPolicyName
 Name of the Azure Service bus authorization rule
 
-.PARAMETER SbRecieveRestUrl
+.PARAMETER ServicebusPeekLockRequestUrl
 Service bus rest api url to receive messages from the queue.
 
 .OUTPUTS
-System.String. Generate-SasToken returns SAS token generated for Service bus rest api recieve message url.
+System.String. Get-SasToken returns SAS token generated for Service bus rest api recieve message url.
 #>
-function Generate-SasToken ( $Saskey,$defaultSASKeyName,$SbRecieveRestUrl )
-{
-    
-    Log-Message "Generating SAS token for using $($defaultSASKeyName)" 
-
-    #checking SASKey Value    
-    if($Saskey)
-    { 
-        try
-        {  
-            # Setting expiry date
-            $sinceEpoch = (Get-Date).ToUniversalTime() - ([datetime]'1/1/1970')
-            $weekInSeconds = 7 * 24 * 60 * 60
-            $expiry = [System.Convert]::ToString([int]($sinceEpoch.TotalSeconds) + $weekInSeconds)
-       
-            #Encoding Service Bus Name space Rest api messaging url
-            $encodedResourceUri = [System.Web.HttpUtility]::UrlEncode($SbRecieveRestUrl)
-            $encodedResourceUri = [uri]::EscapeUriString($SbRecieveRestUrl)
-
-            #Setting up expiry date
-            $stringToSign = $encodedResourceUri + "`n" + $expiry
-            $stringToSignBytes = [System.Text.Encoding]::UTF8.GetBytes($stringToSign)
-       
-            #Encoding Service bus SharedAccess Primary key pulled from ARM template
-            $keyBytes = [System.Text.Encoding]::UTF8.GetBytes($Saskey)
-   
-            #Encoding Signature by HMACSHA256
-            $hmac = [System.Security.Cryptography.HMACSHA256]::new($keyBytes)
-            $hashOfStringToSign = $hmac.ComputeHash($stringToSignBytes)
-
-            $signature = [System.Convert]::ToBase64String($hashOfStringToSign)
-            $encodedSignature = [System.Web.HttpUtility]::UrlEncode($signature)   
-   
-            Log-Message "generating the SAS token for - $($SbRecieveRestUrl)"
-
-            #Generating SAS token
-            $SasToken = "SharedAccessSignature sr=$encodedResourceUri&sig=$encodedSignature&se=$expiry&skn=$($defaultSASKeyName)";
-        }
-        catch
-        {
-             Log-Message "Error in generating SAS token - $($SasToken)"
-        }
-    }
-    else
-    {
-       Log-Message " No SASkey Value is passed through."
-     
-    }    
-    return $SasToken;
-}
-
-<#
-.SYNOPSIS
- Start a sleep routine that wakes up at precise intervals.
-
-.DESCRIPTION
- Start a sleep routine that wakes up at precise intervals.
-
-.PARAMETER WaitGranularityMinutes
-Interval in minutes to periodically wake up and check if wait interval is met
-
-.PARAMETER WaitIntervalHours
- Hourly interval for waiting up and continuing execution
-
-.OUTPUTS
- Nothing
-#>
-function Start-SmartSleep
+function Get-SasToken
 {
     param(
-            [Parameter(Mandatory=$true)][int]$WaitGranularityMinutes,
-            [Parameter(Mandatory=$true)][int]$WaitIntervalHours                    
-         )
+            [Parameter(Mandatory=$true)][string]$Saskey,
+            [Parameter(Mandatory=$true)][string]$ServicebusPeekLockRequestUrl,
+            [Parameter(Mandatory=$false)][string]$SharedAccessPolicyName="RootManageSharedAccessKey"
+        )
 
-   [bool]$continueSleep = $true;
-    while ($continueSleep)
-    {
-        # check the current time and if we are at the expected wait interval hours, awake from persistent sleep 
-        # and look for work
-        # thereafter, we will wait until the next VMSS deployment status interval
+    Log-Message "Generating SAS token" 
 
-        $currentTime = Get-Date;
-        
-        # sleep for a couple of minutes
-        Start-Sleep -Seconds ($WaitGranularityMinutes*60);
+    #checking SASKey Value    
+    $sasToken = $null;
 
-        # check if we need to wake up
-        if (($currentTime.Hour % $WaitIntervalHours) -eq 0 )
-        {
-            # we are within wait interval
-            # awake and get some work done
-            $continueSleep = $false;   
-        }
-    }
+    #Encoding Service Bus Name space Rest api messaging url
+    $encodedResourceUri = [uri]::EscapeUriString($servicebusPeekLockRequestUrl)
+    
+    # Setting expiry (12 hours)
+    $sinceEpoch = (Get-Date).ToUniversalTime() - ([datetime]'1/1/1970')
+    $durationSeconds = 12 * 60 * 60
+    $expiry = [System.Convert]::ToString([int]($sinceEpoch.TotalSeconds) + $durationSeconds)
+    $stringToSign = $encodedResourceUri + "`n" + $expiry
+    $stringToSignBytes = [System.Text.Encoding]::UTF8.GetBytes($stringToSign)
+
+    #Encoding Service bus SharedAccess Primary key pulled from ARM template
+    $keyBytes = [System.Text.Encoding]::UTF8.GetBytes($Saskey)
+
+    #Encoding Signature by HMACSHA256
+    $hmac = [System.Security.Cryptography.HMACSHA256]::new($keyBytes)
+    $hashOfStringToSign = $hmac.ComputeHash($stringToSignBytes)
+
+    $signature = [System.Convert]::ToBase64String($hashOfStringToSign)
+    $encodedSignature = [System.Web.HttpUtility]::UrlEncode($signature)   
+
+    Log-Message "generating the SAS token for - $($servicebusPeekLockRequestUrl)"
+
+    #Generating SAS token
+    $sasToken = "SharedAccessSignature sr=$encodedResourceUri&sig=$encodedSignature&se=$expiry&skn=$($SharedAccessPolicyName)";
+    
+    return $SasToken;
 }

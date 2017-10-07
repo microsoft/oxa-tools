@@ -9,12 +9,6 @@
         "clusterNameDomainName": {
             "type": "string"
         },
-        "serviceBusNameSpace": {
-            "type": "string"            
-        },
-        "serviceBusQueueName": {
-            "type": "string"
-        },        
         "osFamilySpec": {
             "type": "string",
             "defaultValue": "ubuntu",
@@ -655,7 +649,7 @@
         "trafficManagerApiversion": "2015-11-01",
         "mediaServicesApiVersion": "2015-10-01",
         "storageApiVersion": "2016-01-01",
-        "sbApiVersion": "2017-04-01",
+        "servicebusApiVersion": "2017-04-01",
         
         "virtualMachineExtensionsApiVersion": "[variables('defaultApiVersion')]",
         "virtualMachineApiVersion": "[variables('defaultApiVersion')]",
@@ -671,11 +665,6 @@
         "mediaServicesAccountName": "[concat(toLower(parameters('clusterName')), 'wamsmedia')]",
         "storageAccountType": "Standard_LRS",
         "storageContainer": "[concat('https://', variables('storageAccountName'),'.blob.core.windows.net/vhds/')]",
-        "sbQueueName": "[concat(parameters('clusterName'), '-queue3' )]",
-        "location": "[resourceGroup().location]",  
-        "defaultSASKeyName": "RootManageSharedAccessKey",
-        "authRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/authorizationRules', parameters('serviceBusNameSpace'), variables('defaultSASKeyName'))]",   
-                
         "loadBalancerName": "[concat(parameters('clusterName'), '-lb-', parameters('deploymentSlot'))]",
         "virtualNetworkName": "[concat(parameters('clusterName'), '-vnet')]",
         "subnetName": "[concat(parameters('clusterName'), '-subnet')]",
@@ -702,6 +691,48 @@
         "keyVaultEnabledForVolumeEncryption": true,
         "keyVaultTenantId": "[subscription().subscriptionId]",
 
+        "defaultSASKeyName": "RootManageSharedAccessKey",
+        "serviceBusNameSpace": "[concat(parameters('clusterName'), '-sb-', parameters('deploymentVersionId'))]",
+        "serviceBusQueueName": "[concat(parameters('clusterName'), '-sbq-', parameters('deploymentVersionId'))]",
+        "authRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/authorizationRules', variables('serviceBusNameSpace'), variables('defaultSASKeyName'))]",
+        
+        "resourcesToDeploy": {
+            "bootstrap": {
+                "sharedResources": true,
+                "jumpbox": true,
+                "mongo": true,
+                "mysql": true,
+                "vmss": true,
+                "keyVault": false,
+                "trafficManagerLms": true,
+                "trafficManagerCms": true,
+                "trafficManagerPreview": true
+            },
+            "upgrade": {
+                "sharedResources": false,
+                "jumpbox": false,
+                "mongo": false,
+                "mysql": false,
+                "vmss": true,
+                "keyVault": false,
+                "trafficManagerLms": false,
+                "trafficManagerCms": false,
+                "trafficManagerPreview": false
+            },
+            "swap": {
+                "sharedResources": false,
+                "jumpbox": false,
+                "mongo": false,
+                "mysql": false,
+                "vmss": false,
+                "keyVault": false,
+                "trafficManagerLms": true,
+                "trafficManagerCms": true,
+                "trafficManagerPreview": true
+            }
+        },
+        "jumpboxBootstrapIndicator": "[if(greater(parameters('bootstrapJumpbox'), 0), 1, 0)]",
+        "jumpboxNameSuffix": "[if(greater(parameters('bootstrapJumpbox'), 0), parameters('bootstrapJumpbox'), '')]",
         "networkSettings": {
             "virtualNetworkName": "[variables('virtualNetworkName')]",
             "clusterName": "[parameters('clusterName')]",
@@ -726,8 +757,8 @@
             "mongoNetworkSecurityGroupName": "[concat(parameters('clusterName'), '-mongo-', 'nsg')]",
             "mysqlNetworkSecurityGroupName": "[concat(parameters('clusterName'), '-mysql-', 'nsg')]",
             "clusterKeyVaultName": "[concat(parameters('clusterName'), '-kv')]",
-            "clusterJumpBoxName": "[concat(parameters('clusterName'), '-jb')]",
-            "clusterJumpBoxDomainName": "[concat(parameters('clusterName'), 'jb')]",
+            "clusterJumpBoxName": "[concat(parameters('clusterName'), '-jb', variables('jumpboxNameSuffix'))]",
+            "clusterJumpBoxDomainName": "[concat(parameters('clusterName'), 'jb', variables('jumpboxNameSuffix'))]",
             "clusterMongoDataNodeName": "[concat(parameters('clusterName'), '-mongo')]",
             "clusterMongoDataNodeDomainName": "[concat(parameters('clusterName'), 'mongo')]",
             "clusterMysqlDataNodeName": "[concat(parameters('clusterName'), '-mysql')]",
@@ -752,13 +783,13 @@
                     "monitorConfigPath": "/",
                     "endpoint1": {
                         "target": "[concat('lms-', parameters('clusterName'), '-slot1.',resourceGroup().location, '.cloudapp.azure.com')]",
-                        "status": "slot1Status",
+                        "status": "[variables('slot1Status')]",
                         "location": "[resourceGroup().location]",
                         "priority": "1"
                     },
                     "endpoint2": {
                         "target": "[concat('lms-', parameters('clusterName'), '-slot2.',resourceGroup().location, '.cloudapp.azure.com')]",
-                        "status": "slot2Status",
+                        "status": "[variables('slot2Status')]",
                         "location": "[resourceGroup().location]",
                         "priority": "2"
                     }
@@ -770,13 +801,13 @@
                     "monitorConfigPath": "/",
                     "endpoint1": {
                         "target": "[concat('cms-', parameters('clusterName'), '-slot1.',resourceGroup().location, '.cloudapp.azure.com')]",
-                        "status": "slot1Status",
+                        "status": "[variables('slot1Status')]",
                         "location": "[resourceGroup().location]",
                         "priority": "1"
                     },
                     "endpoint2": {
                         "target": "[concat('cms-', parameters('clusterName'), '-slot2.',resourceGroup().location, '.cloudapp.azure.com')]",
-                        "status": "slot2Status",
+                        "status": "[variables('slot2Status')]",
                         "location": "[resourceGroup().location]",
                         "priority": "2"
                     }
@@ -788,13 +819,13 @@
                     "monitorConfigPath": "/",
                     "endpoint1": {
                         "target": "[concat('preview-', parameters('clusterName'), '-slot1.',resourceGroup().location, '.cloudapp.azure.com')]",
-                        "status": "slot1Status",
+                        "status": "[variables('slot1Status')]",
                         "location": "[resourceGroup().location]",
                         "priority": "1"
                     },
                     "endpoint2": {
                         "target": "[concat('preview-', parameters('clusterName'), '-slot2.',resourceGroup().location, '.cloudapp.azure.com')]",
-                        "status": "slot2Status",
+                        "status": "[variables('slot2Status')]",
                         "location": "[resourceGroup().location]",
                         "priority": "2"
                     }
@@ -861,8 +892,51 @@
             "mediaServicesAccountName": "[variables('mediaServicesAccountName')]"
         },
         "serviceBusSettings": {
-            "serviceBusNameSpace": "[parameters('serviceBusNameSpace')]",
-            "serviceBusQueueName": "[parameters('serviceBusQueueName')]"  
+            "serviceBusNameSpace": "[variables('serviceBusNameSpace')]",
+            "serviceBusQueueName": "[variables('serviceBusQueueName')]"            
+        },
+        "jumpboxMachineSettings": {
+            "vmSize": "[parameters('jumpBoxVmSize')]",
+            "osImageReference": {
+                "publisher": "[variables('supportedOSImagePublisher')]",
+                "offer": "[variables('supportedOSImageOffer')]",
+                "sku": "[parameters('defaultUbuntuOsImageSku')]",
+                "version": "latest"
+            },
+            "dataDiskSize": "[parameters('jumpBoxDataDiskSizeGB')]"
+        },
+        "mongoMachineSettings": {
+            "vmSize": "[parameters('mongoVmSize')]",
+            "osImageReference": {
+                "publisher": "[variables('supportedOSImagePublisher')]",
+                "offer": "[variables('supportedOSImageOffer')]",
+                "sku": "[parameters('mongoUbuntuOsImageSku')]",
+                "version": "latest"
+            },
+            "dataDiskSize": "[parameters('mongoNodeDataDiskSizeGB')]",
+            "installerBaseUrl": "http://repo.mongodb.org/apt/ubuntu",
+            "installerPackages": "mongodb-org"
+        },
+        "mysqlMachineSettings": {
+            "vmSize": "[parameters('mysqlVmSize')]",
+            "osImageReference": {
+                "publisher": "[variables('supportedOSImagePublisher')]",
+                "offer": "[variables('supportedOSImageOffer')]",
+                "sku": "[parameters('mysqlUbuntuOsImageSku')]",
+                "version": "latest"
+            },
+            "dataDiskSize": "[parameters('mysqlNodeDataDiskSizeGB')]"
+        },
+        "frontendMachineSettings": {
+            "vmSize": "[parameters('frontendVmSize')]",
+            "osImageReference": {
+                "publisher": "[variables('supportedOSImagePublisher')]",
+                "offer": "[variables('supportedOSImageOffer')]",
+                "sku": "[parameters('vmssUbuntuOsImageSku')]",
+                "version": "latest"
+            },
+            "capacity": "[parameters('frontendVmSize')]",
+            "dataDiskSize": 256
         },
         "apiSettings": {
             "apiVersion": "[variables('apiVersion')]",
@@ -876,7 +950,7 @@
             "keyVaultApiversion": "[variables('keyVaultApiversion')]",
             "trafficManagerApiversion": "[variables('trafficManagerApiversion')]",
             "mediaServicesApiVersion": "[variables('mediaServicesApiVersion')]",
-            "serviceBusApiVersion": "[variables('sbapiVersion')]"            
+            "serviceBusApiVersion": "[variables('servicebusApiVersion')]"          
         },
         "keyVaultSettings": {
             "enabledForDeployment": "[variables('keyVaultEnabledForDeployment')]",
@@ -899,16 +973,90 @@
         "customInstallerAnsibleGitHubRepositoryParameters": "[concat(' --ansible-public-github-accountname ', parameters('ansibleGithubAccountName'), ' --ansible-public-github-projectname ', parameters('ansibleGithubProjectName'), ' --ansible-public-github-projectbranch ', parameters('ansibleGithubBranch') )]",
         "customInstallerMiscRepositoryVersionParameters": "[concat(' --edxversion ', parameters('edxVersion'), ' --forumversion ', parameters('edxForumVersion'), ' --edxtheme-public-github-projectbranch ', parameters('edxThemeGithubBranch') )]",
         "customInstallerKeyVaultParameters": "[concat(' --keyvault-name ', concat(parameters('clusterName'), '-kv'), ' --aad-webclient-id ', parameters('aadWebClientId'), ' --aad-webclient-appkey ', parameters('aadWebClientAppKey'), ' --aad-tenant-id ', parameters('aadTenantId'), ' --azure-subscription-id ', subscription().subscriptionId)]",
+        "customInstallerDomainOverrideParameters": "[concat(' --base-domain-override ', parameters('baseDomain'), ' --domain-separator ', parameters('domainSeparator') )]",
+        "customInstallerMobileRestApiParameters": "[concat(' --enable-mobile-rest-api \"', parameters('enableMobileRestApi'), '\" ')]",
+
         "customInstallerOutputRedirect": " >> /var/log/bootstrap.csx.log 2>&1",
         "smtpParameters": "[concat(' --smtp-server ', parameters('smtpServer'), ' --smtp-server-port ', parameters('smtpServerPort'), ' --smtp-auth-user ', parameters('smtpAuthenticationUser'), ' --smtp-auth-user-password ', parameters('smtpAuthenticationUserPassword'), '  --cluster-admin-email ', parameters('clusterAdmininistratorEmailAddress'))]",
 
         "secureGenericStorageAccountId": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/','Microsoft.Storage/storageAccounts/', variables('secureGenericStorageAccountName'))]",
         "secureGenericStorageAccountKey": "PLACEHOLDER_KEY",
         "backupParameters": "[concat(' --storage-account-key ', variables('secureGenericStorageAccountKey'),' --storage-account-name ', variables('secureGenericStorageAccountName'), ' --mongo-backup-frequency \"', replace(parameters('mongoBackupFrequency'), ' ', '_'), '\" --mysql-backup-frequency \"', replace(parameters('mysqlBackupFrequency'), ' ', '_'), '\" --mongo-backup-retention-days ', parameters('mongoBackupRetentionDays'), ' --mysql-backup-retention-days ', parameters('mysqlBackupRetentionDays'))]",
-        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'), variables('backupParameters'), variables('customInstallerOutputRedirect'))]",
+
+        "sampleCourseParameters": "[concat(' --import-kitchensink-course ', parameters('importKitchenSinkCourse'))]",
+        "comprehensiveThemingParameters": "[concat(' --enable-comprehensive-theming ', parameters('enableComprehensiveTheming'), ' --comprehensive-theming-directory ', parameters('comprehensiveThemingDirectory'), ' --comprehensive-theming-name ', parameters('comprehensiveThemingName'))]",
+        "authenticationParameters": "[concat(' --enable-thirdparty-auth ', parameters('enableThirdPartyAuth'), ' --aad-loginbutton-text \"', replace(parameters('aadLoginButtonText'), ' ', '_'), '\"')]",
+        "databaseParameters": "[concat(' --mongo-adminuser ', parameters('mongoServerAdminUserName'), ' --mongo-adminuserpassword \"', parameters('mongoServerAdminPassword'), '\" --mongo-replicasetkey \"', variables('mongoReplicaSetKey'), '\" --mysql-backupuser ', parameters('mysqlBackupUserName'), ' --mysql-backupuserpassword \"', parameters('mysqlBackupUserPassword'), '\" --mysql-repluser \"', parameters('mysqlServerReplUserName'), '\" --mysql-repluserpassword \"', parameters('mysqlServerReplPassword'), '\" --mysql-adminuser \"', parameters('mysqlServerAdminUserName'), '\" --mysql-adminuserpassword \"', parameters('mysqlServerAdminPassword'), '\" --mysql-repluser \"', parameters('mysqlServerReplUserName'), '\" --mysql-repluserpassword \"', parameters('mysqlServerReplPassword'), '\" --mysql-adminuser \"', parameters('mysqlServerAdminUserName'), '\" --mysql-adminuserpassword \"', parameters('mysqlServerAdminPassword'), '\"')]",
+        "edxappParameters": "[concat(' --platform-email \"', parameters('edxPlatformEmail'), '\" --platform-name \"', base64(parameters('edxPlatformName')), '\" --edxapp-superuser \"', parameters('edxappSuperUserName'), '\" --edxapp-superuserpassword \"', parameters('edxappSuperUserPassword'), '\" --edxapp-superuseremail \"', parameters('edxappSuperUserEmail'), '\"')]",
+        "memcacheParameters": "[concat(' --memcache-server \"', base64(variables('memcacheServer')), '\"')]",
+        "azureCliParameters": "[concat(' --azurecli-version \"', parameters('azureCliVersion'), '\"')]",
+        "jumpboxBootstrapParameters": "[concat(' --bootstrap-jumpbox \"', variables('jumpboxBootstrapIndicator'), '\"')]",
+
+        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'), variables('backupParameters'), variables('sampleCourseParameters'), variables('comprehensiveThemingParameters'), variables('authenticationParameters'), variables('customInstallerDomainOverrideParameters'), variables('databaseParameters'), variables('edxappParameters'), variables('memcacheParameters'), variables('azureCliParameters'), variables('customInstallerMobileRestApiParameters'), variables('jumpboxBootstrapParameters'), variables('customInstallerOutputRedirect') )]",
 
         "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources.json')]",
-        "keyvaultTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-keyvault.json')]"
+        "jumpboxTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-jumpbox.json')]",
+        "keyvaultTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-keyvault.json')]",
+        "trafficManagerTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-trafficmanager.json')]",
+        "mongoNodeTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-mongo.json')]",
+        "mysqlNodeTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-mysql.json')]",
+        "vmssTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-vmss.json')]",
+        "mongoReplicaSetName": "[concat(parameters('clusterName'), 'rs1')]",
+        "mongoReplicaSetKey": "[uniqueString(resourceGroup().id)]",
+
+        "installerUtilitiesScript": "utilities.sh",
+        "mongoDbInstallerScript": "[concat('mongodb-', variables('supportedOSName'), '-install.sh')]",
+        "mongoDbInstallerCommand": "[concat('bash ', variables('mongoDbInstallerScript'), ' -i ', variables('mongoMachineSettings').installerBaseUrl, ' -b ', variables('mongoMachineSettings').installerPackages, ' -r ', variables('mongoReplicaSetName'), ' -k ', variables('mongoReplicaSetKey'), ' -u ', parameters('mongoServerAdminUserName'), ' -p ', base64(parameters('mongoServerAdminPassword')), ' -x ', variables('networkSettings').serverIpPrefix, ' -n ', variables('networkSettings').mongoDataNodeCount)]",
+        "mongoDBInstallerSettings": {
+            "scriptsToDownload": [
+                "[concat(variables('templateBaseUrl'), variables('mongoDbInstallerScript'))]",
+                "[concat(variables('azureSharedScriptUrl'), 'vm-disk-utils-0.1.sh')]",
+                "[concat(variables('clusterCustomInstallerScriptFullPath'))]",
+                "[concat(variables('templateBaseUrl'), variables('installerUtilitiesScript'))]",
+                "[concat(variables('clusterCustomInstallerScriptFullPath'))]"
+            ],
+            "regularNodeInstallCommand": "[concat(variables('customInstallerCommand'), ' && ', variables('mongoDbInstallerCommand'))]",
+            "lastNodeInstallCommand": "[concat(variables('customInstallerCommand'), ' && ', variables('mongoDbInstallerCommand'), ' -l ')]"
+        },
+
+        "mysqlDbInstallerScript": "[concat('mysql-', variables('supportedOSName'), '-install.sh')]",
+        "mysqlDbInstallerCommand": "[concat('bash ', variables('mysqlDbInstallerScript'), ' -r ', parameters('mysqlServerReplUserName'), ' -k ', base64(parameters('mysqlServerReplPassword')), ' -u ', parameters('mysqlServerAdminUserName'), ' -p ', base64(parameters('mysqlServerAdminPassword')), ' -v ', parameters('mysqlServerPackageVersion'), ' -m ', variables('networkSettings').serverIpPrefix, add(int(variables('networkSettings').mysqlServerIpOffset),1) )]",
+        "mysqlDBInstallerSettings": {
+            "scriptsToDownload": [
+                "[concat(variables('templateBaseUrl'), variables('mysqlDbInstallerScript'))]",
+                "[concat(variables('templateBaseUrl'), 'mysqld.template.cnf')]",
+                "[concat(variables('azureSharedScriptUrl'), 'vm-disk-utils-0.1.sh')]",
+                "[concat(variables('templateBaseUrl'), variables('installerUtilitiesScript'))]",
+                "[concat(variables('clusterCustomInstallerScriptFullPath'))]"
+            ],
+            "regularNodeInstallCommand": "[concat(variables('customInstallerCommand'), ' && ', variables('mysqlDbInstallerCommand'))]"
+        },
+
+        "jumpBoxInstallerSettings": {
+            "scriptsToDownload": [
+                "[concat(variables('clusterCustomInstallerScriptFullPath'))]",
+                "[concat(variables('templateBaseUrl'), variables('installerUtilitiesScript'))]"
+            ],
+            "customInstallerCommand": "[variables('customInstallerCommand')]"
+        },
+
+        "vmssInstallerSettings": {
+            "scriptsToDownload": [
+                "[concat(variables('clusterCustomInstallerScriptFullPath'))]",
+                "[concat(variables('templateBaseUrl'), variables('installerUtilitiesScript'))]"
+            ],
+            "customInstallerCommand": "[variables('customInstallerCommand')]"
+        },
+
+        "wadperfcounters1": "<PerformanceCounters scheduledTransferPeriod=\"PT1M\"><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\AvailableMemory\" sampleRate=\"PT15S\" unit=\"Bytes\"><annotation displayName=\"Memory available\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\PercentAvailableMemory\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Mem. percent available\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\UsedMemory\" sampleRate=\"PT15S\" unit=\"Bytes\"><annotation displayName=\"Memory used\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\PercentUsedMemory\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Memory percentage\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\PercentUsedByCache\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Mem. used by cache\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentIdleTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU idle time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentUserTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU user time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentProcessorTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU percentage guest OS\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentIOWaitTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU IO wait time\" locale=\"en-us\"/></PerformanceCounterConfiguration>",
+        "wadperfcounters2": "<PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\BytesPerSecond\" sampleRate=\"PT15S\" unit=\"BytesPerSecond\"><annotation displayName=\"Disk total bytes\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\ReadBytesPerSecond\" sampleRate=\"PT15S\" unit=\"BytesPerSecond\"><annotation displayName=\"Disk read guest OS\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\WriteBytesPerSecond\" sampleRate=\"PT15S\" unit=\"BytesPerSecond\"><annotation displayName=\"Disk write guest OS\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\TransfersPerSecond\" sampleRate=\"PT15S\" unit=\"CountPerSecond\"><annotation displayName=\"Disk transfers\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\ReadsPerSecond\" sampleRate=\"PT15S\" unit=\"CountPerSecond\"><annotation displayName=\"Disk reads\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\WritesPerSecond\" sampleRate=\"PT15S\" unit=\"CountPerSecond\"><annotation displayName=\"Disk writes\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\AverageReadTime\" sampleRate=\"PT15S\" unit=\"Seconds\"><annotation displayName=\"Disk read time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\AverageWriteTime\" sampleRate=\"PT15S\" unit=\"Seconds\"><annotation displayName=\"Disk write time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\AverageTransferTime\" sampleRate=\"PT15S\" unit=\"Seconds\"><annotation displayName=\"Disk transfer time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\AverageDiskQueueLength\" sampleRate=\"PT15S\" unit=\"Count\"><annotation displayName=\"Disk queue length\" locale=\"en-us\"/></PerformanceCounterConfiguration></PerformanceCounters>",
+        "vmssLinuxDiagnosticsSettings": {
+            "diagnosticsStorageAccountName": "[variables('diagnosticStorageAccountName')]",
+            "diagnosticsStorageAccountId": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/','Microsoft.Storage/storageAccounts/', variables('diagnosticStorageAccountName'))]",
+            "wadcfgxstart": "[concat('<WadCfg><DiagnosticMonitorConfiguration>',variables('wadperfcounters1'),variables('wadperfcounters2'),'<Metrics resourceId=\"')]",
+            "wadmetricsresourceid": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name ,'/providers/','Microsoft.Compute/virtualMachineScaleSets/',variables('vmssName'))]",
+            "wadcfgxend": "[concat('\"><MetricAggregation scheduledTransferPeriod=\"PT1H\"/><MetricAggregation scheduledTransferPeriod=\"PT1M\"/></Metrics></DiagnosticMonitorConfiguration></WadCfg>')]"
+        }
     },
     "resources": [
         {

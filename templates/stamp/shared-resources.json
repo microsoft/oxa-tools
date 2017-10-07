@@ -242,25 +242,25 @@
             "name": "[parameters('serviceBusSettings').serviceBusNameSpace]",
             "type": "Microsoft.ServiceBus/Namespaces",
             "location": "[resourceGroup().location]",
-                "sku": {
-                    "name": "Standard",
-                    "tier": "Standard"
-                },
+            "sku": {
+                "name": "Standard",
+                "tier": "Standard"
+            },
             "properties": {},
             "resources": [
-            {
-                "apiVersion": "[parameters('apiSettings').serviceBusApiVersion]",
-                "name": "[parameters('serviceBusSettings').serviceBusQueueName]",
-                "type": "Queues",
-                "dependsOn": [
-                    "[concat('Microsoft.ServiceBus/namespaces/', parameters('serviceBusSettings').serviceBusNameSpace)]"
-            ],
-            "properties": {
-            "lockDuration": "PT5M",
-            "maxSizeInMegabytes": "1024"           
-          }
+                {
+                    "apiVersion": "[parameters('apiSettings').serviceBusApiVersion]",
+                    "name": "[parameters('serviceBusSettings').serviceBusQueueName]",
+                    "type": "Queues",
+                    "dependsOn": [
+                        "[concat('Microsoft.ServiceBus/namespaces/', parameters('serviceBusSettings').serviceBusNameSpace)]"
+                    ],
+                    "properties": {
+                        "lockDuration": "PT5M",
+                        "maxSizeInMegabytes": "1024"
+                    }
+                }
+            ]
         }
-      ]
-    }
-  ]
+    ]
 }
