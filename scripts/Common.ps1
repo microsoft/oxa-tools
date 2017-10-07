@@ -940,12 +940,7 @@ function Remove-OxaNetworkLoadBalancerResource
     
     ############################################
     # 5. Remove the LoadBalancer
-    $response = Remove-OxaLoadBalancer -ResourceGroupName $ResourceGroupName -Name $loadbalancer.Name  -MaxRetries $MaxRetries;
-
-    if ( !$response )
-    {
-        throw "Unable to remove the load balancer $($loadbalancer.Name)"
-    }
+    Remove-OxaLoadBalancer -ResourceGroupName $ResourceGroupName -Name $loadbalancer.Name  -MaxRetries $MaxRetries;
 
     return true;
 }
@@ -1568,7 +1563,7 @@ None.
                                         "Name" = $Name;
                                         "ResourceGroupName" = $ResourceGroupName;
                                         "Command" = "Remove-AzureRmLoadBalancer";
-                                        "Activity" = "Removing azure Load balancer '$($LbName)' from ResourceGroup $($ResourceGroupName)";
+                                        "Activity" = "Removing azure Load balancer '$($Name)' from ResourceGroup $($ResourceGroupName)";
                                         "ExecutionContext" = $Context;
                                         "MaxRetries" = $MaxRetries;
                                    };
@@ -2033,15 +2028,15 @@ function Get-DeploymentStatus
             [Parameter(Mandatory=$false)][string]$SharedAccessPolicyName="RootManageSharedAccessKey"
          )
 
-    Log-Message "Receiving deployment status from $($ServiceBusNamespace)";
+    # Log-Message "Receiving deployment status from $($ServiceBusNamespace)";
     $messages = @();
 
     # Rest api url to receive messages from Service bus queue
-    # https://docs.microsoft.com/en-us/rest/api/servicebus/peek-lock-message-non-destructive-read
+    # https://docs.microsoft.com/en-us/rest/api/servicebus/receive-and-delete-message-destructive-read
     $servicebusPeekLockRequestUrl = "https://$($ServiceBusNamespace).servicebus.windows.net/$($ServiceBusQueueName)/messages/head";
     
     # Generating SAS token to authenticate Service bus Queue to receive messages
-    $authorizedSasToken = Get-SasToken $Saskey $defaultSASKeyName $servicebusPeekLockRequestUrl;
+    $authorizedSasToken = Get-SasToken -Saskey $Saskey -ServicebusPeekLockRequestUrl $servicebusPeekLockRequestUrl -SharedAccessPolicyName $SharedAccessPolicyName;
 
     if (!$authorizedSasToken)
     {
@@ -2056,8 +2051,8 @@ function Get-DeploymentStatus
 
     while($getMessage)
     {
-        # invoking service bus queue rest api message url
-        $messageQueue = Invoke-WebRequest -Method POST -Uri $servicebusPeekLockRequestUrl -Headers $Headers;
+        # invoking service bus queue rest api message url : destructive read
+        $messageQueue = Invoke-WebRequest -Method DELETE -Uri $servicebusPeekLockRequestUrl -Headers $Headers;
 
         if (![string]::IsNullOrEmpty($messageQueue.content))
         {
@@ -2101,8 +2096,6 @@ function Get-SasToken
             [Parameter(Mandatory=$false)][string]$SharedAccessPolicyName="RootManageSharedAccessKey"
         )
 
-    Log-Message "Generating SAS token" 
-
     #checking SASKey Value    
     $sasToken = $null;
 
@@ -2126,10 +2119,8 @@ function Get-SasToken
     $signature = [System.Convert]::ToBase64String($hashOfStringToSign)
     $encodedSignature = [System.Web.HttpUtility]::UrlEncode($signature)   
 
-    Log-Message "generating the SAS token for - $($servicebusPeekLockRequestUrl)"
-
     #Generating SAS token
     $sasToken = "SharedAccessSignature sr=$encodedResourceUri&sig=$encodedSignature&se=$expiry&skn=$($SharedAccessPolicyName)";
     
-    return $SasToken;
+    return $sasToken;
 }

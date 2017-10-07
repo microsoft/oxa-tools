@@ -205,17 +205,13 @@ $currentPath = Split-Path $invocation.MyCommand.Path
 $rootPath = (get-item $currentPath).parent.FullName
 Import-Module "$($currentPath)/Common.ps1" -Force
 
-# TODO: why the exclusion from auto deploy
 # Login
-if (!$AutoDeploy)
-{
-    $clientSecret = ConvertTo-SecureString -String $AadWebClientAppKey -AsPlainText -Force
-    $aadCredential = New-Object System.Management.Automation.PSCredential($AadWebClientId, $clientSecret)
-    Login-AzureRmAccount -ServicePrincipal -TenantId $AadTenantId -SubscriptionName $AzureSubscriptionName -Credential $aadCredential -ErrorAction Stop
+$clientSecret = ConvertTo-SecureString -String $AadWebClientAppKey -AsPlainText -Force
+$aadCredential = New-Object System.Management.Automation.PSCredential($AadWebClientId, $clientSecret)
+Login-AzureRmAccount -ServicePrincipal -TenantId $AadTenantId -SubscriptionName $AzureSubscriptionName -Credential $aadCredential -ErrorAction Stop
 
-    # TODO: do we need this?
-    Set-AzureSubscription -SubscriptionName $AzureSubscriptionName | Out-Null    
-}
+# TODO: do we need this?
+Set-AzureSubscription -SubscriptionName $AzureSubscriptionName | Out-Null    
 
 # create the resource group
 New-AzureRmResourceGroup -Name $ResourceGroupName -Location $Location -Force
@@ -406,11 +402,14 @@ try
             [int]$expectedDeployedInstanceCount = $deploymentStatus.Parameters.autoScaleCapacityDefault.value;
             [array]$deployedInstances = @();
 
+            [int]$totalWait = 0;
+            [int]$waitDurationSeconds = 300;
+
             while ($allServersDeployed -eq $false)
             {            
                 # bootstrap=2hrs, upgrade=1hr, swap < 15mins
                 # check every 5-minutes
-                Start-Sleep -Seconds 300;
+                Start-Sleep -Seconds $waitDurationSeconds;
 
                 # Waiting for deployment status
                 $deployedInstances += Get-DeploymentStatus -ServiceBusNamespace $deploymentStatus.outputs.serviceBusNameSpace.value `
@@ -422,6 +421,12 @@ try
                 
                 $allServersDeployed = ($uniqueInstancesDeployed.Count -eq $expectedDeployedInstanceCount)
                 Log-Message "." -NoNewLine -SkipTimestamp;
+
+                $totalWait += $waitDuration
+                if ($totalWait -gt 10800)
+                {
+                    throw "Exceeded 3-hours of deployment time."
+                }
             }
 
             Log-Message "Done!" -SkipTimestamp -ClearLineAfter;
