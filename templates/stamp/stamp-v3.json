@@ -692,8 +692,8 @@
         "keyVaultTenantId": "[subscription().subscriptionId]",
 
         "defaultSASKeyName": "RootManageSharedAccessKey",
-        "serviceBusNameSpace": "[concat(parameters('clusterName'), '-sb-', parameters('deploymentVersionId'))]",
-        "serviceBusQueueName": "[concat(parameters('clusterName'), '-sbq-', parameters('deploymentVersionId'))]",
+        "serviceBusNameSpace": "[concat(parameters('clusterName'), '-sb')]",
+        "serviceBusQueueName": "[concat(parameters('clusterName'), '-sbq')]",
         "authRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/authorizationRules', variables('serviceBusNameSpace'), variables('defaultSASKeyName'))]",
         
         "resourcesToDeploy": {

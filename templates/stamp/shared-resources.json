@@ -243,8 +243,9 @@
             "type": "Microsoft.ServiceBus/Namespaces",
             "location": "[resourceGroup().location]",
             "sku": {
-                "name": "Standard",
-                "tier": "Standard"
+                "name": "Basic",
+                "tier": "Basic",
+                "capacity": 1
             },
             "properties": {},
             "resources": [
@@ -257,7 +258,8 @@
                     ],
                     "properties": {
                         "lockDuration": "PT5M",
-                        "maxSizeInMegabytes": "1024"
+                        "maxSizeInMegabytes": "1024",
+                        "defaultMessageTimeToLive": "PT5H"
                     }
                 }
             ]
