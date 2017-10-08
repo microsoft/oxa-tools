@@ -35,7 +35,6 @@ from azure.servicebus import ServiceBusService, Message
     default=None,
     help='comma-separated list of objectIds to target for pruning'
 )
-@click_log.init()
 def servicebus_notification(
         namespace,
         queue_name,
