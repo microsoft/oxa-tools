@@ -786,7 +786,7 @@ else
         --servicebus-shared-access-key-name "${servicebus_shared_access_key_name}" \
         --servicebus-shared-access-key "${servicebus_shared_access_key}"
 
-    exit_on_error "OXA stamp customization ("${INSTALLER_PATH) failed" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
+    exit_on_error "OXA stamp customization (${INSTALLER_PATH}) failed" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 fi
 
 # Remove the task if it is already setup

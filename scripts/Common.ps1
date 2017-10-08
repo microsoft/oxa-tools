@@ -942,7 +942,7 @@ function Remove-OxaNetworkLoadBalancerResource
     # 5. Remove the LoadBalancer
     Remove-OxaLoadBalancer -ResourceGroupName $ResourceGroupName -Name $loadbalancer.Name  -MaxRetries $MaxRetries;
 
-    return true;
+    return $true;
 }
 
 
