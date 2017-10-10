@@ -58,7 +58,7 @@ Param(
         [Parameter(Mandatory=$true)][string]$AadTenantId,
         [Parameter(Mandatory=$true)][string]$AzureSubscriptionId,
         [Parameter(Mandatory=$false)][string][ValidateSet("1","2")]$AzureCliVersion="1",
-        [Parameter(Mandatory=$false)][ValidateSet("AzureCloud","AzureChinaCloud", "AzureUSGovernment")][string]$AzureEnvironmentName="AzureCloud"
+        [Parameter(Mandatory=$false)][ValidateSet("AzureCloud","AzureChinaCloud", "AzureUSGovernment")][string]$AzureEnvironmentName="AzureChinaCloud"
      )
 
 ###########################################
