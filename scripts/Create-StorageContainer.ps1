@@ -94,22 +94,78 @@ foreach($storageContainerName in $storageContainerList)
     # todo: add retries for better resiliency
     Log-Message "Creating Storage Container (Cli: $AzureCliVersion): $($storageContainerName)" -Context "Create Storage Containers"
 
+    # track the operation status
+    $status=$false
+
     # todo: fall back to azure cli since there are existing issues with installation of azure powershell cmdlets for linux
     # cli doesn't provide clean object returns (json responses are helpful). Therefore, transition as soon as possible
     if ($AzureCliVersion -eq "1" )
     {
-        azure storage container create --account-name $StorageAccountName --account-key $StorageAccountKey --container $storageContainerName --json
-    }
-    else 
-    {
-        if ($AzureStorageConnectionString)
+        # Azure Cli 1.0
+        # Check if the container exists
+        $response = azure storage container list --account-name $StorageAccountName --account-key $StorageAccountKey --prefix $storageContainerName --json 
+        if ( ($response | jq --raw-output ".[] | select(.name==\`"$storageContainerName\`") | .name") -ine $storageContainerName)
         {
-            Log-Message "Using connection string: $AzureStorageConnectionString" -Context "Create Storage Containers" -NoNewLine
-            az storage container create --account-name $StorageAccountName --account-key $StorageAccountKey --name $storageContainerName --connection-string $AzureStorageConnectionString -o json
+            # container doesn't exist
+            Log-Message "'$storageContainerName' doesn't exist and will be created."
+
+            # create the container now
+            $response = azure storage container create --account-name $StorageAccountName --account-key $StorageAccountKey --container $storageContainerName --json
+            $status = ((($response | jq --raw-output '.name') -ieq $storageContainerName) -and (($response | jq --raw-output '.lease.state') -ieq 'available'))
         }
         else 
         {
-            az storage container create --account-name $StorageAccountName --account-key $StorageAccountKey --name $storageContainerName -o json
+            # container exists
+            $status=$true;
+            Log-Message "'$storageContainerName' already exists."
         }
+    }
+    else 
+    {
+        # Azure Cli 2.0
+        # Check if the container exists
+        if ($AzureStorageConnectionString)
+        {
+            $response = az storage container list --account-name $StorageAccountName --account-key $StorageAccountKey --prefix $storageContainerName --connection-string $AzureStorageConnectionString -o json
+        }
+        else 
+        {
+            $response = az storage container list --account-name $StorageAccountName --account-key $StorageAccountKey --prefix $storageContainerName -o json
+        }
+
+        if ( ($response | jq --raw-output ".[] | select(.name==\`"$storageContainerName\`") | .name") -ine $storageContainerName)
+        {
+            # container doesn't exist
+            Log-Message "'$storageContainerName' doesn't exist and will be created."
+
+            # create the container now
+            if ($AzureStorageConnectionString)
+            {
+                Log-Message "Using connection string: $AzureStorageConnectionString" -Context "Create Storage Containers" -NoNewLine
+    
+                $response = az storage container create --account-name $StorageAccountName --account-key $StorageAccountKey --name $storageContainerName --connection-string $AzureStorageConnectionString -o json
+            }
+            else 
+            {
+                $response = az storage container create --account-name $StorageAccountName --account-key $StorageAccountKey --name $storageContainerName -o json
+            }
+
+            # parse the status (.created=true is the expected status)
+            $status = (($response | jq --raw-output '.created') -ieq "true")
+        }
+        else 
+        {
+            # container exists
+            $status=$true;
+            Log-Message "'$storageContainerName' already exists."
+        }
+    }
+
+    # we expect the following: true=container created, If there is an error, status=[Blank]
+    if (!$status)
+    {
+        # creation failed
+        Log-Message "Unable to create the specified storage container: $storageContainerName" -Context "Create Storage Containers"
+        exit 1
     }
 }

@@ -3,21 +3,16 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
-# TODO: add full error handling and notification
-# set -x
-
 # Path to settings file provided as an argument to this script.
 SETTINGS_FILE=
 
-# azure cli version to use (default to 1.0)
-azure_cli_version=1
-
-# From settings file
+# From settings file (these variables will be populated with values from the sourced settings file)
     DATABASE_TYPE= # mongo|mysql
 
     # Reading from database machines
     MONGO_REPLICASET_CONNECTIONSTRING=
-    MYSQL_SERVER_LIST=
+    MYSQL_SERVER_IP=
+    MYSQL_SERVER_PORT=3306
     DATABASE_USER=
     DATABASE_PASSWORD=
 
@@ -32,16 +27,32 @@ azure_cli_version=1
 
     BACKUP_RETENTIONDAYS=
 
+    # email address for all backup notifications
+    CLUSTER_ADMIN_EMAIL=""
+
+    # Azure Cli version (default to 1.0)
+    AZURE_CLI_VERSION=1
+
 # Paths and file names.
     BACKUP_LOCAL_PATH=
     TMP_QUERY_ADD="query.add.sql"
     TMP_QUERY_REMOVE="query.remove.sql"
     CURRENT_SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
     UTILITIES_FILE=$CURRENT_SCRIPT_PATH/../templates/stamp/utilities.sh
+
     # Derived from DATABASE_TYPE
     CONTAINER_NAME=
     COMPRESSED_FILE=
     BACKUP_PATH=
+
+    # this is the file for logging all backup operations
+    main_logfile=""
+
+    # emailsubject for all backup notifications
+    notification_email_subject=""
+
+    # debug mode: 0=set +x, 1=set -x
+    debug_mode=0
 
 help()
 {
@@ -83,8 +94,7 @@ parse_args()
                 shift # argument
                 ;;            
             --debug)
-                set -x
-                shift # argument
+                debug_mode=1
                 ;;
             *) # unknown option
                 echo "ERROR. Option -${BOLD}$2${NORM} not allowed."
@@ -99,12 +109,13 @@ parse_args()
 
 source_wrapper()
 {
-    if [ -f "$1" ]
-    then
-        echo "Sourcing file $1"
-        source "$1"
+    local source_file="${1}"
+
+    if [[ -f "${source_file}" ]]; then
+        echo "Sourcing file ${source_file}"
+        source "${source_file}"
     else
-        echo "Cannot find file at $1"
+        echo "Cannot find file at ${source_file}"
         help
         exit 1
     fi
@@ -113,8 +124,7 @@ source_wrapper()
 validate_db_type()
 {
     # validate argument
-    if [ "$DATABASE_TYPE" != "mongo" ] && [ "$DATABASE_TYPE" != "mysql" ];
-    then
+    if [[ "$DATABASE_TYPE" != "mongo" ]] && [[ "$DATABASE_TYPE" != "mysql" ]]; then
         log "$DATABASE_TYPE is not supported"
         log "Databse type must be mongo or mysql"
         help
@@ -130,7 +140,7 @@ validate_remote_storage()
     export AZURE_STORAGE_ACCESS_KEY=$BACKUP_STORAGEACCOUNT_KEY # in <env>.sh AZURE_ACCOUNT_KEY
     export AZURE_STORAGE_CONNECTIONSTRING=$AZURE_STORAGEACCOUNT_CONNECTIONSTRING # azure storage account connection string
 
-    if [ -z $AZURE_STORAGE_ACCOUNT ] || [ -z $AZURE_STORAGE_ACCESS_KEY ]; then
+    if [[ -z $AZURE_STORAGE_ACCOUNT ]] || [[ -z $AZURE_STORAGE_ACCESS_KEY ]]; then
         log "Azure storage credentials are required"
         help
         exit 4
@@ -155,12 +165,10 @@ set_path_names()
     TIME_STAMPED=${CONTAINER_NAME}_$(date +"%Y-%m-%d_%Hh-%Mm-%Ss")
     COMPRESSED_FILE="$TIME_STAMPED.tar.gz"
 
-    if [ "$DATABASE_TYPE" == "mysql" ]
-    then
+    if [[ "$DATABASE_TYPE" == "mysql" ]]; then
         # File
         BACKUP_PATH="$TIME_STAMPED.sql"
-    elif [ "$DATABASE_TYPE" == "mongo" ]
-    then
+    elif [[ "$DATABASE_TYPE" == "mongo" ]]; then
         # Directory
         BACKUP_PATH="$TIME_STAMPED"
     fi
@@ -168,7 +176,7 @@ set_path_names()
 
 add_temp_mysql_user()
 {
-    if [ -z $TEMP_DATABASE_USER ] || [ -z $TEMP_DATABASE_PASSWORD ]; then
+    if [[ -z $TEMP_DATABASE_USER ]] || [[ -z $TEMP_DATABASE_PASSWORD ]]; then
         log "We aren't ADDING additional credentials to ${DATABASE_TYPE} db because none were provided."
     else
         log "ADDING ${TEMP_DATABASE_USER} user to ${DATABASE_TYPE} db"
@@ -183,14 +191,13 @@ EOF
         sed -i "s/{TEMP_DATABASE_USER}/${TEMP_DATABASE_USER}/I" $TMP_QUERY_ADD
         sed -i "s/{TEMP_DATABASE_PASSWORD}/${TEMP_DATABASE_PASSWORD}/I" $TMP_QUERY_ADD
 
-        install-mysql-client
         mysql -u $DATABASE_USER -p$DATABASE_PASSWORD -h $1 < $TMP_QUERY_ADD
     fi
 }
 
 remove_temp_mysql_user()
 {
-    if [ -z $TEMP_DATABASE_USER ] || [ -z $TEMP_DATABASE_PASSWORD ]; then
+    if [[ -z $TEMP_DATABASE_USER ]] || [[ -z $TEMP_DATABASE_PASSWORD ]]; then
         log "We aren't REMOVING additional credentials to ${DATABASE_TYPE} db because none were provided."
     else
         log "REMOVING ${TEMP_DATABASE_USER} user from ${DATABASE_TYPE} db"
@@ -205,52 +212,50 @@ EOF
 
         sed -i "s/{TEMP_DATABASE_USER}/${TEMP_DATABASE_USER}/I" $TMP_QUERY_REMOVE
 
-        install-mysql-client
         mysql -u $DATABASE_USER -p$DATABASE_PASSWORD -h $1 < $TMP_QUERY_REMOVE
     fi
 }
 
 create_compressed_db_dump()
 {
+    # this is the actual backup operation
+    log "Backing up '$DATABASE_TYPE' database to local file system"
+    
     pushd $BACKUP_LOCAL_PATH
+    
+    # set the log file & notification
+    main_logfile="/var/log/db_backup_${DATABASE_TYPE}.log"
+    notification_email_subject="OXA Backup - ${DATABASE_TYPE} Databases"
 
-    log "Copying entire $DATABASE_TYPE database to local file system"
-    if [ "$DATABASE_TYPE" == "mysql" ]
-    then
-        #todo: add error conditioning to loop. we're currently just using the first one and assuming success
-        mysql_servers=(`echo $MYSQL_SERVER_LIST | tr , ' ' `)
-        for ip in "${mysql_servers[@]}"; do
-            add_temp_mysql_user $ip
+    # 1. Execute the backup
+    if [[ "$DATABASE_TYPE" == "mysql" ]]; then
+        add_temp_mysql_user $MYSQL_SERVER_IP
 
-            install-mysql-dump
-            mysqldump -u $DATABASE_USER -p$DATABASE_PASSWORD -h $ip --all-databases --single-transaction > $BACKUP_PATH
+        # execute dump of all databases
+        mysqldump -u $DATABASE_USER -p$DATABASE_PASSWORD -h $MYSQL_SERVER_IP -P $MYSQL_SERVER_PORT --all-databases --single-transaction --set-gtid-purged=OFF --triggers --routines --events > $BACKUP_PATH
+        exit_on_error "Unable to backup ${DATABASE_TYPE}!" "${ERROR_DB_BACKUP_FAILED}" "${notification_email_subject}" "${CLUSTER_ADMIN_EMAIL}" "${main_logfile}"
 
-            remove_temp_mysql_user $ip
+        remove_temp_mysql_user $MYSQL_SERVER_IP
 
-            break;
-        done
-
-    elif [ "$DATABASE_TYPE" == "mongo" ]
-    then
-        install-mongodb-tools
+    elif [[ "$DATABASE_TYPE" == "mongo" ]]; then
         mongodump -u $DATABASE_USER -p $DATABASE_PASSWORD --host $MONGO_REPLICASET_CONNECTIONSTRING --db edxapp --authenticationDatabase master -o $BACKUP_PATH
-
+        exit_on_error "Unable to backup ${DATABASE_TYPE}!" "${ERROR_DB_BACKUP_FAILED}" "${notification_email_subject}" "${CLUSTER_ADMIN_EMAIL}" "${main_logfile}"
     fi
 
-    exit_on_error "Failed to connect to database OR failed to create backup file."
+    # 2. Compress the backup
+    # log the file size for future tracking
+    log "Compressing the backup"
 
-    log "Compressing entire $DATABASE_TYPE database"
+    preCompressFileSize=`stat --printf="%s" $BACKUP_PATH`
     tar -zcvf $COMPRESSED_FILE $BACKUP_PATH
+    postCompressFileSize=`stat --printf="%s" $COMPRESSED_FILE`
 
+    log "Uncompressed '$DATABASE_TYPE' database = $preCompressFileSize bytes. Compressed = $postCompressFileSize bytes"
     popd
 }
 
 copy_db_to_azure_storage()
 {
-    # ensure pre-requisites are installed
-    install-azure-cli
-    install-json-processor
-
     pushd $BACKUP_LOCAL_PATH
 
     log "Upload the backup $DATABASE_TYPE file to azure blob storage"
@@ -288,7 +293,7 @@ copy_db_to_azure_storage()
     fi
 
     log "Uploading file... Please wait..."
-    if [[ $azure_cli_version == "1" ]]; then
+    if [[ $AZURE_CLI_VERSION == "1" ]]; then
         # cli 1.0
         result=$(azure storage blob upload $COMPRESSED_FILE $CONTAINER_NAME $COMPRESSED_FILE --json)
 
@@ -298,6 +303,7 @@ copy_db_to_azure_storage()
         if [[ $fileName != "" ]] && [[ $fileName != null ]]; then
             log "$fileName blob file uploaded successfully. Size: $fileSize"
         else
+			# TODO: take action on blob upload failure
             log "Upload blob file failed"
         fi
 
@@ -310,6 +316,7 @@ copy_db_to_azure_storage()
         lastModified=$(echo $result | jq '.lastModified')
 
         if [[ -z "${etag// }" ]] || [[ -z "${lastModified// }" ]]; then
+			# TODO: take action on blob upload failure
             log "Upload blob file failed"
         fi
     fi
@@ -336,7 +343,7 @@ cleanup_local_copies()
 
 cleanup_old_remote_files()
 {
-    if [ -z $BACKUP_RETENTIONDAYS ]; then
+    if [[ -z $BACKUP_RETENTIONDAYS ]]; then
         log "No database retention length provided."
         return
     fi
@@ -353,7 +360,7 @@ cleanup_old_remote_files()
     cutoffInSeconds=$(( $currentSeconds - $retentionPeriod ))
 
     # Get file list with lots of meta-data. We'll use this to extract dates.
-    if [[ $azure_cli_version == "1" ]]; then
+    if [[ $AZURE_CLI_VERSION == "1" ]]; then
         # cli 1.0
         verboseDetails=`azure storage blob list $CONTAINER_NAME --json`
     else
@@ -374,11 +381,10 @@ cleanup_old_remote_files()
         fileDateString=`echo "$fileName" | grep -o "[0-9].*$terminator" | sed "s/$terminator//g" | sed "s/h-\|m-/:/g" | tr '_' ' '`
         fileDateInSeconds=`date --date="$fileDateString" +%s`
 
-        if [ $cutoffInSeconds -ge $fileDateInSeconds ]; then
-            
+        if [[ $cutoffInSeconds -ge $fileDateInSeconds ]]; then
             log "deleting $fileName"
 
-            if [[ $azure_cli_version == "1" ]]; then
+            if [[ $AZURE_CLI_VERSION == "1" ]]; then
                 # cli 1.0
                 azure storage blob delete -q $CONTAINER_NAME $fileName
             else
@@ -400,10 +406,18 @@ source_wrapper $UTILITIES_FILE
 # Parse script argument(s)
 parse_args $@
 
+# debug mode support
+if [[ $debug_mode == 1 ]]; then
+    set -x
+fi
+
+# log() and other functions
+source_wrapper $UTILITIES_FILE
+
 # Script self-idenfitication
 print_script_header
 
-log "Begin execution of $DATABASE_TYPE backup script using ${DATABASE_TYPE}dump command."
+log "Begin execution of $DATABASE_TYPE backup script using '${DATABASE_TYPE}' dump command."
 
 # Settings
 source_wrapper $SETTINGS_FILE
@@ -413,6 +427,20 @@ exit_if_limited_user
 validate_settings
 
 set_path_names
+
+# install requisite tools (if necessary)
+log "Conditionally installing requisite tools for backup operations"
+install-mysql-client
+install-mysql-dump
+install-mongodb-tools
+
+if [[ $AZURE_CLI_VERSION == "1" ]]; then
+    install-azure-cli
+else
+    install-azure-cli-2
+fi
+
+install-json-processor
 
 # Cleanup previous runs.
 cleanup_local_copies
@@ -428,3 +456,5 @@ cleanup_local_copies
 
 # Cleanup old remote files
 cleanup_old_remote_files
+
+log "Backup complete!"

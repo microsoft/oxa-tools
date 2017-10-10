@@ -1,0 +1,15 @@
+# default: on
+# description: mysqlmastercheck
+service mysqlmastercheck
+{
+        flags           = REUSE
+        socket_type     = stream
+        port            = {service_port}
+        wait            = no
+        user            = {service_user}
+        server          = {script_path}
+        log_on_failure  += USERID
+        disable         = no
+        only_from       = 10.0.0.0/24 # limit access to the private network
+        per_source      = UNLIMITED
+}

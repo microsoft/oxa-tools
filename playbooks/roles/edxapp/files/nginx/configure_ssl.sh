@@ -44,7 +44,7 @@ update_nginx_site_configs() {
   local cms_file_path="$sites_available_path/cms"
   local preview_file_path="$sites_available_path/lms-preview"
 
-  if [[ $1 -eq True ]]; then
+  if [[ $1 == True ]] ; then
     # SSL is enabled
     echo "Update LMS/CMS/Preview url rewrites to include SSL port number"
     add_port_to_url_rewrite $lms_file_path $2
@@ -63,4 +63,4 @@ update_nginx_site_configs() {
   fi
 }
 
-update_nginx_site_configs $@
+update_nginx_site_configs "$@"

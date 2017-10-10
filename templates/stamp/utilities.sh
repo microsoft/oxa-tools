@@ -5,6 +5,13 @@
 
 # ERROR CODES: 
 # TODO: move to common script
+ERROR_MYSQL_STARTUP_FAILED=2001
+ERROR_MYSQL_SHUTDOWN_FAILED=2002
+
+# Backup Related Errors
+ERROR_DB_BACKUP_FAILED=2010
+ERROR_DB_BACKUPSETUP_FAILED=2011
+
 ERROR_CRONTAB_FAILED=4101
 ERROR_GITINSTALL_FAILED=5101
 ERROR_MONGOCLIENTINSTALL_FAILED=5201
@@ -20,10 +27,18 @@ ERROR_AZURECLI2_INSTALLATION_FAILED=6203
 ERROR_AZURECLI_INVALID_OSVERSION=6204
 ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED=7001
 EROR_REPLICATION_MASTER_MISSING=7201
-ERROR_HAPROXY_INSTALLER_FAILED=7201
+ERROR_HAPROXY_INSTALLER_FAILED=7202
+ERROR_HAPROXY_STARTUP_FAILED=7203
+ERROR_MYSQL_MOVE_DATADIRECTORY_INSTALLER_FAILED=7210
 ERROR_XINETD_INSTALLER_FAILED=7301
 ERROR_TOOLS_INSTALLER_FAILED=7401
 ERROR_SSHKEYROTATION_INSTALLER_FAILED=7501
+
+# Mysql failover related errors
+ERROR_MYSQL_FAILOVER_INVALIDPROXYPORT=7601
+ERROR_MYSQL_FAILOVER_UNKNOWNRESPONSE=7602
+ERROR_MYSQL_FAILOVER_FAILED=7603
+ERROR_MYSQL_FAILOVER_MARKREADONLY=7604
 
 #############################################################################
 # Log a message
@@ -119,6 +134,8 @@ configure_datadisks()
     # Stripe all of the data 
     log "Formatting and configuring the data disks"
 
+    local mount_point=${1:-"/datadisks"}
+
     # vm-disk-utils-0.1 can install mdadm which installs postfix. The postfix
     # installation cannot be made silent using the techniques that keep the
     # mdadm installation quiet: a) -y AND b) DEBIAN_FRONTEND=noninteractive.
@@ -126,7 +143,22 @@ configure_datadisks()
     echo "postfix postfix/main_mailer_type select No configuration" | debconf-set-selections
     apt-get install -y postfix
 
-    bash ./vm-disk-utils-0.1.sh -b $DATA_DISKS -s
+    # check if the disk utilities exists
+    if [[ ! -f ./vm-disk-utils-0.1.sh ]];
+    then
+        # download the utility
+        pushd /tmp
+        wget https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/shared_scripts/ubuntu/vm-disk-utils-0.1.sh
+
+        # execute the setup
+        bash ./vm-disk-utils-0.1.sh -b "${mount_point}" -s
+
+        # clean up
+        rm ./vm-disk-utils-0.1.sh
+        popd
+    else
+        bash ./vm-disk-utils-0.1.sh -b "${mount_point}" -s
+    fi
 }
 
 #############################################################################
@@ -213,9 +245,9 @@ install-mongodb-tools()
         log "Installing Mongo Tools (mongodump and mongorestore)"
         apt-get install -y mongodb-org-tools
         exit_on_error "Failed to install the Mongo dump/restore on ${HOSTNAME} !" $ERROR_MONGOCLIENTINSTALL_FAILED
-    fi
 
-    log "Mongo Tools installed"
+        log "Mongo Tools installed"
+    fi
 }
 
 
@@ -260,9 +292,9 @@ install-mysql-client()
         fi
 
         exit_on_error "Failed to install the Mysql client on ${HOSTNAME} !" $ERROR_MYSQLCLIENTINSTALL_FAILED
-    fi
 
-    log "Mysql client installed"
+        log "Mysql client installed"
+    fi
 }
 
 #############################################################################
@@ -280,9 +312,9 @@ install-mysql-dump()
         log "Installing Mysql Dump"
         apt-get install -y mysql-client
         exit_on_error "Failed to install the Mysql dump on ${HOSTNAME} !" $ERROR_MYSQLCLIENTINSTALL_FAILED
-    fi
 
-    log "Mysql dump installed"
+        log "Mysql dump installed"
+    fi
 }
 
 #############################################################################
@@ -312,7 +344,7 @@ install-mysql-utilities()
 apt-wrapper()
 {
     log "$1 package(s)..."
-    sudo apt-get $1 -y -qq --fix-missing
+    apt $1 -y -qq --fix-missing
 }
 
 retry-command()
@@ -330,19 +362,23 @@ retry-command()
             apt-wrapper "update"
             apt-wrapper "install -f"
             apt-wrapper "upgrade -f"
-            sudo dpkg --configure -a
+            dpkg --configure -a
         fi
 
         log "STARTING ${message}..."
 
         eval "$command"
-        if [[ $? -eq 0 ]] ; then
+        result=$?
+
+        if [[ $result -eq 0 ]] ; then
             log "SUCCEEDED ${message}!"
             break
         fi
 
         log "FAILED ${message}"
     done
+
+    return $result
 }
 
 #############################################################################
@@ -486,7 +522,7 @@ clean_repository()
 get_machine_role()
 {
     # determine the role of the machine based on its name
-    if [[ $HOSTNAME =~ ^(.*)jb$ ]]; then
+    if [[ $HOSTNAME =~ ^(.*)jb([1-2]?)$ ]]; then
         MACHINE_ROLE="jumpbox"
     elif [[ $HOSTNAME =~ ^(.*)mongo[0-3]{1}$ ]]; then
         MACHINE_ROLE="mongodb"
@@ -568,6 +604,28 @@ sync_repo()
 
     exit_on_error "Failed checking out branch $repo_version from repository $repo_url in $repo_path"
     popd
+}
+
+#############################################################################
+# Create theme directory before edx playbook
+#############################################################################
+make_theme_dir()
+{
+    EDXAPP_COMPREHENSIVE_THEME_DIR="$1"
+    EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME="$2"
+
+    # When the comprehensive theming dirs is specified, edxapp:migrate task fails with :  ImproperlyConfigured: COMPREHENSIVE_THEME_DIRS
+    # As an interim mitigation, create the folder if the path specified is not under the edx-platform directory (where the default themes directory is)
+    if [[ -n "${EDXAPP_COMPREHENSIVE_THEME_DIR}" ]] && [[ ! -d "${EDXAPP_COMPREHENSIVE_THEME_DIR}" ]] ; then
+        # now check if the path specified is within the default edx-platform/themes directory
+        if [[ "${EDXAPP_COMPREHENSIVE_THEME_DIR}" == *"${EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME}"* ]] ; then
+            log "'${EDXAPP_COMPREHENSIVE_THEME_DIR}' falls under the default theme directory. Skipping creation since the edx-platform clone will create it."
+        else
+            log "Creating comprehensive themeing directory at ${EDXAPP_COMPREHENSIVE_THEME_DIR}"
+            mkdir -p "${EDXAPP_COMPREHENSIVE_THEME_DIR}"
+            chown -R edxapp:edxapp "${EDXAPP_COMPREHENSIVE_THEME_DIR}"
+        fi
+    fi
 }
 
 #############################################################################
@@ -685,7 +743,7 @@ install-powershell()
 
     # execute the installer
     bash ~/powershell_installer.sh
-        exit_on_error "Powershell installation failed ${HOSTNAME} !" $ERROR_POWERSHELLINSTALL_FAILED
+    exit_on_error "Powershell installation failed ${HOSTNAME} !" $ERROR_POWERSHELLINSTALL_FAILED
 }
 
 #############################################################################
@@ -747,9 +805,9 @@ install-azure-cli()
 
         log "Suppressing telemetry collection"
         azure telemetry --disable
-    fi
 
-    log "Azure CLI installed"
+        log "Azure CLI installed"
+    fi
 }
 
 install-azure-cli-2()
@@ -804,9 +862,9 @@ install-json-processor()
         log "Installing jq - Command-line JSON processor"
         apt-get install -y jq
         exit_on_error "Failed to install jq"
-    fi
 
-    log "JSON Processor installed"
+        log "JSON Processor installed"
+    fi
 }
 
 #############################################################################
@@ -969,7 +1027,6 @@ get_azure_storage_endpoint_suffix()
     # default storage account suffix to core.windows.net if not specified
     if [[ -z "${suffix// }" ]]; then
 
-        log "Defaulting the storage account suffix to 'core.windows.net'"
         suffix="core.windows.net"
     fi
 
@@ -983,28 +1040,32 @@ setup_backup()
     local backup_script="${2}";                                                     # Backup script (actually take the backup)
     local backup_log="${3}";                                                        # Log file for backup job
 
-    local account_name="${4}"; local account_key="${5}";                            # Storage Account 
+    local account_name="${4}";                                                      # Storage Account credentials
+    local account_key="${5}";
     local backupFrequency="${6}";                                                   # Backup Frequency
     local backupRententionDays="${7}";                                              # Backup Retention
     local mongoReplicaSetConnectionString="${8}";                                   # Mongo replica set connection string
-    local mysqlServerList="${9}";                                                   # Mysql Server List
+    local mysqlServerIp="${9}";                                                     # Mysql Server Ip (or HA Proxy Ip)
     local databaseType="${10}";                                                     # Database Type : mysql|mongo
 
-    local databaseUser="${11}"; local databasePassword="${12}";                     # Credentials for accessing the database for backup purposes
-    local backupLocalPath="${13}";                                                  # Local path where database will be temporarily backed up to
-
+    local databaseUser="${11}";                                                     # Credentials for accessing the database for backup purposes
+    local databasePassword="${12}";                           
+    local backupLocalPath="${13}";                                                  # Database Type : mysql|mongo
+    local mysqlServerPort="${14:-3306}"                                             # Communication port for mysql server (default 3306)
+    local clusterAdminEmail="${15}"                                                 # Email address to which backup notifications will be sent
+    local azureCliVersion="${16:-1}"                                                # Azure Cli Version to use for backup operations
+	
     # Optional.
-    local tempDatabaseUser="${14}"; local tempDatabasePassword="${15}";             # Temporary credentials for accessing the backup (optional)
-    local azureCliVersion="${16}"                                                   # Azure Cli version to use
     local storageAccountEndpointSuffix=`get_azure_storage_endpoint_suffix ${17}`    # Blob storage suffix (defaults to core.windows.net for global azure)
-
+    tempDatabaseUser="${18}"; tempDatabasePassword="${19}";                         # Temporary credentials for accessing the backup (optional)
+    
     # generate a storage connection string
     local storage_connection_string=`generate_azure_storage_connection_string "${account_name}" "${account_key}" "${storageAccountEndpointSuffix}"`
 
     log "Setting up database backup for '${databaseType}' database(s)"
 
     # For simplicity, we require all required parameters are set
-    if [ "$#" -lt 13 ]; then
+    if [[ "$#" -lt 15 ]]; then
         echo "Some required backup configuration parameters are missing"
         exit 1;
     fi
@@ -1015,13 +1076,16 @@ BACKUP_STORAGEACCOUNT_NAME=${account_name}
 BACKUP_STORAGEACCOUNT_KEY=${account_key}
 BACKUP_RETENTIONDAYS=${backupRententionDays}
 MONGO_REPLICASET_CONNECTIONSTRING=${mongoReplicaSetConnectionString}
-MYSQL_SERVER_LIST=${mysqlServerList}
+MYSQL_SERVER_IP=${mysqlServerIp}
+MYSQL_SERVER_PORT=${mysqlServerPort}
 DATABASE_USER=${databaseUser}
 DATABASE_PASSWORD=${databasePassword}
 TEMP_DATABASE_USER=${tempDatabaseUser}
 TEMP_DATABASE_PASSWORD=${tempDatabasePassword}
 DATABASE_TYPE=${databaseType}
 BACKUP_LOCAL_PATH=${backupLocalPath}
+CLUSTER_ADMIN_EMAIL=${clusterAdminEmail}
+AZURE_CLI_VERSION=${azureCliVersion}
 AZURE_STORAGEACCOUNT_CONNECTIONSTRING=\"${storage_connection_string}\"
 EOF"
 
@@ -1092,10 +1156,40 @@ start_haproxy()
 {
     log "Starting HA Proxy Server"
 
-    service haproxy start
+    # add some resilience
+    local mysql_admin_username="${1}"
+    local mysql_admin_password="${2}"
+    local haproxy_server="${3}"
+    local haproxy_port="${4}"
 
-    # Important - wait for the service to startup and interact with mysql
-    sleep 15s
+    local server_started=0
+    local wait_time_seconds=10
+    local max_wait_seconds=$(($wait_time_seconds * 10))
+    local total_wait_seconds=0
+
+    while [[ $server_started == 0 ]] ;
+    do
+        service haproxy start
+
+        # run a basic query against the Proxy
+        db_response=`mysql -u ${mysql_admin_username} -p${mysql_admin_password} -h ${haproxy_server} -P ${haproxy_port} -e "SHOW DATABASES;"`
+
+        # trim the response before assessing emptiness: null /zero-length
+        if [[ -z "${db_response// }" ]];
+        then
+            sleep $wait_time_seconds;
+            ((total_wait_seconds+=$wait_time_seconds))
+
+            if [[ "$total_wait_seconds" -gt "$max_wait_seconds" ]] ;
+            then
+                log "Exceeded the expected wait time for starting up the haproxy server: $total_wait_seconds seconds"
+                exit $ERROR_HAPROXY_STARTUP_FAILED
+            fi
+        else
+            # the server was successfully started and is returning results
+            server_started=1
+        fi
+    done
 
     log "HA Proxy has been started"
 }
@@ -1131,35 +1225,89 @@ start_mysql()
     # track the OS version
     os_version=$(lsb_release -rs)
 
-    if [[ $(echo "$os_version > 16" | bc -l) ]]
-    then
-        systemctl start mysqld
+    # we need some resilience here
+    local server_started=0
+    local wait_time_seconds=10
+    local max_wait_seconds=$(($wait_time_seconds * 10))
+    local total_wait_seconds=0
 
-        # enable mysqld on startup
-        systemctl enable mysqld
-    else
-        service mysql start
-    fi
+    while [[ $server_started == 0 ]] ;
+    do
+        if [[ $(echo "$os_version > 16" | bc -l) == 1 ]] ;
+        then
+            systemctl start mysqld
+            exit_on_error "Could not restart mysqld on '${HOSTNAME}' !" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
 
-    # Wait for Mysql daemon to start and initialize for the first time (this may take up to a minute or so)
-    while ! timeout 1 bash -c "echo > /dev/tcp/localhost/$mysql_port"; do sleep 10; done
+            # enable mysqld on startup
+            systemctl enable mysqld
+            exit_on_error "Could not enable mysqld for startup on '${HOSTNAME}' !" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
+        else
+            service mysql start
+            exit_on_error "Could not restart mysqld on '${HOSTNAME}' !" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
+        fi
+
+        # Wait for Mysql server to start/initialize for the first time (this may take up to a minute or so)
+        (echo >/dev/tcp/localhost/$mysql_port) &>/dev/null && server_started=1 || server_started=0
+
+        # if the server isn't yet started, wait $wait_time_seconds seconds before retry
+        if [[ $server_started == 0 ]] ;
+        then
+            sleep $wait_time_seconds;
+            ((total_wait_seconds+=$wait_time_seconds))
+
+            if [[ "$total_wait_seconds" -gt "$max_wait_seconds" ]] ;
+            then
+                log "Exceeded the expected wait time for starting up the server: $total_wait_seconds seconds"
+                exit $ERROR_MYSQL_STARTUP_FAILED
+            fi
+        fi
+    done
 
     log "Mysql server has been started"
 }
 
 stop_mysql()
 {
-    # Find out what PID the Mysql instance is running as (if any)
-    MYSQLPID=`ps -ef | grep '/usr/sbin/mysqld' | grep -v grep | awk '{print $2}'`
-    
-    if [[ ! -z "$MYSQLPID" ]]; then
-        log "Stopping Mysql Server (PID $MYSQLPID)"
-        
-        kill -15 $MYSQLPID
 
-        # Important not to attempt to start the daemon immediately after it was stopped as unclean shutdown may be wrongly perceived
-        sleep 15s
-    fi
+    # we need some resilience here
+    local server_stopped=0
+    local wait_time_seconds=15
+    local max_wait_seconds=$(($wait_time_seconds * 10))
+    local total_wait_seconds=0
+
+    while [[ $server_stopped == 0 ]] ;
+    do
+
+        # Find out what PID the Mysql instance is running as (if any)
+        MYSQLPID=`ps -ef | grep '/usr/sbin/mysqld' | grep -v grep | awk '{print $2}'`
+        
+        if [[ ! -z "$MYSQLPID" ]]; then
+            log "Stopping Mysql Server (PID $MYSQLPID)"
+            
+            kill -15 $MYSQLPID
+
+            # Important not to attempt to start the daemon immediately after it was stopped as unclean shutdown may be wrongly perceived
+            # We expect the sleep to happen below since we are NOT marking the server as stopped until we validate in the 
+            # next iteration
+
+        else
+            log "All Mysql Server Processes are stopped"
+            server_stopped=1
+        fi
+        
+        # if the server isn't yet stopped, wait $wait_time_seconds seconds before retry
+        if [[ $server_stopped == 0 ]] ;
+        then
+            sleep $wait_time_seconds;
+            ((total_wait_seconds+=$wait_time_seconds))
+
+            if [[ "$total_wait_seconds" -gt "$max_wait_seconds" ]] ;
+            then
+                log "Exceeded the expected wait time for stopping the server: $total_wait_seconds seconds"
+                exit $ERROR_MYSQL_SHUTDOWN_FAILED
+            fi
+        fi
+    done   
 }
 
 # restart mysql server (stop and start)
@@ -1279,12 +1427,8 @@ is_master_server()
     third_server=${replicated_servers_list[$third_server_position]}
 
     # more defensive: the repladmin will override the file/or create a new file
-    replication_status_file="/tmp/replication_status_$server.csv"
-    if [[ -f $replication_status_file ]];
-    then
-        #log "Cleaning up existing replication file"
-        rm $replication_status_file
-    fi
+    replication_status_file="$(mktemp /tmp/replication_status_XXXXXX.csv)"
+    remove_replication_file "${replication_status_file}"
 
     # run the repl admin to check the replication status from the perspective of the target server
     mysqlrpladmin --master=${mysql_admin_user}:${mysql_admin_user_password}@${local_server_ip}:$mysql_server_port --slaves=${mysql_admin_user}:${mysql_admin_user_password}@${second_server}:3306,${mysql_admin_user}:${mysql_admin_user_password}@${third_server}:3306 health --format=csv > $replication_status_file
@@ -1296,7 +1440,156 @@ is_master_server()
     # assess the replication status
     is_valid_master=`check_master_status ${local_server_ip} ${replication_status_file}`
 
+    # clean up
+    remove_replication_file "${replication_status_file}"
+
     echo $is_valid_master
+}
+
+remove_replication_file()
+{
+    local status_file="${1}"
+
+    if [[ -f $status_file ]];
+    then
+        #log "Cleaning up existing replication file"
+        rm $status_file
+    fi
+}
+
+#############################################################################
+# Mysql Data Directory Move Operation
+#############################################################################
+
+move_mysql_datadirectory()
+{
+    ###################################
+    # 0. Pre-requisites
+    # track the input parameters
+    local new_datadirectory_path=$1
+    local admin_email_address=$2
+
+    # database credentials & version
+    local mysql_adminuser_name=$3
+    local mysql_adminuser_password=$4
+    local mysql_server_ip=$5
+    local mysql_server_port=$6
+
+    # subject for email notification
+    local subject="Operation: Moving Mysql Data Directory"
+
+    # get the current data directory (as the server sees it)
+    local current_datadirectory_path=`mysql -u ${mysql_adminuser_name} -p${mysql_adminuser_password} -N -h ${mysql_server_ip} -e "select @@datadir;"`
+    exit_on_error "Could not query the mysql server at on '${mysql_adminuser_name}@${mysql_server_ip}' to determine its current data directory!" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
+
+    # remove trailing slash (if present)
+    current_datadirectory_path=${current_datadirectory_path%/}
+
+    # make sure we have a valid data directory
+    if [ -z $current_datadirectory_path ] || [ ! -d $current_datadirectory_path ];
+    then
+        log "Could not determine the current data directory for '${mysql_adminuser_name}@${mysql_server_ip}'! Current value is: ${current_datadirectory_path}."
+        exit "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}"
+    fi
+
+    ###################################
+    # 1. Stop the server
+    # It is assumed that the server is already running as a slave vs a master node
+    stop_mysql
+    exit_on_error "Could not stop mysql on '${HOSTNAME}'!" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
+
+    ###################################
+    # 2. Copy the server data to the new location and move the server data to backup
+    # there are very restrictive permissions on the data directory (we need super user access)
+
+    # The expectation is that the parent directory exists at the target path. Make sure of that
+    local new_datadirectory_basepath=`dirname $new_datadirectory_path`
+    if [[ ! -d $new_datadirectory_basepath ]]; 
+    then
+        log "Creating the base path at '${new_datadirectory_basepath}' since it doesn't already exist"
+        mkdir -p "${new_datadirectory_basepath}"
+    fi
+
+    log "Copying the data directory from '${current_datadirectory_path}' to '${new_datadirectory_path}'"
+
+    rsync -av $current_datadirectory_path $new_datadirectory_basepath
+    exit_on_error "Failed copying server data from '${current_datadirectory_path}' to '${new_datadirectory_path}' on '${HOSTNAME}' !" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
+
+    # Backup the current data directory
+    local datadirectory_backup_path="${current_datadirectory_path}-backup"
+    log "Backing up the data directory from '${current_datadirectory_path}' to '${datadirectory_backup_path}'"
+
+    mv $current_datadirectory_path $datadirectory_backup_path
+    exit_on_error "Could not backup the data directory from '${current_datadirectory_path}' to '${datadirectory_backup_path}' on '${HOSTNAME}' !" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
+
+    ###################################
+    # 3. Update mysql configuration to reference the new path
+    # locate the main configuration file
+    local mysql_configuration_file="/etc/mysql/conf.d/mysqld.cnf"
+
+    # update the data directory path
+    log "Updating Mysql Configuration at ${mysql_configuration_file} : setting datadir=${new_datadirectory_path}"
+    if [[ ! -f $mysql_configuration_file ]]; 
+    then
+        echo "The calculated Mysql Configuration file isn't available!"
+        exit "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}"
+    fi
+
+    sed -i "s#^datadir=.*#datadir=${new_datadirectory_path}#I" $mysql_configuration_file
+    exit_on_error "Could not update the Mysql Configuration file at '${mysql_configuration_file}'!" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
+
+    # update the systemd service startup configs
+    local mysqld_servicefile="/etc/systemd/system/mysqld.service"
+    sudo sed -i "s#--datadir=.\\S*#--datadir=${new_datadirectory_path}#I" $mysqld_servicefile
+    exit_on_error "Could not update the systemd Mysqld Service configuration file at at '${mysqld_servicefile}'!" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
+
+    ###################################
+    #4. Configure Apparmor
+    # Instead of using symlink (which has been problematic), we will leverage apparmor to handle the aliasing of the data directory path
+
+    # Check if there is a reference to the new path already established. If there isn't any reference, append a new line to the apparmor configs
+    local apparmor_config_file="/etc/apparmor.d/tunables/alias"
+    local alias="alias ${current_datadirectory_path} -> ${new_datadirectory_path}, "
+    local alias_regex="^alias ${current_datadirectory_path} ->.*"
+
+    if [ `grep -Gxq "${alias_regex}" "${apparmor_config_file}"` ];
+    then
+        # Existing Alias: Override it
+        log "Existing alias detected in ${apparmor_config_file}. Overriding with new value: ${alias}"
+        sed -i "s~${alias_regex}~${alias}~I" $apparmor_config_file
+    else
+        # Alias doesn't exist: Append It
+        log "Adding new alias to ${apparmor_config_file}"
+        echo "${alias}" >> $apparmor_config_file
+    fi
+
+    # restart apparmor to apply the settings
+    os_version=$(lsb_release -rs)
+    if [[ $(echo "$os_version > 16" | bc -l) == 1 ]];
+    then
+        systemctl restart apparmor
+    else
+        service apparmor restart
+    fi
+
+    # check for errors
+    exit_on_error "Could not start apparmor after adding the data directory alias on '${HOSTNAME}' !" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
+
+    # setup blank reference for mysql database directory to circumvent any startup check failures
+    mkdir "${current_datadirectory_path}/mysql" -p
+
+    ###################################
+    #5. Restart the server
+
+    # incase there are config changes (specific to Ubuntu 16+)
+    if [[ $(echo "$os_version > 16" | bc -l) == 1 ]];
+    then
+        systemctl daemon-reload
+        exit_on_error "Could not perform a configuration reload on '${HOSTNAME}' !" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
+    fi
+
+    start_mysql $mysql_server_port
+    exit_on_error "Could not start mysql server after moving its data directory on '${HOSTNAME}' !" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
 }
 
 #############################################################################
@@ -1306,9 +1599,15 @@ install-tools()
 {
     machine_role=$(get_machine_role)
 
-    # 1. Setup Tools
+    # Most docker containers don't have sudo pre-installed.
+    install-sudo
+
+    # "desktop environment" flavors of ubuntu like xubuntu don't come with full ssh, but server edition generaly does"
+    install-ssh
     install-git
-    install-gettext # required for envsubst command
+
+    # required for envsubst command
+    install-gettext
     set-server-timezone
     install-json-processor
 
@@ -1318,15 +1617,25 @@ install-tools()
         install-mongodb-shell
         install-mysql-client
 
-        install-powershell
+        # powershell isn't supported on Ubuntu 12
+        short_release_number=`lsb_release -sr`
+        if [[ $(echo "$short_release_number > 14" | bc -l) == 1 ]]; 
+        then
+            log "Ubuntu ${short_release_number} detected. Proceeding with powershell installation"
+            install-powershell
+        else
+            log "Ubuntu ${short_release_number} detected. Skipping powershell installation"
+        fi
+
         install-azure-cli
         install-azure-cli-2
+    fi
 
-        if [[ "$machine_role" == "jumpbox" ]] ; 
-        then
-            log "Installing Mysql Utilities on Jumpbox ${HOSTNAME}"
-            install-mysql-utilities
-        fi
+    # we want this utility installed on the backends & jb
+    if [[ "$machine_role" != "vmss" ]] ; 
+    then
+        log "Installing Mysql Utilities on ${HOSTNAME}"
+        install-mysql-utilities
     fi
 }
 
@@ -1366,7 +1675,7 @@ restart_xinetd()
     # make sure it is running
     xinetd_pid=`ps -ef | grep '/usr/sbin/xinetd' | grep -v grep | awk '{print $2}'`
 
-    if [[ ! -z "$xinetd_pid" ]]; 
+    if [[ -z "${xinetd_pid}" ]]; 
     then
         log "Unable to start xinet"
         exit $ERROR_XINETD_INSTALLER_FAILED
@@ -1386,14 +1695,19 @@ copy_bits()
     copyerror_mail_subject=$5
     copyerror_mail_receiver=$6
 
+    ssh_options="StrictHostKeyChecking=no"
+
+    # clean up existing files (if present)
+    ssh -o "${ssh_options}" "${bitscopy_target_user}@${bitscopy_target_server}" "sudo rm ~/install.sh && sudo rm ~/utilities.sh"
+
     # copy the installer & the utilities files to the target server & ssh/execute the Operations
-    scp -o "StrictHostKeyChecking=no" $script_base_path/install.sh "${bitscopy_target_user}@${bitscopy_target_server}":~/
+    scp -o "${ssh_options}" $script_base_path/install.sh "${bitscopy_target_user}@${bitscopy_target_server}":~/
     exit_on_error "Unable to copy installer script to '${bitscopy_target_server}' from '${HOSTNAME}' !" "${error_code}" "${copyerror_mail_subject}" "${copyerror_mail_receiver}"
 
-    scp -o "StrictHostKeyChecking=no" $script_base_path/utilities.sh "${bitscopy_target_user}@${bitscopy_target_server}":~/
+    scp -o "${ssh_options}" $script_base_path/utilities.sh "${bitscopy_target_user}@${bitscopy_target_server}":~/
     exit_on_error "Unable to copy utilities to '${bitscopy_target_server}' from '${HOSTNAME}' !" "${error_code}" "${copyerror_mail_subject}" "${copyerror_mail_receiver}"
 
     # set appropriate permissions on the required installer files
-    ssh -o "StrictHostKeyChecking=no" "${bitscopy_target_user}@${bitscopy_target_server}" "sudo chmod 600 ~/install.sh && sudo chmod 600 ~/utilities.sh"
+    ssh -o "${ssh_options}" "${bitscopy_target_user}@${bitscopy_target_server}" "sudo chmod 600 ~/install.sh && sudo chmod 600 ~/utilities.sh"
     exit_on_error "Unable to update permissions on the installer files copied to '${bitscopy_target_server}'!" "${error_code}" "${copyerror_mail_subject}" "${copyerror_mail_receiver}"
 }

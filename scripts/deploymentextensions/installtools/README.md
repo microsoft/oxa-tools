@@ -5,11 +5,12 @@ This deployment extension updates the dependent tools on Jumpbox. Optionally, ot
 
 **Parameters**
 1. _smtp-server_: name of your SMTP server
-2. _smtp-server-port: port on your SMTP server used for communications
+2. _smtp-server-port_: port on your SMTP server used for communications
 3. _smtp-auth-user_: user account used for authenticating against your smtp server
 4. _smtp-auth-user-password_: password for the user account used for authenticating against your smtp server
-5. _backend-server-list_: space-separated list of IP addresses for other backend servers on which to install tools (**optional**)
-6. _target-user_: operating system user account used to execute the updates
+5. _cluster-admin-email_: the email address of the cluster administrator that will be used for all deployment notifications
+6. _backend-server-list_: space-separated list of IP addresses for other backend servers on which to install tools (**optional**)
+7. _target-user_: operating system user account used to execute the updates
 
 **Usage Example**
 From a powershell session, execute the following commands:

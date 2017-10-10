@@ -52,6 +52,13 @@
             "metadata": {
                 "description": "A string representing parameter name & value pairs that will be used by the upgrade script. This string needs to be Base64-encoded."
             }
+        },
+        "targetJumpboxName": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Name of the jumpbox to execute the upgrade against."
+            }
         }
     },
 
@@ -60,7 +67,7 @@
         "defaultApiVersion": "2015-05-01-preview",
         "computeApiVersion": "2016-03-30",
         "virtualMachineExtensionsApiVersion": "[variables('defaultApiVersion')]",
-        "clusterJumpBoxName": "[concat(parameters('clusterName'), '-jb')]",
+        "clusterJumpBoxName": "[if(equals(parameters('targetJumpboxName'), ''), concat(parameters('clusterName'), '-jb'), parameters('targetJumpboxName'))]",
 
         "templateBaseUrl": "[concat('https://raw.githubusercontent.com/',parameters('oxaToolsGithubAccountName'), '/', parameters('oxaToolsGithubProjectName'), '/', parameters('oxaToolsGithubBranch'), '/')]",
         "installerScript": "install.sh",

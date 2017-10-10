@@ -340,7 +340,7 @@ done
 vmssIpsArray=(`echo $vmssIpsMasterList | tr ' ' '\n' | sort -u`)
 log "${#vmssIpsArray[@]} IP(s) discovered. Iterating each instance to enable the Mobile Rest Api."
 
-# Iterate the vmss intances and enable mobile rest api
+# Iterate the vmss instances and enable mobile rest api
 for vmssInstanceIp in "${vmssIpsArray[@]}";
 do
     # Update the configs, recycle the services, pause (optional:1min)
