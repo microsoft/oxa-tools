@@ -276,6 +276,9 @@
         },
         "enableMobileRestApi": {
             "value": {ENABLEMOBILERESTAPI}
+        },
+        "azureEnvironment": {
+            "value": "{AZUREENVIRONMENT}"
         }
     }
 }

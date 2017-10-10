@@ -82,6 +82,9 @@ A timestamp or other identifier to associate with the VMSS being deployed.
 .PARAMETER EnableMobileRestApi
 An switch to indicate whether or not mobile rest api is turned on
 
+.PARAMETER JumpboxNumber
+Zero-based numeric indicator of the Jumpbox used for this bootstrap operation (0, 1 or 2). If a non-zero indicator is specified, the corresponding jumpbox will be bootstrapped.
+
 .INPUTS
 None. You cannot pipe objects to Deploy-OxaStamp.ps1
 
@@ -133,7 +136,11 @@ Param(
 
         [Parameter(Mandatory=$false)][string]$DeploymentVersionId="",
 
-        [Parameter(Mandatory=$false)][switch]$EnableMobileRestApi=$false
+        [Parameter(Mandatory=$false)][switch]$EnableMobileRestApi=$false,
+
+        [Parameter(Mandatory=$false)][ValidateRange(0,2)][int]$JumpboxNumber=0,
+
+        [Parameter(Mandatory=$false)][ValidateSet("AzureCloud","AzureChinaCloud", "AzureUSGovernment")][string]$AzureEnvironmentName="AzureCloud"
      )
 
 #################################
@@ -154,8 +161,8 @@ if ($KeyVaultDeploymentParametersFile.Trim().Length -eq 0)
 # Login
 $clientSecret = ConvertTo-SecureString -String $AadWebClientAppKey -AsPlainText -Force
 $aadCredential = New-Object System.Management.Automation.PSCredential($AadWebClientId, $clientSecret)
-Login-AzureRmAccount -ServicePrincipal -TenantId $AadTenantId -SubscriptionName $AzureSubscriptionName -Credential $aadCredential -ErrorAction Stop
-Set-AzureSubscription -SubscriptionName $AzureSubscriptionName | Out-Null
+Login-AzureRmAccount -ServicePrincipal -TenantId $AadTenantId -SubscriptionName $AzureSubscriptionName -Credential $aadCredential -EnvironmentName $AzureEnvironmentName -ErrorAction Stop
+Set-AzureSubscription -SubscriptionName $AzureSubscriptionName -Environment $AzureEnvironmentName | Out-Null
 
 # create the resource group
 New-AzureRmResourceGroup -Name $ResourceGroupName -Location $Location -Force
@@ -215,7 +222,9 @@ $replacements = @{
                     "EDXAPPSUPERUSEREMAIL"=$EdxAppSuperUserEmail;
                     "MEMCACHESERVER"=$MemcacheServer;
                     "AZURECLIVERSION"=$AzureCliVersion;
-                    "DEPLOYMENTVERSIONID"=$DeploymentVersionId
+                    "DEPLOYMENTVERSIONID"=$DeploymentVersionId;
+                    "JUMPBOXNUMBER"=$JumpboxNumber;
+                    "AZUREENVIRONMENT"=$AzureEnvironmentName
                 }
 
 # Assumption: if the SMTP server is specified, the rest of its configuration will be specified
@@ -256,7 +265,7 @@ try
         $scriptPath = split-path -parent $MyInvocation.MyCommand.Definition
         $separator = Get-DirectorySeparator
         Log-Message "Populating keyvault using script at $($scriptPath)$($separator)Process-OxaToolsKeyVaultConfiguration.ps1"
-        &"$($scriptPath)$($separator)Process-OxaToolsKeyVaultConfiguration.ps1" -Operation Upload -VaultName "$($ResourceGroupName)-kv" -AadWebClientId $AadWebClientId -AadWebClientAppKey $AadWebClientAppKey -AadTenantId $AadTenantId -AzureSubscriptionId $AzureSubscriptionName -TargetPath $TargetPath -AzureCliVersion $AzureCliVersion
+        &"$($scriptPath)$($separator)Process-OxaToolsKeyVaultConfiguration.ps1" -Operation Upload -VaultName "$($ResourceGroupName)-kv" -AadWebClientId $AadWebClientId -AadWebClientAppKey $AadWebClientAppKey -AadTenantId $AadTenantId -AzureSubscriptionId $AzureSubscriptionName -TargetPath $TargetPath -AzureCliVersion $AzureCliVersion -AzureEnvironmentName $AzureEnvironmentName
     }
 
     if ($DeployStamp)

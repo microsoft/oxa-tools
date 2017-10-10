@@ -340,12 +340,16 @@ function Authenticate-AzureRmUser
             [Parameter(Mandatory=$true)][string]$AadWebClientId,
             [Parameter(Mandatory=$true)][string]$AadWebClientAppKey,
             [Parameter(Mandatory=$true)][string]$AadTenantId,
-            [Parameter(Mandatory=$false)][boolean]$IsCli2=$false
+            [Parameter(Mandatory=$false)][boolean]$IsCli2=$false,
+            [Parameter(Mandatory=$false)][ValidateSet("AzureCloud","AzureChinaCloud", "AzureUSGovernment")][string]$AzureEnvironmentName="AzureCloud"
          )
 
     Log-Message "Logging in as service principal for '$($AadTenantId)'"
     if ($IsCli2)
     {
+        Log-Message "Setting cloud to $AzureEnvironmentName"
+        az cloud set --name $AzureEnvironmentName
+
         $results = az login -u $AadWebClientId --service-principal --tenant $AadTenantId -p $AadWebClientAppKey --output json | Out-String
         if ($results.Contains("error"))
         {
