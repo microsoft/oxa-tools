@@ -50,7 +50,8 @@ Param(
         [Parameter(Mandatory=$true)][string]$StorageAccountKey,
         [Parameter(Mandatory=$true)][string]$StorageContainerNames,
         [Parameter(Mandatory=$false)][string][ValidateSet("1","2")]$AzureCliVersion="1",
-        [Parameter(Mandatory=$false)][string]$AzureStorageConnectionString=""
+        [Parameter(Mandatory=$false)][string]$AzureStorageConnectionString="",
+        [Parameter(Mandatory=$false)][ValidateSet("AzureCloud","AzureChinaCloud", "AzureUSGovernment")][string]$AzureEnvironmentName="AzureChinaCloud"
      )
 
 ###########################################
@@ -82,9 +83,12 @@ $invocation = (Get-Variable MyInvocation).Value
 $currentPath = Split-Path $invocation.MyCommand.Path 
 Import-Module "$($currentPath)/Common.ps1" -Force
 
+# track version of cli to use
+[bool]$isCli2 = ($AzureCliVersion -eq "2")
+
 # Login First & set context
-Authenticate-AzureRmUser -AadWebClientId $AadWebClientId -AadWebClientAppKey $AadWebClientAppKey -AadTenantId $AadTenantId;
-Set-AzureSubscriptionContext -AzureSubscriptionId $AzureSubscriptionId
+Authenticate-AzureRmUser -AadWebClientId $AadWebClientId -AadWebClientAppKey $AadWebClientAppKey -AadTenantId $AadTenantId -IsCli2 $isCli2 -AzureEnvironmentName $AzureEnvironmentName
+Set-AzureSubscriptionContext -AzureSubscriptionId $AzureSubscriptionId -IsCli2 $isCli2 
 
 # Create the container
 [array]$storageContainerList = $StorageContainerNames.Split(",");
