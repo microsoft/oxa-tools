@@ -81,7 +81,7 @@
             "value": "oxa-tools"
         },
         "oxaToolsGithubBranch": {
-            "value": "oxa/master.fic"
+            "value": "oxa/dev.fic-mooncake"
         },
         "edxConfigurationGithubAccountName": {
             "value": "Microsoft"
@@ -90,7 +90,7 @@
             "value": "edx-configuration"
         },
         "edxConfigurationGithubBranch": {
-            "value": "oxa/master.fic"
+            "value": "oxa/dev.fic-mooncake"
         },
         "edxPlatformGithubAccountName": {
             "value": "microsoft"
@@ -99,7 +99,7 @@
             "value": "edx-platform"
         },
         "edxPlatformGithubBranch": {
-            "value": "oxa/master.fic"
+            "value": "oxa/dev.fic-mooncake"
         },
         "edxThemeGithubAccountName": {
             "value": "microsoft"
