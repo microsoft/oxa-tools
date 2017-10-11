@@ -37,14 +37,14 @@
     "variables": {
         "cmsIpName": "[concat('lbCms', parameters('networkSettings').publicIPAddressNameSuffix, '-', parameters('networkSettings').loadbalancerSettings.deploymentSlot)]",
         "lmsIpName": "[concat('lbLms', parameters('networkSettings').publicIPAddressNameSuffix, '-', parameters('networkSettings').loadbalancerSettings.deploymentSlot)]",
-		"previewIpName": "[concat('lbPreview', parameters('networkSettings').publicIPAddressNameSuffix, '-', parameters('networkSettings').loadbalancerSettings.deploymentSlot)]",
+        "previewIpName": "[concat('lbPreview', parameters('networkSettings').publicIPAddressNameSuffix, '-', parameters('networkSettings').loadbalancerSettings.deploymentSlot)]",
         "cmsIPNamePrefix": "-cms",
         "lmsIPNamePrefix": "-lms",
-		"previewIPNamePrefix": "-preview",
+        "previewIPNamePrefix": "-preview",
         "loadBalancerLMSIpName": "[concat(parameters('networkSettings').loadbalancerSettings.loadBalancerName, variables('cmsIPNamePrefix'), parameters('networkSettings').publicIPAddressNameSuffix)]",
         "loadBalancerCMSIpName": "[concat(parameters('networkSettings').loadbalancerSettings.loadBalancerName, variables('lmsIPNamePrefix'), parameters('networkSettings').publicIPAddressNameSuffix)]",
         "loadBalancerPreviewIpName": "[concat(parameters('networkSettings').loadbalancerSettings.loadBalancerName, variables('previewIPNamePrefix'), parameters('networkSettings').publicIPAddressNameSuffix)]",
-		"newStorageAccountSuffix": "[toLower(concat(parameters('networkSettings').clusterName, 'vmsssa'))]",
+        "newStorageAccountSuffix": "[toLower(concat(parameters('networkSettings').clusterName, 'vmsssa'))]",
         "uniqueStringArray": [
             "[concat(variables('newStorageAccountSuffix'), '0')]",
             "[concat(variables('newStorageAccountSuffix'), '1')]",
@@ -53,7 +53,7 @@
             "[concat(variables('newStorageAccountSuffix'), '4')]"
         ],
         "frontendVmStorageAccountCount": "[length(variables('uniqueStringArray'))]",
-		"storageEndpoint": "[if(equals(parameters('storageSettings').storageEndpoint, 'AzureCloud'), '.blob.core.windows.net', '.blob.core.chinacloudapi.cn')]",
+        "storageEndpoint": "[if(equals(parameters('storageSettings').storageEndpoint, 'AzureCloud'), '.blob.core.windows.net', '.blob.core.chinacloudapi.cn')]"
     },
 
     "resources": [
