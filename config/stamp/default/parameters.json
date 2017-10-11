@@ -12,16 +12,16 @@
             "value": "ubuntu"
         },
         "jumpBoxVmSize": {
-            "value": "Standard_D1_v2"
+            "value": "Standard_DS2_v2"
         },
         "mongoVmSize": {
-            "value": "Standard_D2_v2"
+            "value": "Standard_DS2_v2"
         },
         "mysqlVmSize": {
-            "value": "Standard_D2_v2"
+            "value": "Standard_DS2_v2"
         },
         "frontendVmSize": {
-            "value": "Standard_D2_v2"
+            "value": "Standard_DS2_v2"
         },
         "adminUsername": {
             "value": "lexoxaadmin"
