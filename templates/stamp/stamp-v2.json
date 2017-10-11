@@ -873,7 +873,8 @@
             "secureGenericStorageAccountName": "[variables('secureGenericStorageAccountName')]",
             "videoUploadsStorageAccountName": "[variables('videoUploadsStorageAccountName')]",
             "wamsStorageAccountName": "[variables('wamsStorageAccountName')]",
-            "mediaServicesAccountName": "[variables('mediaServicesAccountName')]"
+            "mediaServicesAccountName": "[variables('mediaServicesAccountName')]",
+			"storageEndpoint": "[variables('storageEndpoint')]"
         },
         "jumpboxMachineSettings": {
             "vmSize": "[parameters('jumpBoxVmSize')]",

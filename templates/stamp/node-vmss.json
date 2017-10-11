@@ -52,7 +52,8 @@
             "[concat(variables('newStorageAccountSuffix'), '3')]",
             "[concat(variables('newStorageAccountSuffix'), '4')]"
         ],
-        "frontendVmStorageAccountCount": "[length(variables('uniqueStringArray'))]"
+        "frontendVmStorageAccountCount": "[length(variables('uniqueStringArray'))]",
+		"storageEndpoint": "[if(equals(parameters('storageSettings').storageEndpoint, 'AzureCloud'), '.blob.core.windows.net', '.blob.core.chinacloudapi.cn')]",
     },
 
     "resources": [
@@ -356,11 +357,11 @@
                     "storageProfile": {
                         "osDisk": {
                             "vhdContainers": [
-                                "[concat('https://', variables('uniqueStringArray')[0], '.blob.core.windows.net/', parameters('storageSettings').storageContainerName)]",
-                                "[concat('https://', variables('uniqueStringArray')[1], '.blob.core.windows.net/', parameters('storageSettings').storageContainerName)]",
-                                "[concat('https://', variables('uniqueStringArray')[2], '.blob.core.windows.net/', parameters('storageSettings').storageContainerName)]",
-                                "[concat('https://', variables('uniqueStringArray')[3], '.blob.core.windows.net/', parameters('storageSettings').storageContainerName)]",
-                                "[concat('https://', variables('uniqueStringArray')[4], '.blob.core.windows.net/', parameters('storageSettings').storageContainerName)]"
+                                "[concat('https://', variables('uniqueStringArray')[0], variables('storageEndpoint'), '/', parameters('storageSettings').storageContainerName)]",
+                                "[concat('https://', variables('uniqueStringArray')[1], variables('storageEndpoint'), '/', parameters('storageSettings').storageContainerName)]",
+                                "[concat('https://', variables('uniqueStringArray')[2], variables('storageEndpoint'), '/', parameters('storageSettings').storageContainerName)]",
+                                "[concat('https://', variables('uniqueStringArray')[3], variables('storageEndpoint'), '/',  parameters('storageSettings').storageContainerName)]",
+                                "[concat('https://', variables('uniqueStringArray')[4], variables('storageEndpoint'), '/', parameters('storageSettings').storageContainerName)]"
                             ],
                             "name": "[concat(parameters('networkSettings').clusterVirtualMachineScaleSetName, parameters('networkSettings').osDiskSuffix)]",
                             "caching": "ReadOnly",
