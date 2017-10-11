@@ -2124,3 +2124,173 @@ function Get-SasToken
     
     return $sasToken;
 }
+
+## Function: New-AzureRMLoginCertificate
+##
+## Purpose: 
+##    Create a certificate associated with a Service Principal 
+##    for logging in to Powershell AzureRM and accessing specified KeyVault
+##
+## Input: 
+##   AzureSubscriptionName  Subscription to provide access to
+##   ResourceGroupName      ResourceGroup to provide access to
+##   ApplicationId          AAD application to create Service Principle for
+##   KeyVaultName           Name of KeyVault instance to provide access to
+##   CertSubject            Subject to search for in cert store
+##   Cloud                  Cloud deploying to, used for setting defaults
+##
+## Output:
+##   Nothing
+##
+function New-AzureRMLoginCertificate
+{
+    Param(
+            [Parameter(Mandatory=$true)][String] $AzureSubscriptionName,
+            [Parameter(Mandatory=$true)][String] $ResourceGroupName,
+            [Parameter(Mandatory=$true)][String] $ApplicationId,
+            [Parameter(Mandatory=$false)][String] $KeyVaultName="",
+            [Parameter(Mandatory=$false)][String] $CertSubject="",
+            [Parameter(Mandatory=$false)][ValidateSet("prod", "int", "bvt")][string]$Cloud="bvt"              
+         )
+
+    $SubscriptionId = Get-AzureRmSubscription -SubscriptionName $AzureSubscriptionName
+    $Scope = "/subscriptions/" + $SubscriptionId
+    Select-AzureRMSubscription -SubscriptionId $SubscriptionId
+    (Get-AzureRmContext).Subscription
+    
+    $KeyVaultName = Set-ScriptDefault -ScriptParamName "KeyVaultName" `
+                    -ScriptParamVal $KeyVaultName `
+                    -DefaultValue "$($ResourceGroupName)-kv"
+    
+    $CertSubject = Set-ScriptDefault -ScriptParamName "CertSubject" `
+                    -ScriptParamVal $CertSubject `
+                    -DefaultValue "CN=$($cloud)-cert"
+    
+    # Get or create Self-Signed Certificate
+    try 
+    {
+        $cert = (Get-ChildItem cert:\CurrentUser\my\ | Where-Object {$_.Subject -match $CertSubject })
+        if (!$cert)
+        {
+            Log-Message "Creating new Self-Signed Certificate..."
+            $cert = New-SelfSignedCertificate -CertStoreLocation "cert:\CurrentUser\My" -Subject $CertSubject -KeySpec KeyExchange
+        }
+        $certValue = [System.Convert]::ToBase64String($cert.GetRawCertData())    
+    }
+    catch
+    {
+        Capture-ErrorStack;
+        throw "Error obtaining certificate: $($_.Message)";
+        exit;
+    }
+    
+    # Replace Service Principal with a new account using the Certificate obtained above
+    try
+    {
+        $sp = Get-AzureRmADServicePrincipal -ServicePrincipalName $ApplicationId
+        
+        if ($sp -and $sp.Id)
+        {
+            Log-Message "Removing old Service Principal..."
+            Remove-AzureRmADServicePrincipal -ObjectId $sp.Id
+        }    
+        
+        Log-Message "Creating new Service Principal for Key Vault Access to: $($KeyVaultName)"
+        $ServicePrincipal = New-AzureRMADServicePrincipal -ApplicationId $ApplicationId -CertValue $certValue -EndDate $cert.NotAfter -StartDate $cert.NotBefore
+        Get-AzureRmADServicePrincipal -ObjectId $ServicePrincipal.Id
+        
+        # Sleep here for a few seconds to allow the service principal application to become active 
+        # (should only take a couple of seconds normally)
+        Sleep 15
+        New-AzureRMRoleAssignment -RoleDefinitionName Contributor -ServicePrincipalName $ServicePrincipal.ApplicationId -Scope $Scope | Write-Verbose -ErrorAction Stop
+    }
+    catch
+    {
+        Capture-ErrorStack;
+        throw "Error in removing old service principal, creating new Service Principal and assigning role in provided subscription: $($_.Message)";
+        exit;
+    }
+    
+    # Allow new Service Principal KeyVault access
+    try
+    {
+        Log-Message "Setting Key Vault Access policy for Key Vault: $($KeyVaultName) and Service Principal: $($sp.Id)"
+        Set-AzureRmKeyVaultAccessPolicy -VaultName $KeyVaultName `
+                                        -ServicePrincipalName $ApplicationId -PermissionsToSecrets get,set,list `
+                                        -ResourceGroupName $ResourceGroupName    
+    }
+    catch
+    {
+        Capture-ErrorStack;
+        throw "Error adding access policy to allow new Service Principal to use Key Vault - $($KeyVaultName): $($_.Message)";
+        exit;
+    }
+}
+
+## Function: Set-KeyVaultSecretsFromFile
+##
+## Purpose: 
+##    Set KeyVault secrets from a .json file. See /config/stamp/default/keyvault-params.json
+##    file for example file. Need to be logged in with access to specified KeyVault
+##
+## Input: 
+##   ResourceGroupName      ResourceGroupName where KeyVault is
+##   KeyVaultName           Name of KeyVault instance to provide access to
+##   CertSubject            Subject to search for in cert store
+##   TargetPath             Path to .json file
+##   Cloud                  Cloud deploying to, used for setting defaults
+##
+## Output:
+##   Nothing
+##
+function Set-KeyVaultSecretsFromFile
+{
+    Param(
+            [Parameter(Mandatory=$false)][String] $ResourceGroupName="",
+            [Parameter(Mandatory=$false)][String] $KeyVaultName="",
+            [Parameter(Mandatory=$false)][String] $CertSubject="",
+            [Parameter(Mandatory=$false)][String] $TargetPath="",            
+            [Parameter(Mandatory=$false)][ValidateSet("prod", "int", "bvt")][string] $Cloud="bvt"              
+         )
+
+    $KeyVaultName = Set-ScriptDefault -ScriptParamName "KeyVaultName" `
+        -ScriptParamVal $KeyVaultName `
+        -DefaultValue "$($ResourceGroupName)-kv"
+     
+    $CertSubject = Set-ScriptDefault -ScriptParamName "CertSubject" `
+        -ScriptParamVal $CertSubject `
+        -DefaultValue "CN=$($Cloud)-cert"
+    
+    $TargetPath = Set-ScriptDefault -ScriptParamName "TargetPath" `
+        -ScriptParamVal $TargetPath `
+        -DefaultValue "$($rootPath)/config/stamp/default/keyvault-params.json"
+    
+    $json = Get-Content -Raw $TargetPath | Out-String | ConvertFrom-Json
+    Write-Host $json
+    $json.psobject.properties | ForEach-Object { 
+
+        Log-Message "Syncing $($_.Name) to KeyVault: $($KeyVaultName)"        
+
+        if ($_.Value)
+        {
+            # Create a new secret
+            $secretvalue = ConvertTo-SecureString $_.Value -AsPlainText -Force
+                
+            try
+            {
+                # Store the secret in Azure Key Vault
+                Set-AzureKeyVaultSecret -VaultName $KeyVaultName -Name $_.Name -SecretValue $secretvalue
+            }
+            catch
+            {
+                Log-Message "Error Syncing Key: $($_.Name)"
+                Capture-ErrorStack;
+                throw $($_.Message)
+            }
+        }
+        else
+        {
+            Log-Message "No value was set for key $($_.Name) in $($TargetPath)"
+        }
+    }
+}

@@ -1,4 +1,6 @@
 <#
+***DEPRECATED. WILL BE REMOVED. FUNCTIONALITY MOVED TO Common.ps1***
+
 .SYNOPSIS
 Create a new Self-Signed Certificate in the local store with a corresponding Service Principal to access KeyVault
 
