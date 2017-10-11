@@ -694,10 +694,10 @@ persist_deployment_time_values
 
 # Generate a storage connection string (primarily to support custom storage endpoints)
 # At this point, we have sourced the cloud configuration file.
-# We expect the storage account suffix (EDXAPP_AZURE_STORAGE_ENDPOINT) to either:
+# We expect the storage account suffix (AZURE_STORAGE_ENDPOINT) to either:
 # 1. have a value (custom storage endpoint)
 # 2. not have a value (default to global azure)
-encoded_azure_storage_endpoint_suffix=`echo ${EDXAPP_AZURE_STORAGE_ENDPOINT} | base64`
+encoded_azure_storage_endpoint_suffix=`echo ${AZURE_STORAGE_ENDPOINT} | base64`
 storageAccountEndpointSuffix=`get_azure_storage_endpoint_suffix ${encoded_azure_storage_endpoint_suffix}`
 storage_connection_string=`generate_azure_storage_connection_string "${AZURE_ACCOUNT_NAME}" "${AZURE_ACCOUNT_KEY}" "${storageAccountEndpointSuffix}"`
 
