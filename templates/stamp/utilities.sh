@@ -1024,6 +1024,11 @@ get_azure_storage_endpoint_suffix()
 {
     local suffix=`echo ${1}| base64 --decode`
     
+    # The edX application required the .blob.* prepended (django-storages).
+    # However, for the purpose of building the azure endpoint suffix, this isn't required.
+    # Therefore, removing this sub-domain is necessary.
+    suffix="${suffix/.blob./}"
+
     # default storage account suffix to core.windows.net if not specified
     if [[ -z "${suffix// }" ]]; then
 
