@@ -8,6 +8,10 @@
 ERROR_MYSQL_STARTUP_FAILED=2001
 ERROR_MYSQL_SHUTDOWN_FAILED=2002
 
+# Backup Related Errors
+ERROR_DB_BACKUP_FAILED=2010
+ERROR_DB_BACKUPSETUP_FAILED=2011
+
 ERROR_CRONTAB_FAILED=4101
 ERROR_GITINSTALL_FAILED=5101
 ERROR_MONGOCLIENTINSTALL_FAILED=5201
@@ -130,6 +134,8 @@ configure_datadisks()
     # Stripe all of the data 
     log "Formatting and configuring the data disks"
 
+    local mount_point=${1:-"/datadisks"}
+
     # vm-disk-utils-0.1 can install mdadm which installs postfix. The postfix
     # installation cannot be made silent using the techniques that keep the
     # mdadm installation quiet: a) -y AND b) DEBIAN_FRONTEND=noninteractive.
@@ -137,7 +143,22 @@ configure_datadisks()
     echo "postfix postfix/main_mailer_type select No configuration" | debconf-set-selections
     apt-get install -y postfix
 
-    bash ./vm-disk-utils-0.1.sh -b $DATA_DISKS -s
+    # check if the disk utilities exists
+    if [[ ! -f ./vm-disk-utils-0.1.sh ]];
+    then
+        # download the utility
+        pushd /tmp
+        wget https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/shared_scripts/ubuntu/vm-disk-utils-0.1.sh
+
+        # execute the setup
+        bash ./vm-disk-utils-0.1.sh -b "${mount_point}" -s
+
+        # clean up
+        rm ./vm-disk-utils-0.1.sh
+        popd
+    else
+        bash ./vm-disk-utils-0.1.sh -b "${mount_point}" -s
+    fi
 }
 
 #############################################################################
@@ -245,8 +266,6 @@ install-mysql-client()
           install-wrapper "mysql-client-core*" $ERROR_MYSQLCLIENTINSTALL_FAILED
         fi
     fi
-
-    log "Mysql client installed"
 }
 
 #############################################################################
@@ -784,9 +803,9 @@ install-azure-cli()
 
         log "Suppressing telemetry collection"
         azure telemetry --disable
-    fi
 
-    log "Azure CLI installed"
+        log "Azure CLI installed"
+    fi
 }
 
 install-azure-cli-2()
@@ -979,29 +998,61 @@ EOF
 # Setup Backup Parameters
 #############################################################################
 
+generate_azure_storage_connection_string()
+{
+    local account_name="${1}"
+    local account_key="${2}"
+    local endpoint_suffix="${3}"
+
+    echo "DefaultEndpointsProtocol=https;AccountName=${account_name};AccountKey=${account_key};EndpointSuffix=${storageAccountEndpointSuffix}"
+}
+
+get_azure_storage_endpoint_suffix()
+{
+    local suffix=`echo ${1}| base64 --decode`
+    
+    # default storage account suffix to core.windows.net if not specified
+    if [[ -z "${suffix// }" ]]; then
+
+        suffix="core.windows.net"
+    fi
+
+    echo $suffix
+}
+
 setup_backup()
 {
     # collect the parameters
-    backup_configuration="${1}";                            # Backup settings file
-    backup_script="${2}";                                   # Backup script (actually take the backup)
-    backup_log="${3}";                                      # Log file for backup job
+    local backup_configuration="${1}";                                              # Backup settings file
+    local backup_script="${2}";                                                     # Backup script (actually take the backup)
+    local backup_log="${3}";                                                        # Log file for backup job
 
-    account_name="${4}"; account_key="${5}";                # Storage Account 
-    backupFrequency="${6}";                                 # Backup Frequency
-    backupRententionDays="${7}";                            # Backup Retention
-    mongoReplicaSetConnectionString="${8}";                 # Mongo replica set connection string
-    mysqlServerList="${9}";                                 # Mysql Server List
-    databaseType="${10}";                                   # Database Type : mysql|mongo
+    local account_name="${4}";                                                      # Storage Account credentials
+    local account_key="${5}";
+    local backupFrequency="${6}";                                                   # Backup Frequency
+    local backupRententionDays="${7}";                                              # Backup Retention
+    local mongoReplicaSetConnectionString="${8}";                                   # Mongo replica set connection string
+    local mysqlServerIp="${9}";                                                     # Mysql Server Ip (or HA Proxy Ip)
+    local databaseType="${10}";                                                     # Database Type : mysql|mongo
 
-    databaseUser="${11}"; databasePassword="${12}";         # Credentials for accessing the database for backup purposes
-    backupLocalPath="${13}";                                # Database Type : mysql|mongo
+    local databaseUser="${11}";                                                     # Credentials for accessing the database for backup purposes
+    local databasePassword="${12}";                           
+    local backupLocalPath="${13}";                                                  # Database Type : mysql|mongo
+    local mysqlServerPort="${14:-3306}"                                             # Communication port for mysql server (default 3306)
+    local clusterAdminEmail="${15}"                                                 # Email address to which backup notifications will be sent
+    local azureCliVersion="${16:-1}"                                                # Azure Cli Version to use for backup operations
+	
     # Optional.
-    tempDatabaseUser="${14}"; tempDatabasePassword="${15}"; # Temporary credentials for accessing the backup (optional)
+    local storageAccountEndpointSuffix=`get_azure_storage_endpoint_suffix ${17}`    # Blob storage suffix (defaults to core.windows.net for global azure)
+    tempDatabaseUser="${18}"; tempDatabasePassword="${19}";                         # Temporary credentials for accessing the backup (optional)
+    
+    # generate a storage connection string
+    local storage_connection_string=`generate_azure_storage_connection_string "${account_name}" "${account_key}" "${storageAccountEndpointSuffix}"`
 
     log "Setting up database backup for '${databaseType}' database(s)"
 
     # For simplicity, we require all required parameters are set
-    if [ "$#" -lt 13 ]; then
+    if [[ "$#" -lt 15 ]]; then
         echo "Some required backup configuration parameters are missing"
         exit 1;
     fi
@@ -1012,13 +1063,17 @@ BACKUP_STORAGEACCOUNT_NAME=${account_name}
 BACKUP_STORAGEACCOUNT_KEY=${account_key}
 BACKUP_RETENTIONDAYS=${backupRententionDays}
 MONGO_REPLICASET_CONNECTIONSTRING=${mongoReplicaSetConnectionString}
-MYSQL_SERVER_LIST=${mysqlServerList}
+MYSQL_SERVER_IP=${mysqlServerIp}
+MYSQL_SERVER_PORT=${mysqlServerPort}
 DATABASE_USER=${databaseUser}
 DATABASE_PASSWORD=${databasePassword}
 TEMP_DATABASE_USER=${tempDatabaseUser}
 TEMP_DATABASE_PASSWORD=${tempDatabasePassword}
 DATABASE_TYPE=${databaseType}
 BACKUP_LOCAL_PATH=${backupLocalPath}
+CLUSTER_ADMIN_EMAIL=${clusterAdminEmail}
+AZURE_CLI_VERSION=${azureCliVersion}
+AZURE_STORAGEACCOUNT_CONNECTIONSTRING=\"${storage_connection_string}\"
 EOF"
 
     # this file contains secrets (like storage account key). Secure it
@@ -1093,14 +1148,7 @@ start_haproxy()
 
     while [[ $server_started == 0 ]] ;
     do
-        # defensive: there are cases where after starting haproxy, it doesn't
-        # bind to the lan interface. Since service * restart doesn't
-        # throw an error even if the service isn't started, it is better to allow
-        # a full service restart while waitng for validation
-        service haproxy restart
-
-        # pause before first query
-        sleep $wait_time_seconds;
+        service haproxy start
 
         # run a basic query against the Proxy
         db_response=`mysql -u ${mysql_admin_username} -p${mysql_admin_password} -h ${haproxy_server} -P ${haproxy_port} -e "SHOW DATABASES;"`
@@ -1206,24 +1254,16 @@ stop_mysql()
     local max_wait_seconds=$(($wait_time_seconds * 10))
     local total_wait_seconds=0
 
-    # restart apparmor to apply the settings
-    os_version=$(lsb_release -rs)
-    
     while [[ $server_stopped == 0 ]] ;
     do
+
         # Find out what PID the Mysql instance is running as (if any)
         MYSQLPID=`ps -ef | grep '/usr/sbin/mysqld' | grep -v grep | awk '{print $2}'`
         
         if [[ ! -z "$MYSQLPID" ]]; then
             log "Stopping Mysql Server (PID $MYSQLPID)"
             
-            # the approach of stopping mysql using the kill causes a new thread to spawn
-            if [[ $(echo "$os_version > 16" | bc -l) == 1 ]];
-            then
-                systemctl stop  mysql
-            else
-                service mysql stop 
-            fi
+            kill -15 $MYSQLPID
 
             # Important not to attempt to start the daemon immediately after it was stopped as unclean shutdown may be wrongly perceived
             # We expect the sleep to happen below since we are NOT marking the server as stopped until we validate in the 

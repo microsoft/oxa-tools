@@ -337,8 +337,8 @@ EOF
     rm $TMP_QUERY_FILE
 }
 
-# Step 1: Configuring Disks"
-configure_datadisks
+# Step 1: Configuring Disks
+configure_datadisks "${DATA_DISKS}"
 
 # Step 2 : Tuning System"
 tune_memory
