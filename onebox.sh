@@ -164,36 +164,34 @@ set_dynamic_vars()
     EDXAPP_SU_PASSWORD=`harden $EDXAPP_SU_PASSWORD`
     VAGRANT_USER_PASSWORD=$EDXAPP_SU_PASSWORD
 
-    # The upstream doesn't have the relevant
-    # changes to leverage MYSQL_ADMIN_PASSWORD
-    # For details, see msft/edx-configuration commit:
-    # 65e2668672bda0112a64aabb86cf532ad228c4fa
-    if [[ $BRANCH_VERSIONS == edge ]]; then
-        MYSQL_ADMIN_USER=lexoxamysqladmin
-        MYSQL_ADMIN_PASSWORD=`harden $MYSQL_ADMIN_PASSWORD`
-    else
-        MYSQL_ADMIN_USER=root
-        MYSQL_ADMIN_PASSWORD=
-    fi
-    set -x
-
     case "$BRANCH_VERSIONS" in
         edx_f|edx_g)
             EDXAPP_ENABLE_COMPREHENSIVE_THEMING=false
             COMBINED_LOGIN_REGISTRATION=true
             NGINX_SITES='[certs, cms, lms, forum, xqueue]'
+
+            if [[ $BRANCH_VERSIONS == edx_g ]] ; then
+                EDX_BRANCH=$GINKGO1
+            fi
+
+            # The upstream doesn't have the relevant
+            # changes to leverage MYSQL_ADMIN_PASSWORD
+            # For details, see msft/edx-configuration commit:
+            # 65e2668672bda0112a64aabb86cf532ad228c4fa
+            MYSQL_ADMIN_USER=root
+            MYSQL_ADMIN_PASSWORD=
         ;;
         *)
             EDXAPP_ENABLE_COMPREHENSIVE_THEMING=true
             COMBINED_LOGIN_REGISTRATION=false
             # Microsoft repositories support the lms-preview subdomain.
             NGINX_SITES='[certs, cms, lms, lms-preview, forum, xqueue]'
+
+            MYSQL_ADMIN_USER=lexoxamysqladmin
+            MYSQL_ADMIN_PASSWORD=`harden $MYSQL_ADMIN_PASSWORD`
         ;;
     esac
-
-    if [[ $BRANCH_VERSIONS == edx_g ]] ; then
-        EDX_BRANCH=$GINKGO1
-    fi
+    set -x
 }
 
 test_args()
@@ -246,7 +244,7 @@ get_branch()
         fi
     elif [[ $BRANCH_VERSIONS == edx_g ]] && [[ $override == $USE_FICUS ]] ; then
         # GINKGO1 edx-configuration doesn't work. Use ficus4 instead.
-        # Devstack fails because elastic search fails to initialize
+        # Devstack fails w/ GINKGO1 because elastic search fails to initialize.
         echo "$FICUS4"
     else
         echo "$EDX_BRANCH"
