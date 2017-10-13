@@ -26,6 +26,7 @@ readonly GINKGO1="${TAGS}open-release/ginkgo.1"
 TEMPLATE_TYPE=fullstack # fullstack or devstack
 BRANCH_VERSIONS=edge    # edge or release or stable or edx
 DEFAULT_PASSWORD=
+MSFT_AUTH=
 
 ##########################
 # Settings
@@ -85,7 +86,8 @@ parse_args()
          # Log input parameters to facilitate troubleshooting
         echo "Option '${1}' set with value '"${arg_value}"'"
 
-        case "$1" in
+        # convert to lowercase
+        case "${1,,}" in
           -r|--role|-s|--stack)
             # convert to lowercase
             TEMPLATE_TYPE=`parse_template "${arg_value,,}"`
@@ -96,6 +98,10 @@ parse_args()
             ;;
           -d|--default-password)
             DEFAULT_PASSWORD="${arg_value}"
+            ;;
+          -msft-oauth)
+            # convert to lowercase
+            MSFT_AUTH="${arg_value,,}"
             ;;
           *)
             # Unknown option encountered
