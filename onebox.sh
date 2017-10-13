@@ -99,7 +99,7 @@ parse_args()
           -d|--default-password)
             DEFAULT_PASSWORD="${arg_value}"
             ;;
-          -msft-oauth)
+          --msft-oauth)
             # convert to lowercase
             MSFT_AUTH="${arg_value,,}"
             ;;
@@ -351,6 +351,8 @@ install-with-oxa()
             8 \
         --environment \
             "dev" \
+        --msft-oauth \
+            $MSFT_AUTH \
         --oxatools-public-github-projectbranch \
             `get_current_branch` \
         --edxconfiguration-public-github-accountname \

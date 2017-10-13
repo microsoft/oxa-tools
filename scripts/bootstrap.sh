@@ -9,6 +9,7 @@ EDX_ROLE=""
 DEPLOYMENT_ENV="dev"
 CRON_MODE=0
 RETRY_COUNT=5
+MSFT_AUTH=
 TARGET_FILE=""
 
 # Oxa Tools
@@ -92,6 +93,10 @@ parse_args()
             ;;
           -e|--environment)
             DEPLOYMENT_ENV="${arg_value,,}" # convert to lowercase
+            ;;
+          --msft-oauth)
+            # convert to lowercase
+            MSFT_AUTH="${arg_value,,}"
             ;;
           --cron)
             CRON_MODE=1
