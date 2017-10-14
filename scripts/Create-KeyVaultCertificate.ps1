@@ -38,14 +38,14 @@ None
 .\scripts\Create-KeyVaultCertificate.ps1 -ApplicationId {APPLICATION_ID} -Cloud "bvt" -AzureSubscriptionName {SOME_SUBSCRIPTION} -ResourceGroupName {SOME_RESOURCE_GROUP}
 #>
 
-Param (        
+Param ( 
         [Parameter(Mandatory=$true)][String] $AzureSubscriptionName,        
         [Parameter(Mandatory=$true)][String] $ResourceGroupName,
         [Parameter(Mandatory=$true)][String] $ApplicationId,
         [Parameter(Mandatory=$false)][String] $KeyVaultName="",
         [Parameter(Mandatory=$false)][String] $CertSubject="",
         [Parameter(Mandatory=$false)][ValidateSet("prod", "int", "bvt")][string]$Cloud="bvt"
-    )
+      )
 
 #################################
 # ENTRY POINT

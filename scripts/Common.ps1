@@ -87,14 +87,15 @@ function Capture-ErrorStack
         return
     }
 
+
     [int]$decoratorLength = 75;
 
     $lastError = $global:Error[0];
-    $message1 = "Error [$($lastError.Exception.GetType().FullName)]:`r`n`r`n"
-    $message1 += "$($lastError.Exception.Message)`r`n`r`n";
+    $message1 = "`r`nError [$($lastError.Exception.GetType().FullName)]:`r`n`r`n"
+    $message1 += "$($lastError.Exception.Message)";
 
-    $message2 = $lastError.Exception | format-list -force | Out-String;
-    
+    $message2 = $lastError | Format-List * -Force | Out-String;
+
     $errorMessage = "`r`n`r`n";
     $errorMessage += "#" * $decoratorLength;
     $errorMessage += "`r`nERROR ENCOUNTERED`r`n";
@@ -103,7 +104,7 @@ function Capture-ErrorStack
 
     if ($message2 -ne "")
     {
-        $errorMessage += "`r`n`r`n$($message2)";
+        $errorMessage += "$($message2)";
     }
 
     if ($ForceStop)
@@ -503,8 +504,12 @@ function Start-AzureCommand
                 {
                     $response = New-AzureRmResourceGroupDeployment -ResourceGroupName $InputParameters['ResourceGroupName'] -TemplateFile $InputParameters['TemplateFile'] -TemplateParameterFile $InputParameters['TemplateParameterFile'] -Force -Verbose
                 }
-                
 
+                "Get-AzureKeyVaultSecret"
+                {
+                    $response = Get-AzureKeyVaultSecret -VaultName $InputParameters['VaultName'] -Verbose
+                }
+                
                 default 
                 { 
                     throw "$($InputParameters['Command']) is not a supported call."; 
@@ -2124,3 +2129,121 @@ function Get-SasToken
     
     return $sasToken;
 }
+
+
+<#
+.SYNOPSIS
+Get parameters associated with a specified script.
+
+.DESCRIPTION
+Get parameters associated with a specified script.
+
+.PARAMETER ScriptFile
+Path to the script file to query.
+
+.PARAMETER Required
+Switch indicating whether or not only required parameters will be returned.
+
+.OUTPUTS
+System.Array. Get-ScriptParameters returns and array of parameters and accompanying details associated with a specified script.
+#>
+function Get-ScriptParameters
+{
+    param(
+            [Parameter(Mandatory=$true)][string]$ScriptFile,
+            [Parameter(Mandatory=$false)][switch]$Required
+        )
+
+    $scriptFileHelpResults = Get-Help $ScriptFile -Detailed;
+
+    $scriptParameters = $scriptFileHelpResults.parameters.parameter;
+
+    if ($Required)
+    {
+        $scriptParameters = $scriptParameters | Where-Object { $_.Required -eq $true }
+    }
+
+    return $scriptParameters
+}
+
+<#
+.SYNOPSIS
+Gets all deployment-related settings/secrets in a key vault.
+
+.DESCRIPTION
+Gets all deployment-related settings/secrets in a key vault.
+
+.PARAMETER ResourceGroupName
+Name of the Azure Resource group containing the network resources.
+
+.PARAMETER Context
+Logging context that identifies the call.
+
+.PARAMETER MaxRetries
+Maximum number of retries this call makes before failing. This defaults to 3.
+
+.OUTPUTS
+System.Array. Get-OxaDeploymentKeyVaultSettings returns an array of deployment-related key vault secrets.
+#>
+function Get-OxaDeploymentKeyVaultSettings
+{
+    param(
+            [Parameter(Mandatory=$true)][string]$ResourceGroupName,
+            [Parameter(Mandatory=$false)][int]$MaxRetries=3,
+            [Parameter(Mandatory=$false)][string]$DeploymentParameterPrefix="DeploymentParamsxxx"
+        )
+
+    $keyVaultName = "$($ResourceGroupName)-kv"
+    $keyVaultSecrets = Get-OxaKeyVaultSecret -VaultName $keyVaultName -MaxRetries $MaxRetries
+
+    $response = $keyVaultSecrets | Where-Object { $_.Name -imatch "^$($DeploymentParameterPrefix)"}
+
+    if (!$response)
+    {
+        $response = @{}
+    }
+
+    return $response
+}
+
+<#
+.SYNOPSIS
+Gets the secrets in a key vault.
+
+.DESCRIPTION
+Gets the secrets in a key vault.
+
+.PARAMETER VaultName
+Specifies the name of the key vault to which the secret belongs.
+
+.PARAMETER Context
+Logging context that identifies the call
+
+.PARAMETER MaxRetries
+Maximum number of retries this call makes before failing. This defaults to 3.
+
+.OUTPUTS
+System.Array. Get-OxaKeyVaultSecret returns an array of keyvault secrets.
+#>
+function Get-OxaKeyVaultSecret
+{
+    param(
+            [Parameter(Mandatory=$true)][string]$VaultName,
+            [Parameter(Mandatory=$false)][string]$Context="KeyVault",
+            [Parameter(Mandatory=$false)][int]$MaxRetries=3
+         )
+
+    # prepare the inputs
+    [hashtable]$inputParameters = @{
+                                        "VaultName" = $VaultName;
+                                        "Command" = "Get-AzureKeyVaultSecret";
+                                        "Activity" = "Fetching KeyVault Secrets from '$($VaultName)'"
+                                        "ExecutionContext" = $Context;
+                                        "MaxRetries" = $MaxRetries;
+                                   };
+
+    # this call doesn't require special error handling
+    return Start-AzureCommand -InputParameters $inputParameters;
+}
+
+
