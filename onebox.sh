@@ -3,9 +3,8 @@
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
 # Export all bash variable assignments (for use by sub-processes)
-# Write all commands to the console
 # Immmediately exit on error
-set -axe
+set -ae
 
 # static strings
 readonly MSFT="microsoft"
@@ -47,7 +46,6 @@ readonly CMS_URL=$BASE_URL
 readonly PREVIEW_URL=$BASE_URL
 readonly PLATFORM_NAME="$MSFT Learning on $HOSTNAME"
 readonly EDXAPP_IMPORT_KITCHENSINK_COURSE=true
-readonly EDXAPP_ENABLE_THIRD_PARTY_AUTH=false
 readonly NGINX_ENABLE_SSL=false
 readonly EDXAPP_SU_EMAIL="${EDXAPP_SU_USERNAME}@${MSFT}.com"
 readonly PLATFORM_EMAIL="$EDXAPP_SU_EMAIL"
@@ -63,6 +61,7 @@ MYSQL_ADMIN_PASSWORD=
 EDXAPP_ENABLE_COMPREHENSIVE_THEMING=
 COMBINED_LOGIN_REGISTRATION=
 NGINX_SITES=
+EDXAPP_ENABLE_THIRD_PARTY_AUTH=
 
 # The upstream tag in common with our forks
 # is ficus1 (edx-platform and configuration)
@@ -197,7 +196,15 @@ set_dynamic_vars()
             MYSQL_ADMIN_PASSWORD=`harden $MYSQL_ADMIN_PASSWORD`
         ;;
     esac
-    set -x
+
+    case "$MSFT_AUTH" in
+        prod|int)
+            EDXAPP_ENABLE_THIRD_PARTY_AUTH=true
+        ;;
+        *)
+            EDXAPP_ENABLE_THIRD_PARTY_AUTH=false
+        ;;
+    esac
 }
 
 test_args()
