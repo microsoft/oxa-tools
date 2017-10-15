@@ -621,7 +621,7 @@ cherry_pick_wrapper()
         exit_on_error "Failed to configure git."
     fi
 
-    git cherry-pick -x $hash --keep-redundant-commits
+    git cherry-pick -x --strategy=recursive -X theirs $hash --keep-redundant-commits
     exit_on_error "Failed to cherry pick essential fix"
 }
 

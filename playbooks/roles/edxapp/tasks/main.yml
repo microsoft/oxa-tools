@@ -16,7 +16,7 @@
   args:
     chdir: "{{ edxapp_files_path }}"
   register: bash_oauth
-  when: "{{ ENABLE_THIRD_PARTY_AUTH }}"
+  when: "{{ EDXAPP_FEATURES.ENABLE_THIRD_PARTY_AUTH }}"
 
 # Print the shell tasks's stdout and stderr.
 - debug: var="bash_oauth.stdout_lines + [ bash_oauth.stderr ]"
