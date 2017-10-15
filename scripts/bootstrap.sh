@@ -265,22 +265,11 @@ verify_state()
     fi
 }
 
-cherry_pick_wrapper()
-{
-    hash=$1
-
-    git config --global user.email "${EDXAPP_SU_EMAIL}"
-    exit_on_error "Failed to configure git."
-
-    git cherry-pick -x $hash --keep-redundant-commits
-    exit_on_error "Failed to cherry pick essential fix"
-}
-
 fix_jdk()
 {
     count=`grep -i "8u65" playbooks/roles/oraclejdk/defaults/main.yml | wc -l`
     if [[ "$count" -gt "0" ]] ; then
-        cherry_pick_wrapper 0ca865c9b0da42bed83459389ae35e2551860472
+        cherry_pick_wrapper 0ca865c9b0da42bed83459389ae35e2551860472 ${EDXAPP_SU_EMAIL}
     fi
 }
 
@@ -288,7 +277,7 @@ fix_npm_python()
 {
     count=`grep -i "node_modules" playbooks/roles/edxapp/tasks/deploy.yml | wc -l`
     if (( "$count" == 0 )) ; then
-        cherry_pick_wrapper 075d69e6c7c5330732ec75346d02df32d087aa92
+        cherry_pick_wrapper 075d69e6c7c5330732ec75346d02df32d087aa92 ${EDXAPP_SU_EMAIL}
     fi
 }
 

@@ -7,20 +7,32 @@ set -ex
 msft_auth=$1
 edx_platform_path=$2
 oxa_tools_path=$3
+email=$4
 
 pushd $oxa_tools_path
 
-#todo: get utilities
+echo "source utilities"
+source templates/stamp/utilities.sh
 
 popd
 
 pushd $edx_platform_path
 
-#todo: cherry-pick change
+log "cherry-pick change"
+count=`grep -i "live" lms/envs/aws.py | wc -l`
+if (( "$count" == 0 )) ; then
+    git remote add msft_plat https://github.com/microsoft/edx-platform.git
+    git fetch msft_plat
+    #todo: update hash after merge https://github.com/Microsoft/edx-platform/pull/115
+    cherry_pick_wrapper 6180813cbbec2fdb8fd9285d886be840d411f735 "$email"
+fi
 
-pushd ..
+pushd ../venvs/edxapp/lib
 
-#todo: update urls for int
+log "update urls for int"
+if [[ $msft_auth == int ]] ; then
+    find . -name 'live.py' -type f -exec sed -i 's/login\.live\./login\.live\-int\./' {} \;
+fi
 
 popd
 popd
