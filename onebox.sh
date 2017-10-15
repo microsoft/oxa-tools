@@ -98,7 +98,7 @@ parse_args()
           -d|--default-password)
             DEFAULT_PASSWORD="${arg_value}"
             ;;
-          --msft-oauth)
+          --msft-oauth|--msft-auth)
             # convert to lowercase
             MSFT_AUTH="${arg_value,,}"
             ;;
