@@ -457,6 +457,11 @@ edx_installation_playbook()
   # oxa playbooks - all (single VM)
   $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK $THEME_ARGS -e "edxrole=$EDX_ROLE"
   exit_on_error "Execution of OXA playbook failed"
+ #ansible-playbook -i localhost, -c local
+                                          #-e@/oxa/oxa.yml        #-e oxa_tools_path=/oxa/oxa-tools -e template_type=fullstack
+                                                                                     #/oxa/oxa-tools/playbooks/oxa_configuration.yml
+                                                                                                    #-e theme_branch=oxa/dev.fic -e theme_repo=https://github.com/Microsoft/edx-theme.git
+                                                                                                                  #-e edxrole=fullstack
 }
 
 update_fullstack() {
@@ -625,7 +630,7 @@ setup
 PATH=$PATH:/edx/bin
 ANSIBLE_PLAYBOOK=ansible-playbook
 OXA_PLAYBOOK=$OXA_TOOLS_PATH/playbooks/oxa_configuration.yml
-OXA_PLAYBOOK_ARGS="-e oxa_tools_path=$OXA_TOOLS_PATH -e template_type=$TEMPLATE_TYPE"
+OXA_PLAYBOOK_ARGS="-e oxa_tools_path=$OXA_TOOLS_PATH -e template_type=$TEMPLATE_TYPE -e msft_auth=$MSFT_AUTH"
 THEME_ARGS="-e theme_branch=$EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH -e theme_repo=$EDX_THEME_REPO"
 OXA_SSH_ARGS="-u $ADMIN_USER --private-key=/home/$ADMIN_USER/.ssh/id_rsa"
 
