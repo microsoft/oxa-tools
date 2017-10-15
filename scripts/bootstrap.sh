@@ -264,7 +264,7 @@ fix_jdk()
 {
     count=`grep -i "8u65" playbooks/roles/oraclejdk/defaults/main.yml | wc -l`
     if [[ "$count" -gt "0" ]] ; then
-        cherry_pick_wrapper 0ca865c9b0da42bed83459389ae35e2551860472 ${EDXAPP_SU_EMAIL}
+        cherry_pick_wrapper 0ca865c9b0da42bed83459389ae35e2551860472 "$EDXAPP_SU_EMAIL"
     fi
 }
 
@@ -272,7 +272,7 @@ fix_npm_python()
 {
     count=`grep -i "node_modules" playbooks/roles/edxapp/tasks/deploy.yml | wc -l`
     if (( "$count" == 0 )) ; then
-        cherry_pick_wrapper 075d69e6c7c5330732ec75346d02df32d087aa92 ${EDXAPP_SU_EMAIL}
+        cherry_pick_wrapper 075d69e6c7c5330732ec75346d02df32d087aa92 "$EDXAPP_SU_EMAIL"
     fi
 }
 
