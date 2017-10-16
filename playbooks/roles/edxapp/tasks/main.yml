@@ -12,7 +12,7 @@
 
 - name: Enable Microsoft OAUTH
   sudo: yes
-  shell: bash ./enable_msft_oauth.sh "{{ msft_auth }}" "{{ edx_platform_path }}" "{{ oxa_tools_path }}" "{{ EDXAPP_SU_EMAIL }}" | tee enable_msft_oauth.log
+  shell: bash ./enable_msft_oauth.sh "{{ msft_auth }}" "{{ edx_platform_path }}" "{{ oxa_tools_path }}" "{{ EDXAPP_SU_EMAIL }}"
   args:
     chdir: "{{ edxapp_files_path }}"
   register: bash_oauth
