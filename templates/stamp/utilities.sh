@@ -616,7 +616,7 @@ cherry_pick_wrapper()
     local hash=$1
     local email=$2
 
-    if [[ -n $email ]] && git config --global --get user.email > /dev/null 2>&1 ; then
+    if [[ -n $email ]] && ! git config --global --get user.email > /dev/null 2>&1 ; then
         git config --global user.email "$email"
         exit_on_error "Failed to configure git."
     fi
