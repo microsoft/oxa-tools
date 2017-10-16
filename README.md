@@ -11,11 +11,11 @@ Common parameter argument options: pick a cell from each column. The first row i
 `--role` or `-r` or <br/> `--stack` or `-s` | `--branches` or `-b` | credential parameter arguments | `--msft-oauth`
 --- | --- | --- | ---
 `fullstack` (default) | `edge` (default) <br/> (will use branches like oxa/dev.fic ) | randomly generated (default) | off (default)
-`devstack` | `release`  <br/> (will use branches like oxa/release.fic ) | `--default-password` or `-d` <br/> `anyString` (set all passwords to anyString) | `prod` <br/> (uses login.live)
-  | `stable`  <br/> (will use branches like oxa/master.fic) |  | `int` <br/> (uses login.live-int)
-  | `ficus`  <br/> (will use upstream edx repositories <br/> and open-release/ficus.1 tag) |  |  
-  | `ginkgo`  <br/> (will use upstream edx repositories <br/> and open-release/ginkgo.1 tag) |  |  
-  | edit onebox.sh to specify custom <br/> remote urls and branches directly | edit onebox.sh to specify custom <br/> usernames and passwords directly |  
+`devstack` | `release` <br/> (will use branches like oxa/release.fic ) | `--default-password` or `-d` <br/> `anyString` (set all passwords to anyString) | `prod` <br/> (uses login.live)
+ &nbsp; | `stable` <br/> (will use branches like oxa/master.fic) | &nbsp; | `int` <br/> (uses login.live-int)
+ &nbsp; | `ficus` <br/> (will use upstream edx repositories <br/> and open-release/ficus.1 tag) | &nbsp; | &nbsp; 
+ &nbsp; | `ginkgo` <br/> (will use upstream edx repositories <br/> and open-release/ginkgo.1 tag) | &nbsp; | &nbsp; 
+ &nbsp; | edit onebox.sh to specify custom <br/> remote urls and branches directly | edit onebox.sh to specify custom <br/> usernames and passwords directly | &nbsp; 
 
 For example:
 `sudo onebox.sh` OR
