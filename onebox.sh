@@ -425,8 +425,9 @@ parse_args "$@"
 test_args
 
 set_dynamic_vars
- 
-# vagrant-fullstack.yml was removed in March 2017 so we use sandbox.sh
+
+set -x
+# vagrant-fullstack.yml was removed in March 2017 so we use sandbox.sh for ginkgo
 if [[ $TEMPLATE_TYPE == fullstack ]] && [[ $BRANCH_VERSIONS == edx_g ]] ; then
     install-with-edx-native
 else
