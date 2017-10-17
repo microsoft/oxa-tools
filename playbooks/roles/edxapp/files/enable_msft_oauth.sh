@@ -51,6 +51,4 @@ popd
 
 # This command won't succeed on devstack. Which is totally fine.
 set +e
-sudo /edx/bin/supervisorctl restart edxapp:
-
-return true
+sudo /edx/bin/supervisorctl restart edxapp || true
