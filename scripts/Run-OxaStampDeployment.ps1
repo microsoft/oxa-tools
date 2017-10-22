@@ -150,7 +150,7 @@ try
         $deploymentType = $autoDeployPhases.Keys | Where-Object { [int]$autoDeployPhases[ $_ ] -eq $deploymentPosition }
         $keyVaultDeploymentParameters['DeploymentType'] = $deploymentType
 
-        Log-Message "Starting '$($deploymentType)($deploymentPosition)' deployment" -
+        Log-Message "Starting '$($deploymentType)($deploymentPosition)' deployment"
 
         # trigger the deployment
         & $mainDeploymentScript @keyVaultDeploymentParameters
@@ -173,5 +173,6 @@ catch
     # If there are special handling based on error thrown, 
     # catch and handle here and manage retries (if applicable)
 
-    # Capture-ErrorStack
+    Capture-ErrorStack
+    exit
 }

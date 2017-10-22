@@ -3138,8 +3138,6 @@ function Set-DeploymentParameterValues
         {
             if ($paramDetails.Type.Name -ieq "SwitchParameter")
             {
-                write-host $AvailableParameters[$parameterName].GetType()
-
                 if ($AvailableParameters[$parameterName].GetType().ToString() -ieq "System.Management.Automation.SwitchParameter")
                 {
                     $updatedParameters[$parameterName] = $AvailableParameters[$parameterName]
