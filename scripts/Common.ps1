@@ -320,7 +320,7 @@ function Set-AzureSubscriptionContext
 ## Function: Authenticate-AzureRmUser
 ##
 ## Purpose: 
-##    Authenticate the AAD user that will interact with KeyVault
+##    Authenticate the AAD user that will interact with Key Vault
 ##
 ## Input: 
 ##   AadWebClientId           the azure active directory web application client id
@@ -385,20 +385,28 @@ function Create-StorageContainer
     New-AzureStorageContainer -Name $StorageContainerName -Context $storageContext
 }
 
-## Function: Start-AzureCommand
-##
-## Purpose: 
-##   one generic call for every wrapped Azure Cmdlet
-##
-## Input: 
-##   InputParameters         Azure Cmdlet & Context Name
-##
-## Output:
-##   nothing
-##
+<#
+.SYNOPSIS
+Executes a wrapped azure command.
+
+.DESCRIPTION
+Executes a wrapped azure command.
+
+.PARAMETER InputParameters
+Hashtable of parameters for the azure command.
+
+.PARAMETER Quiet
+Indicator of whether the underlying azure command will run in quiet mode or not.
+
+.OUTPUTS
+Object. Start-AzureCommand returns the response of the azure cmdlet.
+#>
 function Start-AzureCommand
 {
-    param( [Parameter(Mandatory=$true)][hashtable]$InputParameters )
+    param( 
+            [Parameter(Mandatory=$true)][hashtable]$InputParameters,
+            [Parameter(Mandatory=$false)][switch]$Quiet
+         )
 
     # we will make one generic call for every wrapped Azure Cmdlet
     # With that approach, we unify the call pattern, retries & error handling
@@ -431,7 +439,11 @@ function Start-AzureCommand
     {
         try
         {
-            Log-Message "Attempt [$($retryAttempt)|$($MaxRetries)] - $($InputParameters['Activity']) started." -Context $Context;
+            if (!$Quiet)
+            {
+                Log-Message "Attempt [$($retryAttempt)|$($MaxRetries)] - $($InputParameters['Activity']) started." -Context $Context;
+            }
+
             # handle the commands appropriately
             switch ($InputParameters['Command']) 
             {
@@ -507,9 +519,62 @@ function Start-AzureCommand
 
                 "Get-AzureKeyVaultSecret"
                 {
-                    $response = Get-AzureKeyVaultSecret -VaultName $InputParameters['VaultName'] -Verbose
+                    if ($InputParameters['Name'])
+                    {
+                        $response = Get-AzureKeyVaultSecret -VaultName $InputParameters['VaultName'] -Name $InputParameters['Name'] -Verbose
+                    }
+                    else
+                    {
+                        $response = Get-AzureKeyVaultSecret -VaultName $InputParameters['VaultName']  -Verbose
+                    }
+                }
+
+                "Set-AzureKeyVaultSecret"
+                {
+                    $response = Set-AzureKeyVaultSecret -VaultName $InputParameters['VaultName'] -Name $InputParameters['Name'] -SecretValue $InputParameters['SecretValue']
+                }
+
+                "Remove-AzureKeyVaultSecret"
+                {
+                    $response = Remove-AzureKeyVaultSecret -VaultName $InputParameters['VaultName'] -Name $InputParameters['Name'] -Force:$true -Confirm:$false
+                }
+
+                "Get-AzureRmADServicePrincipal"
+                {
+                    if ($InputParameters['ApplicationId'])
+                    {
+                        $response = Get-AzureRmADServicePrincipal -ServicePrincipalName $InputParameters['ApplicationId'] -Verbose
+                    }
+                    elseif ($InputParameters['DisplayName'])
+                    {
+                        $response = Get-AzureRmADServicePrincipal -SearchString $InputParameters['DisplayName'] -Verbose
+                    }
+                    else
+                    {
+                        throw "'Get-AzureRmADServicePrincipal' cmdlet supports searching for service principals by either 'ApplicationId' or 'DisplayName'"    
+                    }
                 }
                 
+                "New-AzureRMADServicePrincipal"
+                {
+                    $response = New-AzureRMADServicePrincipal -DisplayName $InputParameters['DisplayName'] -CertValue $InputParameters['CertValue'] -EndDate $InputParameters['EndDate'] -StartDate $InputParameters['StartDate'] -Verbose -ErrorAction Stop
+                }
+
+                "New-AzureRmADSpCredential"
+                {
+                    $response = New-AzureRmADAppCredential -ApplicationId $InputParameters['ApplicationId'] -CertValue $InputParameters['CertValue'] -EndDate $InputParameters['EndDate'] -StartDate $InputParameters['StartDate'] -Verbose -ErrorAction Stop
+                }
+
+                "New-AzureRMRoleAssignment"
+                {
+                    $response = New-AzureRMRoleAssignment -RoleDefinitionName $InputParameters['RoleDefinitionName'] -ServicePrincipalName $InputParameters['ServicePrincipalName'] -Scope $InputParameters['Scope'] -Verbose -ErrorAction Stop
+                }
+
+                "Set-AzureRmKeyVaultAccessPolicy"
+                {
+                    $response = Set-AzureRmKeyVaultAccessPolicy -VaultName $InputParameters['VaultName'] -ServicePrincipalName $InputParameters['ServicePrincipalName'] -PermissionsToSecrets $InputParameters['PermissionsToSecrets'] -ResourceGroupName $InputParameters['ResourceGroupName'] -Verbose -ErrorAction Stop
+                }
+
                 default 
                 { 
                     throw "$($InputParameters['Command']) is not a supported call."; 
@@ -517,7 +582,11 @@ function Start-AzureCommand
                 }
             }            
             
-            Log-Message "Attempt [$($retryAttempt)|$($MaxRetries)] - $($InputParameters['Activity']) completed." -Context $Context;
+            if (!$Quiet)
+            {
+                Log-Message "Attempt [$($retryAttempt)|$($MaxRetries)] - $($InputParameters['Activity']) completed." -Context $Context;
+            }
+
             break;
         }
         catch
@@ -546,8 +615,11 @@ function Start-AzureCommand
 
         [int]$retryDelay = $env:RetryDelaySeconds;
 
-        Log-Message -Message "Waiting $($retryDelay) seconds between retries" -Context $Context -Foregroundcolor Yellow;
-        #Start-Sleep -Seconds $retryDelay;
+        if (!$Quiet)
+        {
+            Log-Message -Message "Waiting $($retryDelay) seconds between retries" -Context $Context -Foregroundcolor Yellow;
+            Start-Sleep -Seconds $retryDelay;
+        }
     }
 
     return $response;    
@@ -565,7 +637,7 @@ Get a list of Oxa network-related resources.
 Get a list of Oxa network-related resources.
 
 .PARAMETER ResourceGroupName
-Name of the Azure Resource group containing the network resources
+Name of the Azure Resource group containing the network resources.
 
 .PARAMETER MaxRetries
 Maximum number of retries this call makes before failing. This defaults to 3.
@@ -616,7 +688,7 @@ Finds the specfied azure resource.
 Finds the specfied azure resource.
 
 .PARAMETER ResourceGroupName
-Name of the azurer resource group containing the network resources
+Name of the azure resource group containing the network resources.
 
 .PARAMETER ResourceType
 Specifies the type of azure resource resource
@@ -661,7 +733,7 @@ Gets the disabled azure traffic manager endpoint.
 Gets the disabled azure traffic manager endpoint.
 
 .PARAMETER ResourceGroupName
-Name of the Azure Resource group containing the network resources
+Name of the Azure Resource group containing the network resources.
 
 .PARAMETER ResourceList
 Array of of discovered azure network-related resource objects
@@ -679,7 +751,7 @@ function Get-OxaDisabledDeploymentSlot
 {
     param(
             [Parameter(Mandatory=$true)][string]$ResourceGroupName,    
-            [Parameter(Mandatory=$true)][array]$ResourceList,
+            [Parameter(Mandatory=$false)][array]$ResourceList=@(),
             [Parameter(Mandatory=$false)][ValidateSet("lms", "cms", "preview")][string]$TrafficManagerProfileSite="lms",
             [Parameter(Mandatory=$false)][int]$MaxRetries=3
          )
@@ -1024,44 +1096,59 @@ function Remove-OxaDeploymentSlotResources
     param(
             [Parameter(Mandatory=$true)][string]$ResourceGroupName,
             [Parameter(Mandatory=$true)][ValidateSet("slot1", "slot2")][string]$TargetDeploymentSlot,
-            [Parameter(Mandatory=$true)][array]$NetworkResourceList,
+            [Parameter(Mandatory=$false)][array]$NetworkResourceList=@(),
             [Parameter(Mandatory=$false)][int]$MaxRetries=3
          )
 
-    # if there are no resource groups to delete, default to true
-    $response = $($targetedResources.Count -eq 0)
+    $response = $false
 
     # Filter the resources based on the targeted slot
-    [array]$targetedResources = $resourceList | Where-Object { $_.ResourceName.Contains($TargetDeploymentSlot) };
-    Log-Message "$($targetedResources.Count) resources targeted for removal from '$($TargetDeploymentSlot)'" -ClearLine -ClearLineAfter
-
-    # iterate the targeted resources
-    foreach($resource in $targetedResources)
+    if ($NetworkResourceList -and $NetworkResourceList.Count -gt 1)
     {
-        switch ( $resource.resourcetype )
-        {  
-            "Microsoft.Network/loadBalancers"
-            {
-                # TODO: handle response 
-                $response = Remove-OxaNetworkLoadBalancerResource -LoadBalancerName $resource.Name -MaxRetries $MaxRetries -ResourceGroupName $ResourceGroupName;
-            }
+        # some resources are specified
+        [array]$targetedResources = $NetworkResourceList | Where-Object { $_.ResourceName.Contains($TargetDeploymentSlot) };
+        Log-Message "$($targetedResources.Count) resources targeted for removal from '$($TargetDeploymentSlot)'" -ClearLine -ClearLineAfter
 
-            "Microsoft.Network/publicIPAddresses"
-            {
-                # TODO: handle response 
-                $requestResponse = Remove-OxaNetworkIpAddress -Name $resource.Name -ResourceGroupName $ResourceGroupName  -MaxRetries $MaxRetries;
+        if (!$targetedResources -or $targetedResources.Count -eq 0)
+        {
+            # there is nothing to do: no existing resources for the target slot exists for removal
+            $response = $true;
+        }
 
-                if ( $requestResponse )
+        # iterate the targeted resources
+        foreach($resource in $targetedResources)
+        {
+            switch ( $resource.resourcetype )
+            {  
+                "Microsoft.Network/loadBalancers"
                 {
-                    $response = $true;
+                    # TODO: handle response 
+                    $response = Remove-OxaNetworkLoadBalancerResource -LoadBalancerName $resource.Name -MaxRetries $MaxRetries -ResourceGroupName $ResourceGroupName;
+                }
+
+                "Microsoft.Network/publicIPAddresses"
+                {
+                    # TODO: handle response 
+                    $requestResponse = Remove-OxaNetworkIpAddress -Name $resource.Name -ResourceGroupName $ResourceGroupName  -MaxRetries $MaxRetries;
+
+                    if ( $requestResponse )
+                    {
+                        $response = $true;
+                    }
                 }
             }
-        }
 
-        if ( !$response )
-        {
-            throw "Unable to remove the specified resource: Name=$($resource.Name), Type=$($resource.resourcetype)";
+            if ( !$response )
+            {
+                throw "Unable to remove the specified resource: Name=$($resource.Name), Type=$($resource.resourcetype)";
+            }
         }
+    }
+    else
+    {
+        # if no resources are specified for removal, return $true
+        # equivalent to no-op
+        $response = $true; 
     }
     
     return $response
@@ -1193,7 +1280,7 @@ Gets a Traffic Manager profile.
 Gets a Traffic Manager profile.
 
 .PARAMETER ResourceGroupName
-Name of the Azure Resource group containing the network resources
+Name of the Azure Resource group containing the network resources.
 
 .PARAMETER Context
 Logging context that identifies the call
@@ -1697,13 +1784,9 @@ function Remove-OxaDeploymentSlot
             [Parameter(Mandatory=$true)][ValidateSet("bootstrap", "upgrade", "swap", "cleanup")][string]$DeploymentType,
             [Parameter(Mandatory=$true)][string]$ResourceGroupName,
             [Parameter(Mandatory=$true)][ValidateSet("slot1", "slot2")][string]$TargetDeploymentSlot,
-            [Parameter(Mandatory=$true)][array]$NetworkResourceList,
+            [Parameter(Mandatory=$false)][array]$NetworkResourceList=@(),
             [Parameter(Mandatory=$false)][int]$MaxRetries=3
     )
-
-    # execute the clean up if:
-    #   1. Deployment Type = upgrade
-    #   2. Deployment Type = swap & cloud type = test (bvt)
 
     #cleaning up the resources from the disabled slot (response will be processed by caller)
     return Remove-OxaDeploymentSlotResources -ResourceGroupName $ResourceGroupName -TargetDeploymentSlot $TargetDeploymentSlot -NetworkResourceList $NetworkResourceList -MaxRetries $MaxRetries;
@@ -1835,36 +1918,146 @@ function Set-ScriptDefault
     return $response
 }
 
-## Function: Get-LocalCertificate
-##
-## Purpose: 
-##    Find a certificate in the local cert store with the given subject
-##
-## Input: 
-##   CertSubject  subject to search for in cert store
-##
-## Output:
-##   The Certificate Thumbprint
-##
-function Get-LocalCertificate
+<#
+.SYNOPSIS
+Creates or updates a secret in a key vault.
+
+.DESCRIPTION
+Creates or updates a secret in a key vault.
+
+.PARAMETER VaultName
+Specifies the name of the key vault to which this secret belongs.
+
+.PARAMETER Name
+Specifies the name of a secret to modify.
+
+.PARAMETER SecretValue
+Specifies the value for the secret as a SecureString object
+
+.PARAMETER Context
+Logging context that identifies the call
+
+.PARAMETER MaxRetries
+Maximum number of retries this call makes before failing. This defaults to 3.
+
+.PARAMETER Quiet
+Indicator of whether the underlying azure command will run in quiet mode or not.
+
+.OUTPUTS
+Microsoft.Azure.Commands.KeyVault.Models.Secret. Set-OxaKeyVaultSecret returns an azure key vault secret.
+#>
+function Set-OxaKeyVaultSecret
 {
-    Param(        
-            [Parameter(Mandatory=$true)][String] $CertSubject            
+    param(
+            [Parameter(Mandatory=$true)][string]$VaultName,
+            [Parameter(Mandatory=$true)][string]$Name,
+            [Parameter(Mandatory=$true)][SecureString]$SecretValue,
+            [Parameter(Mandatory=$false)][string]$Context="Key Vault",
+            [Parameter(Mandatory=$false)][int]$MaxRetries=3,
+            [Parameter(Mandatory=$false)][switch]$Quiet
          )
-        
-    $cert = (Get-ChildItem cert:\CurrentUser\my\ | Where-Object {$_.Subject -match $CertSubject })
+
+    # prepare the inputs
+    [hashtable]$inputParameters = @{
+                                        "VaultName" = $VaultName;
+                                        "Name" = $Name;
+                                        "SecretValue" = $SecretValue;
+                                        "Command" = "Set-AzureKeyVaultSecret";
+                                        "Activity" = "Setting key vault secret: '$($Name)' to '$($VaultName)'"
+                                        "ExecutionContext" = $Context;
+                                        "MaxRetries" = $MaxRetries;
+                                   };
+
+    # this call doesn't require special error handling
+    return Start-AzureCommand -InputParameters $inputParameters -Quiet:$Quiet;
+}
+
+<#
+.SYNOPSIS
+Deletes a secret in a key vault.
+
+.DESCRIPTION
+Deletes a secret in a key vault.
+
+.PARAMETER VaultName
+Specifies the name of the key vault to which this secret belongs.
+
+.PARAMETER Name
+Specifies the name of a secret to modify.
+
+.PARAMETER Context
+Logging context that identifies the call
+
+.PARAMETER MaxRetries
+Maximum number of retries this call makes before failing. This defaults to 3.
+
+.PARAMETER Quiet
+Indicator of whether the underlying azure command will run in quiet mode or not.
+
+.OUTPUTS
+None.
+#>
+function Remove-OxaKeyVaultSecret
+{
+    param(
+        [Parameter(Mandatory=$true)][string]$VaultName,
+        [Parameter(Mandatory=$true)][string]$Name,
+        [Parameter(Mandatory=$false)][string]$Context="Key Vault",
+        [Parameter(Mandatory=$false)][int]$MaxRetries=3,
+        [Parameter(Mandatory=$false)][switch]$Quiet
+     )
+
+    # prepare the inputs
+    [hashtable]$inputParameters = @{
+                                        "VaultName" = $VaultName;
+                                        "Name" = $Name;
+                                        "Command" = "Remove-AzureKeyVaultSecret";
+                                        "Activity" = "Removing key vault secret: '$($Name)' from '$($VaultName)'"
+                                        "ExecutionContext" = $Context;
+                                        "MaxRetries" = $MaxRetries;
+                                };
+
+    # this call doesn't require special error handling
+    return Start-AzureCommand -InputParameters $inputParameters -Quiet:$Quiet;
+}
+
+<#
+.SYNOPSIS
+Find a certificate in the local current user certificate store with the given subject.
+
+.DESCRIPTION
+Find a certificate in the local current user certificate store with the given subject.
+
+.PARAMETER CertSubject
+Subject to search for in cert store.
+
+.OUTPUTS
+System.String. Get-CurrentUserCertificate returns the thumbprint of the specified certificate (if found) or null
+#>
+function Get-CurrentUserCertificate
+{
+    param( 
+            [Parameter(Mandatory=$true)][string]$CertSubject,
+            [Parameter(Mandatory=$false)][switch]$ThumbprintOnly
+         )
     
-    if (!$cert)
-    {
-        throw "Could not find a certificate in the local store with the given subject: $($CertSubject)"
+    $response = $null
+    $certStorePath = Get-OxaLocalCertificateStore
+
+    # find the certificate
+    $cert = (Get-ChildItem "cert:$($certStorePath)" | Where-Object {$_.Subject -match $CertSubject })
+    
+    if ($cert)
+    {   
+        if ($cert -is [array])
+        {
+            $cert = $cert[0]
+        }
+
+        $response = $cert
     }
 
-    if ($cert -is [array])
-    {
-        $cert = $cert[0]
-    }
-
-    return $cert.Thumbprint
+    return $response
 }
 
 ## Function: Get-JsonKeys
@@ -1960,7 +2153,7 @@ Adds an Azure deployment to a resource group.
 Adds an Azure deployment to a resource group.
 
 .PARAMETER ResourceGroupName
-Name of the azurer resource group containing the network resources
+Name of the azure resource group containing the network resources.
 
 .PARAMETER TemplateFile
 Specifies the full path of a JSON template file.
@@ -2181,6 +2374,9 @@ Logging context that identifies the call.
 .PARAMETER MaxRetries
 Maximum number of retries this call makes before failing. This defaults to 3.
 
+.PARAMETER WithoutValues
+Indicator of whether secrets will be returned with their values or not.
+
 .OUTPUTS
 System.Array. Get-OxaDeploymentKeyVaultSettings returns an array of deployment-related key vault secrets.
 #>
@@ -2189,17 +2385,32 @@ function Get-OxaDeploymentKeyVaultSettings
     param(
             [Parameter(Mandatory=$true)][string]$ResourceGroupName,
             [Parameter(Mandatory=$false)][int]$MaxRetries=3,
-            [Parameter(Mandatory=$false)][string]$DeploymentParameterPrefix="DeploymentParamsxxx"
+            [Parameter(Mandatory=$false)][string]$DeploymentParameterPrefix="DeploymentParamsxxx",
+            [Parameter(Mandatory=$false)][switch]$WithoutValues
         )
 
     $keyVaultName = "$($ResourceGroupName)-kv"
     $keyVaultSecrets = Get-OxaKeyVaultSecret -VaultName $keyVaultName -MaxRetries $MaxRetries
 
-    $response = $keyVaultSecrets | Where-Object { $_.Name -imatch "^$($DeploymentParameterPrefix)"}
+    $secrets = $keyVaultSecrets | Where-Object { $_.Name -imatch "^$($DeploymentParameterPrefix)"}
 
-    if (!$response)
+    $response = @{}
+
+    if ($WithoutValues)
     {
-        $response = @{}
+        $response = $secrets
+    }
+    elseif ($secrets)
+    {
+        Log-Message "Fetching value of secrets..."
+        foreach($secret in $secrets)
+        {
+            # get the secret value
+            $secretWithValue = Get-OxaKeyVaultSecret -VaultName $keyVaultName -Name $secret.Name -MaxRetries $MaxRetries -Quiet
+
+            # add secret key/value pair to response hashtable
+            $response[$secret.Name.replace($DeploymentParameterPrefix, "")] = $secretWithValue.SecretValueText
+        }
     }
 
     return $response
@@ -2215,11 +2426,17 @@ Gets the secrets in a key vault.
 .PARAMETER VaultName
 Specifies the name of the key vault to which the secret belongs.
 
+.PARAMETER Name
+Specifies the name of a secret to fetch.
+
 .PARAMETER Context
 Logging context that identifies the call
 
 .PARAMETER MaxRetries
 Maximum number of retries this call makes before failing. This defaults to 3.
+
+.PARAMETER Quiet
+Indicator of whether the underlying azure command will run in quiet mode or not.
 
 .OUTPUTS
 System.Array. Get-OxaKeyVaultSecret returns an array of keyvault secrets.
@@ -2228,75 +2445,79 @@ function Get-OxaKeyVaultSecret
 {
     param(
             [Parameter(Mandatory=$true)][string]$VaultName,
-            [Parameter(Mandatory=$false)][string]$Context="KeyVault",
-            [Parameter(Mandatory=$false)][int]$MaxRetries=3
+            [Parameter(Mandatory=$false)][string]$Name="",
+            [Parameter(Mandatory=$false)][string]$Context="Key Vault",
+            [Parameter(Mandatory=$false)][int]$MaxRetries=3,
+            [Parameter(Mandatory=$false)][switch]$Quiet
          )
 
     # prepare the inputs
     [hashtable]$inputParameters = @{
                                         "VaultName" = $VaultName;
+                                        "Name" = $Name;
                                         "Command" = "Get-AzureKeyVaultSecret";
-                                        "Activity" = "Fetching KeyVault Secrets from '$($VaultName)'"
+                                        "Activity" = "Fetching key vault Secrets from '$($VaultName)'"
                                         "ExecutionContext" = $Context;
                                         "MaxRetries" = $MaxRetries;
                                    };
 
     # this call doesn't require special error handling
-    return Start-AzureCommand -InputParameters $inputParameters;
+    return Start-AzureCommand -InputParameters $inputParameters -Quiet:$Quiet;
 }
 
+<#
+.SYNOPSIS
+Creates a new service principal with certiicate-based credential.
 
-## Function: New-AzureRMLoginCertificate
-##
-## Purpose: 
-##    Create a certificate associated with a Service Principal 
-##    for logging in to Powershell AzureRM and accessing specified KeyVault
-##
-## Input: 
-##   AzureSubscriptionName  Subscription to provide access to
-##   ResourceGroupName      ResourceGroup to provide access to
-##   ApplicationId          AAD application to create Service Principle for
-##   KeyVaultName           Name of KeyVault instance to provide access to
-##   CertSubject            Subject to search for in cert store
-##   Cloud                  Cloud deploying to, used for setting defaults
-##
-## Output:
-##   Nothing
-##
-function New-AzureRMLoginCertificate
+.DESCRIPTION
+Creates a new service principal with certiicate-based credential.
+
+.PARAMETER ResourceGroupName
+Name of the azure resource group name.
+
+.PARAMETER AadWebClientId
+The azure active directory web application Id for authentication.
+
+.PARAMETER AuthenticationCertificateSubject
+The subject of the certificate used for authentication. 
+
+.PARAMETER MaxRetries
+Maximum number of retries this call makes before failing. This defaults to 3.
+
+.OUTPUTS
+None.
+#>
+function New-OxaCertificateBasedServicePrincipal
 {
     Param(
-            [Parameter(Mandatory=$true)][String] $AzureSubscriptionName,
             [Parameter(Mandatory=$true)][String] $ResourceGroupName,
-            [Parameter(Mandatory=$true)][String] $ApplicationId,
-            [Parameter(Mandatory=$false)][String] $KeyVaultName="",
-            [Parameter(Mandatory=$false)][String] $CertSubject="",
-            [Parameter(Mandatory=$false)][ValidateSet("prod", "int", "bvt")][string]$Cloud="bvt"              
+            [Parameter(Mandatory=$true)][String] $AadWebClientId,
+            [Parameter(Mandatory=$true)][String] $AuthenticationCertificateSubject,
+            [Parameter(Mandatory=$false)][int]$MaxRetries=3
          )
 
-    $SubscriptionId = Get-AzureRmSubscription -SubscriptionName $AzureSubscriptionName
-    $Scope = "/subscriptions/" + $SubscriptionId
-    Select-AzureRMSubscription -SubscriptionId $SubscriptionId
-    (Get-AzureRmContext).Subscription
-    
-    $KeyVaultName = Set-ScriptDefault -ScriptParamName "KeyVaultName" `
-                    -ScriptParamVal $KeyVaultName `
-                    -DefaultValue "$($ResourceGroupName)-kv"
-    
-    $CertSubject = Set-ScriptDefault -ScriptParamName "CertSubject" `
-                    -ScriptParamVal $CertSubject `
-                    -DefaultValue "CN=$($cloud)-cert"
-    
-    # Get or create Self-Signed Certificate
+    # get path to the local cert store
+    $certStorePath = Get-OxaLocalCertificateStore
+
+    # get the id of the azure subscription in context
+    $SubscriptionId = (Get-AzureRmContext).Subscription.SubscriptionId
+
+    ################################################
+    # 1. Get or create Self-Signed Certificate
+    ################################################
+    $certificate = $null
+    $certificateValue = $null
+
     try 
     {
-        $cert = (Get-ChildItem cert:\CurrentUser\my\ | Where-Object {$_.Subject -match $CertSubject })
-        if (!$cert)
+        $certificate = Get-CurrentUserCertificate -CertSubject $AuthenticationCertificateSubject
+        if (!$certificate)
         {
-            Log-Message "Creating new Self-Signed Certificate..."
-            $cert = New-SelfSignedCertificate -CertStoreLocation "cert:\CurrentUser\My" -Subject $CertSubject -KeySpec KeyExchange
+            Log-Message "Creating new Self-Signed Certificate..."    
+            $certificate = New-SelfSignedCertificate -CertStoreLocation "cert:$($certStorePath)" -Subject $AuthenticationCertificateSubject -KeySpec KeyExchange
         }
-        $certValue = [System.Convert]::ToBase64String($cert.GetRawCertData())    
+
+        $certificateValue = [System.Convert]::ToBase64String($certificate.GetRawCertData())    
     }
     catch
     {
@@ -2305,93 +2526,189 @@ function New-AzureRMLoginCertificate
         exit;
     }
     
-    # Replace Service Principal with a new account using the Certificate obtained above
-    try
+    ################################################
+    # 2. Add new service principal to subscription
+    ################################################
+
+    # Get details for the service principal associated with the specified web application
+    [array]$servicePrincipals = Get-OxaADServicePrincipal -ApplicationId $AadWebClientId -MaxRetries $MaxRetries
+    
+    if ($servicePrincipals -and $servicePrincipals[0].Id)
     {
-        $sp = Get-AzureRmADServicePrincipal -ServicePrincipalName $ApplicationId
-        
-        if ($sp -and $sp.Id)
-        {
-            Log-Message "Removing old Service Principal..."
-            Remove-AzureRmADServicePrincipal -ObjectId $sp.Id
-        }    
-        
-        Log-Message "Creating new Service Principal for Key Vault Access to: $($KeyVaultName)"
-        $ServicePrincipal = New-AzureRMADServicePrincipal -ApplicationId $ApplicationId -CertValue $certValue -EndDate $cert.NotAfter -StartDate $cert.NotBefore
-        Get-AzureRmADServicePrincipal -ObjectId $ServicePrincipal.Id
-        
-        # Sleep here for a few seconds to allow the service principal application to become active 
-        # (should only take a couple of seconds normally)
-        Sleep 15
-        New-AzureRMRoleAssignment -RoleDefinitionName Contributor -ServicePrincipalName $ServicePrincipal.ApplicationId -Scope $Scope | Write-Verbose -ErrorAction Stop
+        # certificate-based service principal exists, re-use it
+        $servicePrincipal = $servicePrincipals[0]
+        Log-Message "Service Principal - '$($servicePrincipal.DisplayName)' already exists. Re-using it."        
     }
-    catch
+    else
     {
-        Capture-ErrorStack;
-        throw "Error in removing old service principal, creating new Service Principal and assigning role in provided subscription: $($_.Message)";
-        exit;
+        throw "Could not identify the service principal for the specified web application: $($AadWebClientId)."
+    }
+
+    # certificate-based service principal doesn't exist, create it
+    Log-Message "Adding certificate-based credential to the service principal '$($servicePrincipal.DisplayName)'"
+
+    $credential = New-OxaADSpCredential -ApplicationId $servicePrincipal.ApplicationId -CertValue $certificateValue -EndDate $certificate.NotAfter -StartDate $certificate.NotBefore -MaxRetries $MaxRetries
+    
+    if (!$credential)
+    {
+        throw "Unable to add certificate-based credential to the service principal '$($servicePrincipal.DisplayName)'"
     }
     
-    # Allow new Service Principal KeyVault access
+    # Following the creation of the service principal, there may be a bit of time lapse before 
+    # the service principal application becomes active.
+    # Incorporate that wait into the role assignment operation.
+    [int]$waitIntervalSeconds = 5
+    [int]$waitDurationSeconds = 0
+    [int]$maxWaitDurationSeconds = $waitIntervalSeconds * 12
+    [bool]$awaitingServicePrincipalRoleAssignment = $true
+
+    while($awaitingServicePrincipalRoleAssignment)
+    {
+        try 
+        {
+            $response = New-OxaRoleAssignment -ServicePrincipalName $servicePrincipal.ApplicationId -Scope "/subscriptions/$($SubscriptionId)" -RoleDefinitionName "Contributor" -MaxRetries $MaxRetries
+
+            # operation succeeded
+            $awaitingServicePrincipalRoleAssignment = $false
+        }
+        catch [Hyak.Common.CloudException]
+        {
+            $expectedException = "The role assignment already exists."
+
+            if ($_.Exception.Message -imatch $expectedException)
+            {
+                # the role already exists, there's nothing more to do
+                Log-Message "'$($servicePrincipal.DisplayName)' already has access to the the subscription."
+                $awaitingServicePrincipalRoleAssignment = $false
+            }
+        }
+        catch
+        {
+            # display the error information
+            Capture-ErrorStack
+
+            Log-Message "Waiting $($waitIntervalSeconds) seconds for service principal application to be created"
+            Start-Sleep -Seconds $waitIntervalSeconds    
+        }
+        
+        # check if the wait duration has been exceeded
+        $waitDurationSeconds += $waitIntervalSeconds
+
+        if ($waitDurationSeconds -gt $maxWaitDurationSeconds)
+        {
+            throw "Could not complete the role assignment for the service principal"
+        }
+    }
+    
+    ################################################
+    # 3. Allow Service Principal Key Vault access
+    ################################################
+
     try
     {
-        Log-Message "Setting Key Vault Access policy for Key Vault: $($KeyVaultName) and Service Principal: $($sp.Id)"
-        Set-AzureRmKeyVaultAccessPolicy -VaultName $KeyVaultName `
-                                        -ServicePrincipalName $ApplicationId -PermissionsToSecrets get,set,list `
-                                        -ResourceGroupName $ResourceGroupName    
+
+        # setup the key vault name associated with the resource group
+        $keyVaultName = "$($ResourceGroupName)-kv"
+        
+        Log-Message "Setting Key Vault Access policy for Key Vault: $($keyVaultName) and Service Principal: $($servicePrincipal.DisplayName)"
+        Set-OxaKeyVaultAccessPolicy -VaultName $keyVaultName `
+                                    -ServicePrincipalName $servicePrincipal.ApplicationId `
+                                    -PermissionsToSecrets get,set,list `
+                                    -ResourceGroupName $ResourceGroupName `
+                                    -MaxRetries $MaxRetries 
+
     }
     catch
     {
         Capture-ErrorStack;
-        throw "Error adding access policy to allow new Service Principal to use Key Vault - $($KeyVaultName): $($_.Message)";
+        throw "Error adding access policy to allow new Service Principal to use Key Vault - $($keyVaultName): $($_.Message)";
         exit;
     }
 }
 
-## Function: Set-KeyVaultSecretsFromFile
-##
-## Purpose: 
-##    Set KeyVault secrets from a .json file. See /config/stamp/default/keyvault-params.json
-##    file for example file. Need to be logged in with access to specified KeyVault
-##
-## Input: 
-##   ResourceGroupName      ResourceGroupName where KeyVault is
-##   KeyVaultName           Name of KeyVault instance to provide access to
-##   CertSubject            Subject to search for in cert store
-##   TargetPath             Path to .json file
-##   Cloud                  Cloud deploying to, used for setting defaults
-##
-## Output:
-##   Nothing
-##
+<#
+.SYNOPSIS
+Get the path for local certificate store where OXA deployment certificates are located. 
+
+.DESCRIPTION
+Get the path for local certificate store where OXA deployment certificates are located. 
+
+.OUTPUTS
+System.String. Get-OxaLocalCertificateStore returns certificate store path.
+#>
+function Get-OxaLocalCertificateStore
+{
+    return "\CurrentUser\My"
+}
+
+<#
+.SYNOPSIS
+Set Key Vault secrets from a .json file. 
+
+.DESCRIPTION
+Set Key Vault secrets from a .json file. 
+
+See /config/stamp/default/keyvault-params.json file for example file. 
+This call expects prior successful authentication and access to specified Key Vault.
+
+.PARAMETER ResourceGroupName
+Name of the azure resource group where Key Vault is
+
+.PARAMETER KeyVaultName
+Name of Key Vault instance to provide populate secrets
+
+.PARAMETER SettingsFile
+Path to deployment settings to upload to keyvault
+
+This parameter is optional. When set, the deployment populates keyvault with the specified deployment-related settings/secrets.
+The file should be a json file with key:value pairs representing setting name and setting value.
+
+.PARAMETER Prefix
+The prefix to use for naming the setting/secret. 
+
+The prefix allows grouping of settings/secrets in keyvault for easy retrieval by group.
+
+.PARAMETER MaxRetries
+Maximum number of retries this call makes before failing. This defaults to 3.
+
+.OUTPUTS
+System.Array. Get-ScriptParameters returns and array of parameters and accompanying details associated with a specified script.
+#>
 function Set-KeyVaultSecretsFromFile
 {
     Param(
-            [Parameter(Mandatory=$false)][String] $ResourceGroupName="",
-            [Parameter(Mandatory=$false)][String] $KeyVaultName="",
-            [Parameter(Mandatory=$false)][String] $CertSubject="",
-            [Parameter(Mandatory=$false)][String] $TargetPath="",            
-            [Parameter(Mandatory=$false)][ValidateSet("prod", "int", "bvt")][string] $Cloud="bvt"              
+            [Parameter(Mandatory=$true)][String] $ResourceGroupName,
+            [Parameter(Mandatory=$true)][String] $KeyVaultName,
+            [Parameter(Mandatory=$true)][String] $SettingsFile,
+            [Parameter(Mandatory=$true)][string]$Prefix,
+            [Parameter(Mandatory=$false)][int]$MaxRetries=3
          )
 
-    $KeyVaultName = Set-ScriptDefault -ScriptParamName "KeyVaultName" `
-        -ScriptParamVal $KeyVaultName `
-        -DefaultValue "$($ResourceGroupName)-kv"
-     
-    $CertSubject = Set-ScriptDefault -ScriptParamName "CertSubject" `
-        -ScriptParamVal $CertSubject `
-        -DefaultValue "CN=$($Cloud)-cert"
+    if ((Test-Path -Path $SettingsFile) -eq $false)
+    {
+        throw "The specified keyvault settings file was not found: $($SettingsFile)"
+    }
     
-    $TargetPath = Set-ScriptDefault -ScriptParamName "TargetPath" `
-        -ScriptParamVal $TargetPath `
-        -DefaultValue "$($rootPath)/config/stamp/default/keyvault-params.json"
+    # Remove all existing secrets
+    [array]$keyVaultSecrets = Get-OxaDeploymentKeyVaultSettings -ResourceGroupName $ResourceGroupName -MaxRetries $MaxRetries -WithoutValues
     
-    $json = Get-Content -Raw $TargetPath | Out-String | ConvertFrom-Json
-    Write-Host $json
+    Log-Message "Purging existing secrets..."
+    foreach($secret in $keyVaultSecrets)
+    {
+        Remove-OxaKeyVaultSecret -VaultName $KeyVaultName -Name $secret.Name -Quiet
+    }
+
+    # Push new secrets to key vault
+    $json = Get-Content -Raw $SettingsFile | Out-String | ConvertFrom-Json
+
+    Log-Message "Syncing settings/secrets to key vault: $($KeyVaultName)"
+
     $json.psobject.properties | ForEach-Object { 
 
-        Log-Message "Syncing $($_.Name) to KeyVault: $($KeyVaultName)"        
+        Log-Message "Syncing $($_.Name) ..." -NoNewLine
 
+        # TODO: why the value check? 
+        # Isn't it possible to setup blank values. At least the secret would have been setup
         if ($_.Value)
         {
             # Create a new secret
@@ -2400,18 +2717,454 @@ function Set-KeyVaultSecretsFromFile
             try
             {
                 # Store the secret in Azure Key Vault
-                Set-AzureKeyVaultSecret -VaultName $KeyVaultName -Name $_.Name -SecretValue $secretvalue
+                # using a prefix for the name allows support for grouping keyvault settings
+                $response = Set-OxaKeyVaultSecret -VaultName $KeyVaultName -Name "$($Prefix)$($_.Name)" -SecretValue $secretvalue -MaxRetries $MaxRetries -Quiet
+                if (!$response)
+                {
+                    throw "Could not create the keyvault secret: $($_.Name)."
+                }
+
+                Log-Message "[OK]." -Foregroundcolor Green -SkipTimestamp
             }
             catch
             {
-                Log-Message "Error Syncing Key: $($_.Name)"
+                Log-Message "[Failed]." -Foregroundcolor Red -SkipTimestamp
                 Capture-ErrorStack;
                 throw $($_.Message)
             }
         }
         else
         {
-            Log-Message "No value was set for key $($_.Name) in $($TargetPath)"
+            Log-Message "[Skipped]." -Foregroundcolor Yellow -SkipTimestamp
         }
     }
+}
+
+<#
+.SYNOPSIS
+Filters active directory service principals.
+
+.DESCRIPTION
+Filters active directory service principals.
+
+.PARAMETER DisplayName
+Display name of the service principal.
+
+.PARAMETER ApplicationId
+Application Id of the service principal.
+
+.PARAMETER Context
+Logging context that identifies the call
+
+.PARAMETER MaxRetries
+Maximum number of retries this call makes before failing. This defaults to 3.
+
+.OUTPUTS
+System.Array. Get-OxaADServicePrincipal returns an array of Microsoft.Azure.Graph.RBAC.Version1_6.ActiveDirectory.PSADServicePrincipal objects
+#>
+function Get-OxaADServicePrincipal
+{
+    param(
+            [Parameter(Mandatory=$false)][string]$DisplayName="",
+            [Parameter(Mandatory=$false)][string]$ApplicationId="",
+            [Parameter(Mandatory=$false)][string]$Context="Azure Active Directory",
+            [Parameter(Mandatory=$false)][int]$MaxRetries=3
+         )
+
+    # prepare the inputs
+    [hashtable]$inputParameters = @{
+                                        "DisplayName" = $DisplayName;
+                                        "ApplicationId" = $ApplicationId;
+                                        "Command" = "Get-AzureRmADServicePrincipal";
+                                        "Activity" = "Getting Service Principal from AAD: DisplayName='$($DisplayName)' or ApplicationId='$($ApplicationId)'"
+                                        "ExecutionContext" = $Context;
+                                        "MaxRetries" = $MaxRetries;
+                                   };
+
+    # this call doesn't require special error handling
+    return Start-AzureCommand -InputParameters $inputParameters
+}
+
+<#
+.SYNOPSIS
+Creates a new azure active directory service principal.
+
+.DESCRIPTION
+Creates a new azure active directory service principal.
+
+.PARAMETER DisplayName
+The unique display name the service principal in a tenant. Once created this property cannot be changed.
+
+.PARAMETER CertValue
+The value of the "asymmetric" credential type. It represents the base 64 encoded certificate.
+
+.PARAMETER EndDate
+The effective end date of the credential usage. The default end date value is one year from today. For an "asymmetric" type credential, this must be set to on or before the date that the X509 certificate is valid.
+
+.PARAMETER StartDate
+The effective start date of the credential usage. The default start date value is today. For an "asymmetric" type credential, this must be set to on or after the date that the X509 certificate is valid from.
+
+.PARAMETER Context
+Logging context that identifies the call
+
+.PARAMETER MaxRetries
+Maximum number of retries this call makes before failing. This defaults to 3.
+
+.OUTPUTS
+Microsoft.Azure.Graph.RBAC.Version1_6.ActiveDirectory.PSADServicePrincipal. New-OxaADServicePrincipal returns an AAD service principal object
+#>
+function New-OxaADServicePrincipal
+{
+    param(
+            [Parameter(Mandatory=$true)][string]$DisplayName,
+            [Parameter(Mandatory=$true)][string]$CertValue,            
+            [Parameter(Mandatory=$true)][datetime]$EndDate,
+            [Parameter(Mandatory=$true)][datetime]$StartDate,
+            [Parameter(Mandatory=$false)][string]$Context="Azure Active Directory",
+            [Parameter(Mandatory=$false)][int]$MaxRetries=3
+         )
+
+    # prepare the inputs
+    [hashtable]$inputParameters = @{
+                                        "DisplayName" = $DisplayName;
+                                        "CertValue" = $CertValue;
+                                        "EndDate" = $EndDate;
+                                        "StartDate" = $StartDate;
+                                        "Command" = "New-AzureRMADServicePrincipal";
+                                        "Activity" = "Creating new service principal for Application: '$($DisplayName)'"
+                                        "ExecutionContext" = $Context;
+                                        "MaxRetries" = $MaxRetries;
+                                   };
+
+    # this call doesn't require special error handling
+    return Start-AzureCommand -InputParameters $inputParameters
+}
+
+<#
+.SYNOPSIS
+Adds a credential to an existing service principal.
+
+.DESCRIPTION
+Adds a credential to an existing service principal.
+
+.PARAMETER ApplicationId
+The id of the application to add the credentials to.
+
+.PARAMETER CertValue
+The value of the "asymmetric" credential type. It represents the base 64 encoded certificate.
+
+.PARAMETER EndDate
+The effective end date of the credential usage. The default end date value is one year from today. For an "asymmetric" type credential, this must be set to on or before the date that the X509 certificate is valid.
+
+.PARAMETER StartDate
+The effective start date of the credential usage. The default start date value is today. For an "asymmetric" type credential, this must be set to on or after the date that the X509 certificate is valid from.
+
+.PARAMETER Context
+Logging context that identifies the call
+
+.PARAMETER MaxRetries
+Maximum number of retries this call makes before failing. This defaults to 3.
+
+.OUTPUTS
+Microsoft.Azure.Graph.RBAC.Version1_6.ActiveDirectory.PSADCredential. New-OxaADSpCredential returns an AAD service principal credential object.
+#>
+function New-OxaADSpCredential
+{
+    param(
+            [Parameter(Mandatory=$true)][string]$ApplicationId,
+            [Parameter(Mandatory=$true)][string]$CertValue,            
+            [Parameter(Mandatory=$true)][datetime]$EndDate,
+            [Parameter(Mandatory=$true)][datetime]$StartDate,
+            [Parameter(Mandatory=$false)][string]$Context="Azure Active Directory",
+            [Parameter(Mandatory=$false)][int]$MaxRetries=3
+         )
+
+    # prepare the inputs
+    [hashtable]$inputParameters = @{
+                                        "ApplicationId" = $ApplicationId;
+                                        "CertValue" = $CertValue;
+                                        "EndDate" = $EndDate;
+                                        "StartDate" = $StartDate;
+                                        "Command" = "New-AzureRmADSpCredential";
+                                        "Activity" = "Creating new service principal credential for Application: '$($ApplicationId)'"
+                                        "ExecutionContext" = $Context;
+                                        "MaxRetries" = $MaxRetries;
+                                   };
+
+    # this call doesn't require special error handling
+    return Start-AzureCommand -InputParameters $inputParameters
+}
+
+<#
+.SYNOPSIS
+Creates a new azure active directory service principal.
+
+.DESCRIPTION
+Creates a new azure active directory service principal.
+
+.PARAMETER ApplicationId
+The unique application id for a service principal in a tenant. Once created this property cannot be changed. If an application id is not specified, one will be generated
+
+.PARAMETER CertValue
+The value of the "asymmetric" credential type. It represents the base 64 encoded certificate.
+
+.PARAMETER EndDate
+The effective end date of the credential usage. The default end date value is one year from today. For an "asymmetric" type credential, this must be set to on or before the date that the X509 certificate is valid.
+
+.PARAMETER StartDate
+The effective start date of the credential usage. The default start date value is today. For an "asymmetric" type credential, this must be set to on or after the date that the X509 certificate is valid from.
+
+.PARAMETER Context
+Logging context that identifies the call
+
+.PARAMETER MaxRetries
+Maximum number of retries this call makes before failing. This defaults to 3.
+
+.OUTPUTS
+Microsoft.Azure.Graph.RBAC.Version1_6.ActiveDirectory.PSADServicePrincipal. New-OxaADServicePrincipal returns an AAD service principal object
+#>
+function New-OxaRoleAssignment
+{
+    param(
+            [Parameter(Mandatory=$true)][string]$ServicePrincipalName,            
+            [Parameter(Mandatory=$true)][string]$Scope,
+            [Parameter(Mandatory=$false)][string]$RoleDefinitionName="Contributor",
+            [Parameter(Mandatory=$false)][string]$Context="Azure Active Directory",
+            [Parameter(Mandatory=$false)][int]$MaxRetries=3
+         )
+
+    # prepare the inputs
+    [hashtable]$inputParameters = @{
+                                        "ServicePrincipalName" = $ServicePrincipalName;
+                                        "Scope" = $Scope;
+                                        "RoleDefinitionName" = $RoleDefinitionName;
+                                        "Command" = "New-AzureRMRoleAssignment";
+                                        "Activity" = "Assigning '$($RoleDefinitionName)' role to service principal: '$($ServicePrincipalName)'"
+                                        "ExecutionContext" = $Context;
+                                        "MaxRetries" = $MaxRetries;
+                                        "ExpectedException" = "The role assignment already exists."
+                                   };
+
+    # this call doesn't require special error handling
+    return Start-AzureCommand -InputParameters $inputParameters
+}
+
+
+<#
+.SYNOPSIS
+Grants or modifies existing permissions for a user, application, or security group to perform operations with a key vault.
+
+.DESCRIPTION
+Grants or modifies existing permissions for a user, application, or security group to perform operations with a key vault.
+
+.PARAMETER VaultName
+Specifies the name of a key vault. This cmdlet modifies the access policy for the key vault that this parameter specifies.
+
+.PARAMETER ServicePrincipalName
+Specifies the service principal name of the application to which to grant permissions.
+
+.PARAMETER PermissionsToSecrets
+Specifies an array of secret operation permissions to grant to a user or service principal.
+
+.PARAMETER ResourceGroupName
+Name of the Azure Resource group containing the network resources.
+
+.PARAMETER Context
+Logging context that identifies the call
+
+.PARAMETER MaxRetries
+Maximum number of retries this call makes before failing. This defaults to 3.
+
+.OUTPUTS
+Microsoft.Azure.Commands.KeyVault.Models.PSVault. Set-OxaKeyVaultAccessPolicy returns a key vault object
+#>
+function Set-OxaKeyVaultAccessPolicy
+{
+    param(
+            [Parameter(Mandatory=$true)][string]$VaultName,            
+            [Parameter(Mandatory=$true)][string]$ServicePrincipalName,
+            [Parameter(Mandatory=$true)][array]$PermissionsToSecrets,
+            [Parameter(Mandatory=$true)][string]$ResourceGroupName,
+            [Parameter(Mandatory=$false)][string]$Context="Key Vault",
+            [Parameter(Mandatory=$false)][int]$MaxRetries=3
+         )
+
+    # prepare the inputs
+    [hashtable]$inputParameters = @{
+                                        "VaultName" = $VaultName;
+                                        "ServicePrincipalName" = $ServicePrincipalName;
+                                        "PermissionsToSecrets" = $PermissionsToSecrets;
+                                        "ResourceGroupName" = $ResourceGroupName;
+                                        "Command" = "Set-AzureRmKeyVaultAccessPolicy";
+                                        "Activity" = "Granting service principal '$($ServicePrincipalName)' access to '$($VaultName)'"
+                                        "ExecutionContext" = $Context;
+                                        "MaxRetries" = $MaxRetries;
+                                   };
+
+    # this call doesn't require special error handling
+    return Start-AzureCommand -InputParameters $inputParameters
+}
+
+<#
+.SYNOPSIS
+Log into Azure account using AAD web application or certificate.
+
+.DESCRIPTION
+Log into Azure account using AAD web application or certificate.
+
+.PARAMETER AzureSubscriptionName
+Name of the azure subscription to use.
+
+.PARAMETER AadWebClientId
+The azure active directory web application Id for authentication.
+
+.PARAMETER AadTenantId
+The azure active directory tenant id for authentication.
+
+.PARAMETER AuthenticationCertificateSubject
+The subject of the certificate used for authentication.
+
+.PARAMETER AadWebClientAppKey
+The azure active directory web application key for authentication.
+
+.PARAMETER ResourceGroupName
+Name of the Azure Resource group containing the network resources.
+
+.PARAMETER MaxRetries
+Maximum number of retries this call makes before failing. This defaults to 3.
+
+.OUTPUTS
+None.
+#>
+function Login-OxaAccount
+{
+    param(
+            [Parameter(Mandatory=$true)][string]$AzureSubscriptionName,
+            [Parameter(Mandatory=$true)][string]$AadWebClientId,
+            [Parameter(Mandatory=$true)][string]$AadTenantId,
+            [Parameter(Mandatory=$false)][string]$AuthenticationCertificateSubject="",
+            [Parameter(Mandatory=$false)][string]$AadWebClientAppKey="",
+            [Parameter(Mandatory=$false)][string]$ResourceGroupName="",
+            [Parameter(Mandatory=$false)][int]$MaxRetries=3
+         )
+
+    # make sure we have the right parameters specified
+    # Preference is given to certificate based login, followed by key-based login
+    if ($AadWebClientAppKey)
+    {
+        # if both credentials are specified, establish certificate as replacement for AAD web application authentication
+        if ($AuthenticationCertificateSubject -and $ResourceGroupName)
+        {
+            # if we are setting up a new SPN, the web application owner needs to login
+            Log-Message "Setting up certificate authentication. Web Application owner needs to login..."
+
+            Log-Message "Logging into azure account..."
+            Login-AzureRmAccount -ErrorAction Stop | Out-Null
+
+            Log-Message "Selecting '$($AzureSubscriptionName)' subscription"
+            Select-AzureRMSubscription -SubscriptionName $AzureSubscriptionName | Out-Null
+
+
+            New-OxaCertificateBasedServicePrincipal -AadWebClientId $AadWebClientId `
+                                                    -AuthenticationCertificateSubject $AuthenticationCertificateSubject `
+                                                    -ResourceGroupName $ResourceGroupName `
+                                                    -MaxRetries $MaxRetries
+        }
+        else 
+        {
+            Log-Message "Logging in with Web Client App Key"
+
+            # Credentials for regular Aad Web Application authentication are available.
+            $clientSecret = ConvertTo-SecureString -String $AadWebClientAppKey -AsPlainText -Force
+            $aadCredential = New-Object System.Management.Automation.PSCredential($AadWebClientId, $clientSecret)
+            Login-AzureRmAccount -ServicePrincipal -TenantId $AadTenantId -SubscriptionName $AzureSubscriptionName -Credential $aadCredential -ErrorAction Stop | Out-Null
+    
+            Log-Message "Selecting '$($AzureSubscriptionName)' subscription"
+            Select-AzureRMSubscription -SubscriptionName $AzureSubscriptionName | Out-Null
+        }
+    }
+    elseif ($AuthenticationCertificateSubject)
+    {
+        Log-Message "Logging in with Authentication Certificate"
+        $certificate = Get-CurrentUserCertificate -CertSubject $AuthenticationCertificateSubject
+
+        if (!$certificate)
+        {
+            throw "$($AuthenticationCertificateSubject) was not found in the current user certificate store"
+        }
+
+        Login-AzureRmAccount -ServicePrincipal -CertificateThumbprint $certificate.thumbprint -ApplicationId $AadWebClientId -TenantId $AadTenantId -ErrorAction Stop | Out-Null
+
+        Log-Message "Selecting '$($AzureSubscriptionName)' subscription"
+        Set-AzureSubscription -SubscriptionName $AzureSubscriptionName | Out-Null
+    }
+    else 
+    {
+        throw "Invalid credentials specified"
+    }
+}
+
+<#
+.SYNOPSIS
+Apply transforms to relevant variables.
+
+.DESCRIPTION
+Apply transforms to relevant variables.
+
+.PARAMETER ScriptParameters
+Array of parameters and their properties.
+
+.PARAMETER AvailableParameters
+Parameters from key vault and their values.
+
+.OUTPUTS
+System.Hashtable. Set-DeploymentParameterValues returns an updated list of available parameters.
+#>
+function Set-DeploymentParameterValues
+{
+    param(
+            [Parameter(Mandatory=$true)][array]$ScriptParameters,
+            [Parameter(Mandatory=$true)][hashtable]$AvailableParameters
+        )
+
+    # get a new reference tothe parameters to avoid interupting the enumeration
+    $updatedParameters = @{}
+
+    foreach($parameterName in $AvailableParameters.keys)
+    {
+        $paramDetails = $ScriptParameters | Where-Object {$_.Name -ieq $parameterName}
+
+        try 
+        {
+            if ($paramDetails.Type.Name -ieq "SwitchParameter")
+            {
+                write-host $AvailableParameters[$parameterName].GetType()
+
+                if ($AvailableParameters[$parameterName].GetType().ToString() -ieq "System.Management.Automation.SwitchParameter")
+                {
+                    $updatedParameters[$parameterName] = $AvailableParameters[$parameterName]
+                }
+                else
+                {
+                    $updatedParameters[$parameterName] = [System.Convert]::ToBoolean([int]$AvailableParameters[$parameterName])
+                }
+            }
+            elseif($paramDetails.Type -ieq "Int")
+            {
+                $updatedParameters[$parameterName] = [System.Convert]::ToInt16($AvailableParameters[$parameterName])
+            }    
+        }
+        catch 
+        {
+            Capture-ErrorStack    
+            exit
+        }
+    }
+
+    foreach($key in $updatedParameters.Keys)
+    {
+        $AvailableParameters[$key] = $updatedParameters[$key]
+    }
+
+    return $AvailableParameters
 }

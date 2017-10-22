@@ -34,6 +34,9 @@ The azure active directory tenant id for authentication.
 .PARAMETER KeyVaultUserObjectId
 Object id of the user to be granted full keyvault access. If no value is specified, the service principal (AadWebClientId) object id will be used.
 
+.PARAMETER AuthenticationCertificateSubject
+Subject of the certificate used for authentication.
+
 .PARAMETER KeyVaultDeploymentArmTemplateFile
 Path to the arm template for bootstrapping keyvault.
 
@@ -132,9 +135,10 @@ Param(
         [Parameter(Mandatory=$true)][string]$TargetPath,
         [Parameter(Mandatory=$false)][string]$ConfigurationPrefix = "OxaToolsConfigxxx",
         [Parameter(Mandatory=$true)][string]$AadWebClientId,
-        [Parameter(Mandatory=$true)][string]$AadWebClientAppKey,
+        [Parameter(Mandatory=$false)][string]$AadWebClientAppKey="",
         [Parameter(Mandatory=$true)][string]$AadTenantId,
         [Parameter(Mandatory=$false)][string]$KeyVaultUserObjectId="",
+        [Parameter(Mandatory=$false)][string]$AuthenticationCertificateSubject="",
 
         [Parameter(Mandatory=$false)][string]$KeyVaultDeploymentArmTemplateFile="",
         [Parameter(Mandatory=$false)][string]$KeyVaultDeploymentParametersFile="",
@@ -170,8 +174,6 @@ Param(
 
         [Parameter(Mandatory=$false)][ValidateSet("bootstrap", "upgrade", "swap", "cleanup")][string]$DeploymentType="bootstrap",
 
-        [Parameter(Mandatory=$false)][ValidateSet("prod", "int", "bvt")][string]$Cloud="bvt",
-
         [Parameter(Mandatory=$false)][ValidateRange(0,2)][int]$JumpboxNumber=0,
 
         [Parameter(Mandatory=$false)][int]$MaxRetries=3,
@@ -186,9 +188,8 @@ Param(
 
 trap [Exception]
 {
-
     # support low level exception handling
-    Capture-ErrorStack -ForceStop
+    Capture-ErrorStack
 
     # we expect a calling script to be listening to what we are doing here. 
     # therefore, we will throw a fit here as a signal to them.
@@ -206,12 +207,12 @@ $rootPath = (get-item $currentPath).parent.FullName
 Import-Module "$($currentPath)/Common.ps1" -Force
 
 # Login
-$clientSecret = ConvertTo-SecureString -String $AadWebClientAppKey -AsPlainText -Force
-$aadCredential = New-Object System.Management.Automation.PSCredential($AadWebClientId, $clientSecret)
-Login-AzureRmAccount -ServicePrincipal -TenantId $AadTenantId -SubscriptionName $AzureSubscriptionName -Credential $aadCredential -ErrorAction Stop
-
-# TODO: do we need this?
-Set-AzureSubscription -SubscriptionName $AzureSubscriptionName | Out-Null    
+Login-OxaAccount -AzureSubscriptionName $AzureSubscriptionName `
+                 -AadWebClientId $AadWebClientId `
+                 -AadWebClientAppKey $AadWebClientAppKey `
+                 -AadTenantId $AadTenantId `
+                 -AuthenticationCertificateSubject $AuthenticationCertificateSubject `
+                 -MaxRetries $MaxRetries
 
 # create the resource group
 New-AzureRmResourceGroup -Name $ResourceGroupName -Location $Location -Force
@@ -279,7 +280,7 @@ $targetDeploymentSlot = Get-OxaDisabledDeploymentSlot -resourceList $resourcelis
 if($DeploymentType -eq "upgrade" -or $DeploymentType -eq "cleanup")
 {
     # upgrade deployment: delete any resource that may exist in the target slot before starting
-    Log-Message "Deleting the resources from ResourceGroup='$($ResourceGroupName)' and cloud='$($Cloud)'";
+    Log-Message "Deleting the resources from ResourceGroup='$($ResourceGroupName)'";
     $response = Remove-OxaDeploymentSlot -DeploymentType $DeploymentType -ResourceGroupName $ResourceGroupName -TargetDeploymentSlot $targetDeploymentSlot -NetworkResourceList $resourcelist -MaxRetries $MaxRetries;
 
     # TODO: process the response
