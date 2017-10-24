@@ -63,6 +63,12 @@ NOTIFICATION_MESSAGE=""
 SECONDARY_LOG="/var/log/bootstrap.csx.log"
 PRIMARY_LOG="/var/log/bootstrap.log"
 
+# servicebus notification parameters
+servicebus_namespace=""
+servicebus_queue_name=""
+servicebus_shared_access_key_name="RootManageSharedAccessKey"
+servicebus_shared_access_key=""
+
 help()
 {
     echo "This script sets up SSH, installs MDSD and runs the DB bootstrap"
@@ -98,6 +104,10 @@ help()
     echo "        --azure-subscription-id    Azure subscription id"
     echo "        --cluster-admin-email Email address of the administrator where system and other notifications will be sent"
     echo "        --cluster-name Name of the cluster being bootstrapped"
+    echo "        --servicebus-namespace Name of servicebus namespace to use for notification communications"
+    echo "        --servicebus-queue-name Name of servicebus queue to use for notification communications"
+    echo "        --servicebus-shared-access-key-name Name of the servicebus shared access policy to use for service bus authentication"
+    echo "        --servicebus-shared-access-key Key for the servicebus shared access policy to use for service bus authentication"
 }
 
 # Parse script parameters
@@ -219,6 +229,18 @@ parse_args()
                 CLUSTER_NAME="${arg_value}"
                 MAIL_SUBJECT="${MAIL_SUBJECT} - ${arg_value,,}"
                 ;;
+            --servicebus-namespace)
+                servicebus_namespace="${arg_value}"
+                ;;
+            --servicebus-queue-name)
+                servicebus_queue_name="${arg_value}"
+                ;;
+            --servicebus-shared-access-key-name)
+                servicebus_shared_access_key_name="${arg_value}"
+                ;;
+            --servicebus-shared-access-key)
+                servicebus_shared_access_key="${arg_value}"
+                ;;
             -h|--help)  # Helpful hints
                 help
                 exit 2
@@ -335,7 +357,10 @@ then
     EDX_THEME_GITHUB_PARAMS="--edxtheme-public-github-accountname $EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME --edxtheme-public-github-projectname $EDX_THEME_PUBLIC_GITHUB_PROJECTNAME --edxtheme-public-github-projectbranch $EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH"
     ANSIBLE_GITHUB_PARAMS="--ansible-public-github-accountname $ANSIBLE_PUBLIC_GITHUB_ACCOUNTNAME --ansible-public-github-projectname $ANSIBLE_PUBLIC_GITHUB_PROJECTNAME --ansible-public-github-projectbranch $ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH"
 
-    INSTALL_COMMAND="sudo flock -n /var/log/bootstrap.lock bash $REPO_ROOT/$OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME/scripts/bootstrap.sh -e $CLOUD_NAME --role $SHORT_ROLE_NAME --installer-script-path $CRON_INSTALLER_SCRIPT --cluster-admin-email $CLUSTER_ADMIN_EMAIL --cluster-name $CLUSTER_NAME ${OXA_TOOLS_GITHUB_PARAMS} ${EDX_CONFIGURATION_GITHUB_PARAMS} ${EDX_PLATFORM_GITHUB_PARAMS} ${EDX_THEME_GITHUB_PARAMS} ${ANSIBLE_GITHUB_PARAMS} --edxversion $EDX_VERSION --forumversion $FORUM_VERSION --cron >> /var/log/bootstrap.log 2>&1"
+    # servicebus notification parameters
+    SERVICEBUS_PARAMS="--servicebus-namespace '${servicebus_namespace}' --servicebus-queue-name '${servicebus_queue_name}' --servicebus-shared-access-key-name '${servicebus_shared_access_key_name}' --servicebus-shared-access-key '${servicebus_shared_access_key}'"
+    
+    INSTALL_COMMAND="sudo flock -n /var/log/bootstrap.lock bash $REPO_ROOT/$OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME/scripts/bootstrap.sh -e $CLOUD_NAME --role $SHORT_ROLE_NAME --installer-script-path $CRON_INSTALLER_SCRIPT --cluster-admin-email $CLUSTER_ADMIN_EMAIL --cluster-name $CLUSTER_NAME ${OXA_TOOLS_GITHUB_PARAMS} ${EDX_CONFIGURATION_GITHUB_PARAMS} ${EDX_PLATFORM_GITHUB_PARAMS} ${EDX_THEME_GITHUB_PARAMS} ${ANSIBLE_GITHUB_PARAMS} ${SERVICEBUS_PARAMS} --edxversion $EDX_VERSION --forumversion $FORUM_VERSION --cron >> /var/log/bootstrap.log 2>&1"
     echo $INSTALL_COMMAND > $CRON_INSTALLER_SCRIPT
 
     # Remove the task if it is already setup

@@ -63,6 +63,12 @@ NOTIFICATION_MESSAGE=""
 SECONDARY_LOG="/var/log/bootstrap.csx.log"
 PRIMARY_LOG="/var/log/bootstrap.log"
 
+# servicebus notification parameters
+servicebus_namespace=""
+servicebus_queue_name=""
+servicebus_shared_access_key_name="RootManageSharedAccessKey"
+servicebus_shared_access_key=""
+
 display_usage()
 {
   echo "Usage: $0 [-r|--role {jb|vmss|mongo|mysql|edxapp|fullstack|devstack}] [-e|--environment {dev|bvt|prod}] [--cron] --keyvault-name {azure keyvault name} --aad-webclient-id {AAD web application client id} --aad-webclient-appkey {AAD web application client key} --aad-tenant-id {AAD Tenant to authenticate against} --azure-subscription-id {Azure subscription Id}"
@@ -156,6 +162,18 @@ parse_args()
           --cluster-name)
             CLUSTER_NAME="${arg_value}"
             MAIL_SUBJECT="${MAIL_SUBJECT} - ${arg_value,,}"
+            ;;
+          --servicebus-namespace)
+            servicebus_namespace="${arg_value}"
+            ;;
+          --servicebus-queue-name)
+            servicebus_queue_name="${arg_value}"
+            ;;
+          --servicebus-shared-access-key-name)
+            servicebus_shared_access_key_name="${arg_value}"
+            ;;
+          --servicebus-shared-access-key)
+            servicebus_shared_access_key="${arg_value}"
             ;;
           *)
             # Unknown option encountered
@@ -680,9 +698,34 @@ then
     NOTIFICATION_MESSAGE="Installation of the EDX Database was completed successfully."
 elif [ "$EDX_ROLE" == "vmss" ] ;
 then
-    NOTIFICATION_MESSAGE="Installation of the EDX Application (VMSS) was completed successfully."
+    NOTIFICATION_MESSAGE="Installation of the EDX Application on VMSS instance '${HOSTNAME}' was completed successfully."
 fi
 
 log "${NOTIFICATION_MESSAGE}"
 send_notification "${NOTIFICATION_MESSAGE}" "${MAIL_SUBJECT}" "${CLUSTER_ADMIN_EMAIL}"
+
+# if required, send completion notification to servicebus queue as well
+# this allows the async deployment process to determine completion
+# this is specific to the VMSS instances
+
+if [[ "$EDX_ROLE" == "vmss" ]] && [[ -n "${servicebus_namespace}" ]] && [[ -n "${servicebus_queue_name}" ]] && [[ -n "${servicebus_shared_access_key_name}" ]] && [[ -n "${servicebus_shared_access_key}" ]];
+then
+    log "Sending servicebus notification"
+
+    # install servicebus dependencies if necessary
+    install-servicebus-tools
+
+    python "${OXA_TOOLS_PATH}/scripts/servicebus_notification.py" \
+        --namespace "${servicebus_namespace}" \
+        --queue_name "${servicebus_queue_name}" \
+        --shared_access_key_name "${servicebus_shared_access_key_name}" \
+        --shared_access_key "${servicebus_shared_access_key}" \
+        --message "${HOSTNAME}"
+
+    exit_on_error "Failed sending service bus notification for '${HOSTNAME}'!" 1 "VMSS Bootstrap ServiceBus Notification Failure" "${cluster_admin_email}"
+else
+    log "Skipping servicebus notification"
+fi
+
+# at this point, we completed successfully
 exit 0
