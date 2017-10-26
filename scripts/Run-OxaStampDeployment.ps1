@@ -123,6 +123,7 @@ $keyVaultDeploymentParameters['AzureSubscriptionName'] = $AzureSubscriptionName
 $keyVaultDeploymentParameters['ResourceGroupName'] = $ResourceGroupName
 $keyVaultDeploymentParameters['AuthenticationCertificateSubject'] = $authenticationCertificateSubject
 $keyVaultDeploymentParameters['AutoDeploy'] = $AutoDeploy
+$keyVaultDeploymentParameters['DeploymentNotificationTemplate'] = $DeploymentNotificationTemplate
 
 #################################################
 # 4. Invoke Deploy-OxaStamp.ps1 
@@ -141,19 +142,22 @@ try
     $autoDeployPhases = @{"bootstrap"=0; "upgrade"=1; "swap"=2; "cleanup"=3}
 
     # seed the deployment type
-    $deploymentType = $keyVaultDeploymentParameters['DeploymentType']
-    [int]$deploymentPosition = $autoDeployPhases[$deploymentType]
+    $calculatedDeploymentType = $keyVaultDeploymentParameters['DeploymentType']
+    [int]$deploymentPosition = $autoDeployPhases[$calculatedDeploymentType]
     $terminalDeploymentPosition = 3
 
     while ($deploymentPosition -le $terminalDeploymentPosition) 
     {
-        $deploymentType = $autoDeployPhases.Keys | Where-Object { [int]$autoDeployPhases[ $_ ] -eq $deploymentPosition }
-        $keyVaultDeploymentParameters['DeploymentType'] = $deploymentType
+        $calculatedDeploymentType = $autoDeployPhases.Keys | Where-Object { [int]$autoDeployPhases[ $_ ] -eq $deploymentPosition }
+        $keyVaultDeploymentParameters['DeploymentType'] = $calculatedDeploymentType
 
-        Log-Message "Starting '$($deploymentType)($deploymentPosition)' deployment"
+        $deploymentMessage = "Starting '$($calculatedDeploymentType.ToUpper())' deployment."
+        Log-Message $deploymentMessage
+
+        New-DeploymentNotificationEmail -Subject $deploymentMessage -Parameters $keyVaultDeploymentParameters -MessageBody $deploymentMessage
 
         # trigger the deployment
-        & $mainDeploymentScript @keyVaultDeploymentParameters
+        # & $mainDeploymentScript @keyVaultDeploymentParameters
 
         if ($deploymentPosition -eq 0 -or !$AutoDeploy)
         {
@@ -165,6 +169,9 @@ try
         # progress the deployment
         $deploymentPosition+=1
     }
+
+    $deploymentMessage = "'$($DeploymentType.ToUpper())' Deployment with AutoDeploy=$($AutoDeploy) to $($Cloud) ($($ResourceGroupName)) is complete."
+    New-DeploymentNotificationEmail -Subject $deploymentMessage -Parameters $keyVaultDeploymentParameters -MessageBody $deploymentMessage
 }
 catch 
 {

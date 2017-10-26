@@ -379,6 +379,35 @@ fi
 
 exit_on_error "OXA Installation failed" 1 "${MAIL_SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
 
+if [ "$MACHINE_ROLE" == "jumpbox" ];
+then
+
+    # In order to support upgrade scenario, a secondary memcache server is required.
+    # Install & configure it using the existing deployment extension script
+
+    log "Installing secondary memcached."
+
+    temp_utilities="${REPO_ROOT}/${OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME}/scripts/deploymentextensions/installmemcached/utilities.sh"
+
+    # create link to temporary utilities file
+    ln -s "${UTILITIES_PATH}" "${temp_utilities}"
+
+    bash "${REPO_ROOT}/${OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME}/scripts/deploymentextensions/installmemcached/install.sh" \
+        --oxatools-public-github-accountname "${OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME}" \
+        --oxatools-public-github-projectname "${OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME}" \
+        --oxatools-public-github-projectbranch "${OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH}" \
+        --oxatools-repository-path "${REPO_ROOT}/${OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME}" \
+        --cluster-admin-email "${CLUSTER_ADMIN_EMAIL}" \
+        --target-user "${OS_ADMIN_USERNAME}"
+
+    exit_on_error "Unable to install secondary memcache server." 1 "${MAIL_SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
+
+    # clean up the temporary utilities file
+    rm "${temp_utilities}"
+
+    log "Completed installation of secondary memcached."
+fi
+
 # at this point, we have succeeded
 log "${NOTIFICATION_MESSAGE}"
 send_notification "${NOTIFICATION_MESSAGE}" "${MAIL_SUBJECT}" "${CLUSTER_ADMIN_EMAIL}"

@@ -276,6 +276,12 @@
         },
         "enableMobileRestApi": {
             "value": {ENABLEMOBILERESTAPI}
+        },
+        "edxPlatformName": {
+            "value": "{EDXPLATFORMNAME}"            
+        },
+        "edxPlatformEmail": {
+            "value": "{EDXPLATFORMEMAIL}"
         }
     }
 }

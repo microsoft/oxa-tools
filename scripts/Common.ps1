@@ -3169,6 +3169,190 @@ function Set-DeploymentParameterValues
 
 <#
 .SYNOPSIS
+Add one or more message recipients to an email message.
+
+.DESCRIPTION
+Add one or more message recipients to an email message.
+
+.PARAMETER Message
+Email message object.
+
+.PARAMETER Recipients
+Comma-separated list of email addresses
+
+.PARAMETER RecipientType
+Type of message recipient to add to the message.
+
+.OUTPUTS
+System.Object. Add-MessageRecipient returns an updated message object with recipient(s) added.
+#>
+function Add-MessageRecipients
+{
+    param 
+    (
+        [Parameter(Mandatory=$true)][object]$Message,
+        [Parameter(Mandatory=$false)][string]$Recipients,
+        [Parameter(Mandatory=$true)][validateset("To", "CC")][string]$Target
+    )
+
+    if($Recipients.Trim().Length -gt 0)
+    {
+        $recipientList = $Recipients.Split(",");
+        foreach($recipient in $recipientList)
+        {
+            # defensive: if the recipient specified is blank, skip it
+            if ($recipient.trim().length -eq 0)
+            {
+                continue;
+            }
+
+            Log-Message "Adding recipient : $($recipient)";
+            if ($Target -eq "To")
+            {
+                $Message.To.Add($recipient);
+            }
+            else
+            {
+                $Message.CC.Add($recipient);
+            }
+        }
+    }
+
+    return $Message;
+}
+
+<#
+.SYNOPSIS
+Gets the value of a parameter by from from a hashtable of key-value pairs.
+
+.DESCRIPTION
+Gets the value of a parameter by from from a hashtable of key-value pairs.
+
+.PARAMETER Parameters
+Hashtable of key-value pairs.
+
+.PARAMETER ParameterName
+Name of the parameter.
+
+.PARAMETER Required
+Indicator of whether or not the specified parameter is required.
+
+If the parameter is required and is not found, an error is thrown.
+
+.OUTPUTS
+System.Object. Get-ParameterValue returns $null or the value of the specified parameter.
+#>
+function Get-ParameterValue
+{
+    param 
+    (
+        [Parameter(Mandatory=$true)][hashtable]$Parameters,
+        [Parameter(Mandatory=$true)][string]$ParameterName,
+        [Parameter(Mandatory=$false)][switch]$Required
+    )
+
+    $parameterValue = $null
+    if ($Parameters.ContainsKey($ParameterName))
+    {
+        $parameterValue = $Parameters[$ParameterName]
+    }
+    elseif ($Required)
+    {
+        # parameter is required but not present
+        throw "$($ParameterName) is not present"
+    }
+
+    return $parameterValue
+}
+
+<#
+.SYNOPSIS
+Sends a deployment notification email.
+
+.DESCRIPTION
+Sends a deployment notification email.
+
+.PARAMETER Subject
+Subject of the email.
+
+.PARAMETER MessageBody
+Body of the email.
+
+.PARAMETER Parameters
+Hashtable of key-value pairs holding required parameters for sending email.
+
+It is expected that parameters will have key-value pairs for:
+1. EmailSenderAddress - address of the email sender
+2. DeploymentNotificationRecipients - comma-separated list of email address representing recipients of the email
+3. ClusterAdministratorEmailAddress - email address of the cluster administrator
+4. SmtpServer - SMTP server used for sending email
+5. SmtpServerPort - SMTP server port
+6. SmtpAuthenticationUser - User name (credential) used for authenticating against the SMTP server
+7. SmtpAuthenticationUserPassword - Password (credential) used for authenticating against the SMTP server
+
+.OUTPUTS
+System.Object. Get-ParameterValue returns $null or the value of the specified parameter.
+#>
+function New-DeploymentNotificationEmail
+{
+    param 
+    (
+        [Parameter(Mandatory=$true)][string]$Subject,
+        [Parameter(Mandatory=$true)][string]$MessageBody,
+        [Parameter(Mandatory=$true)][hashtable]$Parameters
+    )
+
+    if ($Parameters['DisableEmails'])
+    {
+        Log-Message "Skipping email notification since DisableEmails=$($Parameters['DisableEmails'])";
+        return;
+    }
+
+    # get the relevant parameters
+    $fromServiceAccount = Get-ParameterValue -Parameters $Parameters -ParameterName "EmailSenderAddress" -Required
+    $deploymentNotificationRecipients = Get-ParameterValue -Parameters $Parameters -ParameterName "DeploymentNotificationRecipients" -Required
+    $clusterAdministratorEmailAddress = Get-ParameterValue -Parameters $Parameters -ParameterName "ClusterAdministratorEmailAddress" -Required
+    $smtpServer = Get-ParameterValue -Parameters $Parameters -ParameterName "SmtpServer" -Required
+    $smtpServerPort = Get-ParameterValue -Parameters $Parameters -ParameterName "SmtpServerPort" -Required
+    $smtpAuthenticationUser = Get-ParameterValue -Parameters $Parameters -ParameterName "SmtpAuthenticationUser" -Required
+    $smtpAuthenticationUserPassword = Get-ParameterValue -Parameters $Parameters -ParameterName "SmtpAuthenticationUserPassword" -Required
+
+    # create a new message object & update properties
+    $message = New-Object System.Net.Mail.MailMessage
+    $message.From = $fromServiceAccount
+
+    # send to notification audience
+    $message = Add-MessageRecipients -Message $message -Recipients $deploymentNotificationRecipients -Target To
+
+    # always cc the admin
+    $message = Add-MessageRecipients -Message $message -Recipients $clusterAdministratorEmailAddress -Target CC
+
+    # setup subject
+    $message.Subject = $Subject
+
+    # setup message
+    $message.IsBodyHTML = $true
+    $message.Body = $MessageBody
+    
+    Log-Message "Attempting to send message using $($smtpServer)..." -NoNewLine
+    $smtpClient = New-Object System.Net.Mail.SmtpClient($smtpServer, $smtpServerPort)
+    $smtpClient.EnableSSL = $true
+    $smtpClient.Credentials = New-Object System.Net.NetworkCredential($smtpAuthenticationUser, $smtpAuthenticationUserPassword)
+
+    try
+    {
+        $smtpClient.Send($message)
+        Log-Message "[OK]" -Foregroundcolor Green -SkipTimestamp
+    }
+    catch
+    {
+        Log-Message "[Failed]" -Foregroundcolor Red -SkipTimestamp
+        Log-Message "Failed sending message using $($smtpServer): $($_)"
+    }
+}
+
+<#
+.SYNOPSIS
 Clone the specified github branch, tags.
 
 .DESCRIPTION

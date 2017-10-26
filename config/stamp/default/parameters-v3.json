@@ -252,6 +252,12 @@
         },
         "deploymentType": {
             "value": "{DEPLOYMENTTYPE}"
-        }   
+        },
+        "edxPlatformName": {
+            "value": "{EDXPLATFORMNAME}"
+        },
+        "edxPlatformEmail": {
+            "value": "{EDXPLATFORMEMAIL}"
+        }
     }
 }
