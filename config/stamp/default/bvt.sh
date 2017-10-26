@@ -115,6 +115,7 @@ MYSQL_INSTALLER_SCRIPT=mysql-ubuntu-install.sh
 MYSQL_PACKAGE_VERSION="5.6"
 MYSQL_MASTER_IP=10.0.0.16
 MYSQL_SERVER_LIST=10.0.0.16,10.0.0.17,10.0.0.18
+MYSQL_MASTER_PORT=3306
 
 # Superuser Information (this gives front door access to the application. This value must be updated.)
 EDXAPP_SU_PASSWORD=
