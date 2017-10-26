@@ -135,7 +135,9 @@ if ($keyVaultDeploymentParameters.Keys.Count -lt $requiredDeploymentParameters.C
     throw "Invalid number of parameters specified. $($mainDeploymentScript) requires $($requiredDeploymentParameters.Count) parameters. $($keyVaultDeploymentParameters.Keys.Count) parameters retrieved from keyvault."
 }
 
-$keyVaultDeploymentParameters = Set-DeploymentParameterValues -AvailableParameters $keyVaultDeploymentParameters -ScriptParameters $deploymentParameters
+$processedDeploymentParameters = Set-DeploymentParameterValues -AvailableParameters $keyVaultDeploymentParameters -ScriptParameters $deploymentParameters
+$keyVaultDeploymentParameters  = $processedDeploymentParameters["UpdatedParameters"]
+$mainDeploymentScriptParameters  = $processedDeploymentParameters["PurgedParameters"]
 
 try 
 {
@@ -149,15 +151,23 @@ try
     while ($deploymentPosition -le $terminalDeploymentPosition) 
     {
         $calculatedDeploymentType = $autoDeployPhases.Keys | Where-Object { [int]$autoDeployPhases[ $_ ] -eq $deploymentPosition }
+
         $keyVaultDeploymentParameters['DeploymentType'] = $calculatedDeploymentType
+        $mainDeploymentScriptParameters['DeploymentType'] = $calculatedDeploymentType
 
         $deploymentMessage = "Starting '$($calculatedDeploymentType.ToUpper())' deployment."
         Log-Message $deploymentMessage
 
         New-DeploymentNotificationEmail -Subject $deploymentMessage -Parameters $keyVaultDeploymentParameters -MessageBody $deploymentMessage
+        
+        # before starting an upgrade deployment, make sure the messaging queue is clear
+        if ($calculatedDeploymentType -ieq "upgrade")
+        {
+            # TODO: clear the messaging queue            
+        }
 
         # trigger the deployment
-        # & $mainDeploymentScript @keyVaultDeploymentParameters
+        & $mainDeploymentScript @mainDeploymentScriptParameters
 
         if ($deploymentPosition -eq 0 -or !$AutoDeploy)
         {

@@ -3129,10 +3129,16 @@ function Set-DeploymentParameterValues
 
     # get a new reference tothe parameters to avoid interupting the enumeration
     $updatedParameters = @{}
+    $mainDeploymentScriptParameters = @{}
 
     foreach($parameterName in $AvailableParameters.keys)
     {
         $paramDetails = $ScriptParameters | Where-Object {$_.Name -ieq $parameterName}
+
+        if ($paramDetails)
+        {
+            $mainDeploymentScriptParameters[$parameterName] = $AvailableParameters[$parameterName]
+        }
 
         try 
         {
@@ -3162,9 +3168,19 @@ function Set-DeploymentParameterValues
     foreach($key in $updatedParameters.Keys)
     {
         $AvailableParameters[$key] = $updatedParameters[$key]
+
+        if ($mainDeploymentScriptParameters.ContainsKey($key))
+        {
+            $mainDeploymentScriptParameters[$key] = $updatedParameters[$key]
+        }
     }
 
-    return $AvailableParameters
+    $response  = @{
+                    "UpdatedParameters"=$AvailableParameters
+                    "PurgedParameters"=$mainDeploymentScriptParameters
+                  }
+
+    return $response
 }
 
 <#
