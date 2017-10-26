@@ -396,7 +396,7 @@ then
         --oxatools-public-github-accountname "${OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME}" \
         --oxatools-public-github-projectname "${OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME}" \
         --oxatools-public-github-projectbranch "${OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH}" \
-        --oxatools-repository-path "${$REPO_ROOT}/${OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME}" \
+        --oxatools-repository-path "${REPO_ROOT}/${OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME}" \
         --cluster-admin-email "${CLUSTER_ADMIN_EMAIL}" \
         --target-user "${OS_ADMIN_USERNAME}"
 
