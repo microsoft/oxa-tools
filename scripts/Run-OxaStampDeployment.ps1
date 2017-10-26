@@ -63,13 +63,26 @@ Param(
         [Parameter(Mandatory=$true)][string]$AadTenantId,
         [Parameter(Mandatory=$false)][string]$AadWebClientAppKey="",
 
-        [Parameter(Mandatory=$false)][switch]$AutoDeploy
+        [Parameter(Mandatory=$false)][switch]$AutoDeploy,
+
+        [Parameter(Mandatory=$true)][string]$Branch,
+        [Parameter(Mandatory=$false)][string]$Tag="",
+        [Parameter(Mandatory=$false)][string]$ConfigurationRepositoryPath=""
      )
 
 
 $invocation = (Get-Variable MyInvocation).Value 
 $currentPath = Split-Path $invocation.MyCommand.Path
 Import-Module "$($currentPath)\Common.ps1" -Force
+
+# sync the main repository (where this script lives)
+Invoke-RepositorySync -Branch $Branch -Tag $Tag -EnlistmentRootPath (Get-Item $currentPath).Parent.FullName
+
+# sync the secondary repository (if specified)
+if ($ConfigurationRepositoryPath)
+{
+    Invoke-RepositorySync -Branch $Branch -Tag $Tag -EnlistmentRootPath $ConfigurationRepositoryPath
+}
 
 # get a list of required deployment parameter (as specified in the main deployment script)
 $mainDeploymentScript = "$($currentPath)\Deploy-OxaStamp.ps1"

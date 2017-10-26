@@ -3369,69 +3369,42 @@ function New-DeploymentNotificationEmail
 
 <#
 .SYNOPSIS
-Clone the specified github branch, tags.
+Sync the specified repository.
 
 .DESCRIPTION
-Clone the specified github branch, tags.
+Sync the specified repository.
 
-.PARAMETER BranchName
+.PARAMETER Branch
 Name of the github branch.
 
 .PARAMETER Tag
 Name of the github branch Tag.
 
-.PARAMETER enlistmentRootPath
-Provide path to clone the branch (local workspace)
-
-.PARAMETER privateRepoGitAccount
-Github url for oxa-tools-config branch.
+.PARAMETER RepositoryRoot
+Path to the root of the specified repository
 
 .OUTPUTS
 #>
-function Get-LatestChanges
+function Invoke-RepositorySync
 {
     param(      
-             [Parameter(Mandatory=$true)][string]$BranchName,
-             [Parameter(Mandatory=$false)][string]$Tag,
-             [Parameter(Mandatory=$false)][string]$enlistmentRootPath,
-             [Parameter(Mandatory=$false)][string]$privateRepoGitAccount                
+             [Parameter(Mandatory=$true)][string]$BranchOrTag,
+             [Parameter(Mandatory=$false)][string]$Tag="",
+             [Parameter(Mandatory=$false)][string]$EnlistmentRootPath
           )           
-                  
-   if (!(Test-Path -Path $enlistmentRootPath))
-   { 
-       cd $enlistmentRootPath -ErrorAction SilentlyContinue;
-       # Here we are assuming git is already installed and installed path has been set in environment path variable.
-       # SSh key has to be configured with both github & git bash account to authenticate.
-       # Clone TFD Git repository
-       git clone git@github.com:Microsoft/oxa-tools.git -b $BranchName $enlistmentRootPath -q
-   }
 
-   cd $enlistmentRootPath
-   if($tag -eq $null)
-   {
-       git checkout
-       git pull           
-   }
-   else
-   {
-       git checkout $tag -q
-   }
-              
-   if (!(Test-Path -Path $enlistmentRootPath-"config"))
-   { 
-       cd $enlistmentRootPath -ErrorAction SilentlyContinue;
-       # Clone TFD Git repository
-       git clone $privateRepoAccount -b $BranchName $enlistmentRootPath-"config" -q
-   }
-   cd $enlistmentRootPath-"config"
+    # The following assumptions are made:
+    # 1. git is already installed and the path to the git executable has been set in system PATH environment variable
+    # 2. git authentication has been setup (ie: ssh key configured with appropriate access)
 
-   if($tag -eq $null)
-   {
-       git checkout
-       git pull
-   }
-    else
-   {
-       git checkout $tag -q
-   }
+    Log-Message "Syncing git repository at $($EnlistmentRootPath): Branch/Tag=$($BranchOrTag)"
+
+    pushd $EnlistmentRootPath
+
+    git fetch --all --tags --prune
+
+    git checkout $BranchOrTag
+    git pull
+
+   popd
 }
