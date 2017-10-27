@@ -3369,6 +3369,116 @@ function New-DeploymentNotificationEmail
 
 <#
 .SYNOPSIS
+Starts a windows process executing the command specified.
+
+.DESCRIPTION
+Starts a windows process executing the command specified.
+
+.PARAMETER ProcessExecutablePath
+Path to the executable.
+
+.PARAMETER ArgumentList
+Arguments for the executable.
+
+.PARAMETER Context
+Logging context that identifies the call
+
+.PARAMETER MaxRetries
+Maximum number of retries this call makes before failing. This defaults to 3.
+
+.PARAMETER Quiet
+Indicator of whether or not to print the output of the command executed.
+
+.OUTPUTS
+System.Object. Invoke-OxaProcess returns the output of the command executed.
+#>
+function Invoke-OxaProcess
+{
+    param(
+            [Parameter(Mandatory=$true)][string]$ProcessExecutablePath, 
+            [Parameter(Mandatory=$true)][string]$ArgumentList, 
+            [Parameter(Mandatory=$false)][string]$Context="Run Process",
+            [Parameter(Mandatory=$false)][int]$MaxRetries=3,
+            [Parameter(Mandatory=$false)][switch]$Quiet
+         )
+
+    $response = $null;
+    $retryAttempts = 1;
+    while ($retryAttempts -le $MaxRetries)
+    {
+        try
+        {
+            [string]$redirectStandardOutput = [IO.Path]::GetTempFileName();
+            [string]$redirectErrorOutput = [IO.Path]::GetTempFileName();
+
+            if ($Silent -eq $false)
+            {
+                Log-Message "Attempt [$($retryAttempts)|$($MaxRetries)] - Running process: $($ProcessExecutablePath) $($ArgumentList) | Output: $($RedirectStandardOutput)" -Context $Context;
+            }
+
+            # verify our temp files are available
+            if ( !(Test-Path -Path $redirectStandardOutput)) 
+            {  
+                throw "Could not generate a temp file. Please try again."
+            }
+
+            $returnProcess = Start-Process -FilePath $ProcessExecutablePath -ArgumentList $ArgumentList -RedirectStandardOutput $RedirectStandardOutput -RedirectStandardError $redirectErrorOutput -PassThru -Wait -WindowStyle Normal;
+            
+            # check if we have to return the response from the command execution
+            $stdOutput = get-content -Path $RedirectStandardOutput -Encoding Ascii;
+            $stdError = get-content -Path $redirectErrorOutput -Encoding Ascii;
+            $response = $stdOutput;
+            
+            if(($stdError.Length -gt 0 -or $stdOutput.Length -gt 0) -and ($Silent -eq $false))
+            {
+                Log-Message $response;
+                Log-Message $stdError;
+            }
+
+            if ($returnProcess.ExitCode -ne 0)
+	        {
+                Log-Message "Attempt [$($retryAttempt)|$($MaxRetries)] : Process execution failed." -Context $Context;
+                throw "Failed executing $($ProcessExecutablePath). Exit Code: $($returnProcess.ExitCode)"
+	        }
+            else
+            {
+                Log-Message "Attempt [$($retryAttempts)|$($MaxRetries)] :  Process execution succeeded" -Context $Context;
+                $retryAttempts = $MaxRetries;
+            }
+        }
+        catch
+        {
+            Capture-ErrorStack;
+            
+            # check if we have exceeded our retry count
+            if ($retryAttempts -eq $MaxRetries)
+            {
+                # we have had 3 tries and failed when an error wasn't expected. throwing a fit.
+                throw "Process Execution Failed: Unable to execute $($ProcessExecutablePath) $($ArgumentList). `r`n Error $($_)";
+            }
+        }
+        finally
+        {
+            # clean after 
+            if ($redirectStandardOutput -and (Test-Path $redirectStandardOutput) -eq $true)
+            {
+                Remove-Item -Path $redirectStandardOutput -Force | Out-Null;
+            }
+
+            if ($redirectErrorOutput -and (Test-Path $redirectErrorOutput) -eq $true)
+            {
+                Remove-Item -Path $redirectErrorOutput -Force | Out-Null;
+            }
+        }
+
+        $retryAttempts++;
+    }
+
+    return $response;
+}
+
+<#
+.SYNOPSIS
 Sync the specified repository.
 
 .DESCRIPTION
@@ -3383,14 +3493,21 @@ Name of the github branch Tag.
 .PARAMETER RepositoryRoot
 Path to the root of the specified repository
 
+
+.PARAMETER MaxRetries
+Maximum number of retries this call makes before failing. This defaults to 3.
+
 .OUTPUTS
+None.
+
 #>
 function Invoke-RepositorySync
 {
     param(      
-             [Parameter(Mandatory=$true)][string]$BranchOrTag,
-             [Parameter(Mandatory=$false)][string]$Tag="",
-             [Parameter(Mandatory=$false)][string]$EnlistmentRootPath
+            [Parameter(Mandatory=$false)][string]$Branch="",
+            [Parameter(Mandatory=$false)][string]$Tag="",
+            [Parameter(Mandatory=$false)][string]$EnlistmentRootPath,
+            [Parameter(Mandatory=$false)][int]$MaxRetries=3
           )           
 
     # The following assumptions are made:
@@ -3401,10 +3518,22 @@ function Invoke-RepositorySync
 
     pushd $EnlistmentRootPath
 
-    git fetch --all --tags --prune
+    # fetch updates
+    $response = Invoke-OxaProcess -ProcessExecutablePath "git.exe" -ArgumentList "fetch --all --tags --prune" -Quiet -MaxRetries $MaxRetries
 
-    git checkout $BranchOrTag
-    git pull
+    if ($Tag)
+    {
+        $response = Invoke-OxaProcess -ProcessExecutablePath "git.exe" -ArgumentList "checkout tags/$Tag" -Quiet -MaxRetries $MaxRetries
+        Log-Message $response
+    }
+    else 
+    {
+        $response = Invoke-OxaProcess -ProcessExecutablePath "git.exe" -ArgumentList "checkout $Branch" -Quiet -MaxRetries $MaxRetries
+        Log-Message $response
+    }
+
+    $response = Invoke-OxaProcess -ProcessExecutablePath "git.exe" -ArgumentList "pull" -Quiet -MaxRetries $MaxRetries
+    Log-Message $response
 
    popd
 }

@@ -65,6 +65,8 @@ Param(
 
         [Parameter(Mandatory=$false)][switch]$AutoDeploy,
 
+        [Parameter(Mandatory=$false)][switch]$DeployWithoutDetectedChanges,
+
         [Parameter(Mandatory=$true)][string]$Branch,
         [Parameter(Mandatory=$false)][string]$Tag="",
         [Parameter(Mandatory=$false)][string]$ConfigurationRepositoryPath=""
@@ -75,13 +77,21 @@ $invocation = (Get-Variable MyInvocation).Value
 $currentPath = Split-Path $invocation.MyCommand.Path
 Import-Module "$($currentPath)\Common.ps1" -Force
 
+
+#################################################
+# 1. Sync Tools Repository
+#################################################
+
+# TODO: only deploy if changes are detected.
+# To enable this, it is necessary to track ALL repositories associated with the cluster setup
+
 # sync the main repository (where this script lives)
-Invoke-RepositorySync -Branch $Branch -Tag $Tag -EnlistmentRootPath (Get-Item $currentPath).Parent.FullName
+Invoke-RepositorySync -Branch $Branch -Tag $Tag -EnlistmentRootPath (Get-Item $currentPath).Parent.FullName -MaxRetries $MaxRetries
 
 # sync the secondary repository (if specified)
 if ($ConfigurationRepositoryPath)
 {
-    Invoke-RepositorySync -Branch $Branch -Tag $Tag -EnlistmentRootPath $ConfigurationRepositoryPath
+    Invoke-RepositorySync -BranchOrTag $Branch -Tag $Tag -EnlistmentRootPath $ConfigurationRepositoryPath -MaxRetries $MaxRetries
 }
 
 # get a list of required deployment parameter (as specified in the main deployment script)
@@ -95,7 +105,7 @@ $keyVaultName = "$($ResourceGroupName)-kv"
 $authenticationCertificateSubject = "CN=OpenedX On Azure - $($Cloud.ToUpper()) Deployment Certificate"
 
 #################################################
-# 1. Authenticate using web app or certificate
+# 2. Authenticate using web app or certificate
 #################################################
 
 Login-OxaAccount -AzureSubscriptionName $AzureSubscriptionName `
@@ -107,7 +117,7 @@ Login-OxaAccount -AzureSubscriptionName $AzureSubscriptionName `
                  -MaxRetries $MaxRetries
 
 #################################################
-# 2. Populate Key Vault Deployment Settings
+# 3. Populate Key Vault Deployment Settings
 #################################################
 if ($KeyVaultDeploymentSettingsFile)
 {
@@ -125,7 +135,7 @@ if ($KeyVaultDeploymentSettingsFile)
 }
 
 #################################################
-# 3. Fetch Deployment Settings from KeyVault
+# 4. Fetch Deployment Settings from KeyVault
 #################################################
 
 [hashtable]$keyVaultDeploymentParameters = Get-OxaDeploymentKeyVaultSettings -ResourceGroupName $ResourceGroupName -MaxRetries $MaxRetries
@@ -139,7 +149,7 @@ $keyVaultDeploymentParameters['AutoDeploy'] = $AutoDeploy
 $keyVaultDeploymentParameters['DeploymentNotificationTemplate'] = $DeploymentNotificationTemplate
 
 #################################################
-# 4. Invoke Deploy-OxaStamp.ps1 
+# 5. Invoke Deploy-OxaStamp.ps1 
 #################################################
 
 # make sure we at least have the required parameters
