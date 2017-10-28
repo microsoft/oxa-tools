@@ -413,9 +413,9 @@ try
                 Start-Sleep -Seconds $waitDurationSeconds;
 
                 # Waiting for deployment status
-                $deployedInstances += Get-DeploymentStatus -ServiceBusNamespace $deploymentStatus.outputs.serviceBusNameSpace.value `
-                                                           -ServiceBusQueueName $deploymentStatus.outputs.serviceBusQueueName.value `
-                                                           -Saskey $deploymentStatus.outputs.sharedAccessPolicyPrimaryKey.value;
+                $deployedInstances += Get-QueueMessages -ServiceBusNamespace $deploymentStatus.outputs.serviceBusNameSpace.value `
+                                                        -ServiceBusQueueName $deploymentStatus.outputs.serviceBusQueueName.value `
+                                                        -Saskey $deploymentStatus.outputs.sharedAccessPolicyPrimaryKey.value
 
                 # the array of deployed instances may not be unique
                 [array]$uniqueInstancesDeployed = $deployedInstances | Select-Object -Unique

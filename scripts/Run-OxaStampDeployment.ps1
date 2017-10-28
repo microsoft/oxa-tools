@@ -77,6 +77,8 @@ $invocation = (Get-Variable MyInvocation).Value
 $currentPath = Split-Path $invocation.MyCommand.Path
 Import-Module "$($currentPath)\Common.ps1" -Force
 
+# module for service bus support
+Import-Module AzureRM.ServiceBus -Force
 
 #################################################
 # 1. Sync Tools Repository
@@ -186,7 +188,8 @@ try
         # before starting an upgrade deployment, make sure the messaging queue is clear
         if ($calculatedDeploymentType -ieq "upgrade")
         {
-            # TODO: clear the messaging queue            
+            # Clear the messaging queue
+            Clear-OxaMessagingQueue -ResourceGroupName $ResourceGroupName -MaxRetries $MaxRetries
         }
 
         # trigger the deployment

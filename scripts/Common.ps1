@@ -574,6 +574,11 @@ function Start-AzureCommand
                 {
                     $response = Set-AzureRmKeyVaultAccessPolicy -VaultName $InputParameters['VaultName'] -ServicePrincipalName $InputParameters['ServicePrincipalName'] -PermissionsToSecrets $InputParameters['PermissionsToSecrets'] -ResourceGroupName $InputParameters['ResourceGroupName'] -Verbose -ErrorAction Stop
                 }
+                
+                "Get-AzureRmServiceBusNamespaceKey"
+                {
+                    $response = Get-AzureRmServiceBusNamespaceKey -ResourceGroup $InputParameters['ResourceGroup'] -NamespaceName $InputParameters['NamespaceName'] -AuthorizationRuleName $InputParameters['AuthorizationRuleName'] -Verbose -ErrorAction Stop
+                }
 
                 default 
                 { 
@@ -2215,9 +2220,9 @@ Service bus authorization primary key
 Name of the shared access policy
 
 .OUTPUTS
-System.Array. Get-DeployymentStatus returns an array containing names of VMSS instances that have been successfully deployed.
+System.Array. Get-QueueMessages returns an array containing names of VMSS instances that have been successfully deployed.
 #>
-function Get-DeploymentStatus
+function Get-QueueMessages
 {
     param(
             [Parameter(Mandatory=$true)][string]$ServiceBusNamespace,
@@ -2234,7 +2239,7 @@ function Get-DeploymentStatus
     $servicebusPeekLockRequestUrl = "https://$($ServiceBusNamespace).servicebus.windows.net/$($ServiceBusQueueName)/messages/head";
     
     # Generating SAS token to authenticate Service bus Queue to receive messages
-    $authorizedSasToken = Get-SasToken -Saskey $Saskey -ServicebusPeekLockRequestUrl $servicebusPeekLockRequestUrl -SharedAccessPolicyName $SharedAccessPolicyName;
+    $authorizedSasToken = Get-SasToken -Saskey $Saskey -RequestUri $servicebusPeekLockRequestUrl -SharedAccessPolicyName $SharedAccessPolicyName;
 
     if (!$authorizedSasToken)
     {
@@ -2280,7 +2285,7 @@ Service bus authorization primary key
 .PARAMETER SharedAccessPolicyName
 Name of the Azure Service bus authorization rule
 
-.PARAMETER ServicebusPeekLockRequestUrl
+.PARAMETER RequestUri
 Service bus rest api url to receive messages from the queue.
 
 .OUTPUTS
@@ -2290,7 +2295,7 @@ function Get-SasToken
 {
     param(
             [Parameter(Mandatory=$true)][string]$Saskey,
-            [Parameter(Mandatory=$true)][string]$ServicebusPeekLockRequestUrl,
+            [Parameter(Mandatory=$true)][string]$RequestUri,
             [Parameter(Mandatory=$false)][string]$SharedAccessPolicyName="RootManageSharedAccessKey"
         )
 
@@ -2298,7 +2303,7 @@ function Get-SasToken
     $sasToken = $null;
 
     #Encoding Service Bus Name space Rest api messaging url
-    $encodedResourceUri = [uri]::EscapeUriString($servicebusPeekLockRequestUrl)
+    $encodedResourceUri = [uri]::EscapeUriString($RequestUri)
     
     # Setting expiry (12 hours)
     $sinceEpoch = (Get-Date).ToUniversalTime() - ([datetime]'1/1/1970')
@@ -2315,6 +2320,9 @@ function Get-SasToken
     $hashOfStringToSign = $hmac.ComputeHash($stringToSignBytes)
 
     $signature = [System.Convert]::ToBase64String($hashOfStringToSign)
+
+    # add the system web assembly
+    Add-Type -AssemblyName System.Web
     $encodedSignature = [System.Web.HttpUtility]::UrlEncode($signature)   
 
     #Generating SAS token
@@ -3007,6 +3015,57 @@ function Set-OxaKeyVaultAccessPolicy
 
 <#
 .SYNOPSIS
+Gets the primary and secondary connection strings for the namespace.
+
+.DESCRIPTION
+Gets the primary and secondary connection strings for the namespace.
+
+.PARAMETER AuthorizationRuleName
+ServiceBus Namespace AuthorizationRule Name.
+
+.PARAMETER NamespaceName
+ServiceBus Namespace Name.
+
+.PARAMETER ResourceGroup
+The name of the resource group.
+
+.PARAMETER Context
+Logging context that identifies the call
+
+.PARAMETER MaxRetries
+Maximum number of retries this call makes before failing. This defaults to 3.
+
+.OUTPUTS
+Microsoft.Azure.Management.ServiceBus.Models.ResourceListKeys. Set-OxaServiceBusNamespaceKey returns list of resource keys for the specified service bus resource.
+#>
+function Get-OxaServiceBusNamespaceKey
+{
+    param(
+            [Parameter(Mandatory=$true)][string]$NamespaceName,
+            [Parameter(Mandatory=$true)][string]$ResourceGroup,
+            [Parameter(Mandatory=$false)][string]$AuthorizationRuleName="RootManageSharedAccessKey",
+            [Parameter(Mandatory=$false)][string]$Context="Service Bus",
+            [Parameter(Mandatory=$false)][int]$MaxRetries=3
+         )
+
+    # prepare the inputs
+    [hashtable]$inputParameters = @{
+                                        "ResourceGroup" = $ResourceGroup
+                                        "NamespaceName" = $NamespaceName
+                                        "AuthorizationRuleName" = $AuthorizationRuleName
+                                        "Command" = "Get-AzureRmServiceBusNamespaceKey"
+                                        "Activity" = "Getting service bus namespace key: '$($AuthorizationRuleName)' in '$($NamespaceName)'"
+                                        "ExecutionContext" = $Context
+                                        "MaxRetries" = $MaxRetries
+                                   };
+
+    # this call doesn't require special error handling
+    return Start-AzureCommand -InputParameters $inputParameters
+}
+
+
+<#
+.SYNOPSIS
 Log into Azure account using AAD web application or certificate.
 
 .DESCRIPTION
@@ -3096,7 +3155,7 @@ function Login-OxaAccount
         Login-AzureRmAccount -ServicePrincipal -CertificateThumbprint $certificate.thumbprint -ApplicationId $AadWebClientId -TenantId $AadTenantId -ErrorAction Stop | Out-Null
 
         Log-Message "Selecting '$($AzureSubscriptionName)' subscription"
-        Set-AzureSubscription -SubscriptionName $AzureSubscriptionName | Out-Null
+        Select-AzureRMSubscription -SubscriptionName $AzureSubscriptionName | Out-Null
     }
     else 
     {
@@ -3422,7 +3481,7 @@ function Invoke-OxaProcess
                 throw "Could not generate a temp file. Please try again."
             }
 
-            $returnProcess = Start-Process -FilePath $ProcessExecutablePath -ArgumentList $ArgumentList -RedirectStandardOutput $RedirectStandardOutput -RedirectStandardError $redirectErrorOutput -PassThru -Wait -WindowStyle Normal;
+            $returnProcess = Start-Process -FilePath $ProcessExecutablePath -ArgumentList $ArgumentList -RedirectStandardOutput $RedirectStandardOutput -RedirectStandardError $redirectErrorOutput -PassThru -Wait -WindowStyle Hidden;
             
             # check if we have to return the response from the command execution
             $stdOutput = get-content -Path $RedirectStandardOutput -Encoding Ascii;
@@ -3499,7 +3558,6 @@ Maximum number of retries this call makes before failing. This defaults to 3.
 
 .OUTPUTS
 None.
-
 #>
 function Invoke-RepositorySync
 {
@@ -3536,4 +3594,45 @@ function Invoke-RepositorySync
     Log-Message $response
 
    popd
+}
+
+<#
+.SYNOPSIS
+Clear all messages from the service bus namespace for the cluster.
+
+.DESCRIPTION
+Clear all messages from the service bus namespace for the cluster.
+
+.PARAMETER ResourceGroupName
+Name of the Azure Resource group containing the network resources.
+
+.PARAMETER KeyName
+Name of the shared access keyAzure Resource group containing the network resources.
+
+.PARAMETER MaxRetries
+Maximum number of retries this call makes before failing. This defaults to 3.
+
+.OUTPUTS
+System.Array. Get-OxaNetworkResources returns an array of discovered azure network-related resource objects
+#>
+function Clear-OxaMessagingQueue
+{
+    param( 
+            [Parameter(Mandatory=$true)][string]$ResourceGroupName,
+            [Parameter(Mandatory=$false)][string]$KeyName="RootManageSharedAccessKey",
+            [Parameter(Mandatory=$false)][int]$MaxRetries=3
+         )
+
+    $serviceBusNamespace = "$($ResourceGroupName)-sbn"
+    $serviceBusQueueName = "$($ResourceGroupName)-sbq"
+
+    $servicebusKeys = Get-OxaServiceBusNamespaceKey -AuthorizationRuleName $KeyName -NamespaceName $serviceBusNamespace -ResourceGroup $ResourceGroupName -MaxRetries $MaxRetries
+    
+    # drain all messages currently in the queue (if any)
+    [array]$messages = Get-QueueMessages -ServiceBusNamespace $serviceBusNamespace `
+                                         -ServiceBusQueueName $serviceBusQueueName `
+                                         -Saskey $servicebusKeys.PrimaryKey
+
+
+    Log-Message "Removed $($messages.Count) messages from the queue '$($ResourceGroupName)-sbq'"
 }
