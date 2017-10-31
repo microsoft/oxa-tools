@@ -64,16 +64,10 @@ class LdIntegration(object):
 
         Get OAuth2 access token for REST API call using azure MSI extension
 
-        :param resourse_url: principal resource url. Example: 'https://vault.azure.net'
-        :param headers: required headers for the service url
-        :param url: this was the request url. By defalt 'http://localhost:50342/oauth2/token'
-                      in MSI implementation
-        :param data: Meta data for the servie
-        :return: returns the access_token
-
         """
 
         resource = 'https://vault.azure.net'
+        #
         url = 'http://localhost:50342/oauth2/token'
         data = dict(resource=resource)
         headers = dict(MetaData='true')
