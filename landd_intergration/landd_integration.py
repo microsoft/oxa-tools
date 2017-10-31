@@ -144,12 +144,12 @@ class LdIntegration(object):
 
         headers_credentilas = {'Authorization': 'Bearer' + ' ' + (access_token)}
         request_url = "{}/secrets/{}?api-version={}".format(key_vault_url, key_name, api_version)
-        response = requests.get(request_url, headers=headers_credentilas).json()
+        response = requests.get(request_url, headers=headers_credentilas)
         if response.ok:
             self.log("Got the secret key %s from key vault", key_name)
         else:
             raise Exception("Un-handled exception occured while accessing %s from key vault", key_name)
-        return response['value']
+        return response.json()['value']
 
     def get_api_data(
             self,
