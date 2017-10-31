@@ -259,11 +259,17 @@ class LdIntegration(object):
         """
         self.log("Preparing to post the data to L&D Course catalog API")
         try:
-            return requests.post(url, data=data, headers=headers, timeout=2)
+            response = requests.post(url, data=data, headers=headers, timeout=2)
+            if response.ok:
+                message = "Data posted sucessfully with %s" % response
+                self.log(message, "info")
+            else:
+                message = "Error occured while posting the data  %s" % response
+                self.log(message, "warning")
+
         except requests.exceptions.Timeout as error:
             self.log(error, "error")
         except requests.exceptions.ConnectionError as error:
             self.log(error, "error")
         except requests.exceptions.RequestException as error:
             self.log(error, "error")
-            
