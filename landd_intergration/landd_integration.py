@@ -38,7 +38,7 @@ class LdIntegration(object):
         Log a message
 
         :param message: the message to log
-        :param message_type: the type of log message (info, warning or debug).
+        :param message_type: the type of log message (info, warning, error or debug).
                              If a message is not info or warning, it falls back to debug
 
         """
@@ -49,7 +49,10 @@ class LdIntegration(object):
 
             elif message_type == "warning":
                 self.logger.warning(message)
-
+            
+            elif message_type == "error":
+                self.logger.error(message)
+            
             else:
                 self.logger.debug(message)
 
@@ -168,11 +171,11 @@ class LdIntegration(object):
         try:
             return requests.get(request_url, headers=headers, verify=False, timeout=2).json()
         except requests.exceptions.Timeout as error:
-            self.log(error, "debug")
+            self.log(error, "error")
         except requests.exceptions.ConnectionError as error:
-            self.log(error, "debug")
+            self.log(error, "error")
         except requests.exceptions.RequestException as error:
-            self.log(error, "debug")
+            self.log(error, "error")
 
     def get_course_catalog_data(
             self,
@@ -258,9 +261,9 @@ class LdIntegration(object):
         try:
             return requests.post(url, data=data, headers=headers, timeout=2)
         except requests.exceptions.Timeout as error:
-            self.log(error, "debug")
+            self.log(error, "error")
         except requests.exceptions.ConnectionError as error:
-            self.log(error, "debug")
+            self.log(error, "error")
         except requests.exceptions.RequestException as error:
-            self.log(error, "debug")
+            self.log(error, "error")
             
