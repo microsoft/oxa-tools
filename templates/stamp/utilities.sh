@@ -140,8 +140,9 @@ configure_datadisks()
     # installation cannot be made silent using the techniques that keep the
     # mdadm installation quiet: a) -y AND b) DEBIAN_FRONTEND=noninteractive.
     # Therefore, we'll install postfix early with the "No configuration" option.
+    apt-wrapper "update"
     echo "postfix postfix/main_mailer_type select No configuration" | debconf-set-selections
-    apt-get install -y postfix
+    install-wrapper postfix 2 skipUpdate
 
     # check if the disk utilities exists
     if [[ ! -f ./vm-disk-utils-0.1.sh ]];
@@ -310,8 +311,11 @@ install-wrapper()
 {
     package="$1"
     error_code="$2"
+    no_update="$3"
 
-    apt-wrapper "update"
+    if [[ -z $no_update ]] ; then
+        apt-wrapper "update"
+    fi
     apt-wrapper "install $package"
     exit_on_error "Installing $package Failed on $HOSTNAME" $error_code
 
@@ -890,9 +894,7 @@ install-mailer()
 
     log "Install packages in non-interactive mode"
     debconf-set-selections <<< "postfix postfix/main_mailer_type string 'No Configuration'"
-
-    apt-get install -y mailutils ssmtp
-    exit_on_error "Failed to install the GIT clienton ${HOSTNAME} !" $ERROR_GITINSTALL_FAILED
+    install-wrapper "mailutils ssmtp" 3 skipUpdate
 
     log "Mail Utilities installed"
 
