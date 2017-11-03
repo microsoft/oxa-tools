@@ -4,7 +4,7 @@
 
 # argument defaults
 DEPLOYMENT_ENV="dev"
-OXA_TOOLS_VERSION_OVERRIDE="master"
+OXA_TOOLS_VERSION_OVERRIDE="oxa/master.fic"
 MACHINE_ROLE=""
 BOOTSTRAP_PHASE=0
 TARGET_FILE=/var/log/bootstrap-Phase0.log

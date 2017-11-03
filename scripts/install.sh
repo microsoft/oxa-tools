@@ -9,7 +9,6 @@
 # 2. Run Bootstrap for Mongo & MySql
 
 ERROR_MESSAGE=1
-GITHUB_PROJECTBRANCH="master"
 CLOUD_NAME=""
 MONITORING_CLUSTER_NAME=""
 OS_ADMIN_USERNAME=""
@@ -30,13 +29,13 @@ EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH=""
 # There are cases where we want to override the edx-platform repository itself
 EDX_PLATFORM_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
 EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME="edx-platform"
-EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master"
+EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master.fic"
 
 # EdX Theme
 # There are cases where we want to override the edx-platform repository itself
 EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
 EDX_THEME_PUBLIC_GITHUB_PROJECTNAME="edx-theme"
-EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="pilot"
+EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master.fic"
 
 # EdX Ansible
 # There are cases where we want to override the edx\ansible repository itself
@@ -45,8 +44,8 @@ ANSIBLE_PUBLIC_GITHUB_PROJECTNAME="ansible"
 ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH="master"
 
 # MISC
-EDX_VERSION="named-release/dogwood.rc"
-FORUM_VERSION="mongoid5-release"
+EDX_VERSION="open-release/ficus.master"
+FORUM_VERSION="open-release/ficus.master"
 
 #TODO: complete plumbing this variable as a user input
 CRONTAB_INTERVAL_MINUTES=5
@@ -265,9 +264,8 @@ parse_args $@
 print_script_header
 
 # validate key arguments
-if [ "$GITHUB_PROJECTBRANCH" == "" ] || [ "$CLOUD_NAME" == "" ] ;
-then
-    log "Incomplete Github configuration: Github Account Name,  Project Name & Branch Name are required." $ERROR_MESSAGE
+if [[ -z "$CLOUD_NAME" ]] ; then
+    log "Incomplete configuration: CLOUD_NAME is required." $ERROR_MESSAGE
     exit 3
 fi
 

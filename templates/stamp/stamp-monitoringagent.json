@@ -42,7 +42,7 @@
         },
         "oxaToolsGithubBranch": {
             "type": "string",
-            "defaultValue": "master",
+            "defaultValue": "oxa/master.fic",
             "metadata": {
                 "description": "Branch of the oxa-tools GitHub repository"
             }
