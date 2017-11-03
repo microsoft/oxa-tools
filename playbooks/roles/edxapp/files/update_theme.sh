@@ -23,9 +23,9 @@ sudo git clone $EDX_THEME_REPO $dir_themes -b $THEME_BRANCH
 
 # todo:100627 this doesn't work on onebox installations (fullstack and devstack) which don't use oxa-tools-config
 # Generalizing - we only need to do this when there are images that should be copied.
-custom_images=( "/oxa/oxa-tools-config/env/${ENVIRONMENT}/*.png" )
+custom_image_count=`ls /oxa/oxa-tools-config/env/${ENVIRONMENT}/*.png 2>/dev/null | wc -w`
 
-if (( ${#custom_images[@]} )); then
+if (( $(echo "$custom_image_count > 0" | bc -l) )); then
     for i in `ls -d1 $dir_themes/*/lms/static/images`; do
         sudo cp /oxa/oxa-tools-config/env/$ENVIRONMENT/*.png $i;
     done
