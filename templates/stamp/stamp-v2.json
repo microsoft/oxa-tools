@@ -662,6 +662,7 @@
         "trafficManagerApiversion": "2015-11-01",
         "mediaServicesApiVersion": "2015-10-01",
         "storageApiVersion": "2016-01-01",
+        "servicebusApiVersion": "2017-04-01",
 
         "virtualMachineExtensionsApiVersion": "[variables('defaultApiVersion')]",
         "virtualMachineApiVersion": "[variables('defaultApiVersion')]",
@@ -701,6 +702,11 @@
         "keyVaultEnabledForVolumeEncryption": true,
         "keyVaultTenantId": "[subscription().subscriptionId]",
 
+        "defaultSASKeyName": "RootManageSharedAccessKey",
+        "serviceBusNameSpace": "[concat(parameters('clusterName'), '-sbn')]",
+        "serviceBusQueueName": "[concat(parameters('clusterName'), '-sbq')]",
+        "authRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/authorizationRules', variables('serviceBusNameSpace'), variables('defaultSASKeyName'))]",
+        
         "jumpboxBootstrapIndicator": "[if(greater(parameters('bootstrapJumpbox'), 0), 1, 0)]",
         "jumpboxNameSuffix": "[if(greater(parameters('bootstrapJumpbox'), 0), parameters('bootstrapJumpbox'), '')]",
 
@@ -862,6 +868,10 @@
             "wamsStorageAccountName": "[variables('wamsStorageAccountName')]",
             "mediaServicesAccountName": "[variables('mediaServicesAccountName')]"
         },
+        "serviceBusSettings": {
+            "serviceBusNameSpace": "[variables('serviceBusNameSpace')]",
+            "serviceBusQueueName": "[variables('serviceBusQueueName')]"            
+        },
         "jumpboxMachineSettings": {
             "vmSize": "[parameters('jumpBoxVmSize')]",
             "osImageReference": {
@@ -916,7 +926,8 @@
             "insightsApiVersion": "[variables('insightsApiVersion')]",
             "keyVaultApiversion": "[variables('keyVaultApiversion')]",
             "trafficManagerApiversion": "[variables('trafficManagerApiversion')]",
-            "mediaServicesApiVersion": "[variables('mediaServicesApiVersion')]"
+            "mediaServicesApiVersion": "[variables('mediaServicesApiVersion')]",
+            "serviceBusApiVersion": "[variables('servicebusApiVersion')]"          
         },
         "keyVaultSettings": {
             "enabledForDeployment": "[variables('keyVaultEnabledForDeployment')]",
@@ -946,8 +957,8 @@
         "smtpParameters": "[concat(' --smtp-server ', parameters('smtpServer'), ' --smtp-server-port ', parameters('smtpServerPort'), ' --smtp-auth-user ', parameters('smtpAuthenticationUser'), ' --smtp-auth-user-password ', parameters('smtpAuthenticationUserPassword'), '  --cluster-admin-email ', parameters('clusterAdmininistratorEmailAddress'))]",
 
         "secureGenericStorageAccountId": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/','Microsoft.Storage/storageAccounts/', variables('secureGenericStorageAccountName'))]",
-        "secureGenericStorageAccountKey": "PLACEHOLDER_KEY",
-        "backupParameters": "[concat(' --storage-account-key ', variables('secureGenericStorageAccountKey'),' --storage-account-name ', variables('secureGenericStorageAccountName'), ' --mongo-backup-frequency \"', replace(parameters('mongoBackupFrequency'), ' ', '_'), '\" --mysql-backup-frequency \"', replace(parameters('mysqlBackupFrequency'), ' ', '_'), '\" --mongo-backup-retention-days ', parameters('mongoBackupRetentionDays'), ' --mysql-backup-retention-days ', parameters('mysqlBackupRetentionDays'))]",
+        "storageKeyPlaceholder": "STORAGE_PLACEHOLDER_KEY",
+        "backupParameters": "[concat(' --storage-account-key ', variables('storageKeyPlaceholder'),' --storage-account-name ', variables('secureGenericStorageAccountName'), ' --mongo-backup-frequency \"', replace(parameters('mongoBackupFrequency'), ' ', '_'), '\" --mysql-backup-frequency \"', replace(parameters('mysqlBackupFrequency'), ' ', '_'), '\" --mongo-backup-retention-days ', parameters('mongoBackupRetentionDays'), ' --mysql-backup-retention-days ', parameters('mysqlBackupRetentionDays'))]",
 
         "sampleCourseParameters": "[concat(' --import-kitchensink-course ', parameters('importKitchenSinkCourse'))]",
         "comprehensiveThemingParameters": "[concat(' --enable-comprehensive-theming ', parameters('enableComprehensiveTheming'), ' --comprehensive-theming-directory ', parameters('comprehensiveThemingDirectory'), ' --comprehensive-theming-name ', parameters('comprehensiveThemingName'))]",
@@ -957,8 +968,10 @@
         "memcacheParameters": "[concat(' --memcache-server \"', base64(parameters('memcacheServer')), '\"')]",
         "azureCliParameters": "[concat(' --azurecli-version \"', parameters('azureCliVersion'), '\"')]",
         "jumpboxBootstrapParameters": "[concat(' --bootstrap-jumpbox \"', variables('jumpboxBootstrapIndicator'), '\"')]",
+        "servicebusKeyPlaceholder": "SERVICEBUS_PLACEHOLDER_KEY",
+        "servicebusParameters": "[concat(' --servicebus-namespace \"', variables('serviceBusNameSpace'), '\" --servicebus-queue-name \"', variables('serviceBusQueueName'), '\" --servicebus-shared-access-key \"', variables('servicebusKeyPlaceholder'), '\"')]",
 
-        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'), variables('backupParameters'), variables('sampleCourseParameters'), variables('comprehensiveThemingParameters'), variables('authenticationParameters'), variables('customInstallerDomainOverrideParameters'), variables('databaseParameters'), variables('edxappParameters'), variables('memcacheParameters'), variables('azureCliParameters'), variables('customInstallerMobileRestApiParameters'), variables('jumpboxBootstrapParameters'), variables('customInstallerOutputRedirect') )]",
+        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'), variables('backupParameters'), variables('sampleCourseParameters'), variables('comprehensiveThemingParameters'), variables('authenticationParameters'), variables('customInstallerDomainOverrideParameters'), variables('databaseParameters'), variables('edxappParameters'), variables('memcacheParameters'), variables('azureCliParameters'), variables('customInstallerMobileRestApiParameters'), variables('jumpboxBootstrapParameters'), variables('servicebusParameters'), variables('customInstallerOutputRedirect') )]",
 
         "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources.json')]",
         "jumpboxTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-jumpbox.json')]",
@@ -1044,6 +1057,9 @@
                     },
                     "storageSettings": {
                         "value": "[variables('storageSettings')]"
+                    },
+                    "serviceBusSettings": {
+                        "value": "[variables('serviceBusSettings')]"
                     }
                 }
             }
@@ -1080,9 +1096,11 @@
                     "customSettings": {
                         "value": {
                             "vmScripts": "[variables('jumpBoxInstallerSettings').scriptsToDownload]",
-                            "customInstallerCommandToExecute": "[variables('jumpBoxInstallerSettings').customInstallerCommand]",
-                            "storageKeyPlaceholder": "[variables('secureGenericStorageAccountKey')]",
-                            "secureGenericStorageAccountKey": "[listKeys(variables('secureGenericStorageAccountId'), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value]"
+                            "commandToExecute": "[variables('jumpBoxInstallerSettings').customInstallerCommand]",
+                            "storageKeyPlaceholder": "[variables('storageKeyPlaceholder')]",
+                            "servicebusKeyPlaceholder": "[variables('servicebusKeyPlaceholder')]",
+                            "secureGenericStorageAccountKey": "[listKeys(variables('secureGenericStorageAccountId'), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value]",
+                            "secureServicebusSharedAccessKey": "[listkeys(variables('authRuleResourceId'), variables('servicebusApiVersion')).primaryKey]"
                         }
                     }
                 }
@@ -1212,8 +1230,10 @@
                             "vmScripts": "[variables('vmssInstallerSettings').scriptsToDownload]",
                             "commandToExecute": "[variables('vmssInstallerSettings').customInstallerCommand]",
                             "linuxDiagnosticsSettings": "[variables('vmssLinuxDiagnosticsSettings')]",
-                            "storageKeyPlaceholder": "[variables('secureGenericStorageAccountKey')]",
-                            "secureGenericStorageAccountKey": "[listKeys(variables('secureGenericStorageAccountId'), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value]"
+                            "storageKeyPlaceholder": "[variables('storageKeyPlaceholder')]",
+                            "servicebusKeyPlaceholder": "[variables('servicebusKeyPlaceholder')]",
+                            "secureGenericStorageAccountKey": "[listKeys(variables('secureGenericStorageAccountId'), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value]",
+                            "secureServicebusSharedAccessKey": "[listkeys(variables('authRuleResourceId'), variables('servicebusApiVersion')).primaryKey]"
                         }
                     }
                 }
@@ -1351,6 +1371,18 @@
         "resourceGroupLocation": {
             "type": "string",
             "value": "[resourceGroup().location]"
+        },
+        "sharedAccessPolicyPrimaryKey": {
+            "type": "string",
+            "value": "[listkeys(variables('authRuleResourceId'), variables('servicebusApiVersion')).primaryKey]"
+        },
+        "serviceBusNameSpace": {
+            "type": "string",
+            "value": "[variables('serviceBusNameSpace')]"
+        },
+        "serviceBusQueueName": {
+            "type": "string",
+            "value": "[variables('serviceBusQueueName')]"
         }
     }
 }

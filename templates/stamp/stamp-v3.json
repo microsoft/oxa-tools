@@ -618,7 +618,7 @@
         },
         "deploymentType": {
             "type": "string",
-            "defaultValue": "upgrade",
+            "defaultValue": "bootstrap",
             "allowedValues": [
                 "bootstrap",
                 "upgrade",
@@ -733,6 +733,7 @@
         },
         "jumpboxBootstrapIndicator": "[if(greater(parameters('bootstrapJumpbox'), 0), 1, 0)]",
         "jumpboxNameSuffix": "[if(greater(parameters('bootstrapJumpbox'), 0), parameters('bootstrapJumpbox'), '')]",
+        
         "networkSettings": {
             "virtualNetworkName": "[variables('virtualNetworkName')]",
             "clusterName": "[parameters('clusterName')]",
