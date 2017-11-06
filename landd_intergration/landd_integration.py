@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 import json
 import requests
 import adal
+import re
+#pylint: disable=line-too-long
 
 
 class LdIntegration(object):
@@ -64,10 +66,16 @@ class LdIntegration(object):
 
         Get OAuth2 access token for REST API call using azure MSI extension
 
+        :param resourse_url: principal resource url. Example: 'https://vault.azure.net'
+        :param headers: required headers for the service url
+        :param url: this was the request url. By defalt 'http://localhost:50342/oauth2/token'
+                      in MSI implementation
+        :param data: Meta data for the servie
+        :return: returns the access_token
+
         """
 
         resource = 'https://vault.azure.net'
-        #
         url = 'http://localhost:50342/oauth2/token'
         data = dict(resource=resource)
         headers = dict(MetaData='true')
@@ -163,7 +171,8 @@ class LdIntegration(object):
 
         """
         try:
-            return requests.get(request_url, headers=headers, verify=False, timeout=2).json()
+            results = requests.get(request_url, headers=headers, verify=False, timeout=2).json()
+            return results
         except requests.exceptions.Timeout as error:
             self.log(error, "error")
         except requests.exceptions.ConnectionError as error:
@@ -177,7 +186,7 @@ class LdIntegration(object):
             headers=None
     ):
         """
-        returns combined paginated responses for a given api url with optional headers
+        returns data with combined paginated responses for a given api url with optional headers
 
         :param request_url: api url to get the data
         :param headers: required headers obtained from open edx
@@ -208,7 +217,7 @@ class LdIntegration(object):
 
         """
         self.log("Mapping the course catalog data to L&D format")
-        ld_course_catalog = []
+        all_course_catalog = []
         each_catalog = {}
         for each in course_catalog_data:
             each_catalog["Confidential"] = "null"
@@ -240,9 +249,9 @@ class LdIntegration(object):
             each_catalog["ThumbnailShort"] = each['media']['image']['small']
             each_catalog["TrainingOrgs"] = each['org']
             each_catalog["ExternalId"] = each['course_id'].split(':')[1]
-            ld_course_catalog.append(each_catalog)
+            all_course_catalog.append(each_catalog)
             each_catalog = {}
-        return json.dumps(ld_course_catalog)
+        return json.dumps(all_course_catalog)
 
 
     def post_data_ld(self, url, headers, data):
@@ -253,17 +262,82 @@ class LdIntegration(object):
         """
         self.log("Preparing to post the data to L&D Course catalog API")
         try:
-            response = requests.post(url, data=data, headers=headers, timeout=2)
+            response = requests.post(url, data=data, headers=headers)
             if response.ok:
                 message = "Data posted sucessfully with %s" % response
                 self.log(message, "info")
             else:
                 message = "Error occured while posting the data  %s" % response
                 self.log(message, "warning")
-
+        #TODO: change the response.ok to response['errormessage'] = none
         except requests.exceptions.Timeout as error:
             self.log(error, "error")
         except requests.exceptions.ConnectionError as error:
             self.log(error, "error")
         except requests.exceptions.RequestException as error:
             self.log(error, "error")
+    def mapping_api_data(self, data):
+        all_user_grades = []
+        each_user = {}
+        #LOG.warning("Starting the mapping of data")
+        for user in data:
+            #L&D only accepts the user emails with '@microsoft.com' accounts
+            if  not bool(re.search('(?i)^(?:(?!(microsoft.com)).)+$', user['username'])):
+                #print i.keys()
+                #each_user["UserAlias"] = user['email']
+                each_user["UserAlias"] = 'v-mankon@microsoft.com'
+                each_user["ExternalId"] = user['course_key']
+                #each_user["ConsumptionStatus"] = i['letter_grade']
+                #each_user["grade"] = i[3]
+                each_user["SourceSystemId"] = 16
+                each_user["PersonnelNumber"] = 0
+                each_user["SFSync"] = 0
+                each_user["UUID"] = "null"
+                each_user["ActionVerb"] = "null"
+                each_user["ActionValue"] = 0
+                #each_user["CreatedDate"] = i[4]
+                each_user["CreatedDate"] = "22"
+                each_user["SubmittedBy"] = "landd_user@oxa.com"
+                each_user["ActionFlag"] = "null"
+                if each_user['letter_grade'] == 'Pass':
+                    each_user["ConsumptionStatus"] = 'Passed'
+                elif each_user['letter_grade'] == 'Fail':
+                    each_user["ConsumptionStatus"] = "Failed"
+                else:
+                    each_user["ConsumptionStatus"] = "InProgress"
+            all_user_grades.append(each_user)
+            each_user = {}
+
+        #LOG.warning("Mapping of data is finished")
+        return json.dumps(all_user_grades)
+
+
+    def get_and_post_consumption_data(self, request_edx_url, edx_headers, ld_headers, consumption_url_ld):
+        """
+        TODO: 
+        """
+        start_date = open('api_call_time.txt', 'r')
+        k = start_date.read()
+        #time_log = open('api_call_time.txt', 'w')
+        #f = open('api_call_time.txt', 'w')
+        #call_time = (datetime.now()-timedelta(days=29)).replace(microsecond=0).isoformat()
+        #time_log.write(call_time)
+        start_date.close()
+        end_date = datetime.now().replace(microsecond=0).isoformat()
+        self.log('here is the end call time',"info")
+        self.log(end_date, "info")
+        request_edx_url = request_edx_url + '&start_date=' + k[:19] + '&end_date=' + end_date
+        user_data = self.get_api_data(request_edx_url, edx_headers)
+        #print(user_data)
+        #req_grades_data = user_data['results']
+        #self.mapping_api_data(user_data['results'])
+        self.post_data_ld(consumption_url_ld, ld_headers, self.mapping_api_data(user_data['results']))
+        while user_data['pagination']['next']:
+            user_data = self.get_api_data(user_data['pagination']['next'], edx_headers)
+            self.log("hello","info")
+            response = self.post_data_ld(consumption_url_ld, ld_headers, self.mapping_api_data(user_data['results']))
+            #req_grades_data = req_grades_data + user_data['results']
+        write_time = open('api_call_time.txt','w')
+        write_time.write(end_date)
+
+        return user_data
