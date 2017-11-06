@@ -24,11 +24,11 @@ def sync_course_catalog():
     # initialize the key variables
     catalog_service = landd_integration.LdIntegration(logger=LOG)
     edx_course_catalog_url = "https://lms-lexoxabvtc99-tm.trafficmanager.net/api/courses/v1/courses/"
-    edx_course_consumption_url = "https://lms-lexoxabvtc99-tm.trafficmanager.net/api/grades/v1/user_grades/?username=all"
+    #edx_course_consumption_url = "https://lms-lexoxabvtc99-tm.trafficmanager.net/api/grades/v1/user_grades/?username=all"
     key_vault_url = "https://manikeyvault3.vault.azure.net"
     landd_catalog_url = "https://ldserviceuat.microsoft.com/Catalog/16/course"
-    landd_consumption_url = 'https://ldserviceuat.microsoft.com/Consumption/exptrack'
-    
+    #landd_consumption_url = 'https://ldserviceuat.microsoft.com/Consumption/exptrack'
+
     # get secrets from Azure Key Vault
     edx_api_key = catalog_service.get_key_vault_secret(catalog_service.get_access_token(), key_vault_url, 'edx-api-key')
     edx_access_token = catalog_service.get_key_vault_secret(catalog_service.get_access_token(), key_vault_url, 'edx-access-token')

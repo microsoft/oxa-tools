@@ -28,7 +28,7 @@ def sync_course_consumption():
     key_vault_url = "https://manikeyvault3.vault.azure.net"
     #landd_catalog_url = "https://ldserviceuat.microsoft.com/Catalog/16/course"
     landd_consumption_url = 'https://ldserviceuat.microsoft.com/Consumption/exptrack'
-    
+
     # get secrets from Azure Key Vault
     edx_api_key = catalog_service.get_key_vault_secret(catalog_service.get_access_token(), key_vault_url, 'edx-api-key')
     edx_access_token = catalog_service.get_key_vault_secret(catalog_service.get_access_token(), key_vault_url, 'edx-access-token')
@@ -54,8 +54,8 @@ def sync_course_consumption():
             )
         }
 
-    catalog_data = catalog_service.get_course_catalog_data(edx_course_catalog_url, edx_headers)
-    catalog_service.post_data_ld(landd_catalog_url, headers, catalog_service.catalog_data_mapping(16, catalog_data))
-    #catalog_service.get_and_post_consumption_data(edx_course_consumption_url, edx_headers, headers, landd_consumption_url)
+    #catalog_data = catalog_service.get_course_catalog_data(edx_course_catalog_url, edx_headers)
+    #catalog_service.post_data_ld(landd_catalog_url, headers, catalog_service.catalog_data_mapping(16, catalog_data))
+    catalog_service.get_and_post_consumption_data(edx_course_consumption_url, edx_headers, headers, landd_consumption_url)
 if __name__ == "__main__":
     sync_course_consumption()

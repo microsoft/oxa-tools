@@ -66,13 +66,6 @@ class LdIntegration(object):
 
         Get OAuth2 access token for REST API call using azure MSI extension
 
-        :param resourse_url: principal resource url. Example: 'https://vault.azure.net'
-        :param headers: required headers for the service url
-        :param url: this was the request url. By defalt 'http://localhost:50342/oauth2/token'
-                      in MSI implementation
-        :param data: Meta data for the servie
-        :return: returns the access_token
-
         """
 
         resource = 'https://vault.azure.net'
@@ -276,7 +269,13 @@ class LdIntegration(object):
             self.log(error, "error")
         except requests.exceptions.RequestException as error:
             self.log(error, "error")
+        return response
+
+
     def mapping_api_data(self, data):
+        """
+        TODO
+        """
         all_user_grades = []
         each_user = {}
         #LOG.warning("Starting the mapping of data")
@@ -314,8 +313,11 @@ class LdIntegration(object):
 
     def get_and_post_consumption_data(self, request_edx_url, edx_headers, ld_headers, consumption_url_ld):
         """
-        TODO: 
+
+        TODO:
+
         """
+
         start_date = open('api_call_time.txt', 'r')
         k = start_date.read()
         #time_log = open('api_call_time.txt', 'w')
@@ -324,7 +326,7 @@ class LdIntegration(object):
         #time_log.write(call_time)
         start_date.close()
         end_date = datetime.now().replace(microsecond=0).isoformat()
-        self.log('here is the end call time',"info")
+        self.log('here is the end call time', "info")
         self.log(end_date, "info")
         request_edx_url = request_edx_url + '&start_date=' + k[:19] + '&end_date=' + end_date
         user_data = self.get_api_data(request_edx_url, edx_headers)
@@ -334,10 +336,12 @@ class LdIntegration(object):
         self.post_data_ld(consumption_url_ld, ld_headers, self.mapping_api_data(user_data['results']))
         while user_data['pagination']['next']:
             user_data = self.get_api_data(user_data['pagination']['next'], edx_headers)
-            self.log("hello","info")
+            self.log("hello", "info")
             response = self.post_data_ld(consumption_url_ld, ld_headers, self.mapping_api_data(user_data['results']))
             #req_grades_data = req_grades_data + user_data['results']
-        write_time = open('api_call_time.txt','w')
+            print("HERE IS THE RESPONSE")
+            print(response)
+        write_time = open('api_call_time.txt', 'w')
         write_time.write(end_date)
 
         return user_data
