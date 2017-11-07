@@ -54,8 +54,7 @@ def sync_course_consumption():
             )
         }
 
-    #catalog_data = catalog_service.get_course_catalog_data(edx_course_catalog_url, edx_headers)
-    #catalog_service.post_data_ld(landd_catalog_url, headers, catalog_service.catalog_data_mapping(16, catalog_data))
     catalog_service.get_and_post_consumption_data(edx_course_consumption_url, edx_headers, headers, landd_consumption_url)
+
 if __name__ == "__main__":
     sync_course_consumption()
