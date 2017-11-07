@@ -7,12 +7,38 @@ import logging
 
 import sys
 import landd_integration
+import click
+import click_log
+
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 LOG = logging.getLogger(__name__)
 
 #pylint: disable=line-too-long
 
-def sync_course_consumption():
+@click.command()
+@click.option(
+    '--edx-course-consumption-url',
+    default='https://lms-lexoxabvtc99-tm.trafficmanager.net/api/grades/v1/user_grades/?username=all',
+    help='Course Consumption API url from OpenEdx'
+)
+@click.option(
+    '--key-vault-url',
+    default='https://manikeyvault3.vault.azure.net',
+    help='Azure key vault url for secrets'
+)
+@click.option(
+    '--landd-consumption-url',
+    default='https://ldserviceuat.microsoft.com/Consumption/exptrack',
+    help='Course Consumption POST API url for L&D'
+)
+@click.option(
+    '--sourse-system-id',
+    type=click.IntRange(0, 100),
+    default=16,
+    help='source system id provided by L&D'
+)
+@click_log.simple_verbosity_option(default='INFO')
+def sync_course_consumption(edx_course_consumption_url, key_vault_url, landd_consumption_url, source_system_id):
     """
     1) GET access token from Azure tenant using MSI
     2) GET secrets from Azure keyvault using the access token
@@ -24,11 +50,10 @@ def sync_course_consumption():
     # initialize the key variables
     catalog_service = landd_integration.LdIntegration(logger=LOG)
     #edx_course_catalog_url = "https://lms-lexoxabvtc99-tm.trafficmanager.net/api/courses/v1/courses/"
-    edx_course_consumption_url = "https://lms-lexoxabvtc99-tm.trafficmanager.net/api/grades/v1/user_grades/?username=all"
-    key_vault_url = "https://manikeyvault3.vault.azure.net"
+    #edx_course_consumption_url = "https://lms-lexoxabvtc99-tm.trafficmanager.net/api/grades/v1/user_grades/?username=all"
+    #key_vault_url = "https://manikeyvault3.vault.azure.net"
     #landd_catalog_url = "https://ldserviceuat.microsoft.com/Catalog/16/course"
-    landd_consumption_url = 'https://ldserviceuat.microsoft.com/Consumption/exptrack'
-    
+    #landd_consumption_url = 'https://ldserviceuat.microsoft.com/Consumption/exptrack'
     # get secrets from Azure Key Vault
     edx_api_key = catalog_service.get_key_vault_secret(catalog_service.get_access_token(), key_vault_url, 'edx-api-key')
     edx_access_token = catalog_service.get_key_vault_secret(catalog_service.get_access_token(), key_vault_url, 'edx-access-token')
@@ -54,7 +79,7 @@ def sync_course_consumption():
             )
         }
 
-    catalog_service.get_and_post_consumption_data(edx_course_consumption_url, edx_headers, headers, landd_consumption_url,source_system_id)
+    catalog_service.get_and_post_consumption_data(edx_course_consumption_url, edx_headers, headers, landd_consumption_url, source_system_id)
 
 if __name__ == "__main__":
-    sync_course_consumption()
+    sync_course_consumption()  # pylint: disable=no-value-for-parameter
