@@ -24,6 +24,9 @@ Name of the storage account where the container will be created
 .PARAMETER StorageContainerNames
 Name(s) of the storage container(s) to create. Use a comma-separated list to specify multiple containers
 
+.PARAMETER PublicStorageContainerNames
+Name(s) of the storage container(s) to create. Use a comma-separated list to specify multiple containers
+
 .PARAMETER AzureCliVersion
 Version of Azure CLI to use
 
@@ -49,6 +52,7 @@ Param(
         [Parameter(Mandatory=$true)][string]$StorageAccountName,
         [Parameter(Mandatory=$true)][string]$StorageAccountKey,
         [Parameter(Mandatory=$true)][string]$StorageContainerNames,
+        [Parameter(Mandatory=$true)][string]$PublicStorageContainerNames,
         [Parameter(Mandatory=$false)][string][ValidateSet("1","2")]$AzureCliVersion="1",
         [Parameter(Mandatory=$false)][string]$AzureStorageConnectionString=""
      )
@@ -166,6 +170,90 @@ foreach($storageContainerName in $storageContainerList)
     {
         # creation failed
         Log-Message "Unable to create the specified storage container: $storageContainerName" -Context "Create Storage Containers"
+        exit 1
+    }
+}
+
+# Create the container
+[array]$PublicstorageContainerList = $PublicStorageContainerNames.Split(",");
+
+foreach($PublicstorageContainerName in $PublicstorageContainerList)
+{
+    # todo: add retries for better resiliency
+    Log-Message "Creating Public Storage Container (Cli: $AzureCliVersion): $($PublicstorageContainerName)" -Context "Create Public Storage Containers"
+
+    # track the operation status
+    $status=$false
+
+    # todo: fall back to azure cli since there are existing issues with installation of azure powershell cmdlets for linux
+    # cli doesn't provide clean object returns (json responses are helpful). Therefore, transition as soon as possible
+    if ($AzureCliVersion -eq "1" )
+    {
+        # Azure Cli 1.0
+        # Check if the container exists
+        $response = azure storage container list --account-name $StorageAccountName --account-key $StorageAccountKey --prefix $PublicstorageContainerName --json 
+        if ( ($response | jq --raw-output ".[] | select(.name==\`"$PublicstorageContainerName\`") | .name") -ine $storageContainerName)
+        {
+            # container doesn't exist
+            Log-Message "'$PublicstorageContainerName' doesn't exist and will be created."
+
+            # create the container now
+            $response = azure storage container create --account-name $StorageAccountName --account-key $StorageAccountKey --container $PublicstorageContainerName --json
+            $status = ((($response | jq --raw-output '.name') -ieq $PublicstorageContainerName) -and (($response | jq --raw-output '.lease.state') -ieq 'available'))
+        }
+        else 
+        {
+            # container exists
+            $status=$true;
+            Log-Message "'$PublicstorageContainerName' already exists."
+        }
+    }
+    else 
+    {
+        # Azure Cli 2.0
+        # Check if the container exists
+        if ($AzureStorageConnectionString)
+        {
+            $response = az storage container list --account-name $StorageAccountName --account-key $StorageAccountKey --prefix $PublicstorageContainerName --connection-string $AzureStorageConnectionString -o json
+        }
+        else 
+        {
+            $response = az storage container list --account-name $StorageAccountName --account-key $StorageAccountKey --prefix $PublicstorageContainerName -o json
+        }
+
+        if ( ($response | jq --raw-output ".[] | select(.name==\`"$PublicstorageContainerName\`") | .name") -ine $PublicstorageContainerName)
+        {
+            # container doesn't exist
+            Log-Message "'$PublicstorageContainerName' doesn't exist and will be created."
+
+            # create the container now
+            if ($AzureStorageConnectionString)
+            {
+                Log-Message "Using connection string: $AzureStorageConnectionString" -Context "Create Public Storage Containers" -NoNewLine
+    
+                $response = az storage container create --account-name $StorageAccountName --account-key $StorageAccountKey --name $PublicstorageContainerName --public-access blob --connection-string $AzureStorageConnectionString -o json
+            }
+            else 
+            {
+                $response = az storage container create --account-name $StorageAccountName --account-key $StorageAccountKey --name $PublicstorageContainerName --public-access blob -o json
+            }
+
+            # parse the status (.created=true is the expected status)
+            $status = (($response | jq --raw-output '.created') -ieq "true")
+        }
+        else 
+        {
+            # container exists
+            $status=$true;
+            Log-Message "'$PublicstorageContainerName' already exists."
+        }
+    }
+
+    # we expect the following: true=container created, If there is an error, status=[Blank]
+    if (!$status)
+    {
+        # creation failed
+        Log-Message "Unable to create the specified storage container: $PublicstorageContainerName" -Context "Create Public Storage Containers"
         exit 1
     }
 }
