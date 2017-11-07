@@ -479,7 +479,7 @@ function Start-AzureCommand
                 
                 "Remove-AzureRmVmss"
                 {
-                    $response = Remove-AzureRmVmss -ResourceGroupName $InputParameters['ResourceGroupName'] -VMScaleSetName $InputParameters['VMScaleSetName'] -Verbose;
+                    $response = Remove-AzureRmVmss -ResourceGroupName $InputParameters['ResourceGroupName'] -VMScaleSetName $InputParameters['VMScaleSetName'] -Verbose -Confirm:$false
                 }
                  
                 "Remove-AzureRmLoadBalancerBackendAddressPoolConfig"
@@ -521,17 +521,17 @@ function Start-AzureCommand
                 {
                     if ($InputParameters['Name'])
                     {
-                        $response = Get-AzureKeyVaultSecret -VaultName $InputParameters['VaultName'] -Name $InputParameters['Name'] -Verbose
+                        $response = Get-AzureKeyVaultSecret -VaultName $InputParameters['VaultName'] -Name $InputParameters['Name'] -Verbose -ErrorAction Stop
                     }
                     else
                     {
-                        $response = Get-AzureKeyVaultSecret -VaultName $InputParameters['VaultName']  -Verbose
+                        $response = Get-AzureKeyVaultSecret -VaultName $InputParameters['VaultName']  -Verbose -ErrorAction Stop
                     }
                 }
 
                 "Set-AzureKeyVaultSecret"
                 {
-                    $response = Set-AzureKeyVaultSecret -VaultName $InputParameters['VaultName'] -Name $InputParameters['Name'] -SecretValue $InputParameters['SecretValue']
+                    $response = Set-AzureKeyVaultSecret -VaultName $InputParameters['VaultName'] -Name $InputParameters['Name'] -SecretValue $InputParameters['SecretValue'] -ErrorAction Stop
                 }
 
                 "Remove-AzureKeyVaultSecret"
@@ -2621,7 +2621,7 @@ function New-OxaCertificateBasedServicePrincipal
         Log-Message "Setting Key Vault Access policy for Key Vault: $($keyVaultName) and Service Principal: $($servicePrincipal.DisplayName)"
         Set-OxaKeyVaultAccessPolicy -VaultName $keyVaultName `
                                     -ServicePrincipalName $servicePrincipal.ApplicationId `
-                                    -PermissionsToSecrets get,set,list `
+                                    -PermissionsToSecrets get,set,list,delete `
                                     -ResourceGroupName $ResourceGroupName `
                                     -MaxRetries $MaxRetries 
 
@@ -3107,6 +3107,12 @@ function Login-OxaAccount
             [Parameter(Mandatory=$false)][int]$MaxRetries=3
          )
 
+    # track the response code for the login operation: 
+    # 0=Login with Required Access
+    # 1=Login with Limited Access
+
+    $responseCode = 0
+
     # make sure we have the right parameters specified
     # Preference is given to certificate based login, followed by key-based login
     if ($AadWebClientAppKey)
@@ -3128,6 +3134,11 @@ function Login-OxaAccount
                                                     -AuthenticationCertificateSubject $AuthenticationCertificateSubject `
                                                     -ResourceGroupName $ResourceGroupName `
                                                     -MaxRetries $MaxRetries
+
+            # This is a user login. 
+            # Under this mode, all keyvault interactions will fail with 'Access Denied' error. 
+            # Therefore, this login gives limited access
+            $responseCode = 1
         }
         else 
         {
@@ -3161,6 +3172,30 @@ function Login-OxaAccount
     {
         throw "Invalid credentials specified"
     }
+
+
+    if ($responseCode -eq 1)
+    {
+        if ($AadWebClientAppKey)
+        {
+            # authenticated with limited access
+            # run login again but this time switch to certificate based authentication
+            # note: AadWebClientAppKey has been removed. This ensures this path is executed only once
+            $responseCode = Login-OxaAccount -AzureSubscriptionName $AzureSubscriptionName `
+                                             -AadWebClientId $AadWebClientId `
+                                             -AadTenantId $AadTenantId `
+                                             -AuthenticationCertificateSubject $authenticationCertificateSubject `
+                                             -ResourceGroupName $ResourceGroupName `
+                                             -MaxRetries $MaxRetries
+        }
+        else 
+        {
+            # certificate based authentication has been attempted and failed
+            throw "Unable to authenticate with an account having the requisite permissions to the subscription and all its resources (ie: keyvault)"
+        }
+    }
+
+    return $responseCode
 }
 
 <#
