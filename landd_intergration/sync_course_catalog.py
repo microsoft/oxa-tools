@@ -4,16 +4,42 @@ Course catalolg syncronization between OXA and  L&D
 
 """
 import logging
-
+from __future__ import absolute_import
 import sys
 import landd_integration
+import click
+import click_log
+from os import path
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 LOG = logging.getLogger(__name__)
 
+sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 #pylint: disable=line-too-long
-
-def sync_course_catalog():
+@click.command()
+@click.option(
+    '--edx-course-catalog-url',
+    default='https://lms-lexoxabvtc99-tm.trafficmanager.net/api/courses/v1/courses/',
+    help='Course Catalog API url from OpenEdx'
+)
+@click.option(
+    '--key-vault-url',
+    default='https://manikeyvault3.vault.azure.net',
+    help='Course Catalog API url from OpenEdx'
+)
+@click.option(
+    '--landd-catalog-url',
+    default='https://ldserviceuat.microsoft.com/Catalog/16/course',
+    help='Course Catalog API url from OpenEdx'
+)
+@click.option(
+    '--sourse-system-id',
+    type=click.IntRange(0, 100),
+    help='provide the source system id provided by L&D'
+)
+@click_log.simple_verbosity_option(default='INFO')
+@click_log.init()
+def sync_course_catalog(edx_course_catalog_url, key_vault_url, landd_catalog_url):
     """
     1) GET access token from Azure tenant using MSI
     2) GET secrets from Azure keyvault using the access token
@@ -24,9 +50,9 @@ def sync_course_catalog():
     """
     # initialize the key variables
     catalog_service = landd_integration.LdIntegration(logger=LOG)
-    edx_course_catalog_url = "https://lms-lexoxabvtc99-tm.trafficmanager.net/api/courses/v1/courses/"
-    key_vault_url = "https://manikeyvault3.vault.azure.net"
-    landd_catalog_url = "https://ldserviceuat.microsoft.com/Catalog/16/course"
+    #edx_course_catalog_url = "https://lms-lexoxabvtc99-tm.trafficmanager.net/api/courses/v1/courses/"
+    #key_vault_url = "https://manikeyvault3.vault.azure.net"
+    #landd_catalog_url = "https://ldserviceuat.microsoft.com/Catalog/16/course"
 
     # get secrets from Azure Key Vault
     edx_api_key = catalog_service.get_key_vault_secret(catalog_service.get_access_token(), key_vault_url, 'edx-api-key')
@@ -54,7 +80,7 @@ def sync_course_catalog():
         }
 
     catalog_data = catalog_service.get_course_catalog_data(edx_course_catalog_url, edx_headers)
-    catalog_service.post_data_ld(landd_catalog_url, headers, catalog_service.catalog_data_mapping(16, catalog_data))
+    catalog_service.post_data_ld(landd_catalog_url, headers, catalog_service.catalog_data_mapping(source_system_id, catalog_data))
 
 if __name__ == "__main__":
     sync_course_catalog()

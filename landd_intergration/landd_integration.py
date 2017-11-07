@@ -274,7 +274,7 @@ class LdIntegration(object):
         return response
 
 
-    def mapping_api_data(self, data):
+    def mapping_api_data(self, data, source_system_id):
         """
 
         Map edX course consumption data to L&D data
@@ -313,7 +313,7 @@ class LdIntegration(object):
         return json.dumps(all_user_grades)
 
 
-    def get_and_post_consumption_data(self, request_edx_url, edx_headers, ld_headers, consumption_url_ld):
+    def get_and_post_consumption_data(self, request_edx_url, edx_headers, ld_headers, consumption_url_ld, source_system_id):
 
         """
 
@@ -323,7 +323,7 @@ class LdIntegration(object):
 
         """
 
-        start_date = open('api_call_time.txt', 'r')
+        start_date = open('api_call_time.txt', 'w+')
         start_time = start_date.read()
         start_date.close()
         end_date = datetime.now().replace(microsecond=0).isoformat()
@@ -331,10 +331,9 @@ class LdIntegration(object):
         self.log(end_date, "info")
         request_edx_url = request_edx_url + '&start_date=' + start_time[:19] + '&end_date=' + end_date
         user_data = self.get_api_data(request_edx_url, edx_headers)
-        self.post_data_ld(consumption_url_ld, ld_headers, self.mapping_api_data(user_data['results']))
+        self.post_data_ld(consumption_url_ld, ld_headers, self.mapping_api_data(user_data['results'],source_system_id))
         while user_data['pagination']['next']:
             user_data = self.get_api_data(user_data['pagination']['next'], edx_headers)
-            self.log("hello", "info")
             self.post_data_ld(consumption_url_ld, ld_headers, self.mapping_api_data(user_data['results']))
         write_time = open('api_call_time.txt', 'w')
         write_time.write(end_date)
