@@ -840,7 +840,7 @@ install-azure-cli-2()
         apt-key adv --keyserver apt-mo.trafficmanager.net --recv-keys 417A0893
 
         log "Installing Azure CLI 2.0 pre-requisites"
-        install-wrapper "apt-transport-http"
+        install-wrapper "apt-transport-https"
 
         short_release_number=`lsb_release -sr`
 
