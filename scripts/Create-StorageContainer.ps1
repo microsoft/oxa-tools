@@ -45,15 +45,15 @@ To create the 'uploads' storage container:
 
 #>
 Param( 
-        [Parameter(Mandatory=$true)][string]$AadWebClientId,
-        [Parameter(Mandatory=$true)][string]$AadWebClientAppKey,
-        [Parameter(Mandatory=$true)][string]$AadTenantId,
-        [Parameter(Mandatory=$true)][string]$AzureSubscriptionId,
+        [Parameter(Mandatory=$false)][string]$AadWebClientId,
+        [Parameter(Mandatory=$false)][string]$AadWebClientAppKey,
+        [Parameter(Mandatory=$false)][string]$AadTenantId,
+        [Parameter(Mandatory=$false)][string]$AzureSubscriptionId,
         [Parameter(Mandatory=$true)][string]$StorageAccountName,
         [Parameter(Mandatory=$true)][string]$StorageAccountKey,
         [Parameter(Mandatory=$true)][string]$StorageContainerNames,
         [Parameter(Mandatory=$true)][string]$PublicStorageContainerNames,
-        [Parameter(Mandatory=$false)][string][ValidateSet("1","2")]$AzureCliVersion="1",
+        [Parameter(Mandatory=$false)][string][ValidateSet("1","2")]$AzureCliVersion="2",
         [Parameter(Mandatory=$false)][string]$AzureStorageConnectionString=""
      )
 
@@ -82,13 +82,15 @@ trap [Exception]
 #
 #########################
 
-$invocation = (Get-Variable MyInvocation).Value 
-$currentPath = Split-Path $invocation.MyCommand.Path 
-Import-Module "$($currentPath)/Common.ps1" -Force
+#todo: re-enable after tests
+
+#$invocation = (Get-Variable MyInvocation).Value 
+#$currentPath = Split-Path $invocation.MyCommand.Path 
+#Import-Module "$($currentPath)/Common.ps1" -Force
 
 # Login First & set context
-Authenticate-AzureRmUser -AadWebClientId $AadWebClientId -AadWebClientAppKey $AadWebClientAppKey -AadTenantId $AadTenantId;
-Set-AzureSubscriptionContext -AzureSubscriptionId $AzureSubscriptionId
+#Authenticate-AzureRmUser -AadWebClientId $AadWebClientId -AadWebClientAppKey $AadWebClientAppKey -AadTenantId $AadTenantId;
+#Set-AzureSubscriptionContext -AzureSubscriptionId $AzureSubscriptionId
 
 New-Containers -ContainerNames $StorageContainerNames
 
