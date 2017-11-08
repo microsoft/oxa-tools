@@ -32,7 +32,7 @@ LOG = logging.getLogger(__name__)
     help='Course Consumption POST API url for L&D'
 )
 @click.option(
-    '--sourse-system-id',
+    '--source-system-id',
     type=click.IntRange(0, 100),
     default=16,
     help='source system id provided by L&D'

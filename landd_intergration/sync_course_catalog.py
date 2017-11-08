@@ -33,14 +33,14 @@ sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
     help='Course Catalog POST API url for L&D'
 )
 @click.option(
-    '--sourse-system-id',
+    '--source-system-id',
     type=click.IntRange(0, 100),
     default=16,
-    help='provide the source system id provided by L&D'
+    help='source system id provided by L&D'
 )
 @click_log.simple_verbosity_option(default='INFO')
 #@click_log.init()
-def sync_course_catalog(edx_course_catalog_url, key_vault_url, landd_catalog_url, sourse_system_id):
+def sync_course_catalog(edx_course_catalog_url, key_vault_url, landd_catalog_url, source_system_id):
     """
     1) GET access token from Azure tenant using MSI
     2) GET secrets from Azure keyvault using the access token
@@ -81,7 +81,7 @@ def sync_course_catalog(edx_course_catalog_url, key_vault_url, landd_catalog_url
         }
 
     catalog_data = catalog_service.get_course_catalog_data(edx_course_catalog_url, edx_headers)
-    catalog_service.post_data_ld(landd_catalog_url, headers, catalog_service.catalog_data_mapping(sourse_system_id, catalog_data))
+    catalog_service.post_data_ld(landd_catalog_url, headers, catalog_service.catalog_data_mapping(source_system_id, catalog_data))
 
 if __name__ == "__main__":
     sync_course_catalog()  # pylint: disable=no-value-for-parameter

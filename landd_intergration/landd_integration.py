@@ -285,13 +285,12 @@ class LdIntegration(object):
         for user in data:
             #L&D only accepts the user emails with '@microsoft.com' accounts
             if  not bool(re.search('(?i)^(?:(?!(microsoft.com)).)+$', user['username'])):
-                #print i.keys()
                 #each_user["UserAlias"] = user['email']
                 each_user["UserAlias"] = 'v-mankon@microsoft.com'
                 each_user["ExternalId"] = user['course_key']
                 #each_user["ConsumptionStatus"] = user['letter_grade']
                 #each_user["grade"] = user[3]
-                each_user["SourceSystemId"] = 16
+                each_user["SourceSystemId"] = source_system_id
                 each_user["PersonnelNumber"] = 0
                 each_user["SFSync"] = 0
                 each_user["UUID"] = "null"
@@ -331,10 +330,10 @@ class LdIntegration(object):
         self.log(end_date, "info")
         request_edx_url = request_edx_url + '&start_date=' + start_time[:19] + '&end_date=' + end_date
         user_data = self.get_api_data(request_edx_url, edx_headers)
-        self.post_data_ld(consumption_url_ld, ld_headers, self.mapping_api_data(user_data['results'],source_system_id))
+        self.post_data_ld(consumption_url_ld, ld_headers, self.mapping_api_data(user_data['results'], source_system_id))
         while user_data['pagination']['next']:
             user_data = self.get_api_data(user_data['pagination']['next'], edx_headers)
-            self.post_data_ld(consumption_url_ld, ld_headers, self.mapping_api_data(user_data['results']))
+            self.post_data_ld(consumption_url_ld, ld_headers, self.mapping_api_data(user_data['results'], source_system_id))
         write_time = open('api_call_time.txt', 'w')
         write_time.write(end_date)
 
