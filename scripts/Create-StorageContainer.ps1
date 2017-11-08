@@ -86,7 +86,7 @@ trap [Exception]
 
 #$invocation = (Get-Variable MyInvocation).Value 
 #$currentPath = Split-Path $invocation.MyCommand.Path 
-#Import-Module "$($currentPath)/Common.ps1" -Force
+Import-Module "$($currentPath)/Common.ps1" -Force
 
 # Login First & set context
 #Authenticate-AzureRmUser -AadWebClientId $AadWebClientId -AadWebClientAppKey $AadWebClientAppKey -AadTenantId $AadTenantId;
