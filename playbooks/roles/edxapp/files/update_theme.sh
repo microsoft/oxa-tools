@@ -7,9 +7,20 @@ set -ex
 THEME_BRANCH=$1
 EDX_THEME_REPO=$2
 ENVIRONMENT=$3
-THEMES_DIRECTORY=$4
+THEME_DIRECTORY_YAML=$4
 
-themes_parent_directory="$(dirname "${THEMES_DIRECTORY}")"
+# Themes directory comes as a yaml array and needs to be converted to a bash array.
+# Generally, a single array item is expected and we will pick the first one specified
+# Operations:  remove space, convert comma to space, remove opening & closing brackets, 
+#              convert string to bash array
+
+theme_directory=${THEME_DIRECTORY_YAML// /}
+theme_directory=${theme_directory//,/ }
+theme_directory=${theme_directory//[}
+theme_directory=${theme_directory//]}
+eval theme_directory=($theme_directory)
+
+themes_parent_directory="$(dirname "${theme_directory[0]}")"
 edxapp_directory="/edx/app/edxapp"
 
 # Check if the base directory exists.
@@ -19,12 +30,12 @@ if [[ ! -d $themes_parent_directory ]] ; then
 fi
 
 # Remove the themes folder if it exists
-if [[ -d $THEMES_DIRECTORY ]] ; then
-    sudo rm -fr $THEMES_DIRECTORY
+if [[ -d ${theme_directory[0]} ]] ; then
+    sudo rm -fr ${theme_directory[0]}
 fi
 
 # Download comprehensive theming from github to folder $dir_themes/comprehensive 
-sudo git clone $EDX_THEME_REPO $THEMES_DIRECTORY -b $THEME_BRANCH
+sudo git clone $EDX_THEME_REPO ${theme_directory[0]} -b $THEME_BRANCH
 
 # Generalizing - Applying custom images isn't applicable for all scenarios. 
 # Therefore, it is necessary to first check if custom images are available 
@@ -38,8 +49,8 @@ if (( $(echo "$custom_image_count > 0" | bc -l) )); then
 fi
 
 # set appropriate permissions on the new theming folder
-sudo chown -R edxapp:edxapp $THEMES_DIRECTORY
-sudo chmod -R u+rw $THEMES_DIRECTORY
+sudo chown -R edxapp:edxapp ${theme_directory[0]}
+sudo chmod -R u+rw ${theme_directory[0]}
 
 # Compile LMS assets and then restart the services so that changes take effect
 sudo su edxapp -s /bin/bash -c "source $edxapp_directory/edxapp_env;cd $edxapp_directory/edx-platform/;paver update_assets lms --settings aws"
