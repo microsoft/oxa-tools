@@ -85,7 +85,7 @@ trap [Exception]
 #todo: re-enable after tests
 
 #$invocation = (Get-Variable MyInvocation).Value 
-#$currentPath = Split-Path $invocation.MyCommand.Path 
+$currentPath = Split-Path $invocation.MyCommand.Path 
 Import-Module "$($currentPath)/Common.ps1" -Force
 
 # Login First & set context
