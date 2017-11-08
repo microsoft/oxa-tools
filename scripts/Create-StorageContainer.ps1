@@ -75,28 +75,6 @@ trap [Exception]
     # this should trigger and catch and resume
     throw "Script execution failed: $($_)";
 }
-
-#########################
-#
-# ENTRY POINT
-#
-#########################
-
-#todo: re-enable after tests
-
-$invocation = (Get-Variable MyInvocation).Value 
-$currentPath = Split-Path $invocation.MyCommand.Path
-Import-Module "$($currentPath)/Common.ps1" -Force
-
-# Login First & set context
-#Authenticate-AzureRmUser -AadWebClientId $AadWebClientId -AadWebClientAppKey $AadWebClientAppKey -AadTenantId $AadTenantId;
-#Set-AzureSubscriptionContext -AzureSubscriptionId $AzureSubscriptionId
-
-New-Containers -ContainerNames $StorageContainerNames
-
-Set-ContainersPermissions -ContainerNames $PublicStorageContainerNames -AccessPolicy "blob"
-
-#todo: move above entry point
 function New-Containers
 {
     param(
@@ -104,6 +82,10 @@ function New-Containers
          )
     # Create the container
     [array]$storageContainerList = $ContainerNames.Split(",");
+    if ($storageContainerList.Length -gt 0)
+    {
+        Log-Message "Creating Multiple Storage Containers (Cli: $AzureCliVersion): $($ContainerNames)" -Context "Create Storage Containers"
+    }
 
     foreach($storageContainerName in $storageContainerList)
     {
@@ -115,6 +97,8 @@ function New-Containers
 
         if (!$status)
         {
+            Log-Message "creating '$storageContainerName' container"
+
             # todo: fall back to azure cli since there are existing issues with installation of azure powershell cmdlets for linux
             # cli doesn't provide clean object returns (json responses are helpful). Therefore, transition as soon as possible
             if ($AzureCliVersion -eq "1" )
@@ -208,21 +192,23 @@ function Set-ContainersPermissions
 
     # Update the container permissions (create if missing)
     [array]$storageContainerList = $ContainerNames.Split(",");
+    if ($storageContainerList.Length -gt 0)
+    {
+        Log-Message "Updating the Permissions of Multiple Storage Containers (Cli: $AzureCliVersion): $($ContainerNames)" -Context "Update Storage Containers Permissions"
+    }
 
     foreach($storageContainerName in $storageContainerList)
     {
-        Log-Message "Creating Storage Container (Cli: $AzureCliVersion): $($storageContainerName)" -Context "Create Storage Containers"
-
         # Check if container already exists
         $status = Get-ContainerExists -ContainerName $storageContainerName
 
         if (!$status)
         {
             # Create if missing
-            New-Containers -ContainerNames storageContainerName
+            New-Containers -ContainerNames $storageContainerName
         }
-    
-        # todo: update status
+
+        Log-Message "Updating Storage Container Permissions (Cli: $AzureCliVersion): $($storageContainerName)" -Context "Update Storage Containers Permissions"
 
         # Update the container permissions
         # todo: fall back to azure cli since there are existing issues with installation of azure powershell cmdlets for linux
@@ -231,7 +217,7 @@ function Set-ContainersPermissions
         {
             # Azure Cli 1.0
 
-            $response = azure storage container set-permission --account-name $StorageAccountName --account-key $StorageAccountKey --container $storageContainerName --public-access $AccessPolicy --json
+            azure storage container set-permission --account-name $StorageAccountName --account-key $StorageAccountKey --container $storageContainerName --public-access $AccessPolicy --json
         }
         else 
         {
@@ -242,20 +228,30 @@ function Set-ContainersPermissions
                 {
                     Log-Message "Using connection string: $AzureStorageConnectionString" -Context "Create Storage Containers" -NoNewLine
         
-                    $response = az storage container set-permission --account-name $StorageAccountName --account-key $StorageAccountKey --name $storageContainerName --public-access $AccessPolicy --connection-string $AzureStorageConnectionString -o json
+                    az storage container set-permission --account-name $StorageAccountName --account-key $StorageAccountKey --name $storageContainerName --public-access $AccessPolicy --connection-string $AzureStorageConnectionString -o json
                 }
                 else
                 {
-                    $response = az storage container set-permission --account-name $StorageAccountName --account-key $StorageAccountKey --name $storageContainerName --public-access $AccessPolicy -o json
+                    az storage container set-permission --account-name $StorageAccountName --account-key $StorageAccountKey --name $storageContainerName --public-access $AccessPolicy -o json
                 }
-        }
-
-        # we expect the following: true=container created, If there is an error, status=[Blank]
-        if (!$status)
-        {
-            # creation failed
-            Log-Message "Unable to create the specified storage container: $storageContainerName" -Context "Create Storage Containers"
-            exit 1
         }
     }
 }
+
+#########################
+#
+# ENTRY POINT
+#
+#########################
+
+$invocation = (Get-Variable MyInvocation).Value 
+$currentPath = Split-Path $invocation.MyCommand.Path
+Import-Module "$($currentPath)/Common.ps1" -Force
+
+# Login First & set context
+Authenticate-AzureRmUser -AadWebClientId $AadWebClientId -AadWebClientAppKey $AadWebClientAppKey -AadTenantId $AadTenantId;
+Set-AzureSubscriptionContext -AzureSubscriptionId $AzureSubscriptionId
+
+New-Containers -ContainerNames $StorageContainerNames
+
+Set-ContainersPermissions -ContainerNames $PublicStorageContainerNames -AccessPolicy "blob"
