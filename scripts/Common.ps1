@@ -479,7 +479,7 @@ function Start-AzureCommand
                 
                 "Remove-AzureRmVmss"
                 {
-                    $response = Remove-AzureRmVmss -ResourceGroupName $InputParameters['ResourceGroupName'] -VMScaleSetName $InputParameters['VMScaleSetName'] -Verbose -Confirm:$false
+                    $response = Remove-AzureRmVmss -ResourceGroupName $InputParameters['ResourceGroupName'] -VMScaleSetName $InputParameters['VMScaleSetName'] -Verbose -Force
                 }
                  
                 "Remove-AzureRmLoadBalancerBackendAddressPoolConfig"
