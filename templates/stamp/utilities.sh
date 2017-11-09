@@ -318,6 +318,7 @@ install-wrapper()
     if [[ -z $no_update ]] ; then
         apt-wrapper "update"
     fi
+
     apt-wrapper "install $package"
     exit_on_error "Installing $package Failed on $HOSTNAME" $error_code
 
@@ -1710,14 +1711,8 @@ install-memcached()
     if type memcached >/dev/null 2>&1; then
         log "Memcached is already installed"
     else
-        log "Updating Repository"
-        apt-get update -y -qq
-
         log "Installing Memcached"
-        apt-get install -y memcached
-        exit_on_error "Failed to install the Memcached on ${HOSTNAME} !" $ERROR_MEMCACHED_INSTALLER_FAILED
-
-        log "Installed Memcached successfully."
+        install-wrapper "memcached" $ERROR_MEMCACHED_INSTALLER_FAILED
     fi
 }
 
@@ -1726,14 +1721,9 @@ install-pip()
     if type pip >/dev/null 2>&1; then
         log "PIP is already installed"
     else
-        log "Updating Repository"
-        apt-get update -y -qq
-
+ 
         log "Installing Memcached"
-        apt-get install -y python-pip python-dev build-essential
-        exit_on_error "Failed to install the pip on ${HOSTNAME} !" $ERROR_PIP_INSTALLER_FAILED
-
-        log "Installed PIP successfully."
+        install-wrapper "python-pip python-dev build-essential" $ERROR_PIP_INSTALLER_FAILED
     fi
 }
 
