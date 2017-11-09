@@ -54,10 +54,8 @@ class LdIntegration(object):
 
             elif message_type == "warning":
                 self.logger.warning(message)
-
             elif message_type == "error":
                 self.logger.error(message)
-
             else:
                 self.logger.debug(message)
 
@@ -170,11 +168,11 @@ class LdIntegration(object):
             results = requests.get(request_url, headers=headers, verify=False, timeout=2).json()
             return results
         except requests.exceptions.Timeout as error:
-            self.log(error, "error")
+            self.log(error, "debug")
         except requests.exceptions.ConnectionError as error:
-            self.log(error, "error")
+            self.log(error, "debug")
         except requests.exceptions.RequestException as error:
-            self.log(error, "error")
+            self.log(error, "debug")
 
     def get_course_catalog_data(
             self,
@@ -266,11 +264,11 @@ class LdIntegration(object):
                 message = "Error occured while posting the data  %s" % response
                 self.log(message, "warning")
         except requests.exceptions.Timeout as error:
-            self.log(error, "error")
+            self.log(error, "debug")
         except requests.exceptions.ConnectionError as error:
-            self.log(error, "error")
+            self.log(error, "debug")
         except requests.exceptions.RequestException as error:
-            self.log(error, "error")
+            self.log(error, "debug")
         return response
 
 
@@ -328,6 +326,7 @@ class LdIntegration(object):
         end_date = datetime.now().replace(microsecond=0).isoformat()
         self.log('here is the end call time', "info")
         self.log(end_date, "info")
+        #TODO: still testing out if we really need [:19] in the below line.
         request_edx_url = request_edx_url + '&start_date=' + start_time[:19] + '&end_date=' + end_date
         user_data = self.get_api_data(request_edx_url, edx_headers)
         self.post_data_ld(consumption_url_ld, ld_headers, self.mapping_api_data(user_data['results'], source_system_id))

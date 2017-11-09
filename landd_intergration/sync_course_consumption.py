@@ -4,16 +4,16 @@ Course consumption syncronization between OXA and  L&D
 
 """
 import logging
-
-import sys
 import landd_integration
 import click
 import click_log
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-LOG = logging.getLogger(__name__)
-
 #pylint: disable=line-too-long
+logging.basicConfig(filename='course_consumption.log', format='%(asctime)s' '%(message)s', level=logging.DEBUG)
+LOG = logging.getLogger(__name__)
+HANDLER = logging.handlers.TimedRotatingFileHandler('course_consumption.log', when="d", interval=1, backupCount=10)
+LOG.addHandler(HANDLER)
+
 
 @click.command()
 @click.option(
@@ -47,6 +47,7 @@ def sync_course_consumption(edx_course_consumption_url, key_vault_url, landd_con
     5) POST the mapped data to L&D Catalog Consumption API
 
     """
+    LOG.debug("starting the process")
     # initialize the key variables
     catalog_service = landd_integration.LdIntegration(logger=LOG)
     #edx_course_catalog_url = "https://lms-lexoxabvtc99-tm.trafficmanager.net/api/courses/v1/courses/"
@@ -80,6 +81,6 @@ def sync_course_consumption(edx_course_consumption_url, key_vault_url, landd_con
         }
 
     catalog_service.get_and_post_consumption_data(edx_course_consumption_url, edx_headers, headers, landd_consumption_url, source_system_id)
-
+    LOG.debug("end the script")
 if __name__ == "__main__":
     sync_course_consumption()  # pylint: disable=no-value-for-parameter
