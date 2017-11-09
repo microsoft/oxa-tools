@@ -16,7 +16,7 @@ THEME_DIRECTORY_YAML=$4
 
 theme_directory=${THEME_DIRECTORY_YAML// /}
 theme_directory=${theme_directory//,/ }
-theme_directory=${theme_directory//[}
+theme_directory=${theme_directory//[u}
 theme_directory=${theme_directory//]}
 eval theme_directory=($theme_directory)
 
