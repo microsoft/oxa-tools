@@ -12,7 +12,7 @@ import click_log
 #pylint: disable=line-too-long
 
 
-logging.basicConfig(filename='course_consumption.log', format='%(asctime)s' '%(message)s', level=logging.DEBUG)
+logging.basicConfig(filename='course_catalog.log', format='%(asctime)s' '%(message)s', level=logging.DEBUG)
 LOG = logging.getLogger(__name__)
 HANDLER = logging.handlers.TimedRotatingFileHandler('course_consumption.log', when="d", interval=1, backupCount=10)
 LOG.addHandler(HANDLER)
