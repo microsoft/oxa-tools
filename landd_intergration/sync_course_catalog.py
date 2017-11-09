@@ -51,6 +51,7 @@ def sync_course_catalog(edx_course_catalog_url, key_vault_url, landd_catalog_url
     5) POST the mapped data to L&D Catalog_UpdateMultipleCatalogAsync API
 
     """
+    LOG.debug("Starting the Course Catalog Interation process")
     # initialize the key variables
     catalog_service = landd_integration.LdIntegration(logger=LOG)
 
@@ -81,6 +82,6 @@ def sync_course_catalog(edx_course_catalog_url, key_vault_url, landd_catalog_url
 
     catalog_data = catalog_service.get_course_catalog_data(edx_course_catalog_url, edx_headers)
     catalog_service.post_data_ld(landd_catalog_url, headers, catalog_service.catalog_data_mapping(source_system_id, catalog_data))
-
+    LOG.debug("End of the Course Catalog Integration process")
 if __name__ == "__main__":
     sync_course_catalog()  # pylint: disable=no-value-for-parameter
