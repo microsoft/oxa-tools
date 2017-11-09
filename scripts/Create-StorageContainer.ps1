@@ -223,17 +223,17 @@ function Set-ContainersPermissions
         {
             # Azure Cli 2.0
 
-                # Update the container permissions
-                if ($AzureStorageConnectionString)
-                {
-                    Log-Message "Using connection string: $AzureStorageConnectionString" -Context "Create Storage Containers" -NoNewLine
-        
-                    az storage container set-permission --account-name $StorageAccountName --account-key $StorageAccountKey --name $storageContainerName --public-access $AccessPolicy --connection-string $AzureStorageConnectionString -o json
-                }
-                else
-                {
-                    az storage container set-permission --account-name $StorageAccountName --account-key $StorageAccountKey --name $storageContainerName --public-access $AccessPolicy -o json
-                }
+            # Update the container permissions
+            if ($AzureStorageConnectionString)
+            {
+                Log-Message "Using connection string: $AzureStorageConnectionString" -Context "Create Storage Containers" -NoNewLine
+    
+                az storage container set-permission --account-name $StorageAccountName --account-key $StorageAccountKey --name $storageContainerName --public-access $AccessPolicy --connection-string $AzureStorageConnectionString -o json
+            }
+            else
+            {
+                az storage container set-permission --account-name $StorageAccountName --account-key $StorageAccountKey --name $storageContainerName --public-access $AccessPolicy -o json
+            }
         }
     }
 }
