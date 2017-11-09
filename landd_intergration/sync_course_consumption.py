@@ -49,36 +49,41 @@ def sync_course_consumption(edx_course_consumption_url, key_vault_url, landd_con
 
     """
     LOG.debug("Starting the Course consumption Interation process")
-    
-    # initialize the key variables
+    attempts = 0 
+        # initialize the key variables
     catalog_service = landd_integration.LdIntegration(logger=LOG)
+    while attempts < 3:
+        try:
 
-    # get secrets from Azure Key Vault
-    edx_api_key = catalog_service.get_key_vault_secret(catalog_service.get_access_token(), key_vault_url, 'edx-api-key')
-    edx_access_token = catalog_service.get_key_vault_secret(catalog_service.get_access_token(), key_vault_url, 'edx-access-token')
-    landd_authorityhosturl = catalog_service.get_key_vault_secret(catalog_service.get_access_token(), key_vault_url, 'landd-authorityhosturl')
-    landd_clientid = catalog_service.get_key_vault_secret(catalog_service.get_access_token(), key_vault_url, 'landd-clientid')
-    landd_clientsecret = catalog_service.get_key_vault_secret(catalog_service.get_access_token(), key_vault_url, 'landd-clientsecret')
-    landd_resource = catalog_service.get_key_vault_secret(catalog_service.get_access_token(), key_vault_url, 'landd-resource')
-    landd_tenant = catalog_service.get_key_vault_secret(catalog_service.get_access_token(), key_vault_url, 'landd-tenant')
-    landd_subscription_key = catalog_service.get_key_vault_secret(catalog_service.get_access_token(), key_vault_url, 'landd-subscription-key')
+            # get secrets from Azure Key Vault
+            edx_api_key = catalog_service.get_key_vault_secret(catalog_service.get_access_token(), key_vault_url, 'edx-api-key')
+            edx_access_token = catalog_service.get_key_vault_secret(catalog_service.get_access_token(), key_vault_url, 'edx-access-token')
+            landd_authorityhosturl = catalog_service.get_key_vault_secret(catalog_service.get_access_token(), key_vault_url, 'landd-authorityhosturl')
+            landd_clientid = catalog_service.get_key_vault_secret(catalog_service.get_access_token(), key_vault_url, 'landd-clientid')
+            landd_clientsecret = catalog_service.get_key_vault_secret(catalog_service.get_access_token(), key_vault_url, 'landd-clientsecret')
+            landd_resource = catalog_service.get_key_vault_secret(catalog_service.get_access_token(), key_vault_url, 'landd-resource')
+            landd_tenant = catalog_service.get_key_vault_secret(catalog_service.get_access_token(), key_vault_url, 'landd-tenant')
+            landd_subscription_key = catalog_service.get_key_vault_secret(catalog_service.get_access_token(), key_vault_url, 'landd-subscription-key')
 
-    # construct headers using key vault secrets
-    edx_headers = dict(Authorization='Bearer' + ' ' + edx_access_token, X_API_KEY=edx_api_key)
+            # construct headers using key vault secrets
+            edx_headers = dict(Authorization='Bearer' + ' ' + edx_access_token, X_API_KEY=edx_api_key)
 
-    headers = {
-        'Content-Type': 'application/json',
-        'Ocp-Apim-Subscription-Key': landd_subscription_key,
-        'Authorization': catalog_service.get_access_token_ld(
-            landd_authorityhosturl,
-            landd_tenant,
-            landd_resource,
-            landd_clientid,
-            landd_clientsecret
-            )
-        }
+            headers = {
+                'Content-Type': 'application/json',
+                'Ocp-Apim-Subscription-Key': landd_subscription_key,
+                'Authorization': catalog_service.get_access_token_ld(
+                    landd_authorityhosturl,
+                    landd_tenant,
+                    landd_resource,
+                    landd_clientid,
+                    landd_clientsecret
+                    )
+                }
 
-    catalog_service.get_and_post_consumption_data(edx_course_consumption_url, edx_headers, headers, landd_consumption_url, source_system_id)
-    LOG.debug("End of the Catalog Integration process")
+            catalog_service.get_and_post_consumption_data(edx_course_consumption_url, edx_headers, headers, landd_consumption_url, source_system_id)
+            LOG.debug("End of the Catalog Integration process")
+        except Exception as e:
+            attempts += 1
+            LOG.error("Exception occured while running the script", exc_info=True)
 if __name__ == "__main__":
     sync_course_consumption()  # pylint: disable=no-value-for-parameter
