@@ -8,7 +8,7 @@ import logging
 import landd_integration
 import click
 import click_log
-
+from logging.handlers import TimedRotatingFileHandler
 #pylint: disable=line-too-long
 
 
