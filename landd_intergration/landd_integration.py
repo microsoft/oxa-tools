@@ -281,8 +281,8 @@ class LdIntegration(object):
         all_user_grades = []
         each_user = {}
         for user in data:
-            #L&D only accepts the user emails with '@microsoft.com' accounts
-            if  not bool(re.search('(?i)^(?:(?!(microsoft.com)).)+$', user['username'])):
+            #check if the email contains 'microsoft.com' in it
+            if  not bool(re.search('(?i)^(?:(?!(@microsoft.com)).)+$', user['username'])):
                 #each_user["UserAlias"] = user['email']
                 each_user["UserAlias"] = 'v-mankon@microsoft.com'
                 each_user["ExternalId"] = user['course_key']
@@ -304,6 +304,10 @@ class LdIntegration(object):
                     each_user["ConsumptionStatus"] = "Failed"
                 else:
                     each_user["ConsumptionStatus"] = "InProgress"
+            else:
+                message = "Data posted sucessfully with %s" % user['username']
+                self.log(message, "debug")
+                
             all_user_grades.append(each_user)
             each_user = {}
 
