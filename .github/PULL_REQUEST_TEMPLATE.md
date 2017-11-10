@@ -3,7 +3,7 @@
 
 #### Where should the reviewer start?
 
-#### How can this be manually tested? (brief repro steps and URL with change)
+#### How can this be manually tested? (brief repro steps and corpnet-URL with change)
 
 #### What are the relevant TFS items? (list id numbers)
 
