@@ -65,8 +65,8 @@ PRIMARY_LOG="/var/log/bootstrap.log"
 
 display_usage()
 {
-  echo "Usage: $0 [-r|--role {jb|vmss|mongo|mysql|edxapp|fullstack|devstack}] [-e|--environment {dev|bvt|prod}] [--cron] --keyvault-name {azure keyvault name} --aad-webclient-id {AAD web application client id} --aad-webclient-appkey {AAD web application client key} --aad-tenant-id {AAD Tenant to authenticate against} --azure-subscription-id {Azure subscription Id}"
-  exit 1
+    echo "Usage: $0 [-r|--role {jb|vmss|mongo|mysql|edxapp|fullstack|devstack}] [-e|--environment {dev|bvt|prod}] [--cron] --keyvault-name {azure keyvault name} --aad-webclient-id {AAD web application client id} --aad-webclient-appkey {AAD web application client key} --aad-tenant-id {AAD Tenant to authenticate against} --azure-subscription-id {Azure subscription Id}"
+    exit 1
 }
 
 parse_args() 
@@ -443,7 +443,8 @@ edx_installation_playbook()
     exit_on_error "Execution of OXA playbook failed"
 }
 
-update_fullstack() {
+update_fullstack()
+{
     # edx playbooks - fullstack (single VM)
     edx_installation_playbook
 
@@ -451,8 +452,25 @@ update_fullstack() {
     /edx/bin/supervisorctl status
 }
 
-update_devstack() {
-    if ! id -u vagrant > /dev/null 2>&1; then
+remove_browsers()
+{
+    if type firefox >/dev/null 2>&1 ; then
+        log "Un-installing firefox...The proper version will be installed later"
+        apt-wrapper "purge firefox"
+    fi
+
+    if type google-chrome-stable >/dev/null 2>&1 ; then
+        log "Un-installing chrome...The proper version will be installed later"
+        apt-wrapper "purge google-chrome-stable"
+    fi
+
+    # Package that comes with firefox.
+    apt-wrapper "remove hunspell-en-us"
+}
+
+update_devstack()
+{
+    if ! id -u vagrant > /dev/null 2>&1 ; then
         # create required vagrant user account to avoid fatal error
         adduser --disabled-password --gecos "" vagrant
 
@@ -480,12 +498,15 @@ update_devstack() {
         touch /home/vagrant/.bashrc
     fi
 
-    if $(stat -c "%U" /home/vagrant) != "vagrant"; then
+    if $(stat -c "%U" /home/vagrant) != "vagrant" ; then
         # Change the owner of the /home/vagrant folder and its subdirectories to the vagrant user account
         # to avoid an error in TASK: [local_dev | login share X11 auth to app users] related to file
         # "/home/vagrant/share_x11/share_x11.j2" msg: chown failed: failed to look up user vagrant
         chown -hR vagrant /home/vagrant
     fi
+
+    # devstack installs specific versions of chrome and firefox
+    remove_browsers
 
     # edx playbooks - devstack (single VM)
     edx_installation_playbook
