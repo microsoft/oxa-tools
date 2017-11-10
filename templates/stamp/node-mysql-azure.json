@@ -1,0 +1,66 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "apiSettings": {
+            "type": "object",
+            "metadata": {
+                "Description": "API version of the resource type"
+            }
+        },
+
+        "networkSettings": {
+            "type": "secureObject",
+            "metadata": {
+                "Description": "Network settings object"
+            }
+        },
+
+        "customSettings": {
+            "type": "secureObject",
+            "metadata": {
+                "Description": "Custom settings object"
+            }
+        }
+    },
+    "resources": [
+        {  
+            "type":"Microsoft.DBforMySQL/servers",
+            "name": "[parameters('networkSettings').clusterAzureMysqlDataNodeName]",
+            "apiVersion": "[parameters('apiSettings').azureMysqlApiVersion]",
+            "kind":"",
+            "location":"[resourceGroup().location]",
+            
+            "properties":{  
+               "version":"[parameters('customSettings').azureMysql.azureMysqlServerPackageVersion]",
+               "administratorLogin":"[parameters('customSettings').azureMysql.azureMysqlServerAdminUserName]",
+               "administratorLoginPassword":"[parameters('customSettings').azureMysql.azureMysqlServerAdminPassword]",
+               "storageMB":"[parameters('customSettings').azureMysql.azureMysqlSkuInfo.databaseSkuSizeMB']"
+            },
+            
+            "sku":{  
+               "name":"[parameters('customSettings').azureMysql.azureMysqlSkuInfo.databaseSkuName]",
+               "tier":"[parameters('customSettings').azureMysql.azureMysqlSkuInfo.databaseSkuTier]",
+               "capacity":"[parameters('customSettings').azureMysql.azureMysqlSkuInfo.databaseDTU]",
+               "size":"[parameters('customSettings').azureMysql.azureMysqlSkuInfo.databaseSkuSizeMB]",
+               "family":"SkuFamily"
+            },
+            
+            "resources":[  
+               {  
+                  "type":"firewallrules",
+                  "apiVersion": "[parameters('apiSettings').azureMysqlApiVersion]",
+                  "dependsOn":[  
+                     "[concat('Microsoft.DBforMySQL/servers/', parameters('networkSettings').clusterAzureMysqlDataNodeName)]"
+                  ],
+                  "location":"[resourceGroup().location]",
+                  "name":"[concat(parameters('networkSettings').clusterAzureMysqlDataNodeName,'firewall')]",
+                  "properties":{  
+                     "startIpAddress":"0.0.0.0",
+                     "endIpAddress":"255.255.255.255"
+                  }
+               }
+            ]
+         }
+    ]
+}
