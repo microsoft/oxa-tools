@@ -29,7 +29,8 @@ remote_mode=0
 debug_mode=0
 
 # this is the expected server to use for secondary (fixed)
-backend_server_list="10.0.0.17"
+# TODO: remove the default and force server list to be specified always
+backend_server_list="10.0.0.12"
 
 #############################################################################
 # parse the command line arguments

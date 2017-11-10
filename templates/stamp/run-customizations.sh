@@ -110,6 +110,9 @@ servicebus_queue_name=""
 servicebus_shared_access_key_name="RootManageSharedAccessKey"
 servicebus_shared_access_key=""
 
+# Azure Mysql Server
+azure_mysql_server_address=""
+
 help()
 {
     echo "This script bootstraps the OXA Stamp"
@@ -170,6 +173,7 @@ help()
     echo "        --servicebus-queue-name Name of servicebus queue to use for notification communications"
     echo "        --servicebus-shared-access-key-name Name of the servicebus shared access policy to use for service bus authentication"
     echo "        --servicebus-shared-access-key Key for the servicebus shared access policy to use for service bus authentication"
+    echo "        --azure-mysql-server-address Address of the Azure Mysql Server to use for this cluster"
 }
 
 # Parse script parameters
@@ -451,6 +455,9 @@ parse_args()
             --servicebus-shared-access-key)
                 servicebus_shared_access_key="${arg_value}"
                 ;;
+            --azure-mysql-server-address)
+                azure_mysql_server_address=`echo ${arg_value} | base64 --decode`
+                ;;
             -h|--help)  # Helpful hints
                 help
                 exit 2
@@ -528,6 +535,16 @@ persist_deployment_time_values()
 
     sed -i "s#^MYSQL_TEMP_USER=.*#MYSQL_TEMP_USER=${MYSQL_BACKUP_USER}#I" $config_file
     sed -i "s#^MYSQL_TEMP_PASSWORD=.*#MYSQL_TEMP_PASSWORD=${MYSQL_BACKUP_USER_PASSWORD}#I" $config_file
+
+    # Support Azure Mysql
+    # The server name/ip isn't known before the deployment and therefore this override is required
+    # also reset reference to the mysql server list
+    if [[ -n "${azure_mysql_server_address}" ]];
+    then
+        log "Overriding Mysql Master IP with address of azure mysql server: ${azure_mysql_server_address}"
+        sed -i "s#^MYSQL_MASTER_IP=.*#MYSQL_MASTER_IP=${azure_mysql_server_address}#I" $config_file
+        sed -i "s#^MYSQL_SERVER_LIST=.*#MYSQL_SERVER_LIST=#I" $config_file
+    fi
 
     sed -i "s#^MYSQL_USER=.*#MYSQL_USER=${MYSQL_REPL_USER}#I" $config_file
     sed -i "s#^MYSQL_PASSWORD=.*#MYSQL_PASSWORD=${MYSQL_REPL_USER_PASSWORD}#I" $config_file
