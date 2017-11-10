@@ -35,7 +35,7 @@
                "version":"[parameters('customSettings').azureMysql.azureMysqlServerPackageVersion]",
                "administratorLogin":"[parameters('customSettings').azureMysql.azureMysqlServerAdminUserName]",
                "administratorLoginPassword":"[parameters('customSettings').azureMysql.azureMysqlServerAdminPassword]",
-               "storageMB":"[parameters('customSettings').azureMysql.azureMysqlSkuInfo.databaseSkuSizeMB']"
+               "storageMB":"[parameters('customSettings').azureMysql.azureMysqlSkuInfo.databaseSkuSizeMB]"
             },
             
             "sku":{  
