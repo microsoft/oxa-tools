@@ -208,12 +208,13 @@ setup()
             done
  
             # Setup each mysql server
-            count=1
-            mysql_servers=(`echo $MYSQL_SERVER_LIST | tr , ' ' `)
-            for ip in "${mysql_servers[@]}"; do
-                exec_mysql $ip $count
-                ((count++))
-            done
+            # With Azure Mysql, this isn't necessary
+            #count=1
+            #mysql_servers=(`echo $MYSQL_SERVER_LIST | tr , ' ' `)
+            #for ip in "${mysql_servers[@]}"; do
+                # exec_mysql $ip $count
+            #    ((count++))
+            #done
 
             # Secure the mysql installation after replication has been setup (only run against the Mysql Master)
             # Specifically: remove anonymous users, remove root network login (only local host allowed), remove test db
