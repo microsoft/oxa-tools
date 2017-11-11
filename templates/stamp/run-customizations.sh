@@ -111,7 +111,8 @@ servicebus_shared_access_key_name="RootManageSharedAccessKey"
 servicebus_shared_access_key=""
 
 # Azure Mysql Server
-azure_mysql_server_address=""
+azure_mysql_server_fqdn=""
+zure_mysql_server_name=""
 
 help()
 {
@@ -173,7 +174,8 @@ help()
     echo "        --servicebus-queue-name Name of servicebus queue to use for notification communications"
     echo "        --servicebus-shared-access-key-name Name of the servicebus shared access policy to use for service bus authentication"
     echo "        --servicebus-shared-access-key Key for the servicebus shared access policy to use for service bus authentication"
-    echo "        --azure-mysql-server-address Address of the Azure Mysql Server to use for this cluster"
+    echo "        --azure-mysql-server-fqdn FQDN of the Azure Mysql Server to use for this cluster"
+    echo "        --azure-mysql-server-name Name of the Azure Mysql Server to use for this cluster"
 }
 
 # Parse script parameters
@@ -456,7 +458,10 @@ parse_args()
                 servicebus_shared_access_key="${arg_value}"
                 ;;
             --azure-mysql-server-address)
-                azure_mysql_server_address=`echo ${arg_value} | base64 --decode`
+                azure_mysql_server_fqdn="${arg_value}"
+                ;;
+            --azure-mysql-server-name)
+                azure_mysql_server_name="${arg_value}"
                 ;;
             -h|--help)  # Helpful hints
                 help
@@ -529,27 +534,42 @@ persist_deployment_time_values()
     sed -i "s#^MONGO_PASSWORD=.*#MONGO_PASSWORD=${MONGO_PASSWORD}#I" $config_file
     sed -i "s#^MONGO_REPLICASET_KEY=.*#MONGO_REPLICASET_KEY=${MONGO_REPLICASET_KEY}#I" $config_file
     
-    # Mysql Credentials
-    sed -i "s#^MYSQL_ADMIN_USER=.*#MYSQL_ADMIN_USER=${MYSQL_ADMIN_USER}#I" $config_file
-    sed -i "s#^MYSQL_ADMIN_PASSWORD=.*#MYSQL_ADMIN_PASSWORD=${MYSQL_ADMIN_PASSWORD}#I" $config_file
-
-    sed -i "s#^MYSQL_TEMP_USER=.*#MYSQL_TEMP_USER=${MYSQL_BACKUP_USER}#I" $config_file
-    sed -i "s#^MYSQL_TEMP_PASSWORD=.*#MYSQL_TEMP_PASSWORD=${MYSQL_BACKUP_USER_PASSWORD}#I" $config_file
-
     # Support Azure Mysql
     # The server name/ip isn't known before the deployment and therefore this override is required
     # also reset reference to the mysql server list
-    if [[ -n "${azure_mysql_server_address}" ]];
+    if [[ -n "${azure_mysql_server_fqdn}" ]];
     then
-        log "Overriding Mysql Master IP with address of azure mysql server: ${azure_mysql_server_address}"
-        sed -i "s#^MYSQL_MASTER_IP=.*#MYSQL_MASTER_IP=${azure_mysql_server_address}#I" $config_file
+        log "Overriding Mysql Master IP with address of azure mysql server: ${azure_mysql_server_fqdn}"
+        sed -i "s#^MYSQL_MASTER_IP=.*#MYSQL_MASTER_IP=${azure_mysql_server_fqdn}#I" $config_file
         sed -i "s#^MYSQL_SERVER_LIST=.*#MYSQL_SERVER_LIST=#I" $config_file
-    fi
 
-    sed -i "s#^MYSQL_USER=.*#MYSQL_USER=${MYSQL_REPL_USER}#I" $config_file
-    sed -i "s#^MYSQL_PASSWORD=.*#MYSQL_PASSWORD=${MYSQL_REPL_USER_PASSWORD}#I" $config_file
-    sed -i "s#^MYSQL_REPL_USER=.*#MYSQL_REPL_USER=${MYSQL_REPL_USER}#I" $config_file
-    sed -i "s#^MYSQL_REPL_USER_PASSWORD=.*#MYSQL_REPL_USER_PASSWORD=${MYSQL_REPL_USER_PASSWORD}#I" $config_file
+        # TODO: Refactor to leverage single path and reuse
+        # Mysql Credentials 
+        sed -i "s#^MYSQL_ADMIN_USER=.*#MYSQL_ADMIN_USER=${azure_mysql_server_name}@${MYSQL_ADMIN_USER}#I" $config_file
+        sed -i "s#^MYSQL_ADMIN_PASSWORD=.*#MYSQL_ADMIN_PASSWORD=${MYSQL_ADMIN_PASSWORD}#I" $config_file
+        sed -i "s#^MYSQL_TEMP_USER=.*#MYSQL_TEMP_USER=${azure_mysql_server_name}@${MYSQL_BACKUP_USER}#I" $config_file
+        sed -i "s#^MYSQL_TEMP_PASSWORD=.*#MYSQL_TEMP_PASSWORD=${MYSQL_BACKUP_USER_PASSWORD}#I" $config_file
+
+        sed -i "s#^MYSQL_USER=.*#MYSQL_USER=${azure_mysql_server_name}@${MYSQL_REPL_USER}#I" $config_file
+        sed -i "s#^MYSQL_PASSWORD=.*#MYSQL_PASSWORD=${MYSQL_REPL_USER_PASSWORD}#I" $config_file
+        sed -i "s#^MYSQL_REPL_USER=.*#MYSQL_REPL_USER=${azure_mysql_server_name}@${MYSQL_REPL_USER}#I" $config_file
+        sed -i "s#^MYSQL_REPL_USER_PASSWORD=.*#MYSQL_REPL_USER_PASSWORD=${MYSQL_REPL_USER_PASSWORD}#I" $config_file
+
+    else
+
+        # Mysql Credentials
+        sed -i "s#^MYSQL_ADMIN_USER=.*#MYSQL_ADMIN_USER=${MYSQL_ADMIN_USER}#I" $config_file
+        sed -i "s#^MYSQL_ADMIN_PASSWORD=.*#MYSQL_ADMIN_PASSWORD=${MYSQL_ADMIN_PASSWORD}#I" $config_file
+
+        sed -i "s#^MYSQL_TEMP_USER=.*#MYSQL_TEMP_USER=${MYSQL_BACKUP_USER}#I" $config_file
+        sed -i "s#^MYSQL_TEMP_PASSWORD=.*#MYSQL_TEMP_PASSWORD=${MYSQL_BACKUP_USER_PASSWORD}#I" $config_file
+
+        sed -i "s#^MYSQL_USER=.*#MYSQL_USER=${MYSQL_REPL_USER}#I" $config_file
+        sed -i "s#^MYSQL_PASSWORD=.*#MYSQL_PASSWORD=${MYSQL_REPL_USER_PASSWORD}#I" $config_file
+        sed -i "s#^MYSQL_REPL_USER=.*#MYSQL_REPL_USER=${MYSQL_REPL_USER}#I" $config_file
+        sed -i "s#^MYSQL_REPL_USER_PASSWORD=.*#MYSQL_REPL_USER_PASSWORD=${MYSQL_REPL_USER_PASSWORD}#I" $config_file
+
+    fi
 
     if [ ! -z ${DOMAIN_OVERRIDE} ]; 
     then
