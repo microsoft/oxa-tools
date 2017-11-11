@@ -457,7 +457,7 @@ parse_args()
             --servicebus-shared-access-key)
                 servicebus_shared_access_key="${arg_value}"
                 ;;
-            --azure-mysql-server-address)
+            --azure-mysql-server-fqdn)
                 azure_mysql_server_fqdn="${arg_value}"
                 ;;
             --azure-mysql-server-name)
