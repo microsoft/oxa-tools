@@ -68,8 +68,8 @@ AZURE_ACCOUNT_NAME={AZURE_ACCOUNT_NAME}
 AZURE_ACCOUNT_KEY={AZURE_ACCOUNT_KEY}
 
 NGINX_ENABLE_SSL=True
-NGINX_SSL_CERTIFICATE=/oxa/oxa-tools-config/env/bvt/cert.crt
-NGINX_SSL_KEY=/oxa/oxa-tools-config/env/bvt/cert.key
+NGINX_SSL_CERTIFICATE="/oxa/oxa-tools-config/env/${ENVIRONMENT}/cert.crt"
+NGINX_SSL_KEY="/oxa/oxa-tools-config/env/${ENVIRONMENT}/cert.key"
 
 ##########################
 # MONGO

@@ -142,7 +142,7 @@ if ($Upgrade -eq $false)
     # clean up
 
     Log-Message "Completed removal of existing Custom Script Extension for $($targetedVms -join(","))"
-    Get-Job | Receive-Job
+    Get-Job | Receive-Job | Out-Null
 }
 else
 {
