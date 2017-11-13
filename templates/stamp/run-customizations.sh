@@ -104,6 +104,12 @@ EDXAPP_ENABLE_MOBILE_REST_API="false"
 # detect request to bootstrap a new jumpbox
 BOOTSTRAP_JUMPBOX=0
 
+# servicebus notification parameters
+servicebus_namespace=""
+servicebus_queue_name=""
+servicebus_shared_access_key_name="RootManageSharedAccessKey"
+servicebus_shared_access_key=""
+
 help()
 {
     echo "This script bootstraps the OXA Stamp"
@@ -160,6 +166,10 @@ help()
     echo "        --memcache-server the memcache server to use"
     echo "        --enable-mobile-rest-api indicator of whether or not the mobile rest api will be enabled"
     echo "        --bootstrap-jumpbox indicator of whether or not initiate a bootstrap for just the jumpbox"
+    echo "        --servicebus-namespace Name of servicebus namespace to use for notification communications"
+    echo "        --servicebus-queue-name Name of servicebus queue to use for notification communications"
+    echo "        --servicebus-shared-access-key-name Name of the servicebus shared access policy to use for service bus authentication"
+    echo "        --servicebus-shared-access-key Key for the servicebus shared access policy to use for service bus authentication"
 }
 
 # Parse script parameters
@@ -302,122 +312,122 @@ parse_args()
             --storage-account-name)
                 BACKUP_STORAGEACCOUNT_NAME="${arg_value}"
                 ;;
-             --storage-account-key)
+            --storage-account-key)
                 BACKUP_STORAGEACCOUNT_KEY="${arg_value}"
                 ;;
-             --mongo-backup-frequency)
+            --mongo-backup-frequency)
                 MONGO_BACKUP_FREQUENCY="${arg_value//_/ }"
                 echo "Option '${1}' reset to '$MONGO_BACKUP_FREQUENCY'"
                 ;;
-             --mysql-backup-frequency)
+            --mysql-backup-frequency)
                 MYSQL_BACKUP_FREQUENCY="${arg_value//_/ }"
                 echo "Option '${1}' reset to '$MYSQL_BACKUP_FREQUENCY'"
                 ;;
-             --mongo-backup-retention-days)
+            --mongo-backup-retention-days)
                 MONGO_BACKUP_RETENTIONDAYS="${arg_value}"
                 ;;
-             --mysql-backup-retention-days)
+            --mysql-backup-retention-days)
                 MYSQL_BACKUP_RETENTIONDAYS="${arg_value}"
                 ;;
-             --import-kitchensink-course)
+            --import-kitchensink-course)
                 EDXAPP_IMPORT_KITCHENSINK_COURSE="${arg_value}"
                 ;;
-             --enable-comprehensive-theming)
+            --enable-comprehensive-theming)
                 EDXAPP_ENABLE_COMPREHENSIVE_THEMING="${arg_value,,}"
                 ;;
-             --comprehensive-theming-directory)
+            --comprehensive-theming-directory)
                 EDXAPP_COMPREHENSIVE_THEME_DIR="${arg_value}"
                 ;;
-             --comprehensive-theming-name)
+            --comprehensive-theming-name)
                 EDXAPP_DEFAULT_SITE_THEME="${arg_value}"
                 ;;
-             --enable-thirdparty-auth)
+            --enable-thirdparty-auth)
                 EDXAPP_ENABLE_THIRD_PARTY_AUTH="${arg_value,,}"
                 ;;
-             --aad-loginbutton-text)
+            --aad-loginbutton-text)
                 EDXAPP_AAD_BUTTON_NAME="${arg_value//_/ }"
                 echo "Option '${1}' reset to '$EDXAPP_AAD_BUTTON_NAME'"
                 ;;
-             --base-domain-override)
+            --base-domain-override)
                 DOMAIN_OVERRIDE="${arg_value,,}"
                 ;;
-             --domain-separator)
+            --domain-separator)
                 DOMAIN_SEPARATOR="${arg_value,,}"
                 ;;
-             --mongo-adminuser)
+            --mongo-adminuser)
                 MONGO_USER="${arg_value}"
                 ;;
-             --mongo-adminuserpassword)
+            --mongo-adminuserpassword)
                 MONGO_PASSWORD="${arg_value}"
                 ;;
-             --mongo-replicasetkey)
+            --mongo-replicasetkey)
                 MONGO_REPLICASET_KEY="${arg_value}"
                 ;;
-             --mysql-adminuser)
+            --mysql-adminuser)
                 MYSQL_ADMIN_USER="${arg_value}"
                 ;;
-             --mysql-adminuserpassword)
+            --mysql-adminuserpassword)
                 MYSQL_ADMIN_PASSWORD="${arg_value}"
                 ;;
-             --mysql-repluser)
+            --mysql-repluser)
                 MYSQL_REPL_USER="${arg_value}"
                 ;;
-             --mysql-repluserpassword)
+            --mysql-repluserpassword)
                 MYSQL_REPL_USER_PASSWORD="${arg_value}"
                 ;;
-             --mysql-backupuser)
+            --mysql-backupuser)
                 MYSQL_BACKUP_USER="${arg_value}"
                 ;;
-             --mysql-backupuserpassword)
+            --mysql-backupuserpassword)
                 MYSQL_BACKUP_USER_PASSWORD="${arg_value}"
                 ;;
-             --edxapp-superuser)
+            --edxapp-superuser)
                 EDXAPP_SU_USERNAME="${arg_value}"
                 ;;
-             --edxapp-superuserpassword)
+            --edxapp-superuserpassword)
                 EDXAPP_SU_PASSWORD="${arg_value}"
                 ;;
-             --edxapp-superuseremail)
+            --edxapp-superuseremail)
                 EDXAPP_SU_EMAIL="${arg_value}"
                 ;;
-             --import-kitchensink-course)
+            --import-kitchensink-course)
                 EDXAPP_IMPORT_KITCHENSINK_COURSE="${arg_value}"
                 ;;
-             --enable-comprehensive-theming)
+            --enable-comprehensive-theming)
                 EDXAPP_ENABLE_COMPREHENSIVE_THEMING="${arg_value,,}"
                 ;;
-             --comprehensive-theming-directory)
+            --comprehensive-theming-directory)
                 EDXAPP_COMPREHENSIVE_THEME_DIR="${arg_value}"
                 ;;
-             --comprehensive-theming-name)
+            --comprehensive-theming-name)
                 EDXAPP_DEFAULT_SITE_THEME="${arg_value}"
                 ;;
-             --enable-thirdparty-auth)
+            --enable-thirdparty-auth)
                 EDXAPP_ENABLE_THIRD_PARTY_AUTH="${arg_value,,}"
                 ;;
-             --aad-loginbutton-text)
+            --aad-loginbutton-text)
                 EDXAPP_AAD_BUTTON_NAME="${arg_value//_/ }"
                 echo "Option '${1}' reset to '$EDXAPP_AAD_BUTTON_NAME'"
                 ;;
-             --base-domain-override)
+            --base-domain-override)
                 DOMAIN_OVERRIDE="${arg_value,,}"
                 ;;
-             --domain-separator)
+            --domain-separator)
                 DOMAIN_SEPARATOR="${arg_value}"
                 ;;
-             --platform-name)
+            --platform-name)
                 PLATFORM_NAME=`echo ${arg_value} | base64 --decode`
                 ;;
-             --platform-email)
+            --platform-email)
                 PLATFORM_EMAIL="${arg_value}"
                 ;;
-             --memcache-server)
+            --memcache-server)
                 MEMCACHE_SERVER=`echo ${arg_value} | base64 --decode`
                 ;;
-             --azurecli-version)
+            --azurecli-version)
                 AZURE_CLI_VERSION="${arg_value}"
                 ;;
-             --enable-mobile-rest-api)
+            --enable-mobile-rest-api)
                 EDXAPP_ENABLE_MOBILE_REST_API="${arg_value,,}"
                 if ( ! is_valid_arg "true false" $EDXAPP_ENABLE_MOBILE_REST_API ) ; 
                 then
@@ -426,8 +436,20 @@ parse_args()
                   exit 2
                 fi
                 ;;
-             --bootstrap-jumpbox)
+            --bootstrap-jumpbox)
                 BOOTSTRAP_JUMPBOX="${arg_value}"
+                ;;
+            --servicebus-namespace)
+                servicebus_namespace="${arg_value}"
+                ;;
+            --servicebus-queue-name)
+                servicebus_queue_name="${arg_value}"
+                ;;
+            --servicebus-shared-access-key-name)
+                servicebus_shared_access_key_name="${arg_value}"
+                ;;
+            --servicebus-shared-access-key)
+                servicebus_shared_access_key="${arg_value}"
                 ;;
             -h|--help)  # Helpful hints
                 help
@@ -440,6 +462,9 @@ parse_args()
                 ;;
         esac
         
+        # note: when adding a new parameter, make sure to plumb it for the cron session as well:
+        # See [ "$CRON_MODE" == "0" ]; section below
+
         shift # past argument
 
         if [ $shift_once -eq 0 ]; 
@@ -623,8 +648,11 @@ then
 
     BACKUP_PARAMS="--storage-account-name \"${BACKUP_STORAGEACCOUNT_NAME}\" --storage-account-key \"${BACKUP_STORAGEACCOUNT_KEY}\" --mongo-backup-frequency \"${MONGO_BACKUP_FREQUENCY}\" --mysql-backup-frequency \"${MYSQL_BACKUP_FREQUENCY}\" --mongo-backup-retention-days \"${MONGO_BACKUP_RETENTIONDAYS}\" --mysql-backup-retention-days \"${MYSQL_BACKUP_RETENTIONDAYS}\""
 
+    # servicebus notification parameters
+    SERVICEBUS_PARAMS="--servicebus-namespace '${servicebus_namespace}' --servicebus-queue-name '${servicebus_queue_name}' --servicebus-shared-access-key-name '${servicebus_shared_access_key_name}' --servicebus-shared-access-key '${servicebus_shared_access_key}'"
+    
     # Create the cron job & exit
-    INSTALL_COMMAND="sudo flock -n /var/log/bootstrap-run-customization.lock bash $CURRENT_PATH/run-customizations.sh -c $CLOUDNAME -u $OS_ADMIN_USERNAME -i $CUSTOM_INSTALLER_RELATIVEPATH -m $MONITORING_CLUSTER_NAME -s $BOOTSTRAP_PHASE -u $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --crontab-interval $CRONTAB_INTERVAL_MINUTES --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID --smtp-server $SMTP_SERVER --smtp-server-port $SMTP_SERVER_PORT --smtp-auth-user $SMTP_AUTH_USER --smtp-auth-user-password $SMTP_AUTH_USER_PASSWORD --cluster-admin-email $CLUSTER_ADMIN_EMAIL --cluster-name $CLUSTER_NAME ${OXA_TOOLS_GITHUB_PARAMS} ${EDX_CONFIGURATION_GITHUB_PARAMS} ${EDX_PLATFORM_GITHUB_PARAMS} ${EDX_THEME_GITHUB_PARAMS} ${ANSIBLE_GITHUB_PARAMS} ${BACKUP_PARAMS} ${SAMPLE_COURSE_PARAMS} ${COMPREHENSIVE_THEMING_PARAMS} ${AUTHENTICATION_PARAMS} ${DOMAIN_PARAMS} ${EDXAPP_PARAMS} --edxversion ${EDX_VERSION} --forumversion ${FORUM_VERSION} ${DATABASE_PARAMS} ${MEMCACHE_PARAMS} ${AZURE_CLI_VERSION} ${MOBILE_REST_API_PARAMS} ${JUMPBOX_BOOTSTRAP_PARAMS} --cron >> $SECONDARY_LOG 2>&1"
+    INSTALL_COMMAND="sudo flock -n /var/log/bootstrap-run-customization.lock bash $CURRENT_PATH/run-customizations.sh -c $CLOUDNAME -u $OS_ADMIN_USERNAME -i $CUSTOM_INSTALLER_RELATIVEPATH -m $MONITORING_CLUSTER_NAME -s $BOOTSTRAP_PHASE -u $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --crontab-interval $CRONTAB_INTERVAL_MINUTES --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID --smtp-server $SMTP_SERVER --smtp-server-port $SMTP_SERVER_PORT --smtp-auth-user $SMTP_AUTH_USER --smtp-auth-user-password $SMTP_AUTH_USER_PASSWORD --cluster-admin-email $CLUSTER_ADMIN_EMAIL --cluster-name $CLUSTER_NAME ${OXA_TOOLS_GITHUB_PARAMS} ${EDX_CONFIGURATION_GITHUB_PARAMS} ${EDX_PLATFORM_GITHUB_PARAMS} ${EDX_THEME_GITHUB_PARAMS} ${ANSIBLE_GITHUB_PARAMS} ${BACKUP_PARAMS} ${SAMPLE_COURSE_PARAMS} ${COMPREHENSIVE_THEMING_PARAMS} ${AUTHENTICATION_PARAMS} ${DOMAIN_PARAMS} ${EDXAPP_PARAMS} --edxversion ${EDX_VERSION} --forumversion ${FORUM_VERSION} ${DATABASE_PARAMS} ${MEMCACHE_PARAMS} ${AZURE_CLI_VERSION} ${MOBILE_REST_API_PARAMS} ${JUMPBOX_BOOTSTRAP_PARAMS} ${SERVICEBUS_PARAMS} --cron >> $SECONDARY_LOG 2>&1"
     echo $INSTALL_COMMAND > $CRON_INSTALLER_SCRIPT
 
     # Remove the task if it is already setup
@@ -764,8 +792,43 @@ then
     exit_on_error "Failed setting up SSH on ${HOSTNAME}" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 else
     log "Launching the installer at '$INSTALLER_PATH'"
-    bash $INSTALLER_PATH --repo-root $REPO_ROOT --config-path "${REPO_ROOT}/oxa-tools-config" --cloud $CLOUDNAME --admin-user $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --phase $BOOTSTRAP_PHASE --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID --edxconfiguration-public-github-accountname $EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME --edxconfiguration-public-github-projectname $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME --edxconfiguration-public-github-projectbranch $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH --oxatools-public-github-accountname $OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME --oxatools-public-github-projectname $OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME --oxatools-public-github-projectbranch $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH --edxplatform-public-github-accountname $EDX_PLATFORM_PUBLIC_GITHUB_ACCOUNTNAME --edxplatform-public-github-projectname $EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME --edxplatform-public-github-projectbranch $EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH --edxtheme-public-github-accountname $EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME --edxtheme-public-github-projectname $EDX_THEME_PUBLIC_GITHUB_PROJECTNAME --edxtheme-public-github-projectbranch $EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH --ansible-public-github-accountname $ANSIBLE_PUBLIC_GITHUB_ACCOUNTNAME --ansible-public-github-projectname $ANSIBLE_PUBLIC_GITHUB_PROJECTNAME --ansible-public-github-projectbranch $ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH --edxversion $EDX_VERSION --forumversion $FORUM_VERSION --cluster-admin-email $CLUSTER_ADMIN_EMAIL --cluster-name $CLUSTER_NAME 
-    exit_on_error "OXA stamp customization ($INSTALLER_PATH) failed" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
+    bash $INSTALLER_PATH  \
+        --repo-root "${REPO_ROOT}"  \
+        --config-path "${REPO_ROOT}/oxa-tools-config" \
+        --cloud "${CLOUDNAME}" \
+        --admin-user "${OS_ADMIN_USERNAME}" \
+        --monitoring-cluster "${MONITORING_CLUSTER_NAME}" \
+        --phase "${BOOTSTRAP_PHASE}" \
+        --keyvault-name "${KEYVAULT_NAME}" \
+        --aad-webclient-id "${AAD_WEBCLIENT_ID}" \
+        --aad-webclient-appkey "${AAD_WEBCLIENT_APPKEY}" \
+        --aad-tenant-id "${AAD_TENANT_ID}" \
+        --azure-subscription-id "${AZURE_SUBSCRIPTION_ID}" \
+        --edxconfiguration-public-github-accountname "${EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME}" \
+        --edxconfiguration-public-github-projectname "${EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME}" \
+        --edxconfiguration-public-github-projectbranch "${EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH}" \
+        --oxatools-public-github-accountname "${OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME}" \
+        --oxatools-public-github-projectname "${OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME}" \
+        --oxatools-public-github-projectbranch "${OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH}" \ \
+        --edxplatform-public-github-accountname "${EDX_PLATFORM_PUBLIC_GITHUB_ACCOUNTNAME}" \
+        --edxplatform-public-github-projectname "${EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME}" \
+        --edxplatform-public-github-projectbranch "${EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH}" \
+        --edxtheme-public-github-accountname "${EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME}" \
+        --edxtheme-public-github-projectname "${EDX_THEME_PUBLIC_GITHUB_PROJECTNAME}" \
+        --edxtheme-public-github-projectbranch "${EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH}" \
+        --ansible-public-github-accountname "${ANSIBLE_PUBLIC_GITHUB_ACCOUNTNAME}" \
+        --ansible-public-github-projectname "${ANSIBLE_PUBLIC_GITHUB_PROJECTNAME}" \
+        --ansible-public-github-projectbranch "${ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH}" \
+        --edxversion "${EDX_VERSION}" \
+        --forumversion "${FORUM_VERSION}" \
+        --cluster-admin-email "${CLUSTER_ADMIN_EMAIL}" \
+        --cluster-name "${CLUSTER_NAME}" \
+        --servicebus-namespace "${servicebus_namespace}" \
+        --servicebus-queue-name "${servicebus_queue_name}" \
+        --servicebus-shared-access-key-name "${servicebus_shared_access_key_name}" \
+        --servicebus-shared-access-key "${servicebus_shared_access_key}"
+
+    exit_on_error "OXA stamp customization (${INSTALLER_PATH}) failed" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 fi
 
 # Remove the task if it is already setup

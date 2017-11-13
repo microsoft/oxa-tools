@@ -33,6 +33,8 @@ ERROR_MYSQL_MOVE_DATADIRECTORY_INSTALLER_FAILED=7210
 ERROR_XINETD_INSTALLER_FAILED=7301
 ERROR_TOOLS_INSTALLER_FAILED=7401
 ERROR_SSHKEYROTATION_INSTALLER_FAILED=7501
+ERROR_MEMCACHED_INSTALLER_FAILED=7601
+ERROR_PIP_INSTALLER_FAILED=7701
 
 # Mysql failover related errors
 ERROR_MYSQL_FAILOVER_INVALIDPROXYPORT=7601
@@ -316,6 +318,7 @@ install-wrapper()
     if [[ -z $no_update ]] ; then
         apt-wrapper "update"
     fi
+
     apt-wrapper "install $package"
     exit_on_error "Installing $package Failed on $HOSTNAME" $error_code
 
@@ -1697,4 +1700,65 @@ copy_bits()
     # set appropriate permissions on the required installer files
     ssh -o "${ssh_options}" "${bitscopy_target_user}@${bitscopy_target_server}" "sudo chmod 600 ~/install.sh && sudo chmod 600 ~/utilities.sh"
     exit_on_error "Unable to update permissions on the installer files copied to '${bitscopy_target_server}'!" "${error_code}" "${copyerror_mail_subject}" "${copyerror_mail_receiver}"
+}
+
+#############################################################################
+# Memcache
+#############################################################################
+
+install-memcached()
+{
+    if type memcached >/dev/null 2>&1; then
+        log "Memcached is already installed"
+    else
+        log "Installing Memcached"
+        install-wrapper "memcached" $ERROR_MEMCACHED_INSTALLER_FAILED
+    fi
+}
+
+install-pip()
+{
+    if type pip >/dev/null 2>&1; then
+        log "PIP is already installed"
+    else
+ 
+        log "Installing Memcached"
+        install-wrapper "python-pip python-dev build-essential" $ERROR_PIP_INSTALLER_FAILED
+    fi
+}
+
+pipinstall-package()
+{
+    package_name="${1}"
+    package_list=`echo ${2} | base64 --decode`
+
+    # make sure pip is already installed
+    install-pip
+
+    if [[ -z ${package_list} ]]; then
+        package_list="${package_name}"
+    fi
+
+    response=`pip show ${package_name}`
+    
+    if [[ -n "${response}" ]]; then
+        log "python '${package_name}' module is already installed."
+    else
+        # TODO: check if just click install is sufficient
+        # install both click and click_log
+        pip install ${package_list}
+        exit_on_error "Failed to pip install '${package_list}' on ${HOSTNAME} !" $ERROR_PIP_INSTALLER_FAILED
+    fi
+}
+
+install-servicebus-tools()
+{
+    log "PIP installing click, click_log & azure packages to support servicebus communication"
+
+    # pip install click
+    package_list=`echo "click click_log" | base64`
+    pipinstall-package "click" "${package_list}"
+
+    # pip install azure
+    pipinstall-package "azure"
 }

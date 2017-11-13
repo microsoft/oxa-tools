@@ -52,7 +52,10 @@
             "[concat(variables('newStorageAccountSuffix'), '3')]",
             "[concat(variables('newStorageAccountSuffix'), '4')]"
         ],
-        "frontendVmStorageAccountCount": "[length(variables('uniqueStringArray'))]"
+        "frontendVmStorageAccountCount": "[length(variables('uniqueStringArray'))]",
+
+        "commandToExecute1": "[replace(parameters('customSettings').commandToExecute, parameters('customSettings').storageKeyPlaceholder, parameters('customSettings').secureGenericStorageAccountKey)]",
+        "commandToExecute2": "[replace(variables('commandToExecute1'), parameters('customSettings').servicebusKeyPlaceholder, parameters('customSettings').secureServicebusSharedAccessKey)]"
     },
 
     "resources": [
@@ -424,7 +427,7 @@
                                         "fileUris": "[parameters('customSettings').vmScripts]"
                                     },
                                     "protectedSettings": {
-                                        "commandToExecute": "[replace(parameters('customSettings').commandToExecute, parameters('customSettings').storageKeyPlaceholder, parameters('customSettings').secureGenericStorageAccountKey)]",
+                                        "commandToExecute": "[variables('commandToExecute2')]"
                                     }
                                 }
                             },
