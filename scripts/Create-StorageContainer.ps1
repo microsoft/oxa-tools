@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Create a storage container for OXA edxapp:migrate playbook task
 
@@ -25,7 +25,7 @@ Name of the storage account where the container will be created
 Name(s) of the storage container(s) to create. Use a comma-separated list to specify multiple containers
 
 .PARAMETER PublicStorageContainerNames
-Name(s) of the storage container(s) to create. Use a comma-separated list to specify multiple containers
+Name(s) of the Public storage container(s) to create. Use a comma-separated list to specify multiple containers
 
 .PARAMETER AzureCliVersion
 Version of Azure CLI to use
@@ -75,17 +75,15 @@ trap [Exception]
     # this should trigger and catch and resume
     throw "Script execution failed: $($_)";
 }
-function New-Containers
+
+function New-AzureStorageContainers
 {
     param(
             [Parameter(Mandatory=$true)][string]$ContainerNames
          )
+
     # Create the container
     [array]$storageContainerList = $ContainerNames.Split(",");
-    if ($storageContainerList.Length -gt 0)
-    {
-        Log-Message "Creating Multiple Storage Containers (Cli: $AzureCliVersion): $($ContainerNames)" -Context "Create Storage Containers"
-    }
 
     foreach($storageContainerName in $storageContainerList)
     {
@@ -93,13 +91,12 @@ function New-Containers
         Log-Message "Creating Storage Container (Cli: $AzureCliVersion): $($storageContainerName)" -Context "Create Storage Containers"
 
         # Check if container already exists
-        $status = Get-ContainerExists -Container $storageContainerName
+        $status = Get-StorageContainerStatus -Container $storageContainerName
 
         if (!$status)
         {
             Log-Message "creating '$storageContainerName' container"
 
-            # todo: fall back to azure cli since there are existing issues with installation of azure powershell cmdlets for linux
             # cli doesn't provide clean object returns (json responses are helpful). Therefore, transition as soon as possible
             if ($AzureCliVersion -eq "1" )
             {
@@ -140,7 +137,7 @@ function New-Containers
     }
 }
 
-function Get-ContainerExists
+function Get-StorageContainerStatus
 {
     param(
             [Parameter(Mandatory=$true)][string]$ContainerName
@@ -192,20 +189,16 @@ function Set-ContainersPermissions
 
     # Update the container permissions (create if missing)
     [array]$storageContainerList = $ContainerNames.Split(",");
-    if ($storageContainerList.Length -gt 0)
-    {
-        Log-Message "Updating the Permissions of Multiple Storage Containers (Cli: $AzureCliVersion): $($ContainerNames)" -Context "Update Storage Containers Permissions"
-    }
-
+    
     foreach($storageContainerName in $storageContainerList)
     {
         # Check if container already exists
-        $status = Get-ContainerExists -ContainerName $storageContainerName
+        $status = Get-StorageContainerStatus -ContainerName $storageContainerName
 
         if (!$status)
         {
             # Create if missing
-            New-Containers -ContainerNames $storageContainerName
+            New-AzureStorageContainers -ContainerNames $storageContainerName
         }
 
         Log-Message "Updating Storage Container Permissions (Cli: $AzureCliVersion): $($storageContainerName)" -Context "Update Storage Containers Permissions"
@@ -252,6 +245,6 @@ Import-Module "$($currentPath)/Common.ps1" -Force
 Authenticate-AzureRmUser -AadWebClientId $AadWebClientId -AadWebClientAppKey $AadWebClientAppKey -AadTenantId $AadTenantId;
 Set-AzureSubscriptionContext -AzureSubscriptionId $AzureSubscriptionId
 
-New-Containers -ContainerNames $StorageContainerNames
+New-AzureStorageContainers -ContainerNames $StorageContainerNames
 
 Set-ContainersPermissions -ContainerNames $PublicStorageContainerNames -AccessPolicy "blob"
