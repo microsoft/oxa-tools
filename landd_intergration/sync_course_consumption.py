@@ -82,6 +82,7 @@ def sync_course_consumption(edx_course_consumption_url, key_vault_url, landd_con
 
             catalog_service.get_and_post_consumption_data(edx_course_consumption_url, edx_headers, headers, landd_consumption_url, source_system_id)
             LOG.debug("End of the Catalog Integration process")
+            break
         except Exception as e:
             attempts += 1
             LOG.error("Exception occured while running the script", exc_info=True)
