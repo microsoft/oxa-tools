@@ -229,10 +229,10 @@ DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
 EOF
 
             # execute the query
-            mysql -h $MYSQL_MASTER_IP -u root -p$MYSQL_ADMIN_PASSWORD< ./$TMP_QUERY_FILE
+            mysql -h $MYSQL_MASTER_IP -u root -p$MYSQL_ADMIN_PASSWORD< ./$temp_query_file
 
             # remove the temp file (security reasons)
-            rm $TMP_QUERY_FILE
+            rm $temp_query_file
         else
             log "Skipping the 'Infrastructure Bootstrap - Server Application Installation' since this is already done"
         fi

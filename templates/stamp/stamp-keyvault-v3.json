@@ -449,24 +449,6 @@
                 "description": "SKU for the vault"
             }
         },
-        "lmsTrafficManagerStateMetadata": {
-            "type": "array",
-            "metadata": {
-                "description": "Traffic manager status for LMS load balancers endpoints: [0]=Slot1.LoadBalancerEndpointStatus, [1]=Slot2.LoadBalancerEndpointStatus, [2]=Slot1.LoadBalancerEndpointPriority, [3]=Slot2.LoadBalancerEndpointPriority where LoadBalancerStatus=Enabled|Disabled, LoadBalancerEndpointPriority >= 1 and <= 1000"
-            }
-        },
-        "cmsTrafficManagerStateMetadata": {
-            "type": "array",
-            "metadata": {
-                "description": "Traffic manager status for CMS load balancers endpoints: [0]=Slot1.LoadBalancerEndpointStatus, [1]=Slot2.LoadBalancerEndpointStatus, [2]=Slot1.LoadBalancerEndpointPriority, [3]=Slot2.LoadBalancerEndpointPriority where LoadBalancerStatus=Enabled|Disabled, LoadBalancerEndpointPriority >= 1 and <= 1000"
-            }
-        },
-        "previewTrafficManagerStateMetadata": {
-            "type": "array",
-            "metadata": {
-                "description": "Traffic manager status for PREVIEW load balancer endpoints: [0]=Slot1.LoadBalancerEndpointStatus, [1]=Slot2.LoadBalancerEndpointStatus, [2]=Slot1.LoadBalancerEndpointPriority, [3]=Slot2.LoadBalancerEndpointPriority where LoadBalancerStatus=Enabled|Disabled, LoadBalancerEndpointPriority >= 1 and <= 1000"
-            }
-        },
         "smtpServer": {
             "type": "string",
             "metadata": {
@@ -616,13 +598,6 @@
                 "description": "Email address associated with the application"
             }
         },
-        "memcacheServer": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "Memcache server to use for the application servers"
-            }
-        },
         "azureCliVersion": {
             "type": "string",
             "defaultValue": "2",
@@ -639,6 +614,18 @@
             "defaultValue": "false",
             "metadata": {
                 "description": "Indicator of whether or not the Mobile Rest Api is enabled for further integration"
+            }
+        },
+        "deploymentType": {
+            "type": "string",
+            "defaultValue": "upgrade",
+            "allowedValues": [
+                "bootstrap",
+                "upgrade",
+                "swap"
+            ],
+            "metadata": {
+                "description": "This will determine which resources to conditionally deploy."
             }
         },
         "bootstrapJumpbox": {
@@ -663,9 +650,12 @@
         "mediaServicesApiVersion": "2015-10-01",
         "storageApiVersion": "2016-01-01",
         "servicebusApiVersion": "2017-04-01",
-
+        
         "virtualMachineExtensionsApiVersion": "[variables('defaultApiVersion')]",
         "virtualMachineApiVersion": "[variables('defaultApiVersion')]",
+        "slot1Status": "[if(equals(parameters('deploymentSlot'), 'slot1'), 'Enabled','Disabled')]",
+        "slot2Status": "[if(equals(parameters('deploymentSlot'), 'slot2'), 'Enabled','Disabled')]",
+        "memcacheServer": "[if(equals(parameters('deploymentSlot'), 'slot1'), '10.0.0.16','10.0.0.17')]",
 
         "diagnosticStorageAccountName": "[concat(toLower(parameters('clusterName')), 'diagnostics')]",
         "storageAccountName": "[concat(toLower(parameters('clusterName')), 'vhdsa')]",
@@ -675,7 +665,6 @@
         "mediaServicesAccountName": "[concat(toLower(parameters('clusterName')), 'wamsmedia')]",
         "storageAccountType": "Standard_LRS",
         "storageContainer": "[concat('https://', variables('storageAccountName'),'.blob.core.windows.net/vhds/')]",
-
         "loadBalancerName": "[concat(parameters('clusterName'), '-lb-', parameters('deploymentSlot'))]",
         "virtualNetworkName": "[concat(parameters('clusterName'), '-vnet')]",
         "subnetName": "[concat(parameters('clusterName'), '-subnet')]",
@@ -707,9 +696,43 @@
         "serviceBusQueueName": "[concat(parameters('clusterName'), '-sbq')]",
         "authRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/authorizationRules', variables('serviceBusNameSpace'), variables('defaultSASKeyName'))]",
         
+        "resourcesToDeploy": {
+            "bootstrap": {
+                "sharedResources": true,
+                "jumpbox": true,
+                "mongo": true,
+                "mysql": true,
+                "vmss": true,
+                "keyVault": false,
+                "trafficManagerLms": true,
+                "trafficManagerCms": true,
+                "trafficManagerPreview": true
+            },
+            "upgrade": {
+                "sharedResources": false,
+                "jumpbox": false,
+                "mongo": false,
+                "mysql": false,
+                "vmss": true,
+                "keyVault": false,
+                "trafficManagerLms": false,
+                "trafficManagerCms": false,
+                "trafficManagerPreview": false
+            },
+            "swap": {
+                "sharedResources": false,
+                "jumpbox": false,
+                "mongo": false,
+                "mysql": false,
+                "vmss": false,
+                "keyVault": false,
+                "trafficManagerLms": true,
+                "trafficManagerCms": true,
+                "trafficManagerPreview": true
+            }
+        },
         "jumpboxBootstrapIndicator": "[if(greater(parameters('bootstrapJumpbox'), 0), 1, 0)]",
         "jumpboxNameSuffix": "[if(greater(parameters('bootstrapJumpbox'), 0), parameters('bootstrapJumpbox'), '')]",
-
         "networkSettings": {
             "virtualNetworkName": "[variables('virtualNetworkName')]",
             "clusterName": "[parameters('clusterName')]",
@@ -760,15 +783,15 @@
                     "monitorConfigPath": "/",
                     "endpoint1": {
                         "target": "[concat('lms-', parameters('clusterName'), '-slot1.',resourceGroup().location, '.cloudapp.azure.com')]",
-                        "status": "[parameters('lmsTrafficManagerStateMetadata')[0]]",
+                        "status": "[variables('slot1Status')]",
                         "location": "[resourceGroup().location]",
-                        "priority": "[parameters('lmsTrafficManagerStateMetadata')[2]]"
+                        "priority": "1"
                     },
                     "endpoint2": {
                         "target": "[concat('lms-', parameters('clusterName'), '-slot2.',resourceGroup().location, '.cloudapp.azure.com')]",
-                        "status": "[parameters('lmsTrafficManagerStateMetadata')[1]]",
+                        "status": "[variables('slot2Status')]",
                         "location": "[resourceGroup().location]",
-                        "priority": "[parameters('lmsTrafficManagerStateMetadata')[3]]"
+                        "priority": "2"
                     }
                 },
 
@@ -778,15 +801,15 @@
                     "monitorConfigPath": "/",
                     "endpoint1": {
                         "target": "[concat('cms-', parameters('clusterName'), '-slot1.',resourceGroup().location, '.cloudapp.azure.com')]",
-                        "status": "[parameters('cmsTrafficManagerStateMetadata')[0]]",
+                        "status": "[variables('slot1Status')]",
                         "location": "[resourceGroup().location]",
-                        "priority": "[parameters('cmsTrafficManagerStateMetadata')[2]]"
+                        "priority": "1"
                     },
                     "endpoint2": {
                         "target": "[concat('cms-', parameters('clusterName'), '-slot2.',resourceGroup().location, '.cloudapp.azure.com')]",
-                        "status": "[parameters('cmsTrafficManagerStateMetadata')[1]]",
+                        "status": "[variables('slot2Status')]",
                         "location": "[resourceGroup().location]",
-                        "priority": "[parameters('cmsTrafficManagerStateMetadata')[3]]"
+                        "priority": "2"
                     }
                 },
 
@@ -796,15 +819,15 @@
                     "monitorConfigPath": "/",
                     "endpoint1": {
                         "target": "[concat('preview-', parameters('clusterName'), '-slot1.',resourceGroup().location, '.cloudapp.azure.com')]",
-                        "status": "[parameters('previewTrafficManagerStateMetadata')[0]]",
+                        "status": "[variables('slot1Status')]",
                         "location": "[resourceGroup().location]",
-                        "priority": "[parameters('previewTrafficManagerStateMetadata')[2]]"
+                        "priority": "1"
                     },
                     "endpoint2": {
                         "target": "[concat('preview-', parameters('clusterName'), '-slot2.',resourceGroup().location, '.cloudapp.azure.com')]",
-                        "status": "[parameters('previewTrafficManagerStateMetadata')[1]]",
+                        "status": "[variables('slot2Status')]",
                         "location": "[resourceGroup().location]",
-                        "priority": "[parameters('previewTrafficManagerStateMetadata')[3]]"
+                        "priority": "2"
                     }
                 }
             },
@@ -957,21 +980,19 @@
         "smtpParameters": "[concat(' --smtp-server ', parameters('smtpServer'), ' --smtp-server-port ', parameters('smtpServerPort'), ' --smtp-auth-user ', parameters('smtpAuthenticationUser'), ' --smtp-auth-user-password ', parameters('smtpAuthenticationUserPassword'), '  --cluster-admin-email ', parameters('clusterAdmininistratorEmailAddress'))]",
 
         "secureGenericStorageAccountId": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/','Microsoft.Storage/storageAccounts/', variables('secureGenericStorageAccountName'))]",
-        "storageKeyPlaceholder": "STORAGE_PLACEHOLDER_KEY",
-        "backupParameters": "[concat(' --storage-account-key ', variables('storageKeyPlaceholder'),' --storage-account-name ', variables('secureGenericStorageAccountName'), ' --mongo-backup-frequency \"', replace(parameters('mongoBackupFrequency'), ' ', '_'), '\" --mysql-backup-frequency \"', replace(parameters('mysqlBackupFrequency'), ' ', '_'), '\" --mongo-backup-retention-days ', parameters('mongoBackupRetentionDays'), ' --mysql-backup-retention-days ', parameters('mysqlBackupRetentionDays'))]",
+        "secureGenericStorageAccountKey": "PLACEHOLDER_KEY",
+        "backupParameters": "[concat(' --storage-account-key ', variables('secureGenericStorageAccountKey'),' --storage-account-name ', variables('secureGenericStorageAccountName'), ' --mongo-backup-frequency \"', replace(parameters('mongoBackupFrequency'), ' ', '_'), '\" --mysql-backup-frequency \"', replace(parameters('mysqlBackupFrequency'), ' ', '_'), '\" --mongo-backup-retention-days ', parameters('mongoBackupRetentionDays'), ' --mysql-backup-retention-days ', parameters('mysqlBackupRetentionDays'))]",
 
         "sampleCourseParameters": "[concat(' --import-kitchensink-course ', parameters('importKitchenSinkCourse'))]",
         "comprehensiveThemingParameters": "[concat(' --enable-comprehensive-theming ', parameters('enableComprehensiveTheming'), ' --comprehensive-theming-directory ', parameters('comprehensiveThemingDirectory'), ' --comprehensive-theming-name ', parameters('comprehensiveThemingName'))]",
         "authenticationParameters": "[concat(' --enable-thirdparty-auth ', parameters('enableThirdPartyAuth'), ' --aad-loginbutton-text \"', replace(parameters('aadLoginButtonText'), ' ', '_'), '\"')]",
         "databaseParameters": "[concat(' --mongo-adminuser ', parameters('mongoServerAdminUserName'), ' --mongo-adminuserpassword \"', parameters('mongoServerAdminPassword'), '\" --mongo-replicasetkey \"', variables('mongoReplicaSetKey'), '\" --mysql-backupuser ', parameters('mysqlBackupUserName'), ' --mysql-backupuserpassword \"', parameters('mysqlBackupUserPassword'), '\" --mysql-repluser \"', parameters('mysqlServerReplUserName'), '\" --mysql-repluserpassword \"', parameters('mysqlServerReplPassword'), '\" --mysql-adminuser \"', parameters('mysqlServerAdminUserName'), '\" --mysql-adminuserpassword \"', parameters('mysqlServerAdminPassword'), '\" --mysql-repluser \"', parameters('mysqlServerReplUserName'), '\" --mysql-repluserpassword \"', parameters('mysqlServerReplPassword'), '\" --mysql-adminuser \"', parameters('mysqlServerAdminUserName'), '\" --mysql-adminuserpassword \"', parameters('mysqlServerAdminPassword'), '\"')]",
         "edxappParameters": "[concat(' --platform-email \"', parameters('edxPlatformEmail'), '\" --platform-name \"', base64(parameters('edxPlatformName')), '\" --edxapp-superuser \"', parameters('edxappSuperUserName'), '\" --edxapp-superuserpassword \"', parameters('edxappSuperUserPassword'), '\" --edxapp-superuseremail \"', parameters('edxappSuperUserEmail'), '\"')]",
-        "memcacheParameters": "[concat(' --memcache-server \"', base64(parameters('memcacheServer')), '\"')]",
+        "memcacheParameters": "[concat(' --memcache-server \"', base64(variables('memcacheServer')), '\"')]",
         "azureCliParameters": "[concat(' --azurecli-version \"', parameters('azureCliVersion'), '\"')]",
         "jumpboxBootstrapParameters": "[concat(' --bootstrap-jumpbox \"', variables('jumpboxBootstrapIndicator'), '\"')]",
-        "servicebusKeyPlaceholder": "SERVICEBUS_PLACEHOLDER_KEY",
-        "servicebusParameters": "[concat(' --servicebus-namespace \"', variables('serviceBusNameSpace'), '\" --servicebus-queue-name \"', variables('serviceBusQueueName'), '\" --servicebus-shared-access-key \"', variables('servicebusKeyPlaceholder'), '\"')]",
 
-        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'), variables('backupParameters'), variables('sampleCourseParameters'), variables('comprehensiveThemingParameters'), variables('authenticationParameters'), variables('customInstallerDomainOverrideParameters'), variables('databaseParameters'), variables('edxappParameters'), variables('memcacheParameters'), variables('azureCliParameters'), variables('customInstallerMobileRestApiParameters'), variables('jumpboxBootstrapParameters'), variables('servicebusParameters'), variables('customInstallerOutputRedirect') )]",
+        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'), variables('backupParameters'), variables('sampleCourseParameters'), variables('comprehensiveThemingParameters'), variables('authenticationParameters'), variables('customInstallerDomainOverrideParameters'), variables('databaseParameters'), variables('edxappParameters'), variables('memcacheParameters'), variables('azureCliParameters'), variables('customInstallerMobileRestApiParameters'), variables('jumpboxBootstrapParameters'), variables('customInstallerOutputRedirect') )]",
 
         "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources.json')]",
         "jumpboxTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-jumpbox.json')]",
@@ -1039,207 +1060,6 @@
     },
     "resources": [
         {
-            "name": "shared-resources",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('apiVersion')]",
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('sharedTemplateUrl')]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "networkSettings": {
-                        "value": "[variables('networkSettings')]"
-                    },
-                    "apiSettings": {
-                        "value": "[variables('apiSettings')]"
-                    },
-                    "storageSettings": {
-                        "value": "[variables('storageSettings')]"
-                    },
-                    "serviceBusSettings": {
-                        "value": "[variables('serviceBusSettings')]"
-                    }
-                }
-            }
-        },
-        {
-            "name": "jumpbox",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('apiVersion')]",
-            "dependsOn": [
-                "[concat('Microsoft.Resources/deployments/', 'shared-resources')]",
-                "mongoNodesLoop",
-                "mysqlMasterNodeLoop",
-                "keyVault"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('jumpboxTemplateUrl')]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "networkSettings": {
-                        "value": "[variables('networkSettings')]"
-                    },
-                    "apiSettings": {
-                        "value": "[variables('apiSettings')]"
-                    },
-                    "machineSettings": {
-                        "value": "[variables('jumpboxMachineSettings')]"
-                    },
-                    "storageSettings": {
-                        "value": "[variables('storageSettings')]"
-                    },
-                    "customSettings": {
-                        "value": {
-                            "vmScripts": "[variables('jumpBoxInstallerSettings').scriptsToDownload]",
-                            "commandToExecute": "[variables('jumpBoxInstallerSettings').customInstallerCommand]",
-                            "storageKeyPlaceholder": "[variables('storageKeyPlaceholder')]",
-                            "servicebusKeyPlaceholder": "[variables('servicebusKeyPlaceholder')]",
-                            "secureGenericStorageAccountKey": "[listKeys(variables('secureGenericStorageAccountId'), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value]",
-                            "secureServicebusSharedAccessKey": "[listkeys(variables('authRuleResourceId'), variables('servicebusApiVersion')).primaryKey]"
-                        }
-                    }
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Resources/deployments",
-            "name": "[concat(variables('networkSettings').clusterMongoDataNodeName, copyindex(1))]",
-            "apiVersion": "[variables('apiVersion')]",
-            "dependsOn": [
-                "[concat('Microsoft.Resources/deployments/', 'shared-resources')]",
-                "keyVault"
-            ],
-            "copy": {
-                "name": "mongoNodesLoop",
-                "count": "[int(variables('networkSettings').mongoDataNodeCount)]"
-            },
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('mongoNodeTemplateUrl')]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "networkSettings": {
-                        "value": "[variables('networkSettings')]"
-                    },
-                    "apiSettings": {
-                        "value": "[variables('apiSettings')]"
-                    },
-                    "machineSettings": {
-                        "value": "[variables('mongoMachineSettings')]"
-                    },
-                    "storageSettings": {
-                        "value": "[variables('storageSettings')]"
-                    },
-                    "customSettings": {
-                        "value": {
-                            "machineIndex": "[copyindex(1)]",
-                            "vmScripts": "[variables('mongoDBInstallerSettings').scriptsToDownload]",
-                            "adminUsername": "[variables('networkSettings').adminUsername]",
-                            "adminPassword": "[variables('networkSettings').mongoServerAdminPassword]",
-                            "machineNamePrefix": "[variables('networkSettings').clusterMongoDataNodeName]",
-                            "osImageReference": "[variables('mongoMachineSettings').osImageReference]",
-                            "vmSize": "[variables('mongoMachineSettings').vmSize]",
-                            "dataDiskSize": "[variables('mongoMachineSettings').dataDiskSize]",
-                            "commandToExecute": "[variables('mongoDBInstallerSettings').regularNodeInstallCommand]",
-                            "machineIpOffset": "[int(variables('networkSettings').mongoServerIpOffset)]"
-                        }
-                    }
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Resources/deployments",
-            "name": "[concat(variables('networkSettings').clusterMysqlDataNodeName, copyindex(1))]",
-            "apiVersion": "[variables('apiVersion')]",
-            "dependsOn": [
-                "[concat('Microsoft.Resources/deployments/', 'shared-resources')]",
-                "keyVault"
-            ],
-            "copy": {
-                "name": "mysqlMasterNodeLoop",
-                "count": "[int(variables('networkSettings').mysqlDataNodeCount)]"
-            },
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('mysqlNodeTemplateUrl')]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "networkSettings": {
-                        "value": "[variables('networkSettings')]"
-                    },
-                    "apiSettings": {
-                        "value": "[variables('apiSettings')]"
-                    },
-                    "machineSettings": {
-                        "value": "[variables('mysqlMachineSettings')]"
-                    },
-                    "storageSettings": {
-                        "value": "[variables('storageSettings')]"
-                    },
-                    "customSettings": {
-                        "value": {
-                            "machineIndex": "[copyindex(1)]",
-                            "vmScripts": "[variables('mysqlDBInstallerSettings').scriptsToDownload]",
-                            "commandToExecute": "[concat(variables('mysqlDBInstallerSettings').regularNodeInstallCommand, ' -n ', copyindex(1))]",
-                            "machineIpOffset": "[int(variables('networkSettings').mysqlServerIpOffset)]"
-                        }
-                    }
-                }
-            }
-        },
-
-        {
-            "name": "vmss",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('apiVersion')]",
-            "dependsOn": [
-                "[concat('Microsoft.Resources/deployments/', 'shared-resources')]",
-                "keyVault",
-                "jumpbox"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('vmssTemplateUrl')]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "networkSettings": {
-                        "value": "[variables('networkSettings')]"
-                    },
-                    "apiSettings": {
-                        "value": "[variables('apiSettings')]"
-                    },
-                    "machineSettings": {
-                        "value": "[variables('frontendMachineSettings')]"
-                    },
-                    "storageSettings": {
-                        "value": "[variables('storageSettings')]"
-                    },
-                    "customSettings": {
-                        "value": {
-                            "vmScripts": "[variables('vmssInstallerSettings').scriptsToDownload]",
-                            "commandToExecute": "[variables('vmssInstallerSettings').customInstallerCommand]",
-                            "linuxDiagnosticsSettings": "[variables('vmssLinuxDiagnosticsSettings')]",
-                            "storageKeyPlaceholder": "[variables('storageKeyPlaceholder')]",
-                            "servicebusKeyPlaceholder": "[variables('servicebusKeyPlaceholder')]",
-                            "secureGenericStorageAccountKey": "[listKeys(variables('secureGenericStorageAccountId'), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value]",
-                            "secureServicebusSharedAccessKey": "[listkeys(variables('authRuleResourceId'), variables('servicebusApiVersion')).primaryKey]"
-                        }
-                    }
-                }
-            }
-        },
-        {
             "name": "keyVault",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[variables('apiVersion')]",
@@ -1263,126 +1083,30 @@
             }
         },
         {
-            "name": "trafficManagerLms",
+            "name": "shared-resources",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[variables('apiVersion')]",
-            "dependsOn": [
-                "vmss"
-            ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[variables('trafficManagerTemplateUrl')]",
+                    "uri": "[variables('sharedTemplateUrl')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
+                    "networkSettings": {
+                        "value": "[variables('networkSettings')]"
+                    },
                     "apiSettings": {
                         "value": "[variables('apiSettings')]"
                     },
-                    "customSettings": {
-                        "value": {
-                            "trafficManagerName": "[variables('networkSettings').trafficManagerSettings.lms.name]",
-                            "relativeDnsName": "[variables('networkSettings').trafficManagerSettings.lms.name]",
-                            "dnsTtl": "[variables('networkSettings').trafficManagerSettings.dnsTtlSeconds]",
-                            "monitorConfigProtocol": "[variables('networkSettings').trafficManagerSettings.monitorConfigProtocol]",
-                            "monitorConfigPort": "[variables('networkSettings').trafficManagerSettings.lms.monitorConfigPort]",
-                            "monitorConfigPath": "[variables('networkSettings').trafficManagerSettings.lms.monitorConfigPath]",
-                            "endpoint1": "[variables('networkSettings').trafficManagerSettings.lms.endpoint1]",
-                            "endpoint2": "[variables('networkSettings').trafficManagerSettings.lms.endpoint2]"
-                        }
-                    }
-                }
-            }
-        },
-        {
-            "name": "trafficManagerCms",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('apiVersion')]",
-            "dependsOn": [
-                "vmss"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('trafficManagerTemplateUrl')]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "apiSettings": {
-                        "value": "[variables('apiSettings')]"
+                    "serviceBusSettings": {
+                        "value": "[variables('serviceBusSettings')]"
                     },
-                    "customSettings": {
-                        "value": {
-                            "trafficManagerName": "[variables('networkSettings').trafficManagerSettings.cms.name]",
-                            "relativeDnsName": "[variables('networkSettings').trafficManagerSettings.cms.name]",
-                            "dnsTtl": "[variables('networkSettings').trafficManagerSettings.dnsTtlSeconds]",
-                            "monitorConfigProtocol": "[variables('networkSettings').trafficManagerSettings.monitorConfigProtocol]",
-                            "monitorConfigPort": "[variables('networkSettings').trafficManagerSettings.cms.monitorConfigPort]",
-                            "monitorConfigPath": "[variables('networkSettings').trafficManagerSettings.cms.monitorConfigPath]",
-                            "endpoint1": "[variables('networkSettings').trafficManagerSettings.cms.endpoint1]",
-                            "endpoint2": "[variables('networkSettings').trafficManagerSettings.cms.endpoint2]"
-                        }
-                    }
-                }
-            }
-        },
-        {
-            "name": "trafficManagerPreview",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('apiVersion')]",
-            "dependsOn": [
-                "vmss"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('trafficManagerTemplateUrl')]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "apiSettings": {
-                        "value": "[variables('apiSettings')]"
-                    },
-                    "customSettings": {
-                        "value": {
-                            "trafficManagerName": "[variables('networkSettings').trafficManagerSettings.preview.name]",
-                            "relativeDnsName": "[variables('networkSettings').trafficManagerSettings.preview.name]",
-                            "dnsTtl": "[variables('networkSettings').trafficManagerSettings.dnsTtlSeconds]",
-                            "monitorConfigProtocol": "[variables('networkSettings').trafficManagerSettings.monitorConfigProtocol]",
-                            "monitorConfigPort": "[variables('networkSettings').trafficManagerSettings.preview.monitorConfigPort]",
-                            "monitorConfigPath": "[variables('networkSettings').trafficManagerSettings.preview.monitorConfigPath]",
-                            "endpoint1": "[variables('networkSettings').trafficManagerSettings.preview.endpoint1]",
-                            "endpoint2": "[variables('networkSettings').trafficManagerSettings.preview.endpoint2]"
-                        }
+                    "storageSettings": {
+                        "value": "[variables('storageSettings')]"
                     }
                 }
             }
         }
-    ],
-    "outputs": {
-        "mongoReplicaSetKey": {
-            "type": "string",
-            "value": "[variables('mongoReplicaSetKey')]"
-        },
-        "mongoReplicaSetName": {
-            "type": "string",
-            "value": "[variables('mongoReplicaSetName')]"
-        },
-        "resourceGroupLocation": {
-            "type": "string",
-            "value": "[resourceGroup().location]"
-        },
-        "sharedAccessPolicyPrimaryKey": {
-            "type": "string",
-            "value": "[listkeys(variables('authRuleResourceId'), variables('servicebusApiVersion')).primaryKey]"
-        },
-        "serviceBusNameSpace": {
-            "type": "string",
-            "value": "[variables('serviceBusNameSpace')]"
-        },
-        "serviceBusQueueName": {
-            "type": "string",
-            "value": "[variables('serviceBusQueueName')]"
-        }
-    }
+    ]
 }
