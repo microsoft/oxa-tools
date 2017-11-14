@@ -241,8 +241,7 @@ class EdxIntegration(object):
             each_catalog["AvailabilityDate"] = each['enrollment_start'].split('T')[0]
             each_catalog["CreatedDateAtSource"] = datetime.now().replace(microsecond=0).isoformat()
             each_catalog["Name"] = each['name']
-            each_catalog["Url"] = each['blocks_url'].split('/')[0] + '//' + each['blocks_url'].split('/')[
-                2] + "/courses/" + each['course_id'] + "/about"
+            each_catalog["Url"] = each['blocks_url'].split('/')[0] + '//' + each['blocks_url'].split('/')[2] + "/courses/" + each['course_id'] + "/about"
             each_catalog["DescriptionShort"] = "null"
             each_catalog["ThumbnailShort"] = each['media']['image']['small']
             each_catalog["TrainingOrgs"] = each['org']
