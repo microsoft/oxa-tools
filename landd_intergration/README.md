@@ -1,4 +1,4 @@
-# OpenEdx data intergatoin with L&D Servises
+# OpenEdx data intergatoin with L&D Services
 
 This Following intergatoin includes the transfer of course details and user's consumption data from OpenEdx to L&D services.
 1. ALL the Meta Data of Courses created by staff in Openedx will be sent to L&D servies which shows up on Infopedia site.
@@ -23,6 +23,8 @@ Here are the API's used:
   
 
 **Logging**
+
+
     All the logs related to course catalog are logged  in `course_catalog.log`
 	All the logs related to course consumption are logged in `course_consumption.log`
 	By default the LOG files will be stored in seperate files for every 24 hours
@@ -32,6 +34,8 @@ Here are the API's used:
 	
 	
 **Time Logging**
+
+
     
     Bulk Gradees API acccepts start_data and end_date as parameters:
         start_data:For each Execution of script, time of the API call for Bulk Gradees API is logged in `api_call_time.txt`
