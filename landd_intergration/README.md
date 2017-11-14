@@ -38,8 +38,9 @@ Here are the API's used:
 
     
     Bulk Gradees API acccepts start_data and end_date as parameters:
-        start_data:For each Execution of script, time of the API call for Bulk Gradees API is logged in `api_call_time.txt` which will be used as start time for the subsequent run
-        end_date:By default end_date will be taken as current date and time
+	
+	start_data:For each Execution of script, time of the API call for Bulk Gradees API is logged in `api_call_time.txt` which will be used as start time for the subsequent run
+    end_date:By default end_date will be taken as current date and time
 
 		
 		
