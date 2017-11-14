@@ -38,14 +38,12 @@ Here are the API's used:
 
     
     Bulk Gradees API acccepts start_data and end_date as parameters:
-        start_data:For each Execution of script, time of the API call for Bulk Gradees API is logged in `api_call_time.txt`
-		           which will be used as start time for the subsequent run
+        start_data:For each Execution of script, time of the API call for Bulk Gradees API is logged in `api_call_time.txt` which will be used as start time for the subsequent run
         end_date:By default end_date will be taken as current date and time
 
 		
 		
 		
-**Debugging**
 
 
 *Usage:* `sync_course_catalog.py` [OPTIONS]
@@ -57,11 +55,15 @@ Here are the API's used:
   5. POST the mapped data to L&D Catalog_UpdateMultipleCatalogAsync API
 
 *Options:*
-  --edx-course-catalog-url TEXT   Course Catalog API url from OpenEdx
-  --key-vault-url TEXT            Azure key vault url for secrets
-  --landd-catalog-url TEXT        Course Catalog POST API url for L&D
-  --source-system-id INTEGER RANGE
-                                  source system id provided by L&D
+
+  --edx-course-catalog-url       Course Catalog API url from OpenEdx
+
+  --key-vault-url                Azure key vault url for secrets
+
+  --landd-catalog-url            Course Catalog POST API url for L&D
+
+  --source-system-id             Source system id provided by L&D
+
   --help                          Show this message and exit.
 
 
@@ -76,14 +78,18 @@ Here are the API's used:
   5. POST the mapped data to L&D Catalog Consumption API
 
 *Options:*
-  --edx-course-consumption-url TEXT
-                                  Course Consumption API url from OpenEdx
-  --key-vault-url TEXT            Azure key vault url for secrets
-  --landd-consumption-url TEXT    Course Consumption POST API url for L&D
-  --source-system-id INTEGER RANGE
-                                  source system id provided by L&D
+
+  --edx-course-consumption-url Course Consumption API url from OpenEdx
+
+  --key-vault-url              Azure key vault url for secrets
+  
+  --landd-consumption-url      Course Consumption POST API url for L&D
+  
+  --source-system-id           Source system id provided by L&D
+  
   -v, --verbosity LVL             Either CRITICAL, ERROR, WARNING, INFO or
                                   DEBUG
+  
   --help                          Show this message and exit.
 
 	
