@@ -48,7 +48,7 @@ Param(
         [Parameter(Mandatory=$true)][string]$AadWebClientId,
         [Parameter(Mandatory=$true)][string]$AadWebClientAppKey,
         [Parameter(Mandatory=$true)][string]$AadTenantId,
-        [Parameter(Mandatory=$true)][string]$AzureSubscriptionId
+        [Parameter(Mandatory=$true)][string]$AzureSubscriptionId,
         [Parameter(Mandatory=$true)][string]$StorageAccountName,
         [Parameter(Mandatory=$true)][string]$StorageAccountKey,
         [Parameter(Mandatory=$true)][string]$StorageContainerNames,
