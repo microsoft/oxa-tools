@@ -7,7 +7,7 @@ Course catalolg syncronization between OXA and  L&D
 import logging
 import landd_integration
 import click
-from logging.handlers import TimedRotatingFileHandler
+#from logging.handlers import TimedRotatingFileHandler
 #pylint: disable=line-too-long
 
 
@@ -53,7 +53,7 @@ def sync_course_catalog(edx_course_catalog_url, key_vault_url, landd_catalog_url
     LOG.debug("Starting the Course Catalog Interation process")
     # initialize the key variables
     attempts = 0
-    catalog_service = landd_integration.LdIntegration(logger=LOG)
+    catalog_service = landd_integration.EdxIntegration(logger=LOG)
     while attempts < 3:
         try:
             #catalog_service = landd_integration.LdIntegration(logger=LOG)

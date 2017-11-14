@@ -2,6 +2,7 @@
 A collection of functions related to Open edX Integration with L&D
 
 """
+import sys
 from datetime import datetime
 import json
 import re
@@ -9,22 +10,24 @@ import re
 import requests
 import adal
 
-#pylint: disable=line-too-long
+
+# pylint: disable=line-too-long
 
 
-class LdIntegration(object):
+class EdxIntegration(object):
     """
     **Use cases**
 
-    get the data from OpenEdx and post the data to L&D in MSI(Managed Service Identity)
-        enabled Linux deployment.
+    Get the data from OpenEdx and post the data to L&D in MSI(Managed Service Identity)
+    enabled Linux environment.
 
-        1) get secrets from Azure key vault
-        2) get data from Edx
+        1) GET secrets from Azure key vault
+        2) GET data from Edx
         3) Mapping the data
-        4) Post the data to L&D
+        4) POST the data to L&D
 
     """
+
     def __init__(
             self,
             logger=None
@@ -74,7 +77,7 @@ class LdIntegration(object):
         data = dict(resource=resource)
         headers = dict(MetaData='true')
 
-        response = requests.post(url, data=data, headers=headers, timeout=1)
+        response = requests.post(url, data=data, headers=headers, timeout=2)
         if not response.ok:
             raise RuntimeError(response.content)
         else:
@@ -115,7 +118,6 @@ class LdIntegration(object):
         else:
             raise Exception("Un-handled exception occured while accessing the token for L&D")
 
-
     def get_key_vault_secret(
             self,
             access_token,
@@ -141,13 +143,14 @@ class LdIntegration(object):
 
         """
 
-        headers_credentilas = {'Authorization': 'Bearer' + ' ' + (access_token)}
+        headers_credentials = {'Authorization': 'Bearer' + ' ' + (access_token)}
         request_url = "{}/secrets/{}?api-version={}".format(key_vault_url, key_name, api_version)
-        response = requests.get(request_url, headers=headers_credentilas)
+        response = requests.get(request_url, headers=headers_credentials, timeout=2)
         if response.ok:
             self.log("Got the secret key %s from key vault", key_name)
         else:
-            raise Exception("Un-handled exception occured while accessing %s from key vault", key_name)
+            self.log("Un-handled exception occurred while accessing %s from key vault", key_name)
+            sys.exit(1)
         return response.json()['value']
 
     def get_api_data(
@@ -206,7 +209,7 @@ class LdIntegration(object):
         mapping the provided EDX data to L&D data format
 
         :param course_catalog_data: course catalog data obtained from edx
-        :param source_system_id: system_id provided by L&D as part of onboarding
+        :param source_system_id: system_id provided by L&D for OXA
         :return: mapped course catalog data to L&D
 
         """
@@ -214,7 +217,7 @@ class LdIntegration(object):
         all_course_catalog = []
         each_catalog = {}
         for each in course_catalog_data:
-            each_catalog["Confidential"] = "null"
+            each_catalog["Confidential"] = "false"
             each_catalog["BIClassification"] = "MBI"
             each_catalog["BusinessOrg"] = "null"
             each_catalog["IsPrimary"] = "true"
@@ -238,7 +241,8 @@ class LdIntegration(object):
             each_catalog["AvailabilityDate"] = each['enrollment_start'].split('T')[0]
             each_catalog["CreatedDateAtSource"] = datetime.now().replace(microsecond=0).isoformat()
             each_catalog["Name"] = each['name']
-            each_catalog["Url"] = each['blocks_url'].split('/')[0] + '//' + each['blocks_url'].split('/')[2] + "/courses/" + each['course_id'] + "/about"
+            each_catalog["Url"] = each['blocks_url'].split('/')[0] + '//' + each['blocks_url'].split('/')[
+                2] + "/courses/" + each['course_id'] + "/about"
             each_catalog["DescriptionShort"] = "null"
             each_catalog["ThumbnailShort"] = each['media']['image']['small']
             each_catalog["TrainingOrgs"] = each['org']
@@ -247,54 +251,64 @@ class LdIntegration(object):
             each_catalog = {}
         return json.dumps(all_course_catalog)
 
-
-    def post_data_ld(self, url, headers, data):
+    def post_data_ld(
+            self,
+            url,
+            headers,
+            data
+    ):
         """
 
         POST data to L&D services
+        :param url: API Endpoint to post the data
+        :param headers: required L&D headers
+        :param data: data that needs to be posted on L&D
+
+        :return: API json response
 
         """
         self.log("Preparing to post the data to L&D Course catalog API")
         try:
-            response = requests.post(url, data=data, headers=headers)
-            if response.ok:
-                message = "Data posted sucessfully with %s" % response
-                self.log(message, "info")
-            else:
-                message = "Error occured while posting the data  %s" % response
-                self.log(message, "warning")
+            response = requests.post(url, data=data, headers=headers,timeout=2)
+            message = "Data posted successfully with %s" % response
+            self.log(message, "info")
         except requests.exceptions.Timeout as error:
             self.log(error, "debug")
         except requests.exceptions.ConnectionError as error:
             self.log(error, "debug")
         except requests.exceptions.RequestException as error:
             self.log(error, "debug")
-        return response
 
-
-    def mapping_api_data(self, data, source_system_id):
+    def mapping_api_data(
+            self,
+            data,
+            source_system_id
+    ):
         """
 
         Map edX course consumption data to L&D data
+        :param data: source raw data
+        :param source_system_id: source system ID for OXA in L&D environment
+        :return: Data after Mapping
 
         """
         all_user_grades = []
         each_user = {}
         for user in data:
-            #check if the email contains 'microsoft.com' in it
-            if  not bool(re.search('(?i)^(?:(?!(@microsoft.com)).)+$', user['username'])):
-                #each_user["UserAlias"] = user['email']
+            # check if the email contains 'microsoft.com' in it
+            if not bool(re.search('(?i)^(?:(?!(@microsoft.com)).)+$', user['username'])):
+                # each_user["UserAlias"] = user['email']
                 each_user["UserAlias"] = 'v-mankon@microsoft.com'
                 each_user["ExternalId"] = user['course_key']
-                #each_user["ConsumptionStatus"] = user['letter_grade']
-                #each_user["grade"] = user[3]
+                # each_user["ConsumptionStatus"] = user['letter_grade']
+                # each_user["grade"] = user[3]
                 each_user["SourceSystemId"] = source_system_id
                 each_user["PersonnelNumber"] = 0
                 each_user["SFSync"] = 0
                 each_user["UUID"] = "null"
                 each_user["ActionVerb"] = "null"
                 each_user["ActionValue"] = 0
-                #each_user["CreatedDate"] = user[4]
+                # each_user["CreatedDate"] = user[4]
                 each_user["CreatedDate"] = "22"
                 each_user["SubmittedBy"] = "landd_user@oxa.com"
                 each_user["ActionFlag"] = "null"
@@ -307,20 +321,31 @@ class LdIntegration(object):
             else:
                 message = "Data posted sucessfully with %s" % user['username']
                 self.log(message, "debug")
-                
             all_user_grades.append(each_user)
             each_user = {}
 
         return json.dumps(all_user_grades)
 
-
-    def get_and_post_consumption_data(self, request_edx_url, edx_headers, ld_headers, consumption_url_ld, source_system_id):
+    def get_and_post_consumption_data(
+            self,
+            request_edx_url,
+            edx_headers,
+            ld_headers,
+            consumption_url_ld,
+            source_system_id
+    ):
 
         """
 
         1. Get consumption data from edX
         2. Map the data
         3. POST the data to L&D
+        :return:
+        :param request_edx_url: OpenEdx Bulk grades api URL
+        :param edx_headers: OpenEdx Headers
+        :param ld_headers: L&D Authorization headers
+        :param consumption_url_ld: L&D consumption API Endpoint
+        :param source_system_id: L&D source system id for OXA
 
         """
 
@@ -329,16 +354,15 @@ class LdIntegration(object):
         start_date.close()
         end_date = datetime.now().replace(microsecond=0).isoformat()
         self.log('here is the end call time', "info")
-        #self.log(end_date, "info")
-        #TODO: still testing out if we really need [:19] in the below line.maybe take line in variable and split and retrive value
+        # self.log(end_date, "info")
         request_edx_url = request_edx_url + '&start_date=' + start_time[:19] + '&end_date=' + end_date
         self.log(request_edx_url, "info")
         user_data = self.get_api_data(request_edx_url, edx_headers)
         self.post_data_ld(consumption_url_ld, ld_headers, self.mapping_api_data(user_data['results'], source_system_id))
         while user_data['pagination']['next']:
             user_data = self.get_api_data(user_data['pagination']['next'], edx_headers)
-            self.post_data_ld(consumption_url_ld, ld_headers, self.mapping_api_data(user_data['results'], source_system_id))
+            self.post_data_ld(consumption_url_ld, ld_headers,
+                              self.mapping_api_data(user_data['results'], source_system_id))
         write_time = open('api_call_time.txt', 'w')
         write_time.write(end_date)
         write_time.close()
-        return user_data

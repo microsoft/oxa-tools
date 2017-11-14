@@ -49,7 +49,7 @@ def sync_course_consumption(edx_course_consumption_url, key_vault_url, landd_con
 
     """
     LOG.debug("Starting the Course consumption Interation process")
-    attempts = 0 
+    attempts = 0
         # initialize the key variables
     catalog_service = landd_integration.LdIntegration(logger=LOG)
     while attempts < 3:
