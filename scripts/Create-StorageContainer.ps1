@@ -44,11 +44,11 @@ To create the 'uploads' storage container:
 .\Create-StorageContainer.ps1 -AadWebClientId 121 -AadWebClientAppKey key -AadTenantId 345 -AzureSubscriptionId 438484 -StorageAccountName djdjd -StorageContainerName uploads
 
 #>
-Param( 
+Param(  
         [Parameter(Mandatory=$true)][string]$AadWebClientId,
         [Parameter(Mandatory=$true)][string]$AadWebClientAppKey,
         [Parameter(Mandatory=$true)][string]$AadTenantId,
-        [Parameter(Mandatory=$true)][string]$AzureSubscriptionId,
+        [Parameter(Mandatory=$true)][string]$AzureSubscriptionId
         [Parameter(Mandatory=$true)][string]$StorageAccountName,
         [Parameter(Mandatory=$true)][string]$StorageAccountKey,
         [Parameter(Mandatory=$true)][string]$StorageContainerNames,
@@ -76,67 +76,54 @@ trap [Exception]
     throw "Script execution failed: $($_)";
 }
 
+# Create a container
 function New-AzureStorageContainers
 {
     param(
-            [Parameter(Mandatory=$true)][string]$ContainerNames
+            [Parameter(Mandatory=$true)][string]$storageContainerName
          )
 
     # Create the container
-    [array]$storageContainerList = $ContainerNames.Split(",");
 
-    foreach($storageContainerName in $storageContainerList)
-    {
-        # todo: add retries for better resiliency
-        Log-Message "Creating Storage Container (Cli: $AzureCliVersion): $($storageContainerName)" -Context "Create Storage Containers"
+	if ($AzureCliVersion -eq "1" )
+	{
+		# Azure Cli 1.0
 
-        # Check if container already exists
-        $status = Get-StorageContainerStatus -Container $storageContainerName
+		# create the container now
+		$response = azure storage container create --account-name $StorageAccountName --account-key $StorageAccountKey --container $storageContainerName --json
+		$status = ((($response | jq --raw-output '.name') -ieq $storageContainerName) -and (($response | jq --raw-output '.lease.state') -ieq 'available'))
+	}
+	else 
+	{
+		# Azure Cli 2.0
 
-        if (!$status)
-        {
-            Log-Message "creating '$storageContainerName' container"
+		# create the container now
+		if ($AzureStorageConnectionString)
+		{
+			Log-Message "Using connection string: $AzureStorageConnectionString" -Context "Create Storage Containers" -NoNewLine
 
-            # cli doesn't provide clean object returns (json responses are helpful). Therefore, transition as soon as possible
-            if ($AzureCliVersion -eq "1" )
-            {
-                # Azure Cli 1.0
+			$response = az storage container create --account-name $StorageAccountName --account-key $StorageAccountKey --name $storageContainerName --connection-string $AzureStorageConnectionString -o json
+		}
+		else 
+		{
+			$response = az storage container create --account-name $StorageAccountName --account-key $StorageAccountKey --name $storageContainerName -o json
+		}
 
-                # create the container now
-                $response = azure storage container create --account-name $StorageAccountName --account-key $StorageAccountKey --container $storageContainerName --json
-                $status = ((($response | jq --raw-output '.name') -ieq $storageContainerName) -and (($response | jq --raw-output '.lease.state') -ieq 'available'))
-            }
-            else 
-            {
-                # Azure Cli 2.0
+		# parse the status (.created=true is the expected status)
+		$status = (($response | jq --raw-output '.created') -ieq "true")
+	}
 
-                # create the container now
-                if ($AzureStorageConnectionString)
-                {
-                    Log-Message "Using connection string: $AzureStorageConnectionString" -Context "Create Storage Containers" -NoNewLine
-        
-                    $response = az storage container create --account-name $StorageAccountName --account-key $StorageAccountKey --name $storageContainerName --connection-string $AzureStorageConnectionString -o json
-                }
-                else 
-                {
-                    $response = az storage container create --account-name $StorageAccountName --account-key $StorageAccountKey --name $storageContainerName -o json
-                }
-
-                # parse the status (.created=true is the expected status)
-                $status = (($response | jq --raw-output '.created') -ieq "true")
-            }
-        }
-
-        # we expect the following: true=container created, If there is an error, status=[Blank]
-        if (!$status)
-        {
-            # creation failed
-            Log-Message "Unable to create the specified storage container: $storageContainerName" -Context "Create Storage Containers"
-            exit 1
-        }
-    }
+	# we expect the following: true=container created, If there is an error, status=[Blank]
+	if (!$status)
+	{
+		# creation failed
+		Log-Message "Unable to create the specified storage container: $storageContainerName" -Context "Create Storage Containers"
+		exit 1
+	}
+    
 }
 
+# Get storage container status
 function Get-StorageContainerStatus
 {
     param(
@@ -180,6 +167,7 @@ function Get-StorageContainerStatus
     return $status
 }
 
+# Create container or modify existing container w.r.to existing permissions.
 function Set-ContainersPermissions
 {
     param(
@@ -198,7 +186,7 @@ function Set-ContainersPermissions
         if (!$status)
         {
             # Create if missing
-            New-AzureStorageContainers -ContainerNames $storageContainerName
+            New-AzureStorageContainers -storageContainerName $storageContainerName
         }
 
         Log-Message "Updating Storage Container Permissions (Cli: $AzureCliVersion): $($storageContainerName)" -Context "Update Storage Containers Permissions"
@@ -245,6 +233,8 @@ Import-Module "$($currentPath)/Common.ps1" -Force
 Authenticate-AzureRmUser -AadWebClientId $AadWebClientId -AadWebClientAppKey $AadWebClientAppKey -AadTenantId $AadTenantId;
 Set-AzureSubscriptionContext -AzureSubscriptionId $AzureSubscriptionId
 
-New-AzureStorageContainers -ContainerNames $StorageContainerNames
+# create Private storage container
+Set-ContainersPermissions -ContainerNames $StorageContainerNames -AccessPolicy "off"
 
+# create public storage container
 Set-ContainersPermissions -ContainerNames $PublicStorageContainerNames -AccessPolicy "blob"
