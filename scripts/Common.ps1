@@ -577,7 +577,7 @@ function Start-AzureCommand
                 
                 "Get-AzureRmServiceBusNamespaceKey"
                 {
-                    $response = Get-AzureRmServiceBusNamespaceKey -ResourceGroup $InputParameters['ResourceGroup'] -NamespaceName $InputParameters['NamespaceName'] -AuthorizationRuleName $InputParameters['AuthorizationRuleName'] -Verbose -ErrorAction Stop
+                    $response = Get-AzureRmServiceBusKey -ResourceGroup $InputParameters['ResourceGroup'] -NamespaceName $InputParameters['NamespaceName'] -AuthorizationRuleName $InputParameters['AuthorizationRuleName'] -Verbose -ErrorAction Stop
                 }
 
                 default 

@@ -189,7 +189,18 @@ try
         if ($calculatedDeploymentType -ieq "upgrade")
         {
             # Clear the messaging queue
-            Clear-OxaMessagingQueue -ResourceGroupName $ResourceGroupName -MaxRetries $MaxRetries
+            try 
+            {
+                Clear-OxaMessagingQueue -ResourceGroupName $ResourceGroupName -MaxRetries $MaxRetries
+            }
+            catch 
+            {
+                # in first run deployments, the resource may not exist
+                if ($_.Exception.Message -imatch "Operation returned an invalid status code 'NotFound'")
+                {
+                    Log-Message "Service bus doesn't exist in the deployment. It will be created later. Skipping clearing the messaging queue."
+                }
+            }
         }
 
         # trigger the deployment
