@@ -6,16 +6,21 @@ This Following intergatoin includes the transfer of course details and user's co
 3. After making some Activty, All User's consumption data will be sent back to L&D site which shows up in Infopedia.
 
 Here are the API's used: 
+
 **OpenEdx:**    
 
   - Course catalog API         -- GET /api/courses/v1/courses/
   - Bulk Gradees API           -- GET /api/grades/v1/user_grades/?username=all
-	
+
+
+  
 **L&D servies:**
 
   - Catalog_UpdateMultipleCatalogAsync                -- POST /Catalog/{sourceSystemId}/course
   - Consumption_SaveMultipleExperienceTrackingAsync   -- POST /Consumption/exptrack
 
+  
+  
 
 **Logging**
     All the logs related to course catalog are logged  in `course_catalog.log`
@@ -23,6 +28,8 @@ Here are the API's used:
 	By default the LOG files will be stored in seperate files for every 24 hours
 	By default logs for the past 10 days are stored
 
+	
+	
 	
 **Time Logging**
     
@@ -32,7 +39,10 @@ Here are the API's used:
         end_date:By default end_date will be taken as current date and time
 
 		
+		
+		
 **Debugging**
+
 
 *Usage:* `sync_course_catalog.py` [OPTIONS]
 
@@ -51,6 +61,8 @@ Here are the API's used:
   --help                          Show this message and exit.
 
 
+  
+  
 *Usage:* `sync_course_consumption.py` [OPTIONS]
 
   1. GET access token from Azure tenant using MSI
@@ -68,4 +80,7 @@ Here are the API's used:
                                   source system id provided by L&D
   -v, --verbosity LVL             Either CRITICAL, ERROR, WARNING, INFO or
                                   DEBUG
-  --help                          Show this message and exit
+  --help                          Show this message and exit.
+
+	
+ 
