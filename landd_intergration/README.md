@@ -1,9 +1,9 @@
-# OpenEdx data intergatoin with L&D Services
+# OpenEdx Data Integration with L&D Services
 
-This Following intergatoin includes the transfer of course details and user's consumption data from OpenEdx to L&D services.
-1. ALL the Meta Data of Courses created by staff in Openedx will be sent to L&D servies which shows up on Infopedia site.
+The Following Integration includes the transfer of course details and user's consumption data from OpenEdx to L&D services
+1. All the Meta Data of Courses created by staff in Openedx will be sent to L&D servies which shows up on Infopedia site
 2. User's entered in Infopedia courses will be redirected to OpenEdx site based on the Course URL
-3. After making some Activty, All User's consumption data will be sent back to L&D site which shows up in Infopedia.
+3. Course Consumption data will be sent back to Infopedia SITE
 
 Here are the API's used: 
 
