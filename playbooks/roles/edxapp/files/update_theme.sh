@@ -43,7 +43,7 @@ sudo git clone $EDX_THEME_REPO ${theme_directory[0]} -b $THEME_BRANCH
 custom_image_count=`ls /oxa/oxa-tools-config/env/${ENVIRONMENT}/*.png 2>/dev/null | wc -w`
 
 if (( $(echo "$custom_image_count > 0" | bc -l) )); then
-    for i in `ls -d1 $dir_themes/*/lms/static/images`; do
+    for i in `ls -d1 ${theme_directory[0]}/*/lms/static/images`; do
         sudo cp /oxa/oxa-tools-config/env/$ENVIRONMENT/*.png $i;
     done
 fi

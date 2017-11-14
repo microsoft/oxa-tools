@@ -74,6 +74,7 @@ EDXAPP_SOCIAL_SHARING_SETTINGS:
   DASHBOARD_TWITTER: false
 
 
+
 # Order of the social media links we want learners to see in the footer
 # We can also add facebook, twitter, youtube, google_plus and reddit here later if we enable them in SOCIAL_SHARING_SETTINGS above
 EDXAPP_SOCIAL_MEDIA_FOOTER_NAMES: [ "linkedin" ]
@@ -127,3 +128,4 @@ EDXAPP_LTI_USER_EMAIL_DOMAIN: "lti.openedx.microsoft.com"
 
 #Cookies API url
 EDXAPP_API_COOKIE_URL: "%%EDXAPP_COOKIE_API_URL%%"
+
