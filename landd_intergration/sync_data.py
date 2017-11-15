@@ -21,7 +21,7 @@ HANDLER = logging.handlers.TimedRotatingFileHandler('course_consumption.log', wh
 LOG.addHandler(HANDLER)
 
 
-def sync_course_consumption():
+def sync_edx_data():
     """
     1) GET access token from Azure tenant using MSI
     2) GET secrets from Azure keyvault using the access token

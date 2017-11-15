@@ -350,20 +350,21 @@ class EdxIntegration(object):
 
         try:
             start_date = open('api_call_time.txt', 'r')
+            start_time = start_date.read()
         except FileNotFoundError:
             start_date = open('api_call_time.txt', 'w')
-        start_time = start_date.read()
+
         start_date.close()
         end_date = (datetime.now()-timedelta(minutes=10)).replace(microsecond=0).isoformat()
         self.log('api call end_time', "info")
-        request_edx_url = request_edx_url + '&start_date=' + start_time[:19] + '&end_date=' + end_date
+        request_edx_url = request_edx_url + '&start_date=' + start_time + '&end_date=' + end_date
 
-        user_data = self.get_api_data(request_edx_url, edx_headers)
-        self.post_data_ld(consumption_url_ld, ld_headers, self.mapping_api_data(user_data['results'], source_system_id))
-        
-        while user_data['pagination']['next']:
-            user_data = self.get_api_data(user_data['pagination']['next'], edx_headers)
-            self.post_data_ld(consumption_url_ld, ld_headers,self.mapping_api_data(user_data['results'], source_system_id))
+        user_consumption_data = self.get_api_data(request_edx_url, edx_headers)
+        self.post_data_ld(consumption_url_ld, ld_headers, self.mapping_api_data(user_consumption_data['results'], source_system_id))
+
+        while user_consumption_data['pagination']['next']:
+            user_consumption_data = self.get_api_data(user_consumption_data['pagination']['next'], edx_headers)
+            self.post_data_ld(consumption_url_ld, ld_headers, self.mapping_api_data(user_consumption_data['results'], source_system_id))
         write_time = open('api_call_time.txt', 'w')
         write_time.write(end_date)
         write_time.close()

@@ -5,6 +5,8 @@ The Following Integration includes the transfer of course details and user's con
 2. User's entered in Infopedia courses will be redirected to OpenEdx site based on the Course URL
 3. Course Consumption data will be sent back to Infopedia SITE
 
+
+
 Here are the API's used:
 
     **OpenEdx:**
@@ -33,6 +35,8 @@ Here are the API's used:
 
 
 
+
+
 **Time Logging**
 
 
@@ -46,14 +50,28 @@ Here are the API's used:
 
 
 
-*Usage:* python3  `python sync_data.py course_consumption` 
-
-  1. GET access token from Azure tenant using MSI
-  2. GET secrets from Azure keyvault using the access token
-  3. GET the Course catalog data from OpenEdx using the secrets obtained from Azure key vault
-  4. Map and process the OpenEdx course catalog data with L&D Catalog_UpdateMultipleCatalogAsync API request body
-  5. POST the mapped data to L&D Catalog_UpdateMultipleCatalogAsync API
 
 
 
-*Usage:* python3  `python sync_data.py course_catalog` 
+**usage** python3  `python sync_data.py course_consumption` 
+
+
+    1. GET access token from Azure tenant using MSI
+    2. GET secrets from Azure keyvault using the access token
+    3. GET the Course catalog data from OpenEdx using the secrets obtined from Azure key vault
+    4. Map and process the OpenEdx course catalog data with L&D Catalog Consumption API request body
+    5. POST the mapped data to L&D Catalog_UpdateMultipleCatalogAsync  API
+
+
+
+
+
+**Usage:** python3  `python sync_data.py course_catalog` 
+
+
+    1. GET access token from Azure tenant using MSI
+    2. GET secrets from Azure keyvault using the access token
+    3. GET the Course catalog data from OpenEdx using the secrets obtined from Azure key vault
+    4. Map and process the OpenEdx course catalog data with L&D Catalog Consumption API request body
+    5. POST the mapped data to L&D Consumption_SaveMultipleExperienceTrackingAsync API
+
