@@ -38,7 +38,7 @@ def sync_course_consumption():
     secret_keys_dict = {}
     attempts = 0
 
-    while attempts < int(CONFIG.get('general', 'number_of_retry_attempts')):
+    while attempts < int(CONFIG.get('general', 'retry_count')):
         try:
 
             for azure_key_vault_key, api_key in zip(CONFIG.get('azure_key_vault', 'azure_key_vault_keys').split('\n'), CONFIG.get('api_secret_keys', 'api_keys').split('\n')):

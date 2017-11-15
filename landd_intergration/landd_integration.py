@@ -3,7 +3,7 @@ A collection of functions related to Open edX Integration with L&D
 
 """
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import re
 
@@ -12,7 +12,7 @@ import adal
 
 
 # pylint: disable=line-too-long
-
+# pylint: disable=W0703
 
 class EdxIntegration(object):
     """
@@ -78,6 +78,7 @@ class EdxIntegration(object):
         headers = dict(MetaData='true')
 
         response = requests.post(url, data=data, headers=headers, timeout=2)
+        
         if not response.ok:
             raise RuntimeError(response.content)
         else:
@@ -170,12 +171,9 @@ class EdxIntegration(object):
         try:
             results = requests.get(request_url, headers=headers, verify=False, timeout=2).json()
             return results
-        except requests.exceptions.Timeout as error:
-            self.log(error, "debug")
-        except requests.exceptions.ConnectionError as error:
-            self.log(error, "debug")
-        except requests.exceptions.RequestException as error:
-            self.log(error, "debug")
+        except Exception as exception:
+            self.log(exception, "debug")
+
 
     def get_course_catalog_data(
             self,
@@ -191,11 +189,15 @@ class EdxIntegration(object):
 
         """
         self.log("Calling OpenEdx Course Catalog API")
+        
         user_data = self.get_api_data(request_url, headers)
         req_api_data = user_data['results']
+        
         while user_data['pagination']['next']:
+        
             user_data = self.get_api_data(user_data['pagination']['next'], headers)
             req_api_data = req_api_data + user_data['results']
+        
         return req_api_data
 
     def catalog_data_mapping(
@@ -216,6 +218,7 @@ class EdxIntegration(object):
         self.log("Mapping the course catalog data to L&D format")
         all_course_catalog = []
         each_catalog = {}
+        
         for each in course_catalog_data:
             each_catalog["Confidential"] = "false"
             each_catalog["BIClassification"] = "MBI"
@@ -239,7 +242,7 @@ class EdxIntegration(object):
             each_catalog["Keywords"] = each['name']
             each_catalog["ThumbnailLargeUri"] = each['media']['image']['large']
             each_catalog["AvailabilityDate"] = each['enrollment_start'].split('T')[0]
-            each_catalog["CreatedDateAtSource"] = datetime.now().replace(microsecond=0).isoformat()
+            #each_catalog["CreatedDateAtSource"] = datetime.now().replace(microsecond=0).isoformat()
             each_catalog["Name"] = each['name']
             each_catalog["Url"] = each['blocks_url'].split('/')[0] + '//' + each['blocks_url'].split('/')[2] + "/courses/" + each['course_id'] + "/about"
             each_catalog["DescriptionShort"] = "null"
@@ -268,15 +271,11 @@ class EdxIntegration(object):
         """
         self.log("Preparing to post the data to L&D Course catalog API")
         try:
-            response = requests.post(url, data=data, headers=headers,timeout=2)
+            response = requests.post(url, data=data, headers=headers, timeout=2)
             message = "Data posted successfully with %s" % response
             self.log(message, "info")
-        except requests.exceptions.Timeout as error:
-            self.log(error, "debug")
-        except requests.exceptions.ConnectionError as error:
-            self.log(error, "debug")
-        except requests.exceptions.RequestException as error:
-            self.log(error, "debug")
+        except Exception as exception:
+            self.log(exception, "debug")
 
     def mapping_api_data(
             self,
@@ -293,11 +292,11 @@ class EdxIntegration(object):
         """
         all_user_grades = []
         each_user = {}
+        
         for user in data:
-            # check if the email contains 'microsoft.com' in it
+            # check if user email contains '@microsoft.com'
             if not bool(re.search('(?i)^(?:(?!(@microsoft.com)).)+$', user['username'])):
-                # each_user["UserAlias"] = user['email']
-                each_user["UserAlias"] = 'v-mankon@microsoft.com'
+                each_user["UserAlias"] = user['email']
                 each_user["ExternalId"] = user['course_key']
                 # each_user["ConsumptionStatus"] = user['letter_grade']
                 # each_user["grade"] = user[3]
@@ -308,8 +307,8 @@ class EdxIntegration(object):
                 each_user["ActionVerb"] = "null"
                 each_user["ActionValue"] = 0
                 # each_user["CreatedDate"] = user[4]
-                each_user["CreatedDate"] = "22"
-                each_user["SubmittedBy"] = "landd_user@oxa.com"
+                each_user["CreatedDate"] = datetime.now().replace(microsecond=0).isoformat()
+                each_user["SubmittedBy"] = "landd_user@oxa.com"  
                 each_user["ActionFlag"] = "null"
                 if each_user['letter_grade'] == 'Pass':
                     each_user["ConsumptionStatus"] = 'Passed'
@@ -318,8 +317,8 @@ class EdxIntegration(object):
                 else:
                     each_user["ConsumptionStatus"] = "InProgress"
             else:
-                message = "Data posted sucessfully with %s" % user['username']
-                self.log(message, "debug")
+                message = "unable to post the data for the user %s" % user['email']
+                self.log(message, "info")
             all_user_grades.append(each_user)
             each_user = {}
 
@@ -339,7 +338,7 @@ class EdxIntegration(object):
         1. Get consumption data from edX
         2. Map the data
         3. POST the data to L&D
-        :return:
+
         :param request_edx_url: OpenEdx Bulk grades api URL
         :param edx_headers: OpenEdx Headers
         :param ld_headers: L&D Authorization headers
@@ -351,17 +350,16 @@ class EdxIntegration(object):
         start_date = open('api_call_time.txt', 'r')
         start_time = start_date.read()
         start_date.close()
-        end_date = datetime.now().replace(microsecond=0).isoformat()
-        self.log('here is the end call time', "info")
-        # self.log(end_date, "info")
+        end_date = (datetime.now()-timedelta(minutes=10)).replace(microsecond=0).isoformat()
+        self.log('api call end_time', "info")
         request_edx_url = request_edx_url + '&start_date=' + start_time[:19] + '&end_date=' + end_date
-        self.log(request_edx_url, "info")
+
         user_data = self.get_api_data(request_edx_url, edx_headers)
         self.post_data_ld(consumption_url_ld, ld_headers, self.mapping_api_data(user_data['results'], source_system_id))
+        
         while user_data['pagination']['next']:
             user_data = self.get_api_data(user_data['pagination']['next'], edx_headers)
-            self.post_data_ld(consumption_url_ld, ld_headers,
-                              self.mapping_api_data(user_data['results'], source_system_id))
+            self.post_data_ld(consumption_url_ld, ld_headers,self.mapping_api_data(user_data['results'], source_system_id))
         write_time = open('api_call_time.txt', 'w')
         write_time.write(end_date)
         write_time.close()

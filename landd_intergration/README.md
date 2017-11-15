@@ -7,17 +7,17 @@ The Following Integration includes the transfer of course details and user's con
 
 Here are the API's used:
 
-**OpenEdx:**
+    **OpenEdx:**
 
-  - Course catalog API         -- GET /api/courses/v1/courses/
-  - Bulk Grades API           -- GET /api/grades/v1/user_grades/?username=all
+        - Course catalog API         -- GET /api/courses/v1/courses/
+        - Bulk Grades API           -- GET /api/grades/v1/user_grades/?username=all
 
 
 
-**L&D services:**
+    **L&D Services:**
 
-  - Catalog_UpdateMultipleCatalogAsync                -- POST /Catalog/{sourceSystemId}/course
-  - Consumption_SaveMultipleExperienceTrackingAsync   -- POST /Consumption/exptrack
+        - Catalog_UpdateMultipleCatalogAsync                -- POST /Catalog/{sourceSystemId}/course
+        - Consumption_SaveMultipleExperienceTrackingAsync   -- POST /Consumption/exptrack
 
 
 
@@ -25,10 +25,10 @@ Here are the API's used:
 **Logging**
 
 
-    All the logs related to course catalog are logged  in `course_catalog.log`
+  All the logs related to course catalog are logged  in `course_catalog.log`
 	All the logs related to course consumption are logged in `course_consumption.log`
 	By default the LOG files will be stored in separate files for every 24 hours
-	By default logs for the past 10 days are stored
+	By default logs for the past 10 days are stored and older logs are removed
 
 
 
@@ -37,17 +37,16 @@ Here are the API's used:
 
 
 
-    Bulk Grades API acccepts start_data and end_date as parameters:
+    Bulk Grades API acccepts start_date and end_date as parameters:
 
-	start_data:For each Execution of script, time of the API call for Bulk Grades API is logged in `api_call_time.txt` which will be used as start time for the subsequent run
+	start_date:For each Execution of script, time of the API call for Bulk Grades API is logged in `api_call_time.txt` which will be used as start time for the subsequent run
     end_date:By default end_date will be taken as current date and time
 
 
 
 
 
-
-*Usage:* `sync_data.py` [OPTIONS]
+*Usage:* python3  `python sync_data.py course_consumption` 
 
   1. GET access token from Azure tenant using MSI
   2. GET secrets from Azure keyvault using the access token
@@ -55,14 +54,6 @@ Here are the API's used:
   4. Map and process the OpenEdx course catalog data with L&D Catalog_UpdateMultipleCatalogAsync API request body
   5. POST the mapped data to L&D Catalog_UpdateMultipleCatalogAsync API
 
-*Options:*
 
-  --edx-course-catalog-url       Course Catalog API url from OpenEdx
 
-  --key-vault-url                Azure key vault url for secrets
-
-  --landd-catalog-url            Course Catalog POST API url for L&D
-
-  --source-system-id             Source system id provided by L&D
-
-  --help                          Show this message and exit.
+*Usage:* python3  `python sync_data.py course_catalog` 
