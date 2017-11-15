@@ -15,6 +15,7 @@ CONFIG = configparser.ConfigParser()
 CONFIG.read('oxa_landd_config.cfg')
 
 #pylint: disable=line-too-long
+#TODO: seperate logs and rename variables 
 logging.basicConfig(filename='course_consumption.log', format='%(asctime)s' '%(message)s', level=logging.DEBUG)
 LOG = logging.getLogger(__name__)
 HANDLER = logging.handlers.TimedRotatingFileHandler('course_consumption.log', when="d", interval=1, backupCount=10)
@@ -78,4 +79,4 @@ def sync_edx_data():
             LOG.error("Exception occured while running the script", exc_info=True)
 
 if __name__ == "__main__":
-    sync_course_consumption()  # pylint: disable=no-value-for-parameter
+    sync_edx_data()  # pylint: disable=no-value-for-parameter

@@ -28,19 +28,12 @@ class EdxIntegration(object):
 
     """
 
-    def __init__(
-            self,
-            logger=None
-    ):
+    def __init__(self, logger=None):
 
         # get reference to the user-specified python logger that has already been initialized
         self.logger = logger
 
-    def log(
-            self,
-            message,
-            message_type="info"
-    ):
+    def log(self, message, message_type="info"):
 
         """
         Log a message
@@ -62,15 +55,14 @@ class EdxIntegration(object):
             else:
                 self.logger.debug(message)
 
-    def get_access_token(
-            self
-    ):
+    def get_access_token(self):
 
         """
 
         Get OAuth2 access token for REST API call using azure MSI extension
 
         """
+
         # the following variables remain same for any MSI enabled Linux environment
         # MSI runs on localhost:50342, port number of url should not be changed
         resource = 'https://vault.azure.net'
@@ -82,8 +74,10 @@ class EdxIntegration(object):
 
         if not response.ok:
             raise RuntimeError(response.content)
+
         else:
             self.log("Got OAuth2 access token using MSI")
+
         return response.json()['access_token']
 
     def get_access_token_ld(
@@ -114,9 +108,12 @@ class EdxIntegration(object):
             ldresource,
             ldclientid,
             ldclientsecret)
+        
         if token['accessToken']:
             self.log("Got Oauth2 access token for L&D REST API")
+        
             return token['accessToken']
+        
         else:
             raise Exception("Un-handled exception occured while accessing the token for L&D")
 
@@ -148,18 +145,17 @@ class EdxIntegration(object):
         headers_credentials = {'Authorization': 'Bearer' + ' ' + (access_token)}
         request_url = "{}/secrets/{}?api-version={}".format(key_vault_url, key_name, api_version)
         response = requests.get(request_url, headers=headers_credentials, timeout=2)
+
         if response.ok:
             self.log("Got the secret key %s from key vault", key_name)
+
         else:
             self.log("Un-handled exception occurred while accessing %s from key vault", key_name)
             sys.exit(1)
+
         return response.json()['value']
 
-    def get_api_data(
-            self,
-            request_url,
-            headers=None
-    ):
+    def get_api_data(self, request_url, headers=None):
 
         """
         Get the data from the provided api url with optional headers using requests python library
@@ -169,18 +165,17 @@ class EdxIntegration(object):
         :return: return the api data
 
         """
+
         try:
             results = requests.get(request_url, headers=headers, verify=False, timeout=2).json()
+
             return results
+
         except Exception as exception:
             self.log(exception, "debug")
 
 
-    def get_course_catalog_data(
-            self,
-            request_url,
-            headers=None
-    ):
+    def get_course_catalog_data(self, request_url, headers=None):
         """
         returns data with combined paginated responses for a given api url with optional headers
 
@@ -190,22 +185,18 @@ class EdxIntegration(object):
 
         """
         self.log("Calling OpenEdx Course Catalog API")
-        
+
         user_data = self.get_api_data(request_url, headers)
         req_api_data = user_data['results']
-        
+
         while user_data['pagination']['next']:
-        
+
             user_data = self.get_api_data(user_data['pagination']['next'], headers)
             req_api_data = req_api_data + user_data['results']
-        
+
         return req_api_data
 
-    def catalog_data_mapping(
-            self,
-            source_system_id,
-            course_catalog_data
-    ):
+    def catalog_data_mapping(self, source_system_id, course_catalog_data):
 
         """
 
@@ -218,48 +209,43 @@ class EdxIntegration(object):
         """
         self.log("Mapping the course catalog data to L&D format")
         all_course_catalog = []
-        each_catalog = {}
-        
+        ld_catalog = {}
+
         for each in course_catalog_data:
-            each_catalog["Confidential"] = "false"
-            each_catalog["BIClassification"] = "MBI"
-            each_catalog["BusinessOrg"] = "null"
-            each_catalog["IsPrimary"] = "true"
-            each_catalog["IsShareable"] = "null"
-            each_catalog["CourseType"] = "Build"
-            each_catalog["HideInSearch"] = "hidden"
-            each_catalog["HideInRoadMap"] = "null"
-            each_catalog["ParentSourceSystemId"] = "0"
-            each_catalog["Deleted"] = "false"
-            each_catalog["SourceSystemid"] = source_system_id
-            # each_catalog["Language"] = "en-us"
-            each_catalog["Version"] = "1"
-            each_catalog["Brand"] = "Infopedia"
-            each_catalog["Modality"] = "OLT"
-            each_catalog["MediaType"] = "Course"
-            each_catalog["Status"] = "Active"
-            each_catalog["DescriptionLong"] = "null"
-            each_catalog["SunsetDate"] = each['end'].split('T')[0]
-            each_catalog["Keywords"] = each['name']
-            each_catalog["ThumbnailLargeUri"] = each['media']['image']['large']
-            each_catalog["AvailabilityDate"] = each['enrollment_start'].split('T')[0]
-            #each_catalog["CreatedDateAtSource"] = datetime.now().replace(microsecond=0).isoformat()
-            each_catalog["Name"] = each['name']
-            each_catalog["Url"] = each['blocks_url'].split('/')[0] + '//' + each['blocks_url'].split('/')[2] + "/courses/" + each['course_id'] + "/about"
-            each_catalog["DescriptionShort"] = "null"
-            each_catalog["ThumbnailShort"] = each['media']['image']['small']
-            each_catalog["TrainingOrgs"] = each['org']
-            each_catalog["ExternalId"] = each['course_id'].split(':')[1]
-            all_course_catalog.append(each_catalog)
-            each_catalog = {}
+            ld_catalog["Confidential"] = "false"
+            ld_catalog["BIClassification"] = "MBI"
+            ld_catalog["BusinessOrg"] = "null"
+            ld_catalog["IsPrimary"] = "true"
+            ld_catalog["IsShareable"] = "null"
+            ld_catalog["CourseType"] = "Build"
+            ld_catalog["HideInSearch"] = "hidden"
+            ld_catalog["HideInRoadMap"] = "null"
+            ld_catalog["ParentSourceSystemId"] = "0"
+            ld_catalog["Deleted"] = "false"
+            ld_catalog["SourceSystemid"] = source_system_id
+            # ld_catalog["Language"] = "en-us"
+            ld_catalog["Version"] = "1"
+            ld_catalog["Brand"] = "Infopedia"
+            ld_catalog["Modality"] = "OLT"
+            ld_catalog["MediaType"] = "Course"
+            ld_catalog["Status"] = "Active"
+            ld_catalog["DescriptionLong"] = "null"
+            ld_catalog["SunsetDate"] = each['end'].split('T')[0]
+            ld_catalog["Keywords"] = each['name']
+            ld_catalog["ThumbnailLargeUri"] = each['media']['image']['large']
+            ld_catalog["AvailabilityDate"] = each['enrollment_start'].split('T')[0]
+            #ld_catalog["CreatedDateAtSource"] = datetime.now().replace(microsecond=0).isoformat()
+            ld_catalog["Name"] = each['name']
+            ld_catalog["Url"] = each['blocks_url'].split('/')[0] + '//' + each['blocks_url'].split('/')[2] + "/courses/" + each['course_id'] + "/about"
+            ld_catalog["DescriptionShort"] = "null"
+            ld_catalog["ThumbnailShort"] = each['media']['image']['small']
+            ld_catalog["TrainingOrgs"] = each['org']
+            ld_catalog["ExternalId"] = each['course_id'].split(':')[1]
+            all_course_catalog.append(ld_catalog)
+            ld_catalog = {}
         return json.dumps(all_course_catalog)
 
-    def post_data_ld(
-            self,
-            url,
-            headers,
-            data
-    ):
+    def post_data_ld(self, url, headers, data):
         """
 
         POST data to L&D services
@@ -278,11 +264,7 @@ class EdxIntegration(object):
         except Exception as exception:
             self.log(exception, "debug")
 
-    def mapping_api_data(
-            self,
-            data,
-            source_system_id
-    ):
+    def mapping_api_data(self, data, source_system_id):
         """
 
         Map edX course consumption data to L&D data
@@ -309,7 +291,7 @@ class EdxIntegration(object):
                 each_user["ActionValue"] = 0
                 # each_user["CreatedDate"] = user[4]
                 each_user["CreatedDate"] = datetime.now().replace(microsecond=0).isoformat()
-                each_user["SubmittedBy"] = "landd_user@oxa.com"  
+                each_user["SubmittedBy"] = "landd_user@oxa.com" #TODO: yet to decide as team
                 each_user["ActionFlag"] = "null"
                 if each_user['letter_grade'] == 'Pass':
                     each_user["ConsumptionStatus"] = 'Passed'
@@ -317,9 +299,7 @@ class EdxIntegration(object):
                     each_user["ConsumptionStatus"] = "Failed"
                 else:
                     each_user["ConsumptionStatus"] = "InProgress"
-            else:
-                message = "unable to post the data for the user %s" % user['email']
-                self.log(message, "info")
+
             all_user_grades.append(each_user)
             each_user = {}
 

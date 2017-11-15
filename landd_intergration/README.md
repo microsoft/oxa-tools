@@ -53,7 +53,7 @@ Here are the API's used:
 
 
 
-**usage** python3  `python sync_data.py course_consumption` 
+**usage**  `python3 sync_data.py course_consumption` 
 
 
     1. GET access token from Azure tenant using MSI
@@ -66,7 +66,7 @@ Here are the API's used:
 
 
 
-**Usage:** python3  `python sync_data.py course_catalog` 
+**Usage:**  `python3 sync_data.py course_catalog` 
 
 
     1. GET access token from Azure tenant using MSI
