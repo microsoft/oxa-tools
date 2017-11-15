@@ -23,6 +23,7 @@ LOG.addHandler(HANDLER)
 
 def sync_edx_data():
     """
+
     1) GET access token from Azure tenant using MSI
     2) GET secrets from Azure keyvault using the access token
     3) GET the Course catalog data from OpenEdx using the secrets obtined from Azure key vault
