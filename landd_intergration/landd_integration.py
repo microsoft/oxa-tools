@@ -71,14 +71,15 @@ class EdxIntegration(object):
         Get OAuth2 access token for REST API call using azure MSI extension
 
         """
-
+        # the following variables remain same for any MSI enabled Linux environment
+        # MSI runs on localhost:50342, port number of url should not be changed
         resource = 'https://vault.azure.net'
         url = 'http://localhost:50342/oauth2/token'
         data = dict(resource=resource)
         headers = dict(MetaData='true')
 
         response = requests.post(url, data=data, headers=headers, timeout=2)
-        
+
         if not response.ok:
             raise RuntimeError(response.content)
         else:
@@ -347,7 +348,10 @@ class EdxIntegration(object):
 
         """
 
-        start_date = open('api_call_time.txt', 'r')
+        try:
+            start_date = open('api_call_time.txt', 'r')
+        except FileNotFoundError:
+            start_date = open('api_call_time.txt', 'w')
         start_time = start_date.read()
         start_date.close()
         end_date = (datetime.now()-timedelta(minutes=10)).replace(microsecond=0).isoformat()
