@@ -7,13 +7,22 @@
 # Immmediately exit on error
 set -axe
 
+# static strings
 readonly MSFT="microsoft"
+readonly EDX="edx"
+readonly USE_MSFT="useMsftRepo"
+readonly USE_FICUS="useFicusTag"
+readonly TAGS="tags/"
+readonly FICUS1="${TAGS}open-release/ficus.1"
+readonly FICUS4="${TAGS}open-release/ficus.4"
+readonly GINKGO1="${TAGS}open-release/ginkgo.1"
 
 ##########################
 # Script Defaults that can be overriden via
 # - parameter arguments OR
 # - assignment here
 ##########################
+
 TEMPLATE_TYPE=fullstack # fullstack or devstack
 BRANCH_VERSIONS=edge    # edge or release or stable or edx
 DEFAULT_PASSWORD=
@@ -21,14 +30,9 @@ DEFAULT_PASSWORD=
 ##########################
 # Settings
 ##########################
+
 readonly MONGO_USER=oxamongoadmin
 MONGO_PASSWORD=
-
-# dynamically assigned below
-MYSQL_ADMIN_USER=
-MYSQL_ADMIN_PASSWORD=
-EDXAPP_ENABLE_COMPREHENSIVE_THEMING=
-COMBINED_LOGIN_REGISTRATION=
 
 readonly MYSQL_USER=oxamysql
 MYSQL_PASSWORD=
@@ -49,13 +53,24 @@ readonly PLATFORM_EMAIL="$EDXAPP_SU_EMAIL"
 readonly EDXAPP_COMPREHENSIVE_THEME_DIRS='[ "/edx/app/edxapp/themes" ]'
 readonly EDXAPP_DEFAULT_SITE_THEME=comprehensive
 
-# The common tag in the upstream to our fork is open-release/ficus.1
-# Specifically: our forks of edx-platform and configuration
-readonly EDX_BRANCH="tags/open-release/ficus.1"
+##########################
+# Dynamic settings. Assigned later on based on onebox.sh param arguments.
+##########################
+
+MYSQL_ADMIN_USER=
+MYSQL_ADMIN_PASSWORD=
+EDXAPP_ENABLE_COMPREHENSIVE_THEMING=
+COMBINED_LOGIN_REGISTRATION=
+NGINX_SITES=
+
+# The upstream tag in common with our forks
+# is ficus1 (edx-platform and configuration)
+EDX_BRANCH=$FICUS1
 
 ##########################
 # Script Parameter Arguments
 ##########################
+
 parse_args() 
 {
     while [[ "$#" -gt 0 ]] ; do
@@ -72,10 +87,12 @@ parse_args()
 
         case "$1" in
           -r|--role|-s|--stack)
-            TEMPLATE_TYPE="${arg_value,,}" # convert to lowercase
+            # convert to lowercase
+            TEMPLATE_TYPE=`parse_template "${arg_value,,}"`
             ;;
           -b|--branches)
-            BRANCH_VERSIONS="${arg_value,,}" # convert to lowercase
+            # convert to lowercase
+            BRANCH_VERSIONS=`parse_branch "${arg_value,,}"`
             ;;
           -d|--default-password)
             DEFAULT_PASSWORD="${arg_value}"
@@ -95,26 +112,51 @@ parse_args()
     done
 }
 
-fix_args()
+parse_template()
 {
-    # Allow for synonyms
-    if [[ $TEMPLATE_TYPE == full ]] || [[ $TEMPLATE_TYPE == fs ]] || [[ $TEMPLATE_TYPE == f ]] ; then
-        TEMPLATE_TYPE=fullstack
-    elif [[ $TEMPLATE_TYPE == dev ]] || [[ $TEMPLATE_TYPE == ds ]] || [[ $TEMPLATE_TYPE == d ]] ; then
-        TEMPLATE_TYPE=devstack
-    fi
+    userInput="$1"
 
-    # Allow for synonyms
-    if [[ $BRANCH_VERSIONS == production ]] || [[ $BRANCH_VERSIONS == prod ]] || [[ $BRANCH_VERSIONS == master ]]; then
-        BRANCH_VERSIONS=stable
-    elif [[ $BRANCH_VERSIONS == pre ]] || [[ $BRANCH_VERSIONS == bvt ]] || [[ $BRANCH_VERSIONS == int ]] ; then
-        BRANCH_VERSIONS=release
-    elif [[ $BRANCH_VERSIONS == development ]] || [[ $BRANCH_VERSIONS == dev ]] || [[ $BRANCH_VERSIONS == beta ]] ; then
-        BRANCH_VERSIONS=edge
-    elif [[ $BRANCH_VERSIONS == upstream ]] || [[ $BRANCH_VERSIONS == up ]] || [[ $BRANCH_VERSIONS == ed ]] ; then
-        BRANCH_VERSIONS=edx
-    fi
+    case "$userInput" in
+        full|fs|f)
+            echo "fullstack"
+        ;;
+        dev|ds|d)
+            echo "devstack"
+        ;;
+        *)
+            echo "$userInput"
+        ;;
+    esac
+}
 
+parse_branch()
+{
+    userInput="$1"
+
+    case "$userInput" in
+        production|prod|master)
+            echo "stable"
+        ;;
+        pre|bvt|int)
+            echo "release"
+        ;;
+        development|dev|beta)
+            echo "edge"
+        ;;
+        ficus|up|ed|f|edx_ficus|edx|upstream)
+            echo "edx_f"
+        ;;
+        ginkgo|up_g|ed_g|g|edx_ginkgo)
+            echo "edx_g"
+        ;;
+        *)
+            echo "$userInput"
+        ;;
+    esac
+}
+
+set_dynamic_vars()
+{
     # Harden credentials if none were provided.
     set +x
     MONGO_PASSWORD=`harden $MONGO_PASSWORD`
@@ -122,26 +164,35 @@ fix_args()
     EDXAPP_SU_PASSWORD=`harden $EDXAPP_SU_PASSWORD`
     VAGRANT_USER_PASSWORD=$EDXAPP_SU_PASSWORD
 
-    #todo: remove second condition after edx-configuration merge to releae,master
     # The upstream doesn't have the relevant
     # changes to leverage MYSQL_ADMIN_PASSWORD
     # For details, see msft/edx-configuration commit:
     # 65e2668672bda0112a64aabb86cf532ad228c4fa
-    if [[ $BRANCH_VERSIONS == edx ]] || [[ $BRANCH_VERSIONS != edge ]]; then
-        MYSQL_ADMIN_USER=root
-        MYSQL_ADMIN_PASSWORD=
-    else
+    if [[ $BRANCH_VERSIONS == edge ]]; then
         MYSQL_ADMIN_USER=lexoxamysqladmin
         MYSQL_ADMIN_PASSWORD=`harden $MYSQL_ADMIN_PASSWORD`
+    else
+        MYSQL_ADMIN_USER=root
+        MYSQL_ADMIN_PASSWORD=
     fi
     set -x
 
-    if [[ $BRANCH_VERSIONS == edx ]] ; then
-        EDXAPP_ENABLE_COMPREHENSIVE_THEMING=false
-        COMBINED_LOGIN_REGISTRATION=true
-    else
-        EDXAPP_ENABLE_COMPREHENSIVE_THEMING=true
-        COMBINED_LOGIN_REGISTRATION=false
+    case "$BRANCH_VERSIONS" in
+        edx_f|edx_g)
+            EDXAPP_ENABLE_COMPREHENSIVE_THEMING=false
+            COMBINED_LOGIN_REGISTRATION=true
+            NGINX_SITES='[certs, cms, lms, forum, xqueue]'
+        ;;
+        *)
+            EDXAPP_ENABLE_COMPREHENSIVE_THEMING=true
+            COMBINED_LOGIN_REGISTRATION=false
+            # Microsoft repositories support the lms-preview subdomain.
+            NGINX_SITES='[certs, cms, lms, lms-preview, forum, xqueue]'
+        ;;
+    esac
+
+    if [[ $BRANCH_VERSIONS == edx_g ]] ; then
+        EDX_BRANCH=$GINKGO1
     fi
 }
 
@@ -157,40 +208,48 @@ test_args()
         exit 1
     fi
 
-    if [[ $BRANCH_VERSIONS != stable ]] && [[ $BRANCH_VERSIONS != release ]] && [[ $BRANCH_VERSIONS != edge ]] && [[ $BRANCH_VERSIONS != edx ]] ; then
-        set +x
-        echo -e "\033[1;36m"
-        echo -e "\n BRANCH_VERSIONS is set to $BRANCH_VERSIONS"
-        echo -e " but should be stable OR release OR edge OR edx .\n"
-        echo -e " Use the -b param argument.\n"
-        echo -e '\033[0m'
-        exit 1
-    fi
+    echo -e "\n BRANCH_VERSIONS is set to $BRANCH_VERSIONS"
+    case "$BRANCH_VERSIONS" in
+        stable|release|edge|edx_f|edx_g)
+            echo ""
+        ;;
+        *)
+            set +x
+            echo -e "\033[1;36m"
+            echo -e " but should be stable OR release OR edge OR edx .\n"
+            echo -e " Use the -b param argument.\n"
+            echo -e '\033[0m'
+            exit 1
+        ;;
+    esac
 }
 
 ##########################
 # Helpers
 ##########################
+
 get_branch()
 {
-    useMsftRepo=$1
+    override=$1
     useOldDevStyle=$2
 
     if [[ $BRANCH_VERSIONS == stable ]] ; then
         echo "oxa/master.fic"
     elif [[ $BRANCH_VERSIONS == release ]] ; then
         echo "oxa/release.fic"
-    elif [[ $BRANCH_VERSIONS == edge ]] || [[ -n $useMsftRepo ]] ; then
+    elif [[ $BRANCH_VERSIONS == edge ]] || [[ $override == $USE_MSFT ]] ; then
         if [[ -n $useOldDevStyle ]] ; then
             # Legacy switch
             echo "oxa/devfic"
         else
             echo "oxa/dev.fic"
         fi
-    elif [[ $BRANCH_VERSIONS == edx ]] ; then
-        echo "$EDX_BRANCH"
+    elif [[ $BRANCH_VERSIONS == edx_g ]] && [[ $override == $USE_FICUS ]] ; then
+        # GINKGO1 edx-configuration doesn't work. Use ficus4 instead.
+        # Devstack fails because elastic search fails to initialize
+        echo "$FICUS4"
     else
-        test_args
+        echo "$EDX_BRANCH"
     fi
 }
 
@@ -203,7 +262,7 @@ get_current_branch()
 
     # Ensure branch information is useful.
     if [[ -z "$branchInfo" ]] || [[ $branchInfo == *"no branch"* ]] || [[ $branchInfo == *"detached"* ]] ; then
-        branchInfo=`get_branch useMsftRepo oldDevStyle`
+        branchInfo=`get_branch $USE_MSFT oldDevStyle`
     fi
 
     echo "$branchInfo"
@@ -231,32 +290,114 @@ harden()
 
 get_org()
 {
-    if [[ $BRANCH_VERSIONS == edx ]] ; then
-        echo "$BRANCH_VERSIONS"
-    else
-        echo "$MSFT"
-    fi
+    case "$BRANCH_VERSIONS" in
+        edx_f|edx_g)
+            echo "$EDX"
+        ;;
+        *)
+            echo "$MSFT"
+        ;;
+    esac
 }
 
 get_conf_project_name()
 {
-    if [[ $BRANCH_VERSIONS == edx ]] ; then
-        echo "configuration"
-    else
-        echo "edx-configuration"
-    fi
+    case "$BRANCH_VERSIONS" in
+        edx_f|edx_g)
+            echo "configuration"
+        ;;
+        *)
+            echo "edx-configuration"
+        ;;
+    esac
 }
 
-update_nginx_sites()
+wget_wrapper()
 {
-    if [[ $BRANCH_VERSIONS == edx ]] ; then
-        NGINX_SITES='[certs, cms, lms, forum, xqueue]'
+    local expectedPath="$1"
+    local org="$2"
+    local project="$3"
+    local branch="$4"
+
+    # Check if the file exists. If not, download from the public repository
+    if [[ -f "$expectedPath" ]] ; then
+        echo "$expectedPath"
     else
-        # Microsoft repositories support the lms-preview subdomain.
-        NGINX_SITES='[certs, cms, lms, lms-preview, forum, xqueue]'
+        local fileName=`basename $expectedPath`
+        if [[ ! -f "$fileName" ]] ; then
+            wget -q https://raw.githubusercontent.com/${org}/${project}/${branch}/$expectedPath -O $fileName
+        fi
+
+        echo "$fileName"
     fi
 }
 
+##########################
+# Core Installation Operation
+##########################
+
+install-with-oxa()
+{
+    bootstrap=`wget_wrapper "scripts/bootstrap.sh" "${MSFT}" "oxa-tools" "$(get_current_branch)"`
+
+    bash $bootstrap \
+        --role \
+            $TEMPLATE_TYPE \
+        --retry-count \
+            8 \
+        --environment \
+            "dev" \
+        --oxatools-public-github-projectbranch \
+            `get_current_branch` \
+        --edxconfiguration-public-github-accountname \
+            `get_org` \
+        --edxconfiguration-public-github-projectname \
+            `get_conf_project_name` \
+        --edxconfiguration-public-github-projectbranch \
+            `get_branch $USE_FICUS` \
+        --edxplatform-public-github-accountname \
+            `get_org` \
+        --edxplatform-public-github-projectbranch \
+            `get_branch` \
+        --edxtheme-public-github-projectbranch \
+            `get_branch $USE_MSFT` \
+        --edxversion \
+            $EDX_BRANCH \
+        --forumversion \
+            $EDX_BRANCH
+}
+
+install-with-edx-native()
+{
+    # from https://openedx.atlassian.net/wiki/spaces/OpenOPS/pages/146440579/Native+Open+edX+Ubuntu+16.04+64+bit+Installation
+
+    # 1. Set the OPENEDX_RELEASE variable:
+    OPENEDX_RELEASE=${EDX_BRANCH#$TAGS}
+
+    # 2. Bootstrap the Ansible installation:
+    local ans_bootstrap=`wget_wrapper "util/install/ansible-bootstrap.sh" "${EDX}" "$(get_conf_project_name)" "$OPENEDX_RELEASE"`
+    sudo bash $ans_bootstrap
+
+    # 3. (Optional) If this is a new installation, randomize the passwords:
+    # todo: reconcile this w/ -d
+    local gen_pass=`wget_wrapper "util/install/generate-passwords.sh" "${EDX}" "$(get_conf_project_name)" "$OPENEDX_RELEASE"`
+    bash $gen_pass
+
+    #todo: 3c link file to /oxa/oxa.yml
+
+    # 3b Enable retry
+    local utilities=`wget_wrapper "templates/stamp/utilities.sh" "${MSFT}" "oxa-tools" "$(get_current_branch)"`
+    source $utilities
+
+    # 4. Install Open edX:
+    local sandbox=`wget_wrapper "util/install/sandbox.sh" "${EDX}" "$(get_conf_project_name)" "$OPENEDX_RELEASE"`
+    set +e
+    retry-command "bash $sandbox" 8 "$sandbox" "fixPackages"
+    set -e
+
+    # get status of edx services
+    /edx/bin/supervisorctl status
+}
 
 ##########################
 # Execution Starts
@@ -267,42 +408,14 @@ apt update -qq
 apt install -y -qq pwgen wget
 
 parse_args "$@"
-fix_args
+
 test_args
 
-update_nginx_sites
-
-# get current dir
-CURRENT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-bootstrap="scripts/bootstrap.sh"
-if [[ ! -f scripts/bootstrap.sh ]] ; then
-    fileName=`basename $bootstrap`
-    wget -q https://raw.githubusercontent.com/${MSFT}/oxa-tools/$(get_current_branch)/$bootstrap -O $fileName
-    bootstrap=$fileName
+set_dynamic_vars
+ 
+# vagrant-fullstack.yml was removed in March 2017 so we use sandbox.sh
+if [[ $TEMPLATE_TYPE == fullstack ]] && [[ $BRANCH_VERSIONS == edx_g ]] ; then
+    install-with-edx-native
+else
+    install-with-oxa
 fi
-
-bash $bootstrap \
-    --role \
-        $TEMPLATE_TYPE \
-    --retry-count \
-        5 \
-    --environment \
-        "dev" \
-    --oxatools-public-github-projectbranch \
-        `get_current_branch` \
-    --edxconfiguration-public-github-accountname \
-        `get_org` \
-    --edxconfiguration-public-github-projectname \
-        `get_conf_project_name` \
-    --edxconfiguration-public-github-projectbranch \
-        `get_branch` \
-    --edxplatform-public-github-accountname \
-        `get_org` \
-    --edxplatform-public-github-projectbranch \
-        `get_branch` \
-    --edxtheme-public-github-projectbranch \
-        `get_branch useMsftRepo` \
-    --edxversion \
-        $EDX_BRANCH \
-    --forumversion \
-        $EDX_BRANCH

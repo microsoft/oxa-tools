@@ -63,10 +63,16 @@ NOTIFICATION_MESSAGE=""
 SECONDARY_LOG="/var/log/bootstrap.csx.log"
 PRIMARY_LOG="/var/log/bootstrap.log"
 
+# servicebus notification parameters
+servicebus_namespace=""
+servicebus_queue_name=""
+servicebus_shared_access_key_name="RootManageSharedAccessKey"
+servicebus_shared_access_key=""
+
 display_usage()
 {
-  echo "Usage: $0 [-r|--role {jb|vmss|mongo|mysql|edxapp|fullstack|devstack}] [-e|--environment {dev|bvt|prod}] [--cron] --keyvault-name {azure keyvault name} --aad-webclient-id {AAD web application client id} --aad-webclient-appkey {AAD web application client key} --aad-tenant-id {AAD Tenant to authenticate against} --azure-subscription-id {Azure subscription Id}"
-  exit 1
+    echo "Usage: $0 [-r|--role {jb|vmss|mongo|mysql|edxapp|fullstack|devstack}] [-e|--environment {dev|bvt|prod}] [--cron] --keyvault-name {azure keyvault name} --aad-webclient-id {AAD web application client id} --aad-webclient-appkey {AAD web application client key} --aad-tenant-id {AAD Tenant to authenticate against} --azure-subscription-id {Azure subscription Id}"
+    exit 1
 }
 
 parse_args() 
@@ -156,6 +162,18 @@ parse_args()
           --cluster-name)
             CLUSTER_NAME="${arg_value}"
             MAIL_SUBJECT="${MAIL_SUBJECT} - ${arg_value,,}"
+            ;;
+          --servicebus-namespace)
+            servicebus_namespace="${arg_value}"
+            ;;
+          --servicebus-queue-name)
+            servicebus_queue_name="${arg_value}"
+            ;;
+          --servicebus-shared-access-key-name)
+            servicebus_shared_access_key_name="${arg_value}"
+            ;;
+          --servicebus-shared-access-key)
+            servicebus_shared_access_key="${arg_value}"
             ;;
           *)
             # Unknown option encountered
@@ -260,31 +278,19 @@ verify_state()
     fi
 }
 
-cherry_pick_wrapper()
-{
-    hash=$1
-
-    git config --global user.email "${EDXAPP_SU_EMAIL}"
-    exit_on_error "Failed to configure git."
-
-    git cherry-pick -x $hash
-    exit_on_error "Failed to cherry pick essential fix"
-}
-
 fix_jdk()
 {
     count=`grep -i "8u65" playbooks/roles/oraclejdk/defaults/main.yml | wc -l`
     if [[ "$count" -gt "0" ]] ; then
-        cherry_pick_wrapper 0ca865c9b0da42bed83459389ae35e2551860472
+        cherry_pick_wrapper 0ca865c9b0da42bed83459389ae35e2551860472 "$EDXAPP_SU_EMAIL"
     fi
 }
 
 fix_npm_python()
 {
-    if [[ $EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME == edx ]] ; then
-        if [[ $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH == *"release/ficus"* ]] ; then
-            cherry_pick_wrapper 075d69e6c7c5330732ec75346d02df32d087aa92
-        fi
+    count=`grep -i "node_modules" playbooks/roles/edxapp/tasks/deploy.yml | wc -l`
+    if (( "$count" == 0 )) ; then
+        cherry_pick_wrapper 075d69e6c7c5330732ec75346d02df32d087aa92 "$EDXAPP_SU_EMAIL"
     fi
 }
 
@@ -414,93 +420,114 @@ update_stamp_vmss()
 }
 
 update_scalable_mongo() {
-  # edx playbooks - mongo
-  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_mongo.yml
-  exit_on_error "Execution of edX Mongo playbook failed"
+    # edx playbooks - mongo
+    $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_mongo.yml
+    exit_on_error "Execution of edX Mongo playbook failed"
 
-  # oxa playbooks - mongo (enable when customized)
-  #$ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mongo"
-  #exit_on_error "Execution of OXA Mongo playbook failed"
+    # oxa playbooks - mongo (enable when customized)
+    #$ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mongo"
+    #exit_on_error "Execution of OXA Mongo playbook failed"
 }
 
 update_scalable_mysql() {
-  # edx playbooks - mysql and memcached
-  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_mysql.yml
-  exit_on_error "Execution of edX MySQL playbook failed"
-  # minimize tags? "install:base,install:system-requirements,install:configuration,install:app-requirements,install:code"
-  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_sandbox.yml -e "migrate_db=yes" --tags "edxapp-sandbox,install,migrate"
-  exit_on_error "Execution of edX MySQL migrations failed"
+    # edx playbooks - mysql and memcached
+    $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_mysql.yml
+    exit_on_error "Execution of edX MySQL playbook failed"
+    # minimize tags? "install:base,install:system-requirements,install:configuration,install:app-requirements,install:code"
+    $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_sandbox.yml -e "migrate_db=yes" --tags "edxapp-sandbox,install,migrate"
+    exit_on_error "Execution of edX MySQL migrations failed"
 
-  # oxa playbooks - mysql
-  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mysql"
-  exit_on_error "Execution of OXA MySQL playbook failed"
+    # oxa playbooks - mysql
+    $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mysql"
+    exit_on_error "Execution of OXA MySQL playbook failed"
 }
 
 edx_installation_playbook()
 {
-  systemctl >/dev/null 2>&1
-  exit_on_error "Single VM instance of EDX has a hard requirement on systemd and its systemctl functionality"
+    systemctl >/dev/null 2>&1
+    exit_on_error "Single VM instance of EDX has a hard requirement on systemd and its systemctl functionality"
 
-  EDXAPP_COMPREHENSIVE_THEME_DIR=`echo $EDXAPP_COMPREHENSIVE_THEME_DIRS | tr -d [ | tr -d ] | tr -d " " | tr -d \"`
-  make_theme_dir "$EDXAPP_COMPREHENSIVE_THEME_DIR" "$EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME"
+    EDXAPP_COMPREHENSIVE_THEME_DIR=`echo $EDXAPP_COMPREHENSIVE_THEME_DIRS | tr -d [ | tr -d ] | tr -d " " | tr -d \"`
+    make_theme_dir "$EDXAPP_COMPREHENSIVE_THEME_DIR" "$EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME"
 
-  # We've been experiencing intermittent failures on ficus. Simply retrying
-  # mitigates the problem, but we should solve the underlying cause(s) soon.
-  command="$ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG vagrant-${EDX_ROLE}.yml"
-  retry-command "$command" "$RETRY_COUNT" "${EDX_ROLE} installation" "fixPackages"
-  exit_on_error "Execution of edX ${EDX_ROLE} playbook failed"
+    # We've been experiencing intermittent failures on ficus. Simply retrying
+    # mitigates the problem, but we should solve the underlying cause(s) soon.
+    command="$ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG vagrant-${EDX_ROLE}.yml"
+    retry-command "$command" "$RETRY_COUNT" "${EDX_ROLE} installation" "fixPackages"
+    exit_on_error "Execution of edX ${EDX_ROLE} playbook failed"
 
-  # oxa playbooks - all (single VM)
-  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK $THEME_ARGS -e "edxrole=$EDX_ROLE"
-  exit_on_error "Execution of OXA playbook failed"
+    # oxa playbooks - all (single VM)
+    $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK $THEME_ARGS -e "edxrole=$EDX_ROLE"
+    exit_on_error "Execution of OXA playbook failed"
 }
 
-update_fullstack() {
-  # edx playbooks - fullstack (single VM)
-  edx_installation_playbook
+update_fullstack()
+{
+    # edx playbooks - fullstack (single VM)
+    edx_installation_playbook
 
-  # get status of edx services
-  /edx/bin/supervisorctl status
+    # get status of edx services
+    /edx/bin/supervisorctl status
 }
 
-update_devstack() {
-  if ! id -u vagrant > /dev/null 2>&1; then
-    # create required vagrant user account to avoid fatal error
-    sudo adduser --disabled-password --gecos "" vagrant
-
-    # set the vagrant password
-    if [[ -n $VAGRANT_USER_PASSWORD ]] ; then
-      sudo usermod --password $(echo $VAGRANT_USER_PASSWORD | openssl passwd -1 -stdin) vagrant
+remove_browsers()
+{
+    if type firefox >/dev/null 2>&1 ; then
+        log "Un-installing firefox...The proper version will be installed later"
+        apt-wrapper "purge firefox"
     fi
-  fi
 
-  # create some required directories to avoid fatal errors
-  if [[ ! -d /edx/app/ecomworker ]] ; then
-    sudo mkdir -p /edx/app/ecomworker
-  fi
+    if type google-chrome-stable >/dev/null 2>&1 ; then
+        log "Un-installing chrome...The proper version will be installed later"
+        apt-wrapper "purge google-chrome-stable"
+    fi
 
-  if [[ ! -d /home/vagrant/share_x11 ]] ; then
-    sudo mkdir -p /home/vagrant/share_x11
-  fi
+    # Package that comes with firefox.
+    apt-wrapper "remove hunspell-en-us"
+}
 
-  if [[ ! -d /edx/app/ecommerce ]] ; then
-    sudo mkdir -p /edx/app/ecommerce
-  fi
+update_devstack()
+{
+    if ! id -u vagrant > /dev/null 2>&1 ; then
+        # create required vagrant user account to avoid fatal error
+        adduser --disabled-password --gecos "" vagrant
 
-  if [[ ! -f /home/vagrant/.bashrc ]] ; then
-    # create empty .bashrc file to avoid fatal error
-    sudo touch /home/vagrant/.bashrc
-  fi
+        # set the vagrant password
+        if [[ -n $VAGRANT_USER_PASSWORD ]] ; then
+            usermod --password $(echo $VAGRANT_USER_PASSWORD | openssl passwd -1 -stdin) vagrant
+        fi
+    fi
 
-  if $(stat -c "%U" /home/vagrant) != "vagrant"; then
-    # Change the owner of the /home/vagrant folder and its subdirectories to the vagrant user account
-    # to avoid an error in TASK: [local_dev | login share X11 auth to app users] related to file
-    # "/home/vagrant/share_x11/share_x11.j2" msg: chown failed: failed to look up user vagrant
-    sudo chown -hR vagrant /home/vagrant
-  fi
+    # create some required directories to avoid fatal errors
+    if [[ ! -d /edx/app/ecomworker ]] ; then
+        mkdir -p /edx/app/ecomworker
+    fi
 
-  # edx playbooks - devstack (single VM)
-  edx_installation_playbook
+    if [[ ! -d /home/vagrant/share_x11 ]] ; then
+        mkdir -p /home/vagrant/share_x11
+    fi
+
+    if [[ ! -d /edx/app/ecommerce ]] ; then
+        mkdir -p /edx/app/ecommerce
+    fi
+
+    if [[ ! -f /home/vagrant/.bashrc ]] ; then
+        # create empty .bashrc file to avoid fatal error
+        touch /home/vagrant/.bashrc
+    fi
+
+    if $(stat -c "%U" /home/vagrant) != "vagrant" ; then
+        # Change the owner of the /home/vagrant folder and its subdirectories to the vagrant user account
+        # to avoid an error in TASK: [local_dev | login share X11 auth to app users] related to file
+        # "/home/vagrant/share_x11/share_x11.j2" msg: chown failed: failed to look up user vagrant
+        chown -hR vagrant /home/vagrant
+    fi
+
+    # devstack installs specific versions of chrome and firefox
+    remove_browsers
+
+    # edx playbooks - devstack (single VM)
+    edx_installation_playbook
 }
 
 ###############################################
@@ -680,9 +707,34 @@ then
     NOTIFICATION_MESSAGE="Installation of the EDX Database was completed successfully."
 elif [ "$EDX_ROLE" == "vmss" ] ;
 then
-    NOTIFICATION_MESSAGE="Installation of the EDX Application (VMSS) was completed successfully."
+    NOTIFICATION_MESSAGE="Installation of the EDX Application on VMSS instance '${HOSTNAME}' was completed successfully."
 fi
 
 log "${NOTIFICATION_MESSAGE}"
 send_notification "${NOTIFICATION_MESSAGE}" "${MAIL_SUBJECT}" "${CLUSTER_ADMIN_EMAIL}"
+
+# if required, send completion notification to servicebus queue as well
+# this allows the async deployment process to determine completion
+# this is specific to the VMSS instances
+
+if [[ "$EDX_ROLE" == "vmss" ]] && [[ -n "${servicebus_namespace}" ]] && [[ -n "${servicebus_queue_name}" ]] && [[ -n "${servicebus_shared_access_key_name}" ]] && [[ -n "${servicebus_shared_access_key}" ]];
+then
+    log "Sending servicebus notification"
+
+    # install servicebus dependencies if necessary
+    install-servicebus-tools
+
+    python "${OXA_TOOLS_PATH}/scripts/servicebus_notification.py" \
+        --namespace "${servicebus_namespace}" \
+        --queue_name "${servicebus_queue_name}" \
+        --shared_access_key_name "${servicebus_shared_access_key_name}" \
+        --shared_access_key "${servicebus_shared_access_key}" \
+        --message "${HOSTNAME}"
+
+    exit_on_error "Failed sending service bus notification for '${HOSTNAME}'!" 1 "VMSS Bootstrap ServiceBus Notification Failure" "${cluster_admin_email}"
+else
+    log "Skipping servicebus notification"
+fi
+
+# at this point, we completed successfully
 exit 0
