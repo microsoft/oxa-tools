@@ -709,8 +709,7 @@ powershell -file $INSTALLER_BASEPATH/Create-StorageContainer.ps1 \
     -AzureSubscriptionId $AZURE_SUBSCRIPTION_ID \
     -StorageAccountName "${AZURE_ACCOUNT_NAME}" \
     -StorageAccountKey "${AZURE_ACCOUNT_KEY}" \
-    -StorageContainerNames "reports,tracking" \
-    -PublicStorageContainerNames "uploads" \
+    -StorageContainerNames "reports,tracking,uploads" \
     -AzureCliVersion $AZURE_CLI_VERSION \
     -AzureStorageConnectionString "${storage_connection_string}"
 exit_on_error "Failed creating container(s) for edxapp:migrate (uploads,reports,tracking) in '${AZURE_ACCOUNT_NAME}'" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
