@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Create a storage container for OXA edxapp:migrate playbook task
 
@@ -38,7 +38,7 @@ None
 
 .EXAMPLE
 To create the 'uploads' storage container:
-.\Create-StorageContainer.ps1 -AadWebClientId 121 -AadWebClientAppKey key -AadTenantId 345 -AzureSubscriptionId 438484 -StorageAccountName djdjd -StorageContainerName uploads
+.\Create-StorageContainer.ps1 -AadWebClientId 121 -AadWebClientAppKey key -AadTenantId 345 -AzureSubscriptionId 438484 -StorageAccountName djdjd -AzureStorageContainer uploads
 
 #>
 Param( 
@@ -62,14 +62,14 @@ Param(
 
 trap [Exception]
 {
-    Log-Message -Message $_;
+Log-Message -Message $_;
 
-    Capture-ErrorStack -ForceStop
+Capture-ErrorStack -ForceStop
 
-    # we expect a calling script to be listening to what we are doing here. 
-    # therefore, we will throw a fit here as a signal to them.
-    # this should trigger and catch and resume
-    throw "Script execution failed: $($_)";
+# we expect a calling script to be listening to what we are doing here. 
+# therefore, we will throw a fit here as a signal to them.
+# this should trigger and catch and resume
+throw "Script execution failed: $($_)";
 }
 
 #########################
@@ -79,93 +79,12 @@ trap [Exception]
 #########################
 
 $invocation = (Get-Variable MyInvocation).Value 
-$currentPath = Split-Path $invocation.MyCommand.Path 
+$currentPath = Split-Path $invocation.MyCommand.Path
 Import-Module "$($currentPath)/Common.ps1" -Force
 
 # Login First & set context
 Authenticate-AzureRmUser -AadWebClientId $AadWebClientId -AadWebClientAppKey $AadWebClientAppKey -AadTenantId $AadTenantId;
 Set-AzureSubscriptionContext -AzureSubscriptionId $AzureSubscriptionId
 
-# Create the container
-[array]$storageContainerList = $StorageContainerNames.Split(",");
-
-foreach($storageContainerName in $storageContainerList)
-{
-    # todo: add retries for better resiliency
-    Log-Message "Creating Storage Container (Cli: $AzureCliVersion): $($storageContainerName)" -Context "Create Storage Containers"
-
-    # track the operation status
-    $status=$false
-
-    # todo: fall back to azure cli since there are existing issues with installation of azure powershell cmdlets for linux
-    # cli doesn't provide clean object returns (json responses are helpful). Therefore, transition as soon as possible
-    if ($AzureCliVersion -eq "1" )
-    {
-        # Azure Cli 1.0
-        # Check if the container exists
-        $response = azure storage container list --account-name $StorageAccountName --account-key $StorageAccountKey --prefix $storageContainerName --json 
-        if ( ($response | jq --raw-output ".[] | select(.name==\`"$storageContainerName\`") | .name") -ine $storageContainerName)
-        {
-            # container doesn't exist
-            Log-Message "'$storageContainerName' doesn't exist and will be created."
-
-            # create the container now
-            $response = azure storage container create --account-name $StorageAccountName --account-key $StorageAccountKey --container $storageContainerName --json
-            $status = ((($response | jq --raw-output '.name') -ieq $storageContainerName) -and (($response | jq --raw-output '.lease.state') -ieq 'available'))
-        }
-        else 
-        {
-            # container exists
-            $status=$true;
-            Log-Message "'$storageContainerName' already exists."
-        }
-    }
-    else 
-    {
-        # Azure Cli 2.0
-        # Check if the container exists
-        if ($AzureStorageConnectionString)
-        {
-            $response = az storage container list --account-name $StorageAccountName --account-key $StorageAccountKey --prefix $storageContainerName --connection-string $AzureStorageConnectionString -o json
-        }
-        else 
-        {
-            $response = az storage container list --account-name $StorageAccountName --account-key $StorageAccountKey --prefix $storageContainerName -o json
-        }
-
-        if ( ($response | jq --raw-output ".[] | select(.name==\`"$storageContainerName\`") | .name") -ine $storageContainerName)
-        {
-            # container doesn't exist
-            Log-Message "'$storageContainerName' doesn't exist and will be created."
-
-            # create the container now
-            if ($AzureStorageConnectionString)
-            {
-                Log-Message "Using connection string: $AzureStorageConnectionString" -Context "Create Storage Containers" -NoNewLine
-    
-                $response = az storage container create --account-name $StorageAccountName --account-key $StorageAccountKey --name $storageContainerName --connection-string $AzureStorageConnectionString -o json
-            }
-            else 
-            {
-                $response = az storage container create --account-name $StorageAccountName --account-key $StorageAccountKey --name $storageContainerName -o json
-            }
-
-            # parse the status (.created=true is the expected status)
-            $status = (($response | jq --raw-output '.created') -ieq "true")
-        }
-        else 
-        {
-            # container exists
-            $status=$true;
-            Log-Message "'$storageContainerName' already exists."
-        }
-    }
-
-    # we expect the following: true=container created, If there is an error, status=[Blank]
-    if (!$status)
-    {
-        # creation failed
-        Log-Message "Unable to create the specified storage container: $storageContainerName" -Context "Create Storage Containers"
-        exit 1
-    }
-}
+# Create Storage Container
+New-AzureStorageContainers -ContainerNames $StorageContainerNames
