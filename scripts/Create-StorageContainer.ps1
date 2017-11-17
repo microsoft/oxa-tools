@@ -24,6 +24,9 @@ Name of the storage account where the container will be created
 .PARAMETER StorageContainerNames
 Name(s) of the storage container(s) to create. Use a comma-separated list to specify multiple containers
 
+.PARAMETER PublicStorageContainerNames
+Name(s) of the Public storage container(s) to create. Use a comma-separated list to specify multiple containers
+
 .PARAMETER AzureCliVersion
 Version of Azure CLI to use
 
@@ -87,5 +90,8 @@ Import-Module "$($currentPath)/Common.ps1" -Force
 Authenticate-AzureRmUser -AadWebClientId $AadWebClientId -AadWebClientAppKey $AadWebClientAppKey -AadTenantId $AadTenantId;
 Set-AzureSubscriptionContext -AzureSubscriptionId $AzureSubscriptionId
 
-# Create Storage Container
-New-AzureStorageContainers -ContainerNames $StorageContainerNames
+# Create Public Storage Container
+New-AzureStorageContainers -ContainerNames $StorageContainerNames -AccessPolicy "off"
+
+# Create Private Storage Container
+New-AzureStorageContainers -ContainerNames $PublicStorageContainerNames -AccessPolicy "blob"
