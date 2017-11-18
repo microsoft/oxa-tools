@@ -101,6 +101,7 @@ VALUES
   1,
   1
 );
+commit;
 
 /* Insert an entry so that new site is enabled with a domain name */
 
@@ -118,4 +119,4 @@ Insert an entry so that courses site uses different theming
 
 INSERT INTO theming_sitetheme (theme_dir_name,site_id) VALUES ('courses',2);
 
-commit; */
+*/
