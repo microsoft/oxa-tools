@@ -90,8 +90,8 @@ Import-Module "$($currentPath)/Common.ps1" -Force
 Authenticate-AzureRmUser -AadWebClientId $AadWebClientId -AadWebClientAppKey $AadWebClientAppKey -AadTenantId $AadTenantId;
 Set-AzureSubscriptionContext -AzureSubscriptionId $AzureSubscriptionId
 
-# Create Public Storage Container
+# Create Private Storage Containers
 New-AzureStorageContainers -ContainerNames $StorageContainerNames -AccessPolicy "off"
 
-# Create Private Storage Container
+# Create Public Storage Containers
 New-AzureStorageContainers -ContainerNames $PublicStorageContainerNames -AccessPolicy "blob"
