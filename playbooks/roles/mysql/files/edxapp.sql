@@ -104,18 +104,18 @@ VALUES
 
 /* Insert an entry so that new site is enabled with a domain name */
 
-INSERT INTO django_site (domain,name) VALUES ('courses.microsoft.com','courses');
+/* INSERT INTO django_site (domain,name) VALUES ('courses.microsoft.com','courses'); 
 
-/* Updating the siteconfigurations for the existing site */
+ Updating the siteconfigurations for the existing site 
 
-UPDATE site_configuration_siteconfiguration SET `values` = '{"course_org_filter":"Microsoft","ENABLE_THIRD_PARTY_AUTH":false,"LMS_BASE":"openedx.microsoft.com"}' WHERE `site_id` = 1;
+ UPDATE site_configuration_siteconfiguration SET `values` = '{"course_org_filter":"Microsoft","ENABLE_THIRD_PARTY_AUTH":false,"LMS_BASE":"openedx.microsoft.com"}' WHERE `site_id` = 1;
 
-/*Insert siteconfigurations for courses site */
+Insert siteconfigurations for courses site 
 
-INSERT INTO `site_configuration_siteconfiguration` (`site_id`, `values`,`enabled`) VALUES (2,'{"course_org_filter":"ELMS","ENABLE_THIRD_PARTY_AUTH":"true","ENFORCE_PASSWORD_POLICY":"false","SITE_NAME":"courses.microsoft.com","LMS_BASE":"courses.microsoft.com"}',1); 
+ INSERT INTO `site_configuration_siteconfiguration` (`site_id`, `values`,`enabled`) VALUES (2,'{"course_org_filter":"ELMS","ENABLE_THIRD_PARTY_AUTH":"true","ENFORCE_PASSWORD_POLICY":"false","SITE_NAME":"courses.microsoft.com","LMS_BASE":"courses.microsoft.com"}',1); 
 
-/*Insert an entry so that courses site uses different theming */
+Insert an entry so that courses site uses different theming 
 
 INSERT INTO theming_sitetheme (theme_dir_name,site_id) VALUES ('courses',2);
 
-commit;
+commit; */
