@@ -385,6 +385,202 @@ function Create-StorageContainer
     New-AzureStorageContainer -Name $StorageContainerName -Context $storageContext
 }
 
+## Function: Get-AzureStorageContainerStatus
+##
+## Purpose:
+##    Checks the status of the container (exits or doesn't)
+##
+## Input:
+##   ContainerName    name of the storage container
+##
+## Output:
+##   status
+##
+function Get-AzureStorageContainerStatus
+{
+    param(
+            [Parameter(Mandatory=$true)][string]$ContainerName
+         )
+
+    # Check if the container exists
+    $status=$false
+    $response=""
+
+    # todo: fall back to azure cli since there are existing issues with installation of azure powershell cmdlets for linux
+    # cli doesn't provide clean object returns (json responses are helpful). Therefore, transition as soon as possible
+    if ($AzureCliVersion -eq "1" )
+    {
+        # Azure Cli 1.0
+        $response = azure storage container list --account-name $StorageAccountName --account-key $StorageAccountKey --prefix $ContainerName --json
+    }
+    else
+    {
+        # Azure Cli 2.0
+        if ($AzureStorageConnectionString)
+        {
+            $response = az storage container list --account-name $StorageAccountName --account-key $StorageAccountKey --prefix $ContainerName --connection-string $AzureStorageConnectionString -o json
+        }
+        else
+        {
+            $response = az storage container list --account-name $StorageAccountName --account-key $StorageAccountKey --prefix $ContainerName -o json
+        }
+    }
+
+    $status = (-Not ( ($response | jq --raw-output ".[] | select(.name==\`"$ContainerName\`") | .name") -ine $ContainerName) )
+    if ($status)
+    {
+        Log-Message "'$ContainerName' already exists."
+    }
+    else
+    {
+        Log-Message "'$ContainerName' doesn't exist."
+    }
+    return $status
+}
+
+## Function: Set-AzureStorageContainerPermission
+##
+## Purpose:
+##    Sets the permission for the container
+##
+## Input:
+##   ContainerName       name of the storage container
+##   AccessPolicy        Access policy (off,blob,container)
+##
+## Output:
+##   nothing
+##
+function Set-AzureStorageContainerPermission
+{
+    param(
+            [Parameter(Mandatory=$true)][string]$ContainerName,
+            [Parameter(Mandatory=$true)][string]$AccessPolicy
+         )
+
+    # todo: fall back to azure cli since there are existing issues with installation of azure powershell cmdlets for linux
+    # cli doesn't provide clean object returns (json responses are helpful). Therefore, transition as soon as possible
+    if ($AzureCliVersion -eq "1" )
+    {
+        # Azure Cli 1.0
+
+        # Update the container permissions
+        azure storage container set --account-name $StorageAccountName --account-key $StorageAccountKey --container $ContainerName --permission $AccessPolicy --json
+    }
+    else
+    {
+        # Azure Cli 2.0
+
+        # Update the container permissions
+        if ($AzureStorageConnectionString)
+        {
+            Log-Message "Using connection string: $AzureStorageConnectionString" -Context "Create Storage Containers" -NoNewLine
+
+            az storage container set-permission --account-name $StorageAccountName --account-key $StorageAccountKey --name $ContainerName --public-access $AccessPolicy --connection-string $AzureStorageConnectionString -o json
+        }
+        else
+        {
+            az storage container set-permission --account-name $StorageAccountName --account-key $StorageAccountKey --name $ContainerName --public-access $AccessPolicy -o json
+        }
+    }
+}
+
+## Function: New-AzureStorageContainer
+##
+## Purpose:
+##    Creates new storage container
+##
+## Input:
+##   ContainerName       name of the storage container
+##   AccessPolicy        Access policy (off,blob,container)
+##
+## Output:
+##   nothing
+##
+function New-AzureStorageContainer
+{
+
+    param(
+            [Parameter(Mandatory=$true)][string]$ContainerName,
+            [Parameter(Mandatory=$true)][string]$AccessPolicy
+         )
+
+    if ($AzureCliVersion -eq "1" )
+    {
+        # Azure Cli 1.0
+
+        # create the container now
+        $response = azure storage container create --account-name $StorageAccountName --account-key $StorageAccountKey --container $ContainerName --permission $AccessPolicy --json
+        $status = ((($response | jq --raw-output '.name') -ieq $ContainerName) -and (($response | jq --raw-output '.lease.state') -ieq 'available'))
+    }
+    else
+    {
+        # Azure Cli 2.0
+
+        # create the container now
+        if ($AzureStorageConnectionString)
+        {
+            Log-Message "Using connection string: $AzureStorageConnectionString" -Context "Create Storage Containers" -NoNewLine
+
+            $response = az storage container create --account-name $StorageAccountName --account-key $StorageAccountKey --name $ContainerName --public-access $AccessPolicy --connection-string $AzureStorageConnectionString -o json
+        }
+        else
+        {
+            $response = az storage container create --account-name $StorageAccountName --account-key $StorageAccountKey --name $ContainerName --public-access $AccessPolicy -o json
+        }
+
+        # parse the status (.created=true is the expected status)
+        $status = (($response | jq --raw-output '.created') -ieq "true")
+    }
+
+    # we expect the following: true=container created, If there is an error, status=[Blank]
+    if (!$status)
+    {
+        # creation failed
+        Log-Message "Unable to create the specified storage container: $ContainerName" -Context "Create Storage Containers"
+        exit 1
+    }
+}
+
+## Function: New-AzureStorageContainers
+##
+## Purpose:
+##    Create containers or modify existing container w.r.to existing permissions.
+##
+## Input:
+##   ContainerNames       name of the storage container
+##   AccessPolicy         Access policy (off,blob,container)
+##
+## Output:
+##   nothing
+##
+function New-AzureStorageContainers
+{
+    param(
+            [Parameter(Mandatory=$true)][string]$ContainerNames,
+            [Parameter(Mandatory=$true)][ValidateSet("off","blob","container")][string]$AccessPolicy
+         )
+
+    [array]$storageContainerList = $ContainerNames.Split(",");
+
+    foreach($storageContainerName in $storageContainerList)
+    {
+        $status = Get-AzureStorageContainerStatus -ContainerName $storageContainerName
+
+        if (!$status)
+        {
+            # Create the container if missing
+            Log-Message "'Creating Container' $storageContainerName"
+            New-AzureStorageContainer -ContainerName $storageContainerName -AccessPolicy $AccessPolicy
+        }
+        else
+        {
+            # container already exists then update its accesspolicy
+            Log-Message "Updating Storage Container Permissions (Cli: $AzureCliVersion): $($ContainerName)" -Context "Update Storage Containers Permissions"
+            Set-AzureStorageContainerPermission -ContainerName $storageContainerName -AccessPolicy $AccessPolicy
+        }
+    }
+}
+
 <#
 .SYNOPSIS
 Executes a wrapped azure command.
