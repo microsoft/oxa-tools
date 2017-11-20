@@ -74,6 +74,7 @@ EDXAPP_SOCIAL_SHARING_SETTINGS:
   DASHBOARD_TWITTER: false
 
 
+
 # Order of the social media links we want learners to see in the footer
 # We can also add facebook, twitter, youtube, google_plus and reddit here later if we enable them in SOCIAL_SHARING_SETTINGS above
 EDXAPP_SOCIAL_MEDIA_FOOTER_NAMES: [ "linkedin" ]
@@ -119,17 +120,6 @@ EDXAPP_RETRY_ACTIVATION_EMAIL_TIMEOUT: 2
 EDXAPP_SESSION_INACTIVITY_TIMEOUT_IN_SECONDS: 1800
 EDXAPP_X_FRAME_OPTIONS: "SAMEORIGIN"
 EDXAPP_CSRF_COOKIE_SECURE: %%NGINX_ENABLE_SSL%%
-# Configure email addresses
-EDXAPP_BUGS_EMAIL: "microsoftlearning-bugs@microsoft.com"
-EDXAPP_BULK_EMAIL_DEFAULT_FROM_EMAIL: "microsoftlearning-noreply@microsoft.com"
-EDXAPP_CONTACT_EMAIL: "microsoftlearning-info@microsoft.com"
-EDXAPP_DEFAULT_FEEDBACK_EMAIL: "microsoftlearning-feedback@microsoft.com"
-EDXAPP_DEFAULT_FROM_EMAIL: "microsoftlearning-registration@microsoft.com"
-EDXAPP_PAYMENT_SUPPORT_EMAIL: "microsoftlearning-billing@microsoft.com"
-EDXAPP_PRESS_EMAIL: "microsoftlearning-press@microsoft.com"
-EDXAPP_DEFAULT_SERVER_EMAIL: "%%PLATFORM_EMAIL%%"
-EDXAPP_TECH_SUPPORT_EMAIL: "microsoftlearning-technical@microsoft.com"
-EDXAPP_UNIVERSITY_EMAIL: "microsoftlearning-university@microsoft.com"
 
 EDXAPP_LTI_USER_EMAIL_DOMAIN: "lti.openedx.microsoft.com"
 
@@ -138,3 +128,4 @@ EDXAPP_LTI_USER_EMAIL_DOMAIN: "lti.openedx.microsoft.com"
 
 #Cookies API url
 EDXAPP_API_COOKIE_URL: "%%EDXAPP_COOKIE_API_URL%%"
+

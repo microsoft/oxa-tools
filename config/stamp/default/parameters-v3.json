@@ -57,10 +57,10 @@
             "value": "{SERVICEACCOUNTPASSWORD}"
         },
         "deploymentSlot": {
-            "value": "slot1"
+            "value": "{DEPLOYMENTSLOT}"
         },
         "deploymentVersionId": {
-            "value": "201703141409"
+            "value": "{DEPLOYMENTVERSIONID}"
         },
         "autoScaleEnabled": {
             "value": true
@@ -81,7 +81,7 @@
             "value": "oxa-tools"
         },
         "oxaToolsGithubBranch": {
-            "value": "oxa/master.fic"
+            "value": "{GITHUBBRANCH}"
         },
         "edxConfigurationGithubAccountName": {
             "value": "Microsoft"
@@ -90,7 +90,7 @@
             "value": "edx-configuration"
         },
         "edxConfigurationGithubBranch": {
-            "value": "oxa/master.fic"
+            "value": "{GITHUBBRANCH}"
         },
         "edxPlatformGithubAccountName": {
             "value": "microsoft"
@@ -99,7 +99,7 @@
             "value": "edx-platform"
         },
         "edxPlatformGithubBranch": {
-            "value": "oxa/master.fic"
+            "value": "{GITHUBBRANCH}"
         },
         "edxThemeGithubAccountName": {
             "value": "microsoft"
@@ -108,7 +108,7 @@
             "value": "edx-theme"
         },
         "edxThemeGithubBranch": {
-            "value": "oxa/master.fic"
+            "value": "{GITHUBBRANCH}"
         },
         "ansibleGithubAccountName": {
             "value": "edx"
@@ -174,30 +174,6 @@
         },
         "keyVaultSku": {
             "value": "Standard"
-        },
-        "lmsTrafficManagerStateMetadata": {
-            "value": [
-                "Enabled",
-                "Disabled",
-                1,
-                2
-            ]
-        },
-        "cmsTrafficManagerStateMetadata": {
-            "value": [
-                "Enabled",
-                "Disabled",
-                1,
-                2
-            ]
-        },
-        "previewTrafficManagerStateMetadata": {
-            "value": [
-                "Enabled",
-                "Disabled",
-                1,
-                2
-            ]
         },
         "aadWebClientId": {
             "value": "{AADWEBCLIENTID}"
@@ -268,17 +244,17 @@
         "edxappSuperUserEmail": {
             "value": "{ADMINEMAILADDRESS}"
         },
-        "memcacheServer": {
-            "value": "{MEMCACHESERVER}"
-        },
         "azureCliVersion": {
             "value": "{AZURECLIVERSION}"
         },
         "enableMobileRestApi": {
             "value": {ENABLEMOBILERESTAPI}
         },
+        "deploymentType": {
+            "value": "{DEPLOYMENTTYPE}"
+        },
         "edxPlatformName": {
-            "value": "{EDXPLATFORMNAME}"            
+            "value": "{EDXPLATFORMNAME}"
         },
         "edxPlatformEmail": {
             "value": "{EDXPLATFORMEMAIL}"
