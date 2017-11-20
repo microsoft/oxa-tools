@@ -385,17 +385,19 @@ function Create-StorageContainer
     New-AzureStorageContainer -Name $StorageContainerName -Context $storageContext
 }
 
-## Function: Get-AzureStorageContainerStatus
-##
-## Purpose:
-##    Checks the status of the container (exits or doesn't)
-##
-## Input:
-##   ContainerName    name of the storage container
-##
-## Output:
-##   status
-##
+<#
+.SYNOPSIS
+Checks the status of the container (exits or doesn't).
+
+.DESCRIPTION
+Checks the status of the container (exits or doesn't).
+
+.PARAMETER ContainerName
+Name of the storage container.
+
+.OUTPUTS
+status.
+#>
 function Get-AzureStorageContainerStatus
 {
     param(
@@ -438,18 +440,22 @@ function Get-AzureStorageContainerStatus
     return $status
 }
 
-## Function: Set-AzureStorageContainerPermission
-##
-## Purpose:
-##    Sets the permission for the container
-##
-## Input:
-##   ContainerName       name of the storage container
-##   AccessPolicy        Access policy (off,blob,container)
-##
-## Output:
-##   nothing
-##
+<#
+.SYNOPSIS
+Sets the permission for the container.
+
+.DESCRIPTION
+Sets the permission for the container.
+
+.PARAMETER ContainerName
+Name of the storage container.
+
+.PARAMETER AccessPolicy
+Access policy (off,blob,container).
+
+.OUTPUTS
+Nothing.
+#>
 function Set-AzureStorageContainerPermission
 {
     param(
@@ -484,18 +490,22 @@ function Set-AzureStorageContainerPermission
     }
 }
 
-## Function: New-AzureStorageContainer
-##
-## Purpose:
-##    Creates new storage container
-##
-## Input:
-##   ContainerName       name of the storage container
-##   AccessPolicy        Access policy (off,blob,container)
-##
-## Output:
-##   nothing
-##
+<#
+.SYNOPSIS
+Creates new storage container.
+
+.DESCRIPTION
+Creates new storage container.
+
+.PARAMETER ContainerName
+Name of the storage container.
+
+.PARAMETER AccessPolicy
+Access policy (off,blob,container).
+
+.OUTPUTS
+Nothing.
+#>
 function New-AzureStorageContainer
 {
 
@@ -541,18 +551,22 @@ function New-AzureStorageContainer
     }
 }
 
-## Function: New-AzureStorageContainers
-##
-## Purpose:
-##    Create containers or modify existing container w.r.to existing permissions.
-##
-## Input:
-##   ContainerNames       name of the storage container
-##   AccessPolicy         Access policy (off,blob,container)
-##
-## Output:
-##   nothing
-##
+<#
+.SYNOPSIS
+Create containers or modify existing container w.r.to existing permissions.
+
+.DESCRIPTION
+Create containers or modify existing container w.r.to existing permissions.
+
+.PARAMETER ContainerNames
+Names of the storage containers.
+
+.PARAMETER AccessPolicy
+Access policy (off,blob,container).
+
+.OUTPUTS
+Nothing.
+#>
 function New-AzureStorageContainers
 {
     param(
@@ -569,7 +583,7 @@ function New-AzureStorageContainers
         if (!$status)
         {
             # Create the container if missing
-            Log-Message "'Creating Container' $storageContainerName"
+            Log-Message "Creating Container $storageContainerName"
             New-AzureStorageContainer -ContainerName $storageContainerName -AccessPolicy $AccessPolicy
         }
         else

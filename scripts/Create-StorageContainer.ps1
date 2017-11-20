@@ -41,7 +41,7 @@ None
 
 .EXAMPLE
 To create the 'uploads' storage container:
-.\Create-StorageContainer.ps1 -AadWebClientId 121 -AadWebClientAppKey key -AadTenantId 345 -AzureSubscriptionId 438484 -StorageAccountName djdjd -StorageContainerNames uploads
+.\Create-StorageContainer.ps1 -AadWebClientId 121 -AadWebClientAppKey key -AadTenantId 345 -AzureSubscriptionId 438484 -StorageAccountName djdjd -PublicStorageContainerNames uploads
 
 #>
 Param( 
