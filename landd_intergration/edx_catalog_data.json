@@ -1,0 +1,74 @@
+{
+    "pagination": {
+        "count": 14,
+        "previous": null,
+        "num_pages": 2,
+        "next": "https://lms-lexoxabvtc99-tm.trafficmanager.net/api/courses/v1/courses/?page=2"
+    },
+    "results": [
+        {
+            "blocks_url": "https://lms-lexoxabvtc99-tm.trafficmanager.net/api/courses/v1/blocks/?course_id=course-v1%3AedX%2BDemoX%2BCourse_Grades",
+            "effort": null,
+            "end": "2019-04-13T00:00:00Z",
+            "enrollment_start": "2017-03-17T00:00:00Z",
+            "enrollment_end": "2019-04-13T00:00:00Z",
+            "id": "course-v1:edX+DemoX+Course_Grades",
+            "media": {
+                "course_image": {
+                    "uri": "/asset-v1:edX+DemoX+Course_Grades+type@asset+block@Capture.JPG"
+                },
+                "course_video": {
+                    "uri": null
+                },
+                "image": {
+                    "raw": "https://lms-lexoxabvtc99-tm.trafficmanager.net/asset-v1:edX+DemoX+Course_Grades+type@asset+block@Capture.JPG",
+                    "small": "https://lms-lexoxabvtc99-tm.trafficmanager.net/asset-v1:edX+DemoX+Course_Grades+type@asset+block@Capture.JPG",
+                    "large": "https://lms-lexoxabvtc99-tm.trafficmanager.net/asset-v1:edX+DemoX+Course_Grades+type@asset+block@Capture.JPG"
+                }
+            },
+            "name": "JeffCert",
+            "number": "DemoX",
+            "org": "edX",
+            "short_description": "",
+            "start": "2017-03-17T00:00:00Z",
+            "start_display": "March 17, 2017",
+            "start_type": "timestamp",
+            "pacing": "self",
+            "mobile_available": false,
+            "hidden": false,
+            "course_id": "course-v1:edX+DemoX+Course_Grades"
+        },
+        {
+            "blocks_url": "https://lms-lexoxabvtc99-tm.trafficmanager.net/api/courses/v1/blocks/?course_id=course-v1%3AedX%2BDemoX%2BDemo_Course",
+            "effort": null,
+            "end": "2019-02-05T00:00:00Z",
+            "enrollment_start": "2017-02-05T00:00:00Z",
+            "enrollment_end": "2019-02-05T00:00:00Z",
+            "id": "course-v1:edX+DemoX+Demo_Course",
+            "media": {
+                "course_image": {
+                    "uri": "/asset-v1:edX+DemoX+Demo_Course+type@asset+block@images_course_image.jpg"
+                },
+                "course_video": {
+                    "uri": null
+                },
+                "image": {
+                    "raw": "https://lms-lexoxabvtc99-tm.trafficmanager.net/asset-v1:edX+DemoX+Demo_Course+type@asset+block@images_course_image.jpg",
+                    "small": "https://lms-lexoxabvtc99-tm.trafficmanager.net/asset-v1:edX+DemoX+Demo_Course+type@asset+block@images_course_image.jpg",
+                    "large": "https://lms-lexoxabvtc99-tm.trafficmanager.net/asset-v1:edX+DemoX+Demo_Course+type@asset+block@images_course_image.jpg"
+                }
+            },
+            "name": "edX Demonstration Course",
+            "number": "DemoX",
+            "org": "edX",
+            "short_description": "",
+            "start": "2017-02-05T05:00:00Z",
+            "start_display": "Feb. 5, 2017",
+            "start_type": "timestamp",
+            "pacing": "instructor",
+            "mobile_available": false,
+            "hidden": false,
+            "course_id": "course-v1:edX+DemoX+Demo_Course"
+        }
+	]
+}

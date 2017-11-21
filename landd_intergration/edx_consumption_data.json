@@ -1,0 +1,53 @@
+{
+    "pagination": {
+        "count": 944,
+        "previous": null,
+        "num_pages": 95,
+        "next": "https://lms-lexoxabvtc99-tm.trafficmanager.net/api/grades/v1/user_grades/?page=2&username=all"
+    },
+    "results": [
+        {
+            "username": "oxauser",
+            "letter_grade": "",
+            "percent": 0.13,
+            "course_key": "course-v1:edX+DemoX+Demo_Course",
+            "passed": false
+        },
+        {
+            "username": "oxauser",
+            "letter_grade": "Pass",
+            "percent": 1.0,
+            "course_key": "course-v1:edX+DemoX+Course_Grades",
+            "passed": true
+        },
+        {
+            "username": "user100",
+            "letter_grade": "",
+            "percent": 0.13,
+            "course_key": "course-v1:edX+DemoX+Demo_Course",
+            "passed": false
+        },
+        {
+            "username": "user17",
+            "letter_grade": "",
+            "percent": 0.13,
+            "course_key": "course-v1:edX+DemoX+Demo_Course10_GradesAPI",
+            "passed": false
+        },
+        {
+            "username": "user7",
+            "letter_grade": "",
+            "percent": 0.13,
+            "course_key": "course-v1:edX+DemoX+Demo_Course1_GradesAPI",
+            "passed": false
+        },
+        {
+            "username": "user7",
+            "letter_grade": "",
+            "percent": 0.13,
+            "course_key": "course-v1:edX+DemoX+Demo_Course2_GradesAPI",
+            "passed": false
+        }
+
+    ]
+}
