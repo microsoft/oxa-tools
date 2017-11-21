@@ -333,10 +333,10 @@ class EdxIntegration(object):
             start_time = start_date.read()
         except FileNotFoundError:
             start_date = open('api_call_time.txt', 'w')
+            start_time = ''
 
         start_date.close()
         end_date = (datetime.now()-timedelta(minutes=10)).replace(microsecond=0).isoformat()
-        self.log('api call end_time', "info")
         request_edx_url = request_edx_url + '&start_date=' + start_time + '&end_date=' + end_date
 
         user_consumption_data = self.get_api_data(request_edx_url, edx_headers)

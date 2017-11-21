@@ -9,20 +9,12 @@ from logging.handlers import TimedRotatingFileHandler
 import configparser
 import landd_integration
 
-
-
 CONFIG = configparser.ConfigParser()
 CONFIG.read('oxa_landd_config.cfg')
 
 #pylint: disable=line-too-long
-#TODO: seperate logs and rename variables 
-logging.basicConfig(filename='course_consumption.log', format='%(asctime)s' '%(message)s', level=logging.DEBUG)
-LOG = logging.getLogger(__name__)
-HANDLER = logging.handlers.TimedRotatingFileHandler('course_consumption.log', when="d", interval=1, backupCount=10)
-LOG.addHandler(HANDLER)
 
-
-def sync_edx_data():
+def sync_edx_data(integration_type):
     """
 
     1) GET access token from Azure tenant using MSI
@@ -32,10 +24,15 @@ def sync_edx_data():
     5) POST the mapped data to L&D Catalog Consumption API
 
     """
-    LOG.debug("Starting the Course consumption Interation process")
+
+    logging.basicConfig(filename=integration_type +'.log', format='%(asctime)s - %(name)s - %(levelname)s', level=logging.INFO)
+    log = logging.getLogger(__name__)
+    handler = logging.handlers.TimedRotatingFileHandler(integration_type +'.log', when="d", interval=1, backupCount=10)
+    log.addHandler(handler)
+    log.info("Starting the Course %s Interation process", integration_type)
 
     # initialize the key variables
-    catalog_service = landd_integration.EdxIntegration(logger=LOG)
+    catalog_service = landd_integration.EdxIntegration(logger=log)
 
     secret_keys_dict = {}
     attempts = 0
@@ -64,19 +61,25 @@ def sync_edx_data():
                     secret_keys_dict['landd_clientsecret']
                     )
                 }
-            if sys.argv[1] == "course_consumption":
+            if integration_type == "course_consumption":
                 catalog_service.get_and_post_consumption_data(CONFIG.get('edx', 'edx_course_consumption_url'), edx_headers, headers, CONFIG.get('landd', 'landd_consumption_url'), CONFIG.get('landd', 'source_system_id'))
-                LOG.debug("End of the Catalog Integration process")
-            elif sys.argv[1] == "course_catalog":
+                log.info("End of the Catalog Integration process")
+            elif integration_type == "course_catalog":
                 catalog_data = catalog_service.get_course_catalog_data(CONFIG.get('edx', 'edx_course_catalog_url'), edx_headers)
                 catalog_service.post_data_ld(CONFIG.get('landd', 'landd_catalog_url'), headers, catalog_service.catalog_data_mapping(CONFIG.get('landd', 'source_system_id'), catalog_data))
-                LOG.debug("End of the Course Catalog Integration process")
+                log.info("End of the Course Catalog Integration process")
             break
 
         except Exception: # pylint: disable=W0703
 
             attempts += 1
-            LOG.error("Exception occured while running the script", exc_info=True)
+            log.error("Exception occured while running the script", exc_info=True)
 
 if __name__ == "__main__":
-    sync_edx_data()  # pylint: disable=no-value-for-parameter
+    VALID_ARGS = ['course_catalog', 'course_consumption']
+    INPUT_ARGS = sys.argv[1]
+    if INPUT_ARGS in VALID_ARGS:
+
+        sync_edx_data(INPUT_ARGS)  # pylint: disable=no-value-for-parameter
+    else:
+        print('Invalid arguments passed. Choose from the following arguments.\n 1.course_catalog \n 2.course_consumption')
