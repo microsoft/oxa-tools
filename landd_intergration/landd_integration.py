@@ -108,12 +108,12 @@ class EdxIntegration(object):
             ldresource,
             ldclientid,
             ldclientsecret)
-        
+
         if token['accessToken']:
             self.log("Got Oauth2 access token for L&D REST API")
-        
+
             return token['accessToken']
-        
+
         else:
             raise Exception("Un-handled exception occured while accessing the token for L&D")
 
@@ -264,7 +264,7 @@ class EdxIntegration(object):
         except Exception as exception:
             self.log(exception, "debug")
 
-    def mapping_api_data(self, data, source_system_id):
+    def mapping_consumption_data(self, data, source_system_id, submitted_by):
         """
 
         Map edX course consumption data to L&D data
@@ -275,7 +275,7 @@ class EdxIntegration(object):
         """
         all_user_grades = []
         each_user = {}
-        
+
         for user in data:
             # check if user email contains '@microsoft.com'
             if not bool(re.search('(?i)^(?:(?!(@microsoft.com)).)+$', user['username'])):
@@ -291,7 +291,7 @@ class EdxIntegration(object):
                 each_user["ActionValue"] = 0
                 # each_user["CreatedDate"] = user[4]
                 each_user["CreatedDate"] = datetime.now().replace(microsecond=0).isoformat()
-                each_user["SubmittedBy"] = "landd_user@oxa.com" #TODO: yet to decide as team
+                each_user["SubmittedBy"] = submitted_by
                 each_user["ActionFlag"] = "null"
                 if each_user['letter_grade'] == 'Pass':
                     each_user["ConsumptionStatus"] = 'Passed'
@@ -311,7 +311,8 @@ class EdxIntegration(object):
             edx_headers,
             ld_headers,
             consumption_url_ld,
-            source_system_id
+            source_system_id,
+            submitted_by
     ):
 
         """
@@ -340,11 +341,11 @@ class EdxIntegration(object):
         request_edx_url = request_edx_url + '&start_date=' + start_time + '&end_date=' + end_date
 
         user_consumption_data = self.get_api_data(request_edx_url, edx_headers)
-        self.post_data_ld(consumption_url_ld, ld_headers, self.mapping_api_data(user_consumption_data['results'], source_system_id))
+        self.post_data_ld(consumption_url_ld, ld_headers, self.mapping_consumption_data(user_consumption_data['results'], source_system_id, submitted_by))
 
         while user_consumption_data['pagination']['next']:
             user_consumption_data = self.get_api_data(user_consumption_data['pagination']['next'], edx_headers)
-            self.post_data_ld(consumption_url_ld, ld_headers, self.mapping_api_data(user_consumption_data['results'], source_system_id))
+            self.post_data_ld(consumption_url_ld, ld_headers, self.mapping_consumption_data(user_consumption_data['results'], source_system_id, submitted_by))
         write_time = open('api_call_time.txt', 'w')
         write_time.write(end_date)
         write_time.close()

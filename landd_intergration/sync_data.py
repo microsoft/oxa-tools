@@ -7,6 +7,7 @@ import sys
 import logging
 from logging.handlers import TimedRotatingFileHandler
 import configparser
+
 import landd_integration
 
 CONFIG = configparser.ConfigParser()
@@ -62,11 +63,24 @@ def sync_edx_data(integration_type):
                     )
                 }
             if integration_type == "course_consumption":
-                catalog_service.get_and_post_consumption_data(CONFIG.get('edx', 'edx_course_consumption_url'), edx_headers, headers, CONFIG.get('landd', 'landd_consumption_url'), CONFIG.get('landd', 'source_system_id'))
+                catalog_service.get_and_post_consumption_data(
+                    CONFIG.get('edx', 'edx_course_consumption_url'),
+                    edx_headers, headers, CONFIG.get('landd', 'landd_consumption_url'),
+                    CONFIG.get('landd', 'source_system_id'),
+                    CONFIG.get('general', 'submitted_by')
+                    )
                 log.info("End of the Catalog Integration process")
+
             elif integration_type == "course_catalog":
-                catalog_data = catalog_service.get_course_catalog_data(CONFIG.get('edx', 'edx_course_catalog_url'), edx_headers)
-                catalog_service.post_data_ld(CONFIG.get('landd', 'landd_catalog_url'), headers, catalog_service.catalog_data_mapping(CONFIG.get('landd', 'source_system_id'), catalog_data))
+                catalog_data = catalog_service.get_course_catalog_data(
+                    CONFIG.get('edx', 'edx_course_catalog_url'),
+                    edx_headers
+                    )
+                catalog_service.post_data_ld(
+                    CONFIG.get('landd', 'landd_catalog_url'),
+                    headers,
+                    catalog_service.catalog_data_mapping(CONFIG.get('landd', 'source_system_id'), catalog_data)
+                    )
                 log.info("End of the Course Catalog Integration process")
             break
 
