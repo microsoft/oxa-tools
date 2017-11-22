@@ -99,7 +99,7 @@ class EdxIntegration(object):
         :return: access token
 
         """
-        authority_url = (ldauthorityhosturl + '/' + ldtenant)
+        authority_url = "{0}/{1}".format(ldauthorityhosturl, ldtenant)
         context = adal.AuthenticationContext(
             authority_url, validate_authority=ldtenant != 'adfs',
             api_version=None)
@@ -289,7 +289,7 @@ class EdxIntegration(object):
                 ld_user["UUID"] = "null"
                 ld_user["ActionVerb"] = "null"
                 ld_user["ActionValue"] = 0
-                # ld_user["CreatedDate"] = user[4]
+                # ld_user["CreatedDate"]
                 ld_user["CreatedDate"] = datetime.now().replace(microsecond=0).isoformat()
                 ld_user["SubmittedBy"] = submitted_by
                 ld_user["ActionFlag"] = "null"
@@ -348,6 +348,6 @@ class EdxIntegration(object):
         while user_consumption_data['pagination']['next']:
             user_consumption_data = self.get_api_data(user_consumption_data['pagination']['next'], edx_headers)
             self.post_data_ld(consumption_url_ld, ld_headers, self.mapping_consumption_data(user_consumption_data['results'], source_system_id, submitted_by))
-        write_time = open('api_call_time.txt', 'w')
+        write_time = open('api_time_log_file', 'w')
         write_time.write(end_date)
         write_time.close()

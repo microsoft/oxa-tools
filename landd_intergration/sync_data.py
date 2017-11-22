@@ -5,6 +5,7 @@ Course consumption syncronization between OXA and  L&D
 """
 import sys
 import logging
+from logging.handlers import TimedRotatingFileHandler
 import configparser
 
 import ld_integration
