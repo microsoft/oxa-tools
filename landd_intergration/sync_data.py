@@ -72,7 +72,7 @@ def sync_edx_data(integration_type):
                     CONFIG.get('ld', 'source_system_id'),
                     CONFIG.get('general', 'submitted_by'),
                     CONFIG.get('general', 'api_time_log_file'),
-                    CONFIG.get('general', 'time_delta_retention')
+                    int(CONFIG.get('general', 'time_delta_retention'))
                     )
                 log.info("End of the Catalog Integration process")
 

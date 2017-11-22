@@ -348,6 +348,6 @@ class EdxIntegration(object):
         while user_consumption_data['pagination']['next']:
             user_consumption_data = self.get_api_data(user_consumption_data['pagination']['next'], edx_headers)
             self.post_data_ld(consumption_url_ld, ld_headers, self.mapping_consumption_data(user_consumption_data['results'], source_system_id, submitted_by))
-        write_time = open('api_time_log_file', 'w')
+        write_time = open(api_time_log_file, 'w')
         write_time.write(end_date)
         write_time.close()
