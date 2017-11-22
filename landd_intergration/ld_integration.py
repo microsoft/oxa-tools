@@ -155,7 +155,7 @@ class EdxIntegration(object):
 
         return response.json()['value']
 
-    def get_api_data(self, request_url, headers=None):
+    def get_api_data(self, request_url, headers):
 
         """
         Get the data from the provided api url with optional headers using requests python library
@@ -274,34 +274,34 @@ class EdxIntegration(object):
 
         """
         all_user_grades = []
-        each_user = {}
+        ld_user = {}
 
         for user in data:
             # check if user email contains '@microsoft.com'
             if not bool(re.search('(?i)^(?:(?!(@microsoft.com)).)+$', user['username'])):
-                each_user["UserAlias"] = user['email']
-                each_user["ExternalId"] = user['course_key']
-                # each_user["ConsumptionStatus"] = user['letter_grade']
-                # each_user["grade"] = user[3]
-                each_user["SourceSystemId"] = source_system_id
-                each_user["PersonnelNumber"] = 0
-                each_user["SFSync"] = 0
-                each_user["UUID"] = "null"
-                each_user["ActionVerb"] = "null"
-                each_user["ActionValue"] = 0
-                # each_user["CreatedDate"] = user[4]
-                each_user["CreatedDate"] = datetime.now().replace(microsecond=0).isoformat()
-                each_user["SubmittedBy"] = submitted_by
-                each_user["ActionFlag"] = "null"
-                if each_user['letter_grade'] == 'Pass':
-                    each_user["ConsumptionStatus"] = 'Passed'
-                elif each_user['letter_grade'] == 'Fail':
-                    each_user["ConsumptionStatus"] = "Failed"
+                ld_user["UserAlias"] = user['email']
+                ld_user["ExternalId"] = user['course_key']
+                # ld_user["ConsumptionStatus"] = user['letter_grade']
+                # ld_user["grade"] = user[3]
+                ld_user["SourceSystemId"] = source_system_id
+                ld_user["PersonnelNumber"] = 0
+                ld_user["SFSync"] = 0
+                ld_user["UUID"] = "null"
+                ld_user["ActionVerb"] = "null"
+                ld_user["ActionValue"] = 0
+                # ld_user["CreatedDate"] = user[4]
+                ld_user["CreatedDate"] = datetime.now().replace(microsecond=0).isoformat()
+                ld_user["SubmittedBy"] = submitted_by
+                ld_user["ActionFlag"] = "null"
+                if ld_user['letter_grade'] == 'Pass':
+                    ld_user["ConsumptionStatus"] = 'Passed'
+                elif ld_user['letter_grade'] == 'Fail':
+                    ld_user["ConsumptionStatus"] = "Failed"
                 else:
-                    each_user["ConsumptionStatus"] = "InProgress"
+                    ld_user["ConsumptionStatus"] = "InProgress"
 
-            all_user_grades.append(each_user)
-            each_user = {}
+            all_user_grades.append(ld_user)
+            ld_user = {}
 
         return json.dumps(all_user_grades)
 
@@ -312,7 +312,9 @@ class EdxIntegration(object):
             ld_headers,
             consumption_url_ld,
             source_system_id,
-            submitted_by
+            submitted_by,
+            api_time_log_file,
+            time_delta_retention
     ):
 
         """
@@ -330,14 +332,14 @@ class EdxIntegration(object):
         """
 
         try:
-            start_date = open('api_call_time.txt', 'r')
+            start_date = open(api_time_log_file, 'r')
             start_time = start_date.read()
         except FileNotFoundError:
-            start_date = open('api_call_time.txt', 'w')
+            start_date = open(api_time_log_file, 'w')
             start_time = ''
 
         start_date.close()
-        end_date = (datetime.now()-timedelta(minutes=10)).replace(microsecond=0).isoformat()
+        end_date = (datetime.now()-timedelta(minutes=time_delta_retention)).replace(microsecond=0).isoformat()
         request_edx_url = request_edx_url + '&start_date=' + start_time + '&end_date=' + end_date
 
         user_consumption_data = self.get_api_data(request_edx_url, edx_headers)

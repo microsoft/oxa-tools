@@ -5,13 +5,13 @@ Course consumption syncronization between OXA and  L&D
 """
 import sys
 import logging
-from logging.handlers import TimedRotatingFileHandler
 import configparser
 
-import landd_integration
+import ld_integration
 
 CONFIG = configparser.ConfigParser()
-CONFIG.read('oxa_landd_config.cfg')
+CONFIG.read('oxa_ld_config.cfg')
+#TODO: read file from the known path
 
 #pylint: disable=line-too-long
 
@@ -22,18 +22,18 @@ def sync_edx_data(integration_type):
     2) GET secrets from Azure keyvault using the access token
     3) GET the Course catalog data from OpenEdx using the secrets obtined from Azure key vault
     4) Map and process the OpenEdx course catalog data with L&D Catalog Consumption API request body
-    5) POST the mapped data to L&D Catalog Consumption API
+    5) POST the mapped data to L&D based on the parameter.
 
     """
-
-    logging.basicConfig(filename=integration_type +'.log', format='%(asctime)s - %(name)s - %(levelname)s', level=logging.INFO)
+    log_file_name = '{0}.log'.format(integration_type)
+    logging.basicConfig(filename=log_file_name, format='%(asctime)s - %(name)s - %(levelname)s', level=logging.INFO)
     log = logging.getLogger(__name__)
-    handler = logging.handlers.TimedRotatingFileHandler(integration_type +'.log', when="d", interval=1, backupCount=10)
+    handler = logging.handlers.TimedRotatingFileHandler(log_file_name, when="d", interval=1, backupCount=10)
     log.addHandler(handler)
     log.info("Starting the Course %s Interation process", integration_type)
 
     # initialize the key variables
-    catalog_service = landd_integration.EdxIntegration(logger=log)
+    catalog_service = ld_integration.EdxIntegration(logger=log)
 
     secret_keys_dict = {}
     attempts = 0
@@ -53,21 +53,25 @@ def sync_edx_data(integration_type):
 
             headers = {
                 'Content-Type': 'application/json',
-                'Ocp-Apim-Subscription-Key': secret_keys_dict['landd_subscription_key'],
+                'Ocp-Apim-Subscription-Key': secret_keys_dict['ld_subscription_key'],
                 'Authorization': catalog_service.get_access_token_ld(
-                    CONFIG.get('landd', 'landd_authorityhosturl'),
-                    CONFIG.get('landd', 'landd_tenant'),
-                    CONFIG.get('landd', 'landd_resource'),
-                    secret_keys_dict['landd_clientid'],
-                    secret_keys_dict['landd_clientsecret']
+                    CONFIG.get('ld', 'ld_authorityhosturl'),
+                    CONFIG.get('ld', 'ld_tenant'),
+                    CONFIG.get('ld', 'ld_resource'),
+                    secret_keys_dict['ld_clientid'],
+                    secret_keys_dict['ld_clientsecret']
                     )
                 }
             if integration_type == "course_consumption":
                 catalog_service.get_and_post_consumption_data(
                     CONFIG.get('edx', 'edx_course_consumption_url'),
-                    edx_headers, headers, CONFIG.get('landd', 'landd_consumption_url'),
-                    CONFIG.get('landd', 'source_system_id'),
-                    CONFIG.get('general', 'submitted_by')
+                    edx_headers,
+                    headers,
+                    CONFIG.get('ld', 'ld_consumption_url'),
+                    CONFIG.get('ld', 'source_system_id'),
+                    CONFIG.get('general', 'submitted_by'),
+                    CONFIG.get('general', 'api_time_log_file'),
+                    CONFIG.get('general', 'time_delta_retention')
                     )
                 log.info("End of the Catalog Integration process")
 
@@ -77,9 +81,9 @@ def sync_edx_data(integration_type):
                     edx_headers
                     )
                 catalog_service.post_data_ld(
-                    CONFIG.get('landd', 'landd_catalog_url'),
+                    CONFIG.get('ld', 'ld_catalog_url'),
                     headers,
-                    catalog_service.catalog_data_mapping(CONFIG.get('landd', 'source_system_id'), catalog_data)
+                    catalog_service.catalog_data_mapping(CONFIG.get('ld', 'source_system_id'), catalog_data)
                     )
                 log.info("End of the Course Catalog Integration process")
             break
@@ -94,6 +98,6 @@ if __name__ == "__main__":
     INPUT_ARGS = sys.argv[1]
     if INPUT_ARGS in VALID_ARGS:
 
-        sync_edx_data(INPUT_ARGS)  # pylint: disable=no-value-for-parameter
+        sync_edx_data(INPUT_ARGS)
     else:
         print('Invalid arguments passed. Choose from the following arguments.\n 1.course_catalog \n 2.course_consumption')
