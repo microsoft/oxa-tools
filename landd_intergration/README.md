@@ -11,7 +11,7 @@ Here are the API's used:
 
     **OpenEdx:**
 
-        - Course catalog API         -- GET /api/courses/v1/courses/
+        - Course catalog API        -- GET /api/courses/v1/courses/
         - Bulk Grades API           -- GET /api/grades/v1/user_grades/?username=all
 
 
@@ -27,7 +27,8 @@ Here are the API's used:
 **Logging**
 
 
-  All the logs related to course catalog are logged  in `course_catalog.log`
+    Log files are created based on the parameter name
+	All the logs related to course catalog are logged  in `course_catalog.log`
 	All the logs related to course consumption are logged in `course_consumption.log`
 	By default the LOG files will be stored in separate files for every 24 hours
 	By default logs for the past 10 days are stored and older logs are removed
@@ -43,7 +44,7 @@ Here are the API's used:
 
     Bulk Grades API acccepts start_date and end_date as parameters:
 
-	start_date:For each Execution of script, time of the API call for Bulk Grades API is logged in `api_call_time.txt` which will be used as start time for the subsequent run
+	start_date:For each Execution of script, time of the API call for Bulk Grades API is logged in a file  which will be used as start time for the subsequent run
     end_date:By default end_date will be taken as current date and time
 
 
