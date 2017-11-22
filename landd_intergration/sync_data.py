@@ -42,25 +42,25 @@ def sync_edx_data(integration_type):
     while attempts < int(CONFIG.get('general', 'retry_count')):
         try:
 
-            for azure_key_vault_key, api_key in zip(CONFIG.get('azure_key_vault', 'azure_key_vault_keys').split('\n'), CONFIG.get('api_secret_keys', 'api_keys').split('\n')):
+            for azure_key_vault_key in CONFIG.get('azure_key_vault', 'azure_key_vault_keys').split('\n'):
                 # get secrets from Azure Key Vault
-                secret_keys_dict[api_key] = catalog_service.get_key_vault_secret(catalog_service.get_access_token(), CONFIG.get('azure_key_vault', 'key_vault_url'), azure_key_vault_key)
+                secret_keys_dict[azure_key_vault_key] = catalog_service.get_key_vault_secret(catalog_service.get_access_token(), CONFIG.get('azure_key_vault', 'key_vault_url'), azure_key_vault_key)
 
 
             # construct headers using key vault secrets
-            authorization = '{0} {1}'.format('Bearer', secret_keys_dict['edx_access_token'])
-            edx_headers = dict(Authorization=authorization, X_API_KEY=secret_keys_dict['edx_api_key'])
+            authorization = '{0} {1}'.format('Bearer', secret_keys_dict['edxaccesstoken'])
+            edx_headers = dict(Authorization=authorization, X_API_KEY=secret_keys_dict['edxapikey'])
 
 
             headers = {
                 'Content-Type': 'application/json',
-                'Ocp-Apim-Subscription-Key': secret_keys_dict['ld_subscription_key'],
+                'Ocp-Apim-Subscription-Key': secret_keys_dict['ldsubscriptionkey'],
                 'Authorization': catalog_service.get_access_token_ld(
                     CONFIG.get('ld', 'ld_authorityhosturl'),
                     CONFIG.get('ld', 'ld_tenant'),
                     CONFIG.get('ld', 'ld_resource'),
-                    secret_keys_dict['ld_clientid'],
-                    secret_keys_dict['ld_clientsecret']
+                    secret_keys_dict['ldclientid'],
+                    secret_keys_dict['ldclientsecret']
                     )
                 }
             if integration_type == "course_consumption":
