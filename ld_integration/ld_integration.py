@@ -230,10 +230,12 @@ class EdxIntegration(object):
             ld_catalog["MediaType"] = "Course"
             ld_catalog["Status"] = "Active"
             ld_catalog["DescriptionLong"] = "null"
-            ld_catalog["SunsetDate"] = each['end'].split('T')[0]
+            if each['end']:
+                ld_catalog["SunsetDate"] = each['end'].split('T')[0]
             ld_catalog["Keywords"] = each['name']
             ld_catalog["ThumbnailLargeUri"] = each['media']['image']['large']
-            ld_catalog["AvailabilityDate"] = each['enrollment_start'].split('T')[0]
+            if each['enrollment_start']:
+                ld_catalog["AvailabilityDate"] = each['enrollment_start'].split('T')[0]
             #ld_catalog["CreatedDateAtSource"] = datetime.now().replace(microsecond=0).isoformat()
             ld_catalog["Name"] = each['name']
             ld_catalog["Url"] = each['blocks_url'].split('/')[0] + '//' + each['blocks_url'].split('/')[2] + "/courses/" + each['course_id'] + "/about"
@@ -245,7 +247,7 @@ class EdxIntegration(object):
             ld_catalog = {}
         return json.dumps(all_course_catalog)
 
-    def post_data_ld(self, url, headers, data):
+    def post_data_ld(self, url, ld_headers, data):
         """
 
         POST data to L&D services
@@ -258,7 +260,7 @@ class EdxIntegration(object):
         """
         self.log("Preparing to post the data to L&D Course catalog API")
         try:
-            response = requests.post(url, data=data, headers=headers, timeout=2)
+            response = requests.post(url, data=data, headers=ld_headers)
             message = "Data posted successfully with %s" % response
             self.log(message, "info")
         except Exception as exception:
