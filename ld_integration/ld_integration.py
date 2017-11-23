@@ -259,12 +259,18 @@ class EdxIntegration(object):
 
         """
         self.log("Preparing to post the data to L&D Course catalog API")
-        try:
-            response = requests.post(url, data=data, headers=ld_headers)
+        response = requests.post(url, data=data, headers=ld_headers)
+        if response.ok:
             message = "Data posted successfully with %s" % response
             self.log(message, "info")
-        except Exception as exception:
-            self.log(exception, "debug")
+
+        else:
+            self.log("Un-handled exception occurred while posting the data")
+            sys.exit(1)
+
+        return response.json()
+
+
 
     def mapping_consumption_data(self, data, source_system_id, submitted_by):
         """
