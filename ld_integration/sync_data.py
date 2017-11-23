@@ -50,8 +50,8 @@ def sync_edx_data(integration_type):
             # construct headers using key vault secrets
             edx_authorization = '{0} {1}'.format('Bearer', secret_keys_dict['edxaccesstoken'])
             edx_headers = dict(Authorization=edx_authorization, X_API_KEY=secret_keys_dict['edxapikey'])
-            
-            ld_token =  catalog_service.get_access_token_ld(
+
+            ld_token = catalog_service.get_access_token_ld(
                 CONFIG.get('ld', 'ld_authorityhosturl'),
                 CONFIG.get('ld', 'ld_tenant'),
                 CONFIG.get('ld', 'ld_resource'),
