@@ -48,26 +48,28 @@ def sync_edx_data(integration_type):
 
 
             # construct headers using key vault secrets
-            authorization = '{0} {1}'.format('Bearer', secret_keys_dict['edxaccesstoken'])
-            edx_headers = dict(Authorization=authorization, X_API_KEY=secret_keys_dict['edxapikey'])
+            edx_authorization = '{0} {1}'.format('Bearer', secret_keys_dict['edxaccesstoken'])
+            edx_headers = dict(Authorization=edx_authorization, X_API_KEY=secret_keys_dict['edxapikey'])
 
+            ld_token = catalog_service.get_access_token_ld(
+                CONFIG.get('ld', 'ld_authorityhosturl'),
+                CONFIG.get('ld', 'ld_tenant'),
+                CONFIG.get('ld', 'ld_resource'),
+                secret_keys_dict['ldclientid'],
+                secret_keys_dict['ldclientsecret']
+                )
 
-            headers = {
+            ld_authorization = '{0} {1}'.format('Bearer', ld_token)
+            ld_headers = {
                 'Content-Type': 'application/json',
                 'Ocp-Apim-Subscription-Key': secret_keys_dict['ldsubscriptionkey'],
-                'Authorization': catalog_service.get_access_token_ld(
-                    CONFIG.get('ld', 'ld_authorityhosturl'),
-                    CONFIG.get('ld', 'ld_tenant'),
-                    CONFIG.get('ld', 'ld_resource'),
-                    secret_keys_dict['ldclientid'],
-                    secret_keys_dict['ldclientsecret']
-                    )
+                'Authorization': ld_authorization
                 }
             if integration_type == "course_consumption":
                 catalog_service.get_and_post_consumption_data(
                     CONFIG.get('edx', 'edx_course_consumption_url'),
                     edx_headers,
-                    headers,
+                    ld_headers,
                     CONFIG.get('ld', 'ld_consumption_url'),
                     CONFIG.get('ld', 'source_system_id'),
                     CONFIG.get('general', 'submitted_by'),
@@ -83,7 +85,7 @@ def sync_edx_data(integration_type):
                     )
                 catalog_service.post_data_ld(
                     CONFIG.get('ld', 'ld_catalog_url'),
-                    headers,
+                    ld_headers,
                     catalog_service.catalog_data_mapping(CONFIG.get('ld', 'source_system_id'), catalog_data)
                     )
                 log.info("End of the Course Catalog Integration process")
