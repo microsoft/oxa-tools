@@ -242,19 +242,13 @@ test_args()
 get_branch()
 {
     override=$1
-    useOldDevStyle=$2
 
     if [[ $BRANCH_VERSIONS == stable ]] ; then
         echo "oxa/master.fic"
     elif [[ $BRANCH_VERSIONS == release ]] ; then
         echo "oxa/release.fic"
     elif [[ $BRANCH_VERSIONS == edge ]] || [[ $override == $USE_MSFT ]] ; then
-        if [[ -n $useOldDevStyle ]] ; then
-            # Legacy switch
-            echo "oxa/devfic"
-        else
-            echo "oxa/dev.fic"
-        fi
+        echo "oxa/dev.fic"
     elif [[ $BRANCH_VERSIONS == edx_g ]] && [[ $override == $USE_FICUS ]] ; then
         # GINKGO1 edx-configuration doesn't work. Use ficus4 instead.
         # Devstack fails w/ GINKGO1 because elastic search fails to initialize.
@@ -273,7 +267,7 @@ get_current_branch()
 
     # Ensure branch information is useful.
     if [[ -z "$branchInfo" ]] || [[ $branchInfo == *"no branch"* ]] || [[ $branchInfo == *"detached"* ]] ; then
-        branchInfo=`get_branch $USE_MSFT oldDevStyle`
+        branchInfo=`get_branch $USE_MSFT`
     fi
 
     echo "$branchInfo"

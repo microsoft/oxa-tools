@@ -19,24 +19,24 @@ CRONTAB_INTERVAL_MINUTES=5
 # Oxa Tools Github configs
 OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME="oxa-tools"
 OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
-OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH="master"
+OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master.fic"
 
 # Edx Configuration Github configs
 EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME="edx-configuration"
 EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
-EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master"
+EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master.fic"
 
 # EdX Platform
 # There are cases where we want to override the edx-platform repository itself
 EDX_PLATFORM_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
 EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME="edx-platform"
-EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master"
+EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master.fic"
 
 # EdX Theme
 # There are cases where we want to override the edx-platform repository itself
 EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
 EDX_THEME_PUBLIC_GITHUB_PROJECTNAME="edx-theme"
-EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="pilot"
+EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master.fic"
 
 # EdX Ansible
 # There are cases where we want to override the edx\ansible repository itself
@@ -45,8 +45,8 @@ ANSIBLE_PUBLIC_GITHUB_PROJECTNAME="ansible"
 ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH="master"
 
 # MISC
-EDX_VERSION="named-release/dogwood.rc"
-FORUM_VERSION="mongoid5-release"
+EDX_VERSION="open-release/ficus.master"
+FORUM_VERSION="open-release/ficus.master"
 
 # operational mode
 CRON_MODE=0

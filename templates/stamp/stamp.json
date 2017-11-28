@@ -163,7 +163,7 @@
         },
         "customInstallerGithubBranch": {
             "type": "string",
-            "defaultValue": "master",
+            "defaultValue": "oxa/master.fic",
             "metadata": {
                 "description": "The branch of the GitHub project from which custom installer scripts and other files will be downloaded"
             }
@@ -190,7 +190,7 @@
         },
         "githubBranch": {
             "type": "string",
-            "defaultValue": "master",
+            "defaultValue": "oxa/master.fic",
             "metadata": {
                 "description": "The branch of the GitHub project from which scripts and other files will be downloaded"
             }

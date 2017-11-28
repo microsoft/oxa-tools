@@ -108,7 +108,7 @@
         },
         "oxaToolsGithubBranch": {
             "type": "string",
-            "defaultValue": "master",
+            "defaultValue": "oxa/master.fic",
             "metadata": {
                 "description": "Branch of the oxa-tools GitHub repository"
             }
@@ -129,7 +129,7 @@
         },
         "edxConfigurationGithubBranch": {
             "type": "string",
-            "defaultValue": "oxa/master",
+            "defaultValue": "oxa/master.fic",
             "metadata": {
                 "description": "Branch of edx configuration GitHub repository"
             }
@@ -150,7 +150,7 @@
         },
         "edxPlatformGithubBranch": {
             "type": "string",
-            "defaultValue": "oxa/master",
+            "defaultValue": "oxa/master.fic",
             "metadata": {
                 "description": "Branch of edx platform GitHub repository"
             }
@@ -171,7 +171,7 @@
         },
         "edxThemeGithubBranch": {
             "type": "string",
-            "defaultValue": "pilot",
+            "defaultValue": "oxa/master.fic",
             "metadata": {
                 "description": "Branch of edx theme GitHub repository"
             }
@@ -199,7 +199,7 @@
         },
         "edxVersion": {
             "type": "string",
-            "defaultValue": "named-release/dogwood.rc",
+            "defaultValue": "open-release/ficus.master",
             "metadata": {
                 "description": "EdX named release (Git Tag) to deploy. See https://openedx.atlassian.net/wiki/display/DOC/Open+edX+Releases for the full list"
             }
