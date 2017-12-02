@@ -272,7 +272,7 @@ verify_state()
       display_usage
     fi
 
-    if ! is_valid_arg "dev bvt prod" $DEPLOYMENT_ENV ; then
+    if ! is_valid_arg "dev bvt int prod" $DEPLOYMENT_ENV ; then
       echo "Invalid environment specified\n"
       display_usage
     fi
