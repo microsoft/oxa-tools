@@ -2789,7 +2789,7 @@ function New-OxaCertificateBasedServicePrincipal
             # operation succeeded
             $awaitingServicePrincipalRoleAssignment = $false
         }
-        catch [Hyak.Common.CloudException]
+        catch
         {
             $expectedException = "The role assignment already exists."
 
@@ -2800,7 +2800,7 @@ function New-OxaCertificateBasedServicePrincipal
                 $awaitingServicePrincipalRoleAssignment = $false
             }
         }
-        catch
+        else
         {
             # display the error information
             Capture-ErrorStack
