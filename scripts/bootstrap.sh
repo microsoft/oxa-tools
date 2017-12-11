@@ -9,6 +9,7 @@ EDX_ROLE=""
 DEPLOYMENT_ENV="dev"
 CRON_MODE=0
 RETRY_COUNT=5
+MSFT_AUTH=
 TARGET_FILE=""
 
 # Oxa Tools
@@ -98,6 +99,10 @@ parse_args()
             ;;
           -e|--environment)
             DEPLOYMENT_ENV="${arg_value,,}" # convert to lowercase
+            ;;
+          --msft-oauth)
+            # convert to lowercase
+            MSFT_AUTH="${arg_value,,}"
             ;;
           --cron)
             CRON_MODE=1
@@ -648,7 +653,7 @@ setup
 PATH=$PATH:/edx/bin
 ANSIBLE_PLAYBOOK=ansible-playbook
 OXA_PLAYBOOK=$OXA_TOOLS_PATH/playbooks/oxa_configuration.yml
-OXA_PLAYBOOK_ARGS="-e oxa_tools_path=$OXA_TOOLS_PATH -e template_type=$TEMPLATE_TYPE"
+OXA_PLAYBOOK_ARGS="-e oxa_tools_path=$OXA_TOOLS_PATH -e template_type=$TEMPLATE_TYPE -e msft_auth=$MSFT_AUTH"
 THEME_ARGS="-e theme_branch=$EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH -e theme_repo=$EDX_THEME_REPO"
 OXA_SSH_ARGS="-u $ADMIN_USER --private-key=/home/$ADMIN_USER/.ssh/id_rsa"
 
