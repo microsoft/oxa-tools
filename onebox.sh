@@ -3,9 +3,8 @@
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
 # Export all bash variable assignments (for use by sub-processes)
-# Write all commands to the console
 # Immmediately exit on error
-set -axe
+set -ae
 
 # static strings
 readonly MSFT="microsoft"
@@ -26,6 +25,7 @@ readonly GINKGO1="${TAGS}open-release/ginkgo.1"
 TEMPLATE_TYPE=fullstack # fullstack or devstack
 BRANCH_VERSIONS=edge    # edge or release or stable or edx
 DEFAULT_PASSWORD=
+MSFT_AUTH=
 
 ##########################
 # Settings
@@ -46,7 +46,6 @@ readonly CMS_URL=$BASE_URL
 readonly PREVIEW_URL=$BASE_URL
 readonly PLATFORM_NAME="$MSFT Learning on $HOSTNAME"
 readonly EDXAPP_IMPORT_KITCHENSINK_COURSE=true
-readonly EDXAPP_ENABLE_THIRD_PARTY_AUTH=false
 readonly NGINX_ENABLE_SSL=false
 readonly EDXAPP_SU_EMAIL="${EDXAPP_SU_USERNAME}@${MSFT}.com"
 readonly PLATFORM_EMAIL="$EDXAPP_SU_EMAIL"
@@ -62,6 +61,7 @@ MYSQL_ADMIN_PASSWORD=
 EDXAPP_ENABLE_COMPREHENSIVE_THEMING=
 COMBINED_LOGIN_REGISTRATION=
 NGINX_SITES=
+EDXAPP_ENABLE_THIRD_PARTY_AUTH=
 
 # The upstream tag in common with our forks
 # is ficus1 (edx-platform and configuration)
@@ -85,7 +85,8 @@ parse_args()
          # Log input parameters to facilitate troubleshooting
         echo "Option '${1}' set with value '"${arg_value}"'"
 
-        case "$1" in
+        # convert to lowercase
+        case "${1,,}" in
           -r|--role|-s|--stack)
             # convert to lowercase
             TEMPLATE_TYPE=`parse_template "${arg_value,,}"`
@@ -96,6 +97,10 @@ parse_args()
             ;;
           -d|--default-password)
             DEFAULT_PASSWORD="${arg_value}"
+            ;;
+          --msft-oauth|--msft-auth)
+            # convert to lowercase
+            MSFT_AUTH="${arg_value,,}"
             ;;
           *)
             # Unknown option encountered
@@ -164,36 +169,42 @@ set_dynamic_vars()
     EDXAPP_SU_PASSWORD=`harden $EDXAPP_SU_PASSWORD`
     VAGRANT_USER_PASSWORD=$EDXAPP_SU_PASSWORD
 
-    # The upstream doesn't have the relevant
-    # changes to leverage MYSQL_ADMIN_PASSWORD
-    # For details, see msft/edx-configuration commit:
-    # 65e2668672bda0112a64aabb86cf532ad228c4fa
-    if [[ $BRANCH_VERSIONS == edge ]]; then
-        MYSQL_ADMIN_USER=lexoxamysqladmin
-        MYSQL_ADMIN_PASSWORD=`harden $MYSQL_ADMIN_PASSWORD`
-    else
-        MYSQL_ADMIN_USER=root
-        MYSQL_ADMIN_PASSWORD=
-    fi
-    set -x
-
     case "$BRANCH_VERSIONS" in
         edx_f|edx_g)
             EDXAPP_ENABLE_COMPREHENSIVE_THEMING=false
             COMBINED_LOGIN_REGISTRATION=true
             NGINX_SITES='[certs, cms, lms, forum, xqueue]'
+
+            if [[ $BRANCH_VERSIONS == edx_g ]] ; then
+                EDX_BRANCH=$GINKGO1
+            fi
+
+            # The upstream doesn't have the relevant
+            # changes to leverage MYSQL_ADMIN_PASSWORD
+            # For details, see msft/edx-configuration commit:
+            # 65e2668672bda0112a64aabb86cf532ad228c4fa
+            MYSQL_ADMIN_USER=root
+            MYSQL_ADMIN_PASSWORD=
         ;;
         *)
             EDXAPP_ENABLE_COMPREHENSIVE_THEMING=true
             COMBINED_LOGIN_REGISTRATION=false
             # Microsoft repositories support the lms-preview subdomain.
             NGINX_SITES='[certs, cms, lms, lms-preview, forum, xqueue]'
+
+            MYSQL_ADMIN_USER=lexoxamysqladmin
+            MYSQL_ADMIN_PASSWORD=`harden $MYSQL_ADMIN_PASSWORD`
         ;;
     esac
 
-    if [[ $BRANCH_VERSIONS == edx_g ]] ; then
-        EDX_BRANCH=$GINKGO1
-    fi
+    case "$MSFT_AUTH" in
+        prod|int)
+            EDXAPP_ENABLE_THIRD_PARTY_AUTH=true
+        ;;
+        *)
+            EDXAPP_ENABLE_THIRD_PARTY_AUTH=false
+        ;;
+    esac
 }
 
 test_args()
@@ -246,7 +257,7 @@ get_branch()
         fi
     elif [[ $BRANCH_VERSIONS == edx_g ]] && [[ $override == $USE_FICUS ]] ; then
         # GINKGO1 edx-configuration doesn't work. Use ficus4 instead.
-        # Devstack fails because elastic search fails to initialize
+        # Devstack fails w/ GINKGO1 because elastic search fails to initialize.
         echo "$FICUS4"
     else
         echo "$EDX_BRANCH"
@@ -347,6 +358,8 @@ install-with-oxa()
             8 \
         --environment \
             "dev" \
+        --msft-oauth \
+            $MSFT_AUTH \
         --oxatools-public-github-projectbranch \
             `get_current_branch` \
         --edxconfiguration-public-github-accountname \
@@ -412,8 +425,9 @@ parse_args "$@"
 test_args
 
 set_dynamic_vars
- 
-# vagrant-fullstack.yml was removed in March 2017 so we use sandbox.sh
+
+set -x
+# vagrant-fullstack.yml was removed in March 2017 so we use sandbox.sh for ginkgo
 if [[ $TEMPLATE_TYPE == fullstack ]] && [[ $BRANCH_VERSIONS == edx_g ]] ; then
     install-with-edx-native
 else
