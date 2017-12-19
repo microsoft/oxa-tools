@@ -402,6 +402,9 @@ install-with-edx-native()
     local utilities=`wget_wrapper "templates/stamp/utilities.sh" "${MSFT}" "oxa-tools" "$(get_current_branch)"`
     source $utilities
 
+    # 3c Create required vagrant user account to avoid fatal error
+    adduser --disabled-password --gecos "" vagrant
+
     # 4. Install Open edX:
     local sandbox=`wget_wrapper "util/install/sandbox.sh" "${EDX}" "$(get_conf_project_name)" "$OPENEDX_RELEASE"`
     set +e
