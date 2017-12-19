@@ -416,9 +416,9 @@ install-with-edx-native()
 # Execution Starts
 ##########################
 
-echo "installing pwgen and wget..."
+echo "installing pwgen, wget, ssh..."
 apt update -qq
-apt install -y -qq pwgen wget
+apt install -y -qq pwgen wget ssh
 
 parse_args "$@"
 
