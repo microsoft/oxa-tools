@@ -389,27 +389,27 @@ install-with-edx-native()
 
     # 2. Bootstrap the Ansible installation:
     local ans_bootstrap=`wget_wrapper "util/install/ansible-bootstrap.sh" "${EDX}" "$(get_conf_project_name)" "$OPENEDX_RELEASE"`
-    #sudo bash $ans_bootstrap
+    sudo bash $ans_bootstrap
 
     # 3. (Optional) If this is a new installation, randomize the passwords:
     # todo: reconcile this w/ -d
     local gen_pass=`wget_wrapper "util/install/generate-passwords.sh" "${EDX}" "$(get_conf_project_name)" "$OPENEDX_RELEASE"`
-    #bash $gen_pass
+    bash $gen_pass
 
     #todo: 3c link file to /oxa/oxa.yml
 
     # 3b Enable retry
     local utilities=`wget_wrapper "templates/stamp/utilities.sh" "${MSFT}" "oxa-tools" "$(get_current_branch)"`
-    #source $utilities
+    source $utilities
 
     # 4. Install Open edX:
     local sandbox=`wget_wrapper "util/install/sandbox.sh" "${EDX}" "$(get_conf_project_name)" "$OPENEDX_RELEASE"`
     set +e
-    #retry-command "bash $sandbox" 8 "$sandbox" "fixPackages"
+    retry-command "bash $sandbox" 8 "$sandbox" "fixPackages"
     set -e
 
     # get status of edx services
-    #/edx/bin/supervisorctl status
+    /edx/bin/supervisorctl status || true
 }
 
 ##########################
