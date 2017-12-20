@@ -388,6 +388,26 @@ retry-command()
 }
 
 #############################################################################
+# Uninstall Browsers
+#############################################################################
+
+remove_browsers()
+{
+    if type firefox >/dev/null 2>&1 ; then
+        log "Un-installing firefox...The proper version will be installed later"
+        apt-wrapper "purge firefox"
+    fi
+
+    if type google-chrome-stable >/dev/null 2>&1 ; then
+        log "Un-installing chrome...The proper version will be installed later"
+        apt-wrapper "purge google-chrome-stable"
+    fi
+
+    # Package that comes with firefox.
+    apt-wrapper "remove hunspell-en-us"
+}
+
+#############################################################################
 # Setup Sudo
 #############################################################################
 

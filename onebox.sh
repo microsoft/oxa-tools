@@ -383,7 +383,17 @@ devstack_preconditions()
         sed -i "s|edx_sandbox|vagrant-devstack|g" $sandbox_path
 
         # Create required vagrant user account to avoid fatal error
-        adduser --disabled-password --gecos "" vagrant
+        if ! id -u vagrant > /dev/null 2>&1 ; then
+            adduser --disabled-password --gecos "" vagrant
+        fi
+
+        # Set the vagrant password
+        if [[ -n $VAGRANT_USER_PASSWORD ]] ; then
+            usermod --password $(echo $VAGRANT_USER_PASSWORD | openssl passwd -1 -stdin) vagrant
+        fi
+
+        # Devstack installs specific versions of chrome and firefox
+        remove_browsers
     fi
 }
 
