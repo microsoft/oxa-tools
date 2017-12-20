@@ -228,7 +228,7 @@ log "Starting main execution (remote exection mode)"
 
 # Run migrations for the target django_application
 /edx/app/edxapp/venvs/edxapp/bin/python /edx/app/edxapp/edx-platform/manage.py ${target_edx_system} migrate ${target_django_application} --settings=aws --noinput
-/edx/bin/supervisorctl restart all
+sudo /edx/bin/supervisorctl restart all
 exit_on_error "Unable run migrations '${HOSTNAME}' !" "${ERROR_DJANGO_MIGRATIONS_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
 log "Completed running django migrations for: '${target_django_application}' on server: '${target_server_ip}' successfully."
