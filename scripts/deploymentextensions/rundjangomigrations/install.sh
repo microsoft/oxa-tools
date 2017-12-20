@@ -20,6 +20,7 @@ oxa_tools_repository_path="/oxa/oxa-tools"
 
 # admin user for OS
 target_user=""
+target_server_ip=""
 
 # Email Notifications
 notification_email_subject="Running Django Migrations"
