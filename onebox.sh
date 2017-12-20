@@ -142,10 +142,10 @@ parse_branch()
         production|prod|master)
             echo "stable"
         ;;
-        pre|bvt|int)
+        pre|beta|int)
             echo "release"
         ;;
-        development|dev|beta)
+        development|dev|bvt)
             echo "edge"
         ;;
         ficus|up|ed|f|edx_ficus|edx|upstream)
@@ -155,6 +155,7 @@ parse_branch()
             echo "edx_g"
         ;;
         *)
+            # no additional mappings for edx_master (at this time)
             echo "$userInput"
         ;;
     esac
@@ -170,13 +171,15 @@ set_dynamic_vars()
     VAGRANT_USER_PASSWORD=$EDXAPP_SU_PASSWORD
 
     case "$BRANCH_VERSIONS" in
-        edx_f|edx_g)
+        edx_f|edx_g|edx_master)
             EDXAPP_ENABLE_COMPREHENSIVE_THEMING=false
             COMBINED_LOGIN_REGISTRATION=true
             NGINX_SITES='[certs, cms, lms, forum, xqueue]'
 
             if [[ $BRANCH_VERSIONS == edx_g ]] ; then
                 EDX_BRANCH=$GINKGO
+            elif [[ $BRANCH_VERSIONS == edx_master ]] ; then
+                EDX_BRANCH=master
             fi
 
             # The upstream doesn't have the relevant
@@ -221,7 +224,7 @@ test_args()
 
     echo -e "\n BRANCH_VERSIONS is set to $BRANCH_VERSIONS"
     case "$BRANCH_VERSIONS" in
-        stable|release|edge|edx_f|edx_g)
+        stable|release|edge|edx_f|edx_g|edx_master)
             echo ""
         ;;
         *)
@@ -292,7 +295,7 @@ harden()
 get_org()
 {
     case "$BRANCH_VERSIONS" in
-        edx_f|edx_g)
+        edx_f|edx_g|edx_master)
             echo "$EDX"
         ;;
         *)
@@ -304,7 +307,7 @@ get_org()
 get_conf_project_name()
 {
     case "$BRANCH_VERSIONS" in
-        edx_f|edx_g)
+        edx_f|edx_g|edx_master)
             echo "configuration"
         ;;
         *)
@@ -433,7 +436,7 @@ set -x
 # We currently use sandbox.sh for ginkgo+. Therefore, it doesn't have our customizations.
 #  - (fullstack) This is because vagrant-fullstack.yml was removed in March 2017 and
 #  - (devstack) Something about our customizations result in an "elastic search" error
-if [[ $BRANCH_VERSIONS == edx_g ]] ; then
+if [[ $BRANCH_VERSIONS == edx_g ]] || [[ $BRANCH_VERSIONS == edx_master ]] ; then
     install-with-edx-native
 else
     install-with-oxa
