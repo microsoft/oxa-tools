@@ -13,6 +13,8 @@ readonly USE_MSFT="useMsftRepo"
 readonly TAGS="tags/"
 readonly FICUS="${TAGS}open-release/ficus.1"
 readonly GINKGO="${TAGS}open-release/ginkgo.2"
+readonly FS="fullstack"
+readonly DS="devstack"
 
 ##########################
 # Script Defaults that can be overriden via
@@ -20,7 +22,7 @@ readonly GINKGO="${TAGS}open-release/ginkgo.2"
 # - assignment here
 ##########################
 
-TEMPLATE_TYPE=fullstack # fullstack or devstack
+TEMPLATE_TYPE=$FS       # fullstack or devstack
 BRANCH_VERSIONS=edge    # edge or release or stable or edx
 DEFAULT_PASSWORD=
 MSFT_AUTH=
@@ -121,10 +123,10 @@ parse_template()
 
     case "$userInput" in
         full|fs|f)
-            echo "fullstack"
+            echo "$FS"
         ;;
         dev|ds|d)
-            echo "devstack"
+            echo "$DS"
         ;;
         *)
             echo "$userInput"
@@ -207,11 +209,11 @@ set_dynamic_vars()
 
 test_args()
 {
-    if [[ $TEMPLATE_TYPE != fullstack ]] && [[ $TEMPLATE_TYPE != devstack ]] ; then
+    if [[ $TEMPLATE_TYPE != $FS ]] && [[ $TEMPLATE_TYPE != $DS ]] ; then
         set +x
         echo -e "\033[1;36m"
         echo -e "\n TEMPLATE_TYPE is set to $TEMPLATE_TYPE"
-        echo -e " but should be fullstack or devstack."
+        echo -e " but should be $FS or $DS."
         echo -e " Use the -r param argument.\n"
         echo -e '\033[0m'
         exit 1
@@ -372,7 +374,7 @@ devstack_preconditions()
 {
     sandbox_path=$1
 
-    if [[ $TEMPLATE_TYPE == devstack ]]; then
+    if [[ $TEMPLATE_TYPE == $DS ]]; then
         # Use devstack playbook
         chmod 777 $sandbox_path
         sed -i "s|edx_sandbox|vagrant-devstack|g" $sandbox_path
