@@ -10,11 +10,9 @@ set -ae
 readonly MSFT="microsoft"
 readonly EDX="edx"
 readonly USE_MSFT="useMsftRepo"
-readonly USE_FICUS="useFicusTag"
 readonly TAGS="tags/"
-readonly FICUS1="${TAGS}open-release/ficus.1"
-readonly FICUS4="${TAGS}open-release/ficus.4"
-readonly GINKGO1="${TAGS}open-release/ginkgo.1"
+readonly FICUS="${TAGS}open-release/ficus.1"
+readonly GINKGO="${TAGS}open-release/ginkgo.2"
 
 ##########################
 # Script Defaults that can be overriden via
@@ -65,7 +63,7 @@ EDXAPP_ENABLE_THIRD_PARTY_AUTH=
 
 # The upstream tag in common with our forks
 # is ficus1 (edx-platform and configuration)
-EDX_BRANCH=$FICUS1
+EDX_BRANCH=$FICUS
 
 ##########################
 # Script Parameter Arguments
@@ -176,7 +174,7 @@ set_dynamic_vars()
             NGINX_SITES='[certs, cms, lms, forum, xqueue]'
 
             if [[ $BRANCH_VERSIONS == edx_g ]] ; then
-                EDX_BRANCH=$GINKGO1
+                EDX_BRANCH=$GINKGO
             fi
 
             # The upstream doesn't have the relevant
@@ -242,23 +240,13 @@ test_args()
 get_branch()
 {
     override=$1
-    useOldDevStyle=$2
 
     if [[ $BRANCH_VERSIONS == stable ]] ; then
         echo "oxa/master.fic"
     elif [[ $BRANCH_VERSIONS == release ]] ; then
         echo "oxa/release.fic"
     elif [[ $BRANCH_VERSIONS == edge ]] || [[ $override == $USE_MSFT ]] ; then
-        if [[ -n $useOldDevStyle ]] ; then
-            # Legacy switch
-            echo "oxa/devfic"
-        else
-            echo "oxa/dev.fic"
-        fi
-    elif [[ $BRANCH_VERSIONS == edx_g ]] && [[ $override == $USE_FICUS ]] ; then
-        # GINKGO1 edx-configuration doesn't work. Use ficus4 instead.
-        # Devstack fails w/ GINKGO1 because elastic search fails to initialize.
-        echo "$FICUS4"
+        echo "oxa/dev.fic"
     else
         echo "$EDX_BRANCH"
     fi
@@ -273,7 +261,7 @@ get_current_branch()
 
     # Ensure branch information is useful.
     if [[ -z "$branchInfo" ]] || [[ $branchInfo == *"no branch"* ]] || [[ $branchInfo == *"detached"* ]] ; then
-        branchInfo=`get_branch $USE_MSFT oldDevStyle`
+        branchInfo=`get_branch $USE_MSFT`
     fi
 
     echo "$branchInfo"
@@ -367,7 +355,7 @@ install-with-oxa()
         --edxconfiguration-public-github-projectname \
             `get_conf_project_name` \
         --edxconfiguration-public-github-projectbranch \
-            `get_branch $USE_FICUS` \
+            `get_branch` \
         --edxplatform-public-github-accountname \
             `get_org` \
         --edxplatform-public-github-projectbranch \
@@ -378,6 +366,16 @@ install-with-oxa()
             $EDX_BRANCH \
         --forumversion \
             $EDX_BRANCH
+}
+
+devstack_preconditions()
+{
+    if [[ $TEMPLATE_TYPE == devstack ]]; then
+        #todo: conditionalize sed statement
+
+        # Create required vagrant user account to avoid fatal error
+        adduser --disabled-password --gecos "" vagrant
+    fi
 }
 
 install-with-edx-native()
@@ -392,21 +390,17 @@ install-with-edx-native()
     sudo bash $ans_bootstrap
 
     # 3. (Optional) If this is a new installation, randomize the passwords:
-    # todo: reconcile this w/ -d
+    # todo: reconcile this w/ -d and /oxa/oxa.yml
     local gen_pass=`wget_wrapper "util/install/generate-passwords.sh" "${EDX}" "$(get_conf_project_name)" "$OPENEDX_RELEASE"`
     bash $gen_pass
-
-    #todo: 3c link file to /oxa/oxa.yml
 
     # 3b Enable retry
     local utilities=`wget_wrapper "templates/stamp/utilities.sh" "${MSFT}" "oxa-tools" "$(get_current_branch)"`
     source $utilities
 
-    # 3c Create required vagrant user account to avoid fatal error
-    adduser --disabled-password --gecos "" vagrant
-
     # 4. Install Open edX:
     local sandbox=`wget_wrapper "util/install/sandbox.sh" "${EDX}" "$(get_conf_project_name)" "$OPENEDX_RELEASE"`
+    devstack_preconditions
     set +e
     retry-command "bash $sandbox" 8 "$sandbox" "fixPackages"
     set -e
@@ -430,7 +424,9 @@ test_args
 set_dynamic_vars
 
 set -x
-# vagrant-fullstack.yml was removed in March 2017 so we use sandbox.sh for ginkgo
+# We currently use sandbox.sh for ginkgo+. Therefore, it doesn't have our customizations.
+#  - (fullstack) This is because vagrant-fullstack.yml was removed in March 2017 and
+#  - (devstack) Something about our customizations result in an "elastic search" error
 if [[ $BRANCH_VERSIONS == edx_g ]] ; then
     install-with-edx-native
 else
