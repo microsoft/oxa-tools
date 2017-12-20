@@ -370,8 +370,12 @@ install-with-oxa()
 
 devstack_preconditions()
 {
+    sandbox_path=$1
+
     if [[ $TEMPLATE_TYPE == devstack ]]; then
-        #todo: conditionalize sed statement
+        # Use devstack playbook
+        chmod 777 $sandbox_path
+        sed -i "s|edx_sandbox|vagrant-devstack|g" $sandbox_path
 
         # Create required vagrant user account to avoid fatal error
         adduser --disabled-password --gecos "" vagrant
@@ -400,7 +404,7 @@ install-with-edx-native()
 
     # 4. Install Open edX:
     local sandbox=`wget_wrapper "util/install/sandbox.sh" "${EDX}" "$(get_conf_project_name)" "$OPENEDX_RELEASE"`
-    devstack_preconditions
+    devstack_preconditions $sandbox
     set +e
     retry-command "bash $sandbox" 8 "$sandbox" "fixPackages"
     set -e
