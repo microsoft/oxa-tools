@@ -1,8 +1,23 @@
 # RUN DJANGO MIGRATION
 
 **Function**
+
+Whenever we edit a `models.py` class we need to create and run a django migration to 
+sync these model changes to the database.
+
 This deployment extension runs django migrations for a specific app in INSTALLED_APPS of edx-platform
-It DOES NOT run the django makemigrations. Migrations need to be checked in.
+It DOES NOT run the django `manage.py makemigrations` command. Migrations need to be checked in before running this extension.
+
+This script will just run the django `manage.py migrate` command for the specified target_django_application
+
+Example script that will be run on a single front end VM
+if _target_edx_system_ = 'lms' and _target_django_application_ = 'courseware'
+
+```
+$ python /edx/app/edxapp/edx-platform/manage.py lms migrate courseware --settings=aws --noinput
+```
+
+This runs new migrations for model changes to the courseware app.
 
 **Parameters**
 1. _cluster-admin-email_: the email address of the cluster administrator that will be used for all deployment notifications
