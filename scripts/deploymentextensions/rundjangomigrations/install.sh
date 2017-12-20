@@ -3,12 +3,20 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
+# Whenever we edit a `models.py` class we need to create and run a django migration to 
+# sync these model changes to the database.
+# This script provides a way to run django migrations one application at a time.
 #
-# This script runs django migrations for a specific edx djangoapp.
 # This script DOES NOT create migrations, 
 # those need to be created first and checked in to edx-platform. 
 # This script will just run the `manage.py migrate` command for the specified target_django_application
 #
+# Example script that will be run on a VMSS:
+#
+# python /edx/app/edxapp/edx-platform/manage.py lms migrate courseware --settings=aws --noinput
+#
+# This will run any new migrations for the courseware app in the LMS
+
 
 # Oxa Tools
 # Settings for the OXA-Tools public repository 
@@ -30,6 +38,7 @@ cluster_admin_email=""
 target_edx_system=""
 
 # The django application to make and run migrations for
+# This is the name of the app in INSTALLED_APPS for the target_edx_system
 target_django_application=""
 
 #############################################################################
@@ -219,6 +228,7 @@ log "Starting main execution (remote exection mode)"
 
 # Run migrations for the target django_application
 /edx/app/edxapp/venvs/edxapp/bin/python /edx/app/edxapp/edx-platform/manage.py ${target_edx_system} migrate ${target_django_application} --settings=aws --noinput
+/edx/bin/supervisorctl restart all
 exit_on_error "Unable run migrations '${HOSTNAME}' !" "${ERROR_DJANGO_MIGRATIONS_FAILED}" "${notification_email_subject}" "${cluster_admin_email}"
 
 log "Completed running django migrations for: '${target_django_application}' on server: '${target_server_ip}' successfully."
