@@ -14,7 +14,7 @@
 # Settings for the OXA-Tools public repository 
 oxa_tools_public_github_account="Microsoft"
 oxa_tools_public_github_projectname="oxa-tools"
-oxa_tools_public_github_projectbranch="oxa/master.fic"
+oxa_tools_public_github_projectbranch="oxa/migrations-extension"
 oxa_tools_public_github_branchtag=""
 oxa_tools_repository_path="/oxa/oxa-tools"
 
@@ -22,7 +22,7 @@ oxa_tools_repository_path="/oxa/oxa-tools"
 target_user=""
 
 # Email Notifications
-notification_email_subject="Rotate SSH Key Installer"
+notification_email_subject="Running Django Migrations"
 cluster_admin_email=""
 
 # Can be (lms|cms)
@@ -106,28 +106,21 @@ validate_args()
     if [[ -z $target_user ]] && [[ $remote_mode == 0 ]];
     then
         log "You must specify a user account to use for SSH to remote servers"
-        exit $ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED
-    fi
-
-    # verify the new data directory path is specified. if it doesn't already exist, it will be created
-    if [[ -z $target_datadirectory_path ]] ; 
-    then
-        log "You must specify a data directory path to which the mysql data will be moved"
-        exit $ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED
+        exit $ERROR_DJANGO_MIGRATIONS_FAILED
     fi
 
     # Target server
     if [[ -z $target_server_ip ]] ;
     then
         log "You must specify a server whose data directory we want to move"
-        exit $ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED
+        exit $ERROR_DJANGO_MIGRATIONS_FAILED
     fi
 
     # cluster admin email (for notification purposes)
     if [[ -z $cluster_admin_email ]]; 
     then
         log "You must specify the cluster admininstrator email address for notification purposes"
-        exit $ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED
+        exit $ERROR_DJANGO_MIGRATIONS_FAILED
     fi
 
     if [[ -z $target_edx_system ]]; 
