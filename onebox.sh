@@ -71,7 +71,7 @@ EDX_BRANCH=$FICUS
 # Script Parameter Arguments
 ##########################
 
-parse_args() 
+parse_args()
 {
     while [[ "$#" -gt 0 ]] ; do
         arg_value="${2}"
@@ -91,7 +91,7 @@ parse_args()
             # convert to lowercase
             TEMPLATE_TYPE=`parse_template "${arg_value,,}"`
             ;;
-          -b|--branches)
+          -b|--branches|--branch)
             # convert to lowercase
             BRANCH_VERSIONS=`parse_branch "${arg_value,,}"`
             ;;
@@ -105,6 +105,7 @@ parse_args()
           *)
             # Unknown option encountered
             echo "Option '${BOLD}$1${NORM} ${arg_value}' not allowed."
+            exit 1
             ;;
         esac
 
