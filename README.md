@@ -21,7 +21,7 @@ For example:
 `sudo onebox.sh` OR
 `sudo bash onebox.sh -r devstack -b stable -d hokiePokiePass11 --msft-oauth prod`
 
-What's been tested: server edition on azure, desktop edtion in virtualbox VM, docker containers with systemd. Please open an "issue" in github if you encounter any problems.
+What's been tested: server edition on azure, desktop edition in virtualbox VM, docker containers with systemd. Please open an "issue" in Github if you encounter any problems.
 
 ## Deploying high availability instance (for production-like environments)
 
