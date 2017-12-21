@@ -41,6 +41,12 @@ target_edx_system=""
 # This is the name of the app in INSTALLED_APPS for the target_edx_system
 target_django_application=""
 
+# operation mode: 0=local, 1=remote via ssh
+remote_mode=0
+
+# debug mode: 0=set +x, 1=set -x
+debug_mode=0
+
 #############################################################################
 # parse the command line arguments
 
