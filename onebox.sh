@@ -260,6 +260,20 @@ get_branch()
     fi
 }
 
+get_current_org()
+{
+    organization=$MSFT
+
+    if git status > /dev/null ; then
+        remoteUrl="$(git config --get remote.origin.url)"
+        if echo $remoteUrl | grep -i "http") ; then
+            organization=$(echo $remoteUrl | tr / "\n" | head -4 | tail -1)
+        fi
+    fi
+
+    echo $organization
+}
+
 get_current_branch()
 {
     prefix='* '
@@ -345,7 +359,7 @@ wget_wrapper()
 
 install-with-oxa()
 {
-    bootstrap=`wget_wrapper "scripts/bootstrap.sh" "${MSFT}" "oxa-tools" "$(get_current_branch)"`
+    bootstrap=`wget_wrapper "scripts/bootstrap.sh" "$(get_current_org)" "oxa-tools" "$(get_current_branch)"`
 
     bash $bootstrap \
         --role \
@@ -356,6 +370,8 @@ install-with-oxa()
             "dev" \
         --msft-oauth \
             $MSFT_AUTH \
+        --oxatools-public-github-accountname \
+            `get_current_org`
         --oxatools-public-github-projectbranch \
             `get_current_branch` \
         --edxconfiguration-public-github-accountname \
@@ -408,7 +424,7 @@ install-with-edx-native()
     OPENEDX_RELEASE=${EDX_BRANCH#$TAGS}
 
     # Enable retry
-    local utilities=`wget_wrapper "templates/stamp/utilities.sh" "${MSFT}" "oxa-tools" "$(get_current_branch)"`
+    local utilities=`wget_wrapper "templates/stamp/utilities.sh" $(get_current_org)" "oxa-tools" "$(get_current_branch)"`
     source $utilities
 
     # 2. Bootstrap the Ansible installation:
