@@ -423,6 +423,7 @@ install-with-edx-native()
     devstack_preconditions $sandbox
     set +e
     retry-command "bash $sandbox" 8 "$sandbox" "fixPackages"
+    exit_on_error "Execution of edX sandbox playbook failed"
     set -e
 
     # get status of edx services
