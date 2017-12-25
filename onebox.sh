@@ -407,7 +407,7 @@ install-with-edx-native()
 
     # 2. Bootstrap the Ansible installation:
     local ans_bootstrap=`wget_wrapper "util/install/ansible-bootstrap.sh" "${EDX}" "$(get_conf_project_name)" "$OPENEDX_RELEASE"`
-    sudo bash $ans_bootstrap
+    bash $ans_bootstrap
 
     # 3. (Optional) If this is a new installation, randomize the passwords:
     # todo: reconcile this w/ -d and /oxa/oxa.yml
