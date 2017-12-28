@@ -419,6 +419,8 @@ install-with-edx-native()
     source $utilities
 
     # 4. Install Open edX:
+    CONFIGURATION_REPO="https://github.com/sdolenc/configuration"
+    CONFIGURATION_VERSION="fullstack_in_container"
     local sandbox=`wget_wrapper "util/install/sandbox.sh" "${EDX}" "$(get_conf_project_name)" "$OPENEDX_RELEASE"`
     devstack_preconditions $sandbox
     set +e
