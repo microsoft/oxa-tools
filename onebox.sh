@@ -396,10 +396,6 @@ devstack_preconditions()
         # Devstack installs specific versions of chrome and firefox
         remove_browsers
     fi
-
-    # use fork
-    sed -i "s|github.com/edx/configuration|github.com/sdolenc/configuration|g" $sandbox_path
-    sed -i 's|checkout $CONFIGURATION_VERSION|checkout fullstack_in_container|g' $sandbox_path
 }
 
 install-with-edx-native()
