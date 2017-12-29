@@ -399,6 +399,7 @@ devstack_preconditions()
 
     # use fork
     sed -i "s|github.com/edx/configuration|github.com/sdolenc/configuration|g" $sandbox_path
+    sed -i 's|checkout $CONFIGURATION_VERSION|checkout fullstack_in_container|g' $sandbox_path
 }
 
 install-with-edx-native()
@@ -422,12 +423,10 @@ install-with-edx-native()
     source $utilities
 
     # 4. Install Open edX:
-    CONFIGURATION_REPO="https://github.com/sdolenc/configuration"
-    CONFIGURATION_VERSION="fullstack_in_container"
     local sandbox=`wget_wrapper "util/install/sandbox.sh" "${EDX}" "$(get_conf_project_name)" "$OPENEDX_RELEASE"`
     devstack_preconditions $sandbox
     set +e
-    retry-command "bash $sandbox -e edx_ansible_source_repo=$CONFIGURATION_REPO" 8 "$sandbox" "fixPackages"
+    retry-command "bash $sandbox" 8 "$sandbox" "fixPackages"
     exit_on_error "Execution of edX sandbox playbook failed"
     set -e
 
