@@ -427,7 +427,7 @@ install-with-edx-native()
     local sandbox=`wget_wrapper "util/install/sandbox.sh" "${EDX}" "$(get_conf_project_name)" "$OPENEDX_RELEASE"`
     devstack_preconditions $sandbox
     set +e
-    retry-command "bash $sandbox" 8 "$sandbox" "fixPackages"
+    retry-command "bash $sandbox -e edx_ansible_source_repo=$CONFIGURATION_REPO" 8 "$sandbox" "fixPackages"
     exit_on_error "Execution of edX sandbox playbook failed"
     set -e
 
