@@ -9,6 +9,8 @@ set -ae
 # static strings
 readonly MSFT="microsoft"
 readonly EDX="edx"
+readonly CONF="configuration"
+readonly E_CONF="${EDX}-${CONF}"
 readonly USE_MSFT="useMsftRepo"
 readonly TAGS="tags/"
 readonly FICUS="${TAGS}open-release/ficus.1"
@@ -309,10 +311,10 @@ get_conf_project_name()
 {
     case "$BRANCH_VERSIONS" in
         edx_f|edx_g|edx_master)
-            echo "configuration"
+            echo "$CONF"
         ;;
         *)
-            echo "edx-configuration"
+            echo "$E_CONF"
         ;;
     esac
 }
@@ -419,7 +421,7 @@ install-with-edx-native()
     source $utilities
 
     # 4. Install Open edX:
-    local sandbox=`wget_wrapper "util/install/sandbox.sh" "${EDX}" "$(get_conf_project_name)" "$OPENEDX_RELEASE"`
+    local sandbox=`wget_wrapper "util/install/sandbox.sh" "${MSFT}" "$E_CONF" "ginkgo1tweaks"`
     devstack_preconditions $sandbox
     set +e
     retry-command "bash $sandbox --skip-tags=edxapp-sandbox" 8 "$sandbox" "fixPackages"
