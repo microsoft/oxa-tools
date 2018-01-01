@@ -424,7 +424,7 @@ install-with-edx-native()
     local sandbox=`wget_wrapper "util/install/sandbox.sh" "${MSFT}" "$E_CONF" "ginkgo1tweaks"`
     devstack_preconditions $sandbox
     set +e
-    retry-command "source $sandbox --skip-tags=edxapp-sandbox" 8 "$sandbox" "fixPackages"
+    retry-command "bash $sandbox --skip-tags=edxapp-sandbox" 8 "$sandbox" "fixPackages"
     exit_on_error "Execution of edX sandbox playbook failed"
     set -e
 
