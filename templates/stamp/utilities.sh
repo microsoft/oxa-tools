@@ -639,6 +639,18 @@ sync_repo()
     popd
 }
 
+add_remote()
+{
+    local remoteName=$1
+    local remoteUrl="$2"
+
+    count=`git remote | grep "$remoteName" | wc -l`
+    if (( "$count" == 0 )) ; then
+        git remote add $remoteName $remoteUrl
+    fi
+    git fetch $remoteName > /dev/null 2>&1
+}
+
 cherry_pick_wrapper()
 {
     local hash=$1

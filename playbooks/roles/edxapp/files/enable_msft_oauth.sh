@@ -28,11 +28,7 @@ fix_platform()
     count=`grep -i "live" lms/envs/aws.py | wc -l`
     if (( "$count" == 0 )) ; then
         log "Ensure remote has commit"
-        count=`git remote | grep "msft_plat" | wc -l`
-        if (( "$count" == 0 )) ; then
-            git remote add msft_plat https://github.com/microsoft/edx-platform.git
-        fi
-        git fetch msft_plat > /dev/null 2>&1
+        add_remote msft_plat https://github.com/microsoft/edx-platform.git
 
         # Ficus Fix
         hash=86a53b8353ac76fbb761d4fa465bc0f363e264b3
