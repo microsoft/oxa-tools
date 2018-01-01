@@ -299,6 +299,17 @@ fix_npm_python()
     fi
 }
 
+fix_hosts_file()
+{
+    set -e
+    add_remote msft_conf "https://github.com/microsoft/edx-configuration.git"
+    count=`tail -33 playbooks/roles/local_dev/tasks/main.yml | grep "ignore_errors" | wc -l`
+    if (( "$count" == 0 )) ; then
+        cherry_pick_wrapper 9e05aafe417d8d4fd1b5bc23626358ecb9cc807b "$EDXAPP_SU_EMAIL"
+    fi
+    set +e
+}
+
 # We should use the existing oxa-tools enlistment if one exists. This
 #   a) saves us a git clone AND
 #   b) preserves our current branch/changes
@@ -373,6 +384,7 @@ setup()
     cd $CONFIGURATION_PATH
     fix_jdk
     fix_npm_python
+    fix_hosts_file
     ANSIBLE_BOOTSTRAP_SCRIPT=util/install/ansible-bootstrap.sh
     bash $ANSIBLE_BOOTSTRAP_SCRIPT
     exit_on_error "Failed executing $ANSIBLE_BOOTSTRAP_SCRIPT"
