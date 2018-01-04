@@ -421,7 +421,7 @@ install-with-edx-native()
     source $utilities
 
     # 4. Install Open edX:
-    local sandbox=`wget_wrapper "util/install/sandbox.sh" "${MSFT}" "$E_CONF" "ginkgo1tweaks"`
+    local sandbox=`wget_wrapper "util/install/sandbox.sh" "${MSFT}" "$E_CONF" "g1t_hosts2"`
     devstack_preconditions $sandbox
     set +e
     retry-command "bash $sandbox --skip-tags=edxapp-sandbox" 8 "$sandbox" "fixPackages"
