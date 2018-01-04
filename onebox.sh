@@ -407,21 +407,24 @@ install-with-edx-native()
     # 1. Set the OPENEDX_RELEASE variable:
     OPENEDX_RELEASE=${EDX_BRANCH#$TAGS}
 
+    # Enable retry
+    local utilities=`wget_wrapper "templates/stamp/utilities.sh" "${MSFT}" "oxa-tools" "$(get_current_branch)"`
+    source $utilities
+
     # 2. Bootstrap the Ansible installation:
     local ans_bootstrap=`wget_wrapper "util/install/ansible-bootstrap.sh" "${EDX}" "$(get_conf_project_name)" "$OPENEDX_RELEASE"`
-    bash $ans_bootstrap
+    set +e
+    retry-command "bash $ans_bootstrap" 3 "$ans_bootstrap"
+    exit_on_error "Execution of edX ansible bootstrap failed"
+    set -e
 
     # 3. (Optional) If this is a new installation, randomize the passwords:
     # todo: reconcile this w/ -d and /oxa/oxa.yml
     local gen_pass=`wget_wrapper "util/install/generate-passwords.sh" "${EDX}" "$(get_conf_project_name)" "$OPENEDX_RELEASE"`
     bash $gen_pass
 
-    # 3b Enable retry
-    local utilities=`wget_wrapper "templates/stamp/utilities.sh" "${MSFT}" "oxa-tools" "$(get_current_branch)"`
-    source $utilities
-
     # 4. Install Open edX:
-    local sandbox=`wget_wrapper "util/install/sandbox.sh" "${MSFT}" "$E_CONF" "g1t_hosts2"`
+    local sandbox=`wget_wrapper "util/install/sandbox.sh" "${MSFT}" "$E_CONF" "ginkgo1tweaks"`
     devstack_preconditions $sandbox
     set +e
     retry-command "bash $sandbox --skip-tags=edxapp-sandbox" 8 "$sandbox" "fixPackages"
