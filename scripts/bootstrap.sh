@@ -307,7 +307,7 @@ fix_hosts_file()
     # Apply https://github.com/Microsoft/edx-configuration/pull/90
     add_remote msft_conf "https://github.com/microsoft/edx-configuration.git"
     count=`grep -c "127.0.0.1 localhost" playbooks/roles/local_dev/tasks/main.yml`
-    if (( "$count" == 0 )) ; then
+    if [[ "$count" -gt "0" ]] ; then
         cherry_pick_wrapper 9e05aafe417d8d4fd1b5bc23626358ecb9cc807b "$EDXAPP_SU_EMAIL"
     fi
     set +e
