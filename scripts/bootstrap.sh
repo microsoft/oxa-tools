@@ -313,6 +313,19 @@ fix_hosts_file()
     set +e
 }
 
+ansible_try_catch()
+{
+    set -e
+    add_remote msft_conf "https://github.com/microsoft/edx-configuration.git"
+
+    # Apply https://github.com/Microsoft/edx-configuration/pull/91
+    cherry_pick_wrapper a6304eaaefc24d2c3c59d57606c059cdd75b1dd4 "$EDXAPP_SU_EMAIL"
+
+    # Apply https://github.com/Microsoft/edx-configuration/pull/92
+    cherry_pick_wrapper d20f121a5181a283a89565ce5207d08d2a2dcc45 "$EDXAPP_SU_EMAIL"
+    set +e
+}
+
 # We should use the existing oxa-tools enlistment if one exists. This
 #   a) saves us a git clone AND
 #   b) preserves our current branch/changes
@@ -385,9 +398,13 @@ setup()
 
     # run edx bootstrap and install requirements
     cd $CONFIGURATION_PATH
+
+    # Cherry pick fixes
     fix_jdk
     fix_npm_python
     fix_hosts_file
+    ansible_try_catch
+
     ANSIBLE_BOOTSTRAP_SCRIPT=util/install/ansible-bootstrap.sh
     bash $ANSIBLE_BOOTSTRAP_SCRIPT
     exit_on_error "Failed executing $ANSIBLE_BOOTSTRAP_SCRIPT"
