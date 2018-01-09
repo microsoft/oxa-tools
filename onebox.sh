@@ -371,7 +371,7 @@ install-with-oxa()
         --edxversion \
             $EDX_BRANCH \
         --forumversion \
-            $EDX_BRANCH
+            `get_branch`
 }
 
 devstack_preconditions()
