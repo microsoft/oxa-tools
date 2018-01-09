@@ -406,7 +406,7 @@ setup()
     ansible_try_catch
 
     ANSIBLE_BOOTSTRAP_SCRIPT=util/install/ansible-bootstrap.sh
-    bash $ANSIBLE_BOOTSTRAP_SCRIPT
+    retry-command "bash $ANSIBLE_BOOTSTRAP_SCRIPT" 3 "$ANSIBLE_BOOTSTRAP_SCRIPT"
     exit_on_error "Failed executing $ANSIBLE_BOOTSTRAP_SCRIPT"
 
     pip install -r requirements.txt
