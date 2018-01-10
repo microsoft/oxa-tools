@@ -135,12 +135,10 @@ validate_remote_storage()
     fi
 
     # Container names cannot contain underscores or uppercase characters
-    if [[ "$DATABASE_TYPE" == "mongo" ]] || [[ "$DATABASE_TYPE" == "mysql" ]]
+    CONTAINER_NAME="${DATABASE_TYPE}-backup"
+    if [[ "$DATABASE_TYPE" == "trackinglogs" ]]
     then
-        CONTAINER_NAME="${DATABASE_TYPE}-backup"
-    elif [ "$DATABASE_TYPE" == "trackinglogs" ] 
-    then
-        CONTAINER_NAME="trackingtest"
+        CONTAINER_NAME="tracking"
     fi
 }
 
