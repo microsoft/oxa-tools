@@ -396,7 +396,7 @@ cleanup_old_remote_files()
     set -x
 }
 
-cleanup_old_TrackingLogs()
+cleanup_old_tracking_logs()
 {
     if [ -z $BACKUP_RETENTIONDAYS ]
     then
@@ -500,5 +500,5 @@ then
 elif [[ "$DATABASE_TYPE" == "trackinglogs" ]]
 then
    #Cleanup old tracking logs
-    cleanup_old_TrackingLogs
+    cleanup_old_tracking_logs
 fi
