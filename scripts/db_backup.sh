@@ -409,7 +409,7 @@ cleanup_old_TrackingLogs()
 
     # Calculate cutoff time.
     logs_currentSeconds=$(date --date="`date`" +%s)
-    logs_retentionPeriod=10 #$(( $BACKUP_RETENTIONDAYS * 24 * 60 * 60 ))
+    logs_retentionPeriod=$(( $BACKUP_RETENTIONDAYS * 24 * 60 * 60 ))
     logs_cutoffInSeconds=$(( $logs_currentSeconds - $logs_retentionPeriod ))
 
     # This is very noisy. We'll use log to communicate status.
