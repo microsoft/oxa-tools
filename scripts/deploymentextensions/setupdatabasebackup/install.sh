@@ -318,4 +318,16 @@ setup_backup "${installer_basepath}/backup_configuration_${database_type}.sh" "$
 
 exit_on_error "Failed setting up the Mongo Database backup" 1 "${notification_email_subject} Failed" $cluster_admin_email $main_logfile
 
+# Setup tracking backup
+log "Setting up tracking backup"
+database_type="trackinglogs"
+database_backup_log="/var/log/backup_${database_type}.log"
+setup_backup "${installer_basepath}/configuration_${database_type}.sh" "${database_backup_script}" "${database_backup_log}" "${backup_storageaccount_name}" \
+    "${backup_storageaccount_key}" "${mongo_backup_frequency}" "${mongo_backup_retentiondays}" "${mongo_replicaset_connectionstring}" "${mysql_server}" \
+    "${database_type}" "${mongo_admin_username}" "${mongo_admin_password}" "${backup_local_path}" "${mysql_server_port}" "${cluster_admin_email}" "${azure_cli_version}" \
+    "${encoded_backup_storageaccount_endpoint_suffix}" "${mongo_backup_username}" "${mongo_backup_password}"
+
+exit_on_error "Failed setting up the Mongo Database backup" 1 "${notification_email_subject} Failed" $cluster_admin_email $main_logfile
+
+
 log "Completed database backup configuration"

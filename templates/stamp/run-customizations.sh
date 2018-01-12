@@ -787,6 +787,17 @@ then
                 "${MONGO_USER}" "${MONGO_PASSWORD}"
 
     exit_on_error "Failed setting up the Mongo Database backup" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
+
+    # Setup tracking logs
+    DATABASE_TYPE_TO_BACKUP="trackinglogs"
+    DATABASE_BACKUP_LOG="/var/log/backup_${DATABASE_TYPE_TO_BACKUP}.log"
+    setup_backup "${INSTALLER_BASEPATH}/configuration_${DATABASE_TYPE_TO_BACKUP}.sh" "${DATABASE_BACKUP_SCRIPT}" "${DATABASE_BACKUP_LOG}" \
+                "${BACKUP_STORAGEACCOUNT_NAME}" "${BACKUP_STORAGEACCOUNT_KEY}" "${MONGO_BACKUP_FREQUENCY}" "${MONGO_BACKUP_RETENTIONDAYS}" \
+                "${MONGO_REPLICASET_CONNECTIONSTRING}" "${MYSQL_MASTER_IP}" "${DATABASE_TYPE_TO_BACKUP}" "${MONGO_USER}" "${MONGO_PASSWORD}" \
+                "${BACKUP_LOCAL_PATH}" "${MYSQL_MASTER_PORT}" "${CLUSTER_ADMIN_EMAIL}" "${AZURE_CLI_VERSION}" "${encoded_azure_storage_endpoint_suffix}" \
+                "${MONGO_USER}" "${MONGO_PASSWORD}"
+
+    exit_on_error "Failed setting up the Tracking Logs" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 fi
 
 #####################################
