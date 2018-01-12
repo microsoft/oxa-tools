@@ -414,8 +414,14 @@ cleanup_old_tracking_logs()
     set +x
 
     # Get file list with lastModified meta-data. We'll use this to extract dates.
-    logs_verboseDetails= azure storage blob list $CONTAINER_NAME --json | jq -r '.[] | .name + "_" + .lastModified' > tracklogsblobs.json
-    
+    if [[ $AZURE_CLI_VERSION == "1" ]]; then
+        # cli 1.0
+        azure storage blob list $CONTAINER_NAME --json | jq -r '.[] | .name + "_" + .lastModified' > tracklogsblobs.json
+    else
+        # cli 2.0
+        az storage blob list --connection-string "${AZURE_STORAGE_CONNECTIONSTRING}" --container-name $CONTAINER_NAME -o json | jq -r '.[] | .name + "_" + .properties.lastModified' > tracklogsblobs.json
+    fi
+
     while read obj ; do
         
         # Split BlobName and BlobDate from below String Format; Split by underscore
@@ -424,12 +430,19 @@ cleanup_old_tracking_logs()
         blobDate=`echo $obj | cut -d _ -f 2-`
         
         logs_fileDateInSeconds=$(date --date="$blobDate" +%s)
-        #echo "logs_fileDateInSeconds - $logs_fileDateInSeconds"
-        
+
         if [[ $logs_cutoffInSeconds -ge $logs_fileDateInSeconds ]]
         then
             log "deleting $blobName"
-            azure storage blob delete -q $CONTAINER_NAME $blobName
+        
+            if [[ $AZURE_CLI_VERSION == "1" ]]; then
+                # cli 1.0
+                azure storage blob delete -q $CONTAINER_NAME $blobName
+            else
+                # cli 2.0
+                # failure here isn't critical, so ignoring response
+                az storage blob delete --connection-string "${AZURE_STORAGE_CONNECTIONSTRING}" --container-name "${CONTAINER_NAME}" --name "${blobName}" -o json
+            fi
         else
             log "keeping $blobName"
         fi
