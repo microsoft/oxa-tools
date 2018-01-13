@@ -266,7 +266,7 @@ get_current_org()
 
     if git status > /dev/null ; then
         remoteUrl="$(git config --get remote.origin.url)"
-        if echo $remoteUrl | grep -i "http") ; then
+        if echo $remoteUrl | grep -i "http" > /dev/null ; then
             organization=$(echo $remoteUrl | tr / "\n" | head -4 | tail -1)
         fi
     fi
@@ -371,7 +371,7 @@ install-with-oxa()
         --msft-oauth \
             $MSFT_AUTH \
         --oxatools-public-github-accountname \
-            `get_current_org`
+            `get_current_org` \
         --oxatools-public-github-projectbranch \
             `get_current_branch` \
         --edxconfiguration-public-github-accountname \
