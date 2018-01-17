@@ -35,6 +35,7 @@ ERROR_TOOLS_INSTALLER_FAILED=7401
 ERROR_SSHKEYROTATION_INSTALLER_FAILED=7501
 ERROR_MEMCACHED_INSTALLER_FAILED=7601
 ERROR_PIP_INSTALLER_FAILED=7701
+ERROR_DJANGO_MIGRATIONS_FAILED=7801
 
 # Mysql failover related errors
 ERROR_MYSQL_FAILOVER_INVALIDPROXYPORT=7601
@@ -385,6 +386,26 @@ retry-command()
     done
 
     return $result
+}
+
+#############################################################################
+# Uninstall Browsers
+#############################################################################
+
+remove_browsers()
+{
+    if type firefox >/dev/null 2>&1 ; then
+        log "Un-installing firefox...The proper version will be installed later"
+        apt-wrapper "purge firefox"
+    fi
+
+    if type google-chrome-stable >/dev/null 2>&1 ; then
+        log "Un-installing chrome...The proper version will be installed later"
+        apt-wrapper "purge google-chrome-stable"
+    fi
+
+    # Package that comes with firefox.
+    apt-wrapper "remove hunspell-en-us"
 }
 
 #############################################################################
