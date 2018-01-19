@@ -42,6 +42,20 @@ get_theme_directory()
     echo "${theme_directory[0]}"
 }
 
+# Generalizing - Applying custom images isn't applicable for all scenarios. 
+# Therefore, it is necessary to first check if custom images are available 
+# before attempting to copy them.
+copy_images()
+{
+    custom_image_count=`ls $OXA_TOOLS_CONFIG_PATH/env/${ENVIRONMENT}/*.png 2> /dev/null | wc -w`
+
+    if (( $(echo "$custom_image_count > 0" | bc -l) )); then
+        for i in `ls -d1 $theme_path/*/lms/static/images`; do
+            sudo cp $OXA_TOOLS_CONFIG_PATH/env/$ENVIRONMENT/*.png $i;
+        done
+    fi
+}
+
 ##########################
 # Execution Starts
 ##########################
@@ -53,18 +67,7 @@ theme_path=$(get_theme_directory)
 clean_repository $theme_path
 sync_repo $EDX_THEME_REPO $THEME_BRANCH $theme_path
 
-#todo:
-
-# Generalizing - Applying custom images isn't applicable for all scenarios. 
-# Therefore, it is necessary to first check if custom images are available 
-# before attempting to copy them.
-custom_image_count=`ls $OXA_TOOLS_CONFIG_PATH/env/${ENVIRONMENT}/*.png 2> /dev/null | wc -w`
-
-if (( $(echo "$custom_image_count > 0" | bc -l) )); then
-    for i in `ls -d1 $theme_path/*/lms/static/images`; do
-        sudo cp $OXA_TOOLS_CONFIG_PATH/env/$ENVIRONMENT/*.png $i;
-    done
-fi
+copy_images
 
 # set appropriate permissions on the new theming folder
 sudo chown -R edxapp:edxapp $theme_path
