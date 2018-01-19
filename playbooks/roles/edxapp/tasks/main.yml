@@ -33,10 +33,11 @@
 
 - name: Import kitchen sink course
   sudo: yes
-  shell: bash ./import_kitchensink_course.sh "{{ EDXAPP_IMPORT_KITCHENSINK_COURSE }}"
+  shell: bash ./import_kitchensink_course.sh
   args:
     chdir: "{{ edxapp_files_path }}"
   register: bash_kitchen
+  when: "{{ EDXAPP_IMPORT_KITCHENSINK_COURSE }}"
 
 # Print the shell tasks's stdout and stderr.
 - debug: var="bash_kitchen.stdout_lines + [ bash_kitchen.stderr ]"
