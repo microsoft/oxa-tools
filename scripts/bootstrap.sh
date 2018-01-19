@@ -51,8 +51,9 @@ ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH="master"
 
 # MISC
 EDX_VERSION="open-release/ficus.master"
-#FORUM_VERSION="mongoid5-release"
 FORUM_VERSION="open-release/ficus.master"
+AZURE_MEDIA_VERSION=
+KITCHEN_SINK_COURSE_VERSION=
 
 # script used for triggering background installation (setup in cron)
 CRON_INSTALLER_SCRIPT=""
@@ -155,8 +156,14 @@ parse_args()
           --edxversion)
             EDX_VERSION="${arg_value}"
             ;;
-           --forumversion)
+          --forumversion)
             FORUM_VERSION="${arg_value}"
+            ;;
+          --azure-media-version)
+            AZURE_MEDIA_VERSION="${arg_value}"
+            ;;
+          --kitchen-sink-course-version)
+            KITCHEN_SINK_COURSE_VERSION="${arg_value}"
             ;;
           --installer-script-path)
             CRON_INSTALLER_SCRIPT="${arg_value}"
@@ -271,6 +278,9 @@ required_value()
 verify_state()
 {
     required_value TEMPLATE_TYPE $TEMPLATE_TYPE
+    required_value FORUM_VERSION $FORUM_VERSION
+    required_value AZURE_MEDIA_VERSION $AZURE_MEDIA_VERSION
+    required_value KITCHEN_SINK_COURSE_VERSION $KITCHEN_SINK_COURSE_VERSION
 
     if ! is_valid_arg "jb vmss mongo mysql edxapp fullstack devstack" $EDX_ROLE ; then
       echo "Invalid role specified\n"

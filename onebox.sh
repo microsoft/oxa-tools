@@ -371,6 +371,10 @@ install-with-oxa()
         --edxversion \
             $EDX_BRANCH \
         --forumversion \
+            `get_branch` \
+        --azure-media-version \
+            `get_branch` \
+        --kitchen-sink-course-version \
             `get_branch`
 }
 
