@@ -5,7 +5,8 @@
 set -ex
 
 oxa_tools_path=$1
-kitchen_sink_course_branch=$2 #todo:plumbing
+edx_platform_path=$2
+kitchen_sink_course_branch=$3 #todo:plumbing
 course_path=/tmp/ks_source
 
 src_utils()
@@ -35,7 +36,7 @@ clone_repository \
 sudo chown -R edxapp:www-data $course_path
 
 # Go to edx-platform folder for importing
-pushd /edx/app/edxapp/edx-platform/
+pushd $edx_platform_path
 
 # Import kitchen sink course into the platform
 sudo -u www-data /edx/bin/python.edxapp ./manage.py cms --settings=aws import /edx/var/edxapp/data $course_path

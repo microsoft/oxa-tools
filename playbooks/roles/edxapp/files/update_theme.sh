@@ -10,7 +10,8 @@ ENVIRONMENT=$3
 THEME_DIRECTORY_YAML=$4
 OXA_TOOLS_PATH=$5
 OXA_TOOLS_CONFIG_PATH=$6
-edxapp_directory="/edx/app/edxapp"
+edx_platform_path=$7
+edxapp_directory=$(dirname $edx_platform_path)
 
 src_utils()
 {
@@ -74,7 +75,7 @@ sudo chown -R edxapp:edxapp $theme_path
 sudo chmod -R u+rw $theme_path
 
 # Compile LMS assets and then restart the services so that changes take effect
-sudo su edxapp -s /bin/bash -c "source $edxapp_directory/edxapp_env;cd $edxapp_directory/edx-platform/;paver update_assets lms --settings aws"
+sudo su edxapp -s /bin/bash -c "source $edxapp_directory/edxapp_env;cd $edx_platform_path;paver update_assets lms --settings aws"
 
 # This command won't succeed on devstack. Which is totally fine.
 set +e

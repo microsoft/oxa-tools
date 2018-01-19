@@ -1,7 +1,7 @@
 ---
 - name: Apply theming compile assets workaround
   sudo: yes
-  shell: bash ./update_theme.sh "{{ theme_branch }}" "{{ theme_repo }}" "{{ EDXAPP_THEME_ENVIRONMENT }}" "{{ EDXAPP_COMPREHENSIVE_THEME_DIRS }}" "{{ oxa_tools_path }}" "{{ secrets_path }}"
+  shell: bash ./update_theme.sh "{{ theme_branch }}" "{{ theme_repo }}" "{{ EDXAPP_THEME_ENVIRONMENT }}" "{{ EDXAPP_COMPREHENSIVE_THEME_DIRS }}" "{{ oxa_tools_path }}" "{{ secrets_path }}" "{{ edx_platform_path }}"
   args:
     chdir: "{{ edxapp_files_path }}"
   register: bash_theme
@@ -23,7 +23,7 @@
 
 - name: Create the super user
   sudo: yes
-  shell: bash ./create_superuser.sh "{{ EDXAPP_SU_PASSWORD }}" "{{ EDXAPP_SU_EMAIL }}" "{{ EDXAPP_SU_USERNAME }}"
+  shell: bash ./create_superuser.sh "{{ EDXAPP_SU_PASSWORD }}" "{{ EDXAPP_SU_EMAIL }}" "{{ EDXAPP_SU_USERNAME }}" "{{ edx_platform_path }}"
   args:
     chdir: "{{ edxapp_files_path }}"
   register: bash_superuser
@@ -33,7 +33,7 @@
 
 - name: Import kitchen sink course
   sudo: yes
-  shell: bash ./import_kitchensink_course.sh "{{ oxa_tools_path }}" todo:branch
+  shell: bash ./import_kitchensink_course.sh "{{ oxa_tools_path }}" "{{ edx_platform_path }}" todo:branch
   args:
     chdir: "{{ edxapp_files_path }}"
   register: bash_kitchen
