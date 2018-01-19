@@ -4,25 +4,42 @@
 
 set -ex
 
-# If EDXAPP_IMPORT_KITCHENSINK_COURSE then import Kitchen Sink Course
+oxa_tools_path=$1
+kitchen_sink_course_branch=$2 #todo:plumbing
+course_path=/tmp/ks_source
 
-pushd /tmp
+src_utils()
+{
+    pushd $oxa_tools_path
 
-# Remove if kitchen sink course folder exists
-if [[ -d ks_source ]]; then
-    sudo rm -fr ks_source
-fi
+    echo "source utilities"
+    source templates/stamp/utilities.sh
 
-# Download kitchen sink course from github to folder /tmp/ks_source 
-sudo git clone https://github.com/Microsoft/oxa_kitchen_sink.git ks_source
+    popd
+}
 
-sudo chown -R edxapp:www-data ks_source
+##########################
+# Execution Starts
+##########################
+
+src_utils
+
+# Download kitchen sink course from github
+clone_repository \
+    "Microsoft" \
+    "oxa_kitchen_sink" \
+    $kitchen_sink_course_branch \
+    '' \
+    $course_path
+
+#todo:
+
+sudo chown -R edxapp:www-data $course_path
 
 # Go to edx-platform folder for importing
 pushd /edx/app/edxapp/edx-platform/
 
 # Import kitchen sink course into the platform
-sudo -u www-data /edx/bin/python.edxapp ./manage.py cms --settings=aws import /edx/var/edxapp/data /tmp/ks_source
+sudo -u www-data /edx/bin/python.edxapp ./manage.py cms --settings=aws import /edx/var/edxapp/data $course_path
 
-popd
 popd

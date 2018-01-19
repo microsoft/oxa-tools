@@ -492,7 +492,7 @@ setup-ssh()
 
 get_github_url()
 {
-    if [ -z $3 ]; then
+    if [[ -z $3 ]] ; then
         echo "https://github.com/$1/$2.git"
     else
         echo "https://$3@github.com/$1/$2.git"
@@ -542,8 +542,7 @@ clean_repository()
     REPO_PATH=$1
 
     log "Cleaning up the cloned GitHub Repository at '${REPO_PATH}'"
-    if [ -d "$REPO_PATH" ]; 
-    then
+    if [[ -d "$REPO_PATH" ]] ; then
         rm -rf $REPO_PATH
     fi
 }
