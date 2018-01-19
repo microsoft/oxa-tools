@@ -6,7 +6,7 @@ set -ex
 
 oxa_tools_path=$1
 edx_platform_path=$2
-kitchen_sink_course_branch=$3 #todo:plumbing
+kitchen_sink_course_branch=$3
 course_path=/tmp/ks_source
 
 src_utils()

@@ -33,7 +33,7 @@
 
 - name: Import kitchen sink course
   sudo: yes
-  shell: bash ./import_kitchensink_course.sh "{{ oxa_tools_path }}" "{{ edx_platform_path }}" todo:branch
+  shell: bash ./import_kitchensink_course.sh "{{ oxa_tools_path }}" "{{ edx_platform_path }}" "{{ kitchen_sink_course_version }}"
   args:
     chdir: "{{ edxapp_files_path }}"
   register: bash_kitchen
