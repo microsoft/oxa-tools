@@ -32,8 +32,6 @@ clone_repository \
     '' \
     $course_path
 
-#todo:
-
 sudo chown -R edxapp:www-data $course_path
 
 # Go to edx-platform folder for importing
