@@ -160,10 +160,10 @@ parse_args()
             FORUM_VERSION="${arg_value}"
             ;;
           --azure-media-version)
-            AZURE_MEDIA_VERSION="${arg_value}"
+            export AZURE_MEDIA_VERSION="${arg_value}"
             ;;
           --kitchen-sink-course-version)
-            KITCHEN_SINK_COURSE_VERSION="${arg_value}"
+            export KITCHEN_SINK_COURSE_VERSION="${arg_value}"
             ;;
           --installer-script-path)
             CRON_INSTALLER_SCRIPT="${arg_value}"
