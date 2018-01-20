@@ -160,10 +160,10 @@ parse_args()
             FORUM_VERSION="${arg_value}"
             ;;
           --azure-media-version)
-            AZURE_MEDIA_VERSION="${arg_value}"
+            export AZURE_MEDIA_VERSION="${arg_value}"
             ;;
           --kitchen-sink-course-version)
-            KITCHEN_SINK_COURSE_VERSION="${arg_value}"
+            export KITCHEN_SINK_COURSE_VERSION="${arg_value}"
             ;;
           --installer-script-path)
             CRON_INSTALLER_SCRIPT="${arg_value}"
@@ -353,20 +353,14 @@ source_env()
 ##
 setup()
 {
-    verify_state
     export $(sed -e 's/#.*$//' $OXA_ENV_OVERRIDE_FILE | cut -d= -f1)
-    verify_state
     export ANSIBLE_REPO=$EDX_ANSIBLE_REPO
     export ANSIBLE_VERSION=$ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH
   
     # Sync public repositories using utilities.sh
-    verify_state
     link_oxa_tools_repo
-    verify_state
     sync_repo $OXA_TOOLS_REPO $OXA_TOOLS_VERSION $OXA_TOOLS_PATH
-    verify_state
     sync_repo $CONFIGURATION_REPO $CONFIGURATION_VERSION $CONFIGURATION_PATH
-    verify_state
 
     # aggregate edx configuration with deployment environment expansion
     # warning: beware of yaml variable dependencies due to order of aggregation
