@@ -277,6 +277,7 @@ required_value()
 
 verify_state()
 {
+    set -x
     required_value TEMPLATE_TYPE $TEMPLATE_TYPE
     required_value FORUM_VERSION $FORUM_VERSION
     required_value AZURE_MEDIA_VERSION $AZURE_MEDIA_VERSION
@@ -352,14 +353,20 @@ source_env()
 ##
 setup()
 {
+    verify_state
     export $(sed -e 's/#.*$//' $OXA_ENV_OVERRIDE_FILE | cut -d= -f1)
+    verify_state
     export ANSIBLE_REPO=$EDX_ANSIBLE_REPO
     export ANSIBLE_VERSION=$ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH
   
     # Sync public repositories using utilities.sh
+    verify_state
     link_oxa_tools_repo
+    verify_state
     sync_repo $OXA_TOOLS_REPO $OXA_TOOLS_VERSION $OXA_TOOLS_PATH
+    verify_state
     sync_repo $CONFIGURATION_REPO $CONFIGURATION_VERSION $CONFIGURATION_PATH
+    verify_state
 
     # aggregate edx configuration with deployment environment expansion
     # warning: beware of yaml variable dependencies due to order of aggregation
@@ -369,6 +376,8 @@ setup()
         sed -e "s/%%\([^%]*\)%%/$\{\\1\}/g" -e "s/^---.*$//g" $config | envsubst >> $OXA_PLAYBOOK_CONFIG
     done
     popd
+
+    verify_state
 
     # in order to support retries, we should cleanup residue from previous ansible-bootstrap run
     TEMP_CONFIGURATION_PATH=/tmp/configuration
