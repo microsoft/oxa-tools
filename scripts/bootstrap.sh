@@ -51,8 +51,9 @@ ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH="master"
 
 # MISC
 EDX_VERSION="open-release/ficus.master"
-#FORUM_VERSION="mongoid5-release"
 FORUM_VERSION="open-release/ficus.master"
+AZURE_MEDIA_VERSION=
+KITCHEN_SINK_COURSE_VERSION=
 
 # script used for triggering background installation (setup in cron)
 CRON_INSTALLER_SCRIPT=""
@@ -155,8 +156,14 @@ parse_args()
           --edxversion)
             EDX_VERSION="${arg_value}"
             ;;
-           --forumversion)
+          --forumversion)
             FORUM_VERSION="${arg_value}"
+            ;;
+          --azure-media-version)
+            export AZURE_MEDIA_VERSION="${arg_value}"
+            ;;
+          --kitchen-sink-course-version)
+            export KITCHEN_SINK_COURSE_VERSION="${arg_value}"
             ;;
           --installer-script-path)
             CRON_INSTALLER_SCRIPT="${arg_value}"
@@ -247,10 +254,10 @@ setup_overrides_file()
 
     # in order to support deployment-time configuration bootstrap (specifying repository & branch for the key bits: Oxa-Tools, EdX Platform, EdX Theme, Edx Configuration)
     # we have to allow settings for each of these repositories to override whatever existing settings there are
-    EDX_CONFIGURATION_REPO="https://github.com/${EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME}/${EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME}.git"
-    EDX_PLATFORM_REPO="https://github.com/${EDX_PLATFORM_PUBLIC_GITHUB_ACCOUNTNAME}/${EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME}.git"
-    EDX_THEME_REPO="https://github.com/${EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME}/${EDX_THEME_PUBLIC_GITHUB_PROJECTNAME}.git"
-    EDX_ANSIBLE_REPO="https://github.com/${ANSIBLE_PUBLIC_GITHUB_ACCOUNTNAME}/${ANSIBLE_PUBLIC_GITHUB_PROJECTNAME}.git"
+    EDX_CONFIGURATION_REPO=$(get_github_url ${EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME} ${EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME})
+    EDX_PLATFORM_REPO=$(get_github_url ${EDX_PLATFORM_PUBLIC_GITHUB_ACCOUNTNAME} ${EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME})
+    EDX_THEME_REPO=$(get_github_url ${EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME} ${EDX_THEME_PUBLIC_GITHUB_PROJECTNAME})
+    EDX_ANSIBLE_REPO=$(get_github_url ${ANSIBLE_PUBLIC_GITHUB_ACCOUNTNAME} ${ANSIBLE_PUBLIC_GITHUB_PROJECTNAME})
 
     # setup the deployment overrides (for debugging and deployment-time control of repositories used)
     setup_deployment_overrides $OXA_ENV_OVERRIDE_FILE $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH $EDX_CONFIGURATION_REPO $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH $EDX_PLATFORM_REPO $EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH $EDX_THEME_REPO $EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH $EDX_VERSION $FORUM_VERSION $EDX_ANSIBLE_REPO $ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH
@@ -271,6 +278,9 @@ required_value()
 verify_state()
 {
     required_value TEMPLATE_TYPE $TEMPLATE_TYPE
+    required_value FORUM_VERSION $FORUM_VERSION
+    required_value AZURE_MEDIA_VERSION $AZURE_MEDIA_VERSION
+    required_value KITCHEN_SINK_COURSE_VERSION $KITCHEN_SINK_COURSE_VERSION
 
     if ! is_valid_arg "jb vmss mongo mysql edxapp fullstack devstack" $EDX_ROLE ; then
       echo "Invalid role specified\n"
@@ -556,7 +566,7 @@ BOOTSTRAP_HOME=$(readlink -f $(dirname $0))
 OXA_PATH="/oxa"
 
 # OXA Tools
-OXA_TOOLS_REPO="https://github.com/${OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME}/${OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME}.git"
+OXA_TOOLS_REPO=$(get_github_url ${OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME} ${OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME})
 OXA_TOOLS_PATH=$OXA_PATH/$OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME
 
 # OXA Tools Config
@@ -637,7 +647,7 @@ setup
 PATH=$PATH:/edx/bin
 ANSIBLE_PLAYBOOK=ansible-playbook
 OXA_PLAYBOOK=$OXA_TOOLS_PATH/playbooks/oxa_configuration.yml
-OXA_PLAYBOOK_ARGS="-e oxa_tools_path=$OXA_TOOLS_PATH -e template_type=$TEMPLATE_TYPE -e msft_auth=$MSFT_AUTH"
+OXA_PLAYBOOK_ARGS="-e oxa_tools_path=$OXA_TOOLS_PATH -e oxa_tools_config_path=$OXA_TOOLS_CONFIG_PATH -e template_type=$TEMPLATE_TYPE -e msft_auth=$MSFT_AUTH"
 THEME_ARGS="-e theme_branch=$EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH -e theme_repo=$EDX_THEME_REPO"
 OXA_SSH_ARGS="-u $ADMIN_USER --private-key=/home/$ADMIN_USER/.ssh/id_rsa"
 
