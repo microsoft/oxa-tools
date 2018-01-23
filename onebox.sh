@@ -371,7 +371,11 @@ install-with-oxa()
         --edxversion \
             $EDX_BRANCH \
         --forumversion \
-            `get_branch`
+            `get_branch` \
+        --azure-media-version \
+            `get_branch $USE_MSFT` \
+        --kitchen-sink-course-version \
+            `get_branch $USE_MSFT`
 }
 
 devstack_preconditions()
