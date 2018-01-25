@@ -286,7 +286,7 @@ verify_state()
 fix_jdk()
 {
     # Apply https://github.com/edx/configuration/pull/3881
-    count=`grep -i "8u65" playbooks/roles/oraclejdk/defaults/main.yml | wc -l`
+    count=$(grep -i -c "8u65" playbooks/roles/oraclejdk/defaults/main.yml)
     if [[ "$count" -gt "0" ]] ; then
         cherry_pick_wrapper 0ca865c9b0da42bed83459389ae35e2551860472 "$EDXAPP_SU_EMAIL"
     fi
@@ -295,7 +295,7 @@ fix_jdk()
 fix_npm_python()
 {
     # Apply https://github.com/edx/configuration/pull/4101
-    count=`grep -i "node_modules" playbooks/roles/edxapp/tasks/deploy.yml | wc -l`
+    count=$(grep -i -c "node_modules" playbooks/roles/edxapp/tasks/deploy.yml)
     if (( "$count" == 0 )) ; then
         cherry_pick_wrapper 075d69e6c7c5330732ec75346d02df32d087aa92 "$EDXAPP_SU_EMAIL"
     fi
@@ -306,7 +306,7 @@ fix_hosts_file()
     set -e
     # Apply https://github.com/Microsoft/edx-configuration/pull/90
     add_remote msft_conf "https://github.com/microsoft/edx-configuration.git"
-    count=`grep -c "127.0.0.1 localhost" playbooks/roles/local_dev/tasks/main.yml`
+    count=$(grep -c "127.0.0.1 localhost" playbooks/roles/local_dev/tasks/main.yml)
     if [[ "$count" -gt "0" ]] ; then
         cherry_pick_wrapper f3d59dd09dbbd8b60c9049292c3c814f4de715c5 "$EDXAPP_SU_EMAIL"
     fi
@@ -322,7 +322,10 @@ ansible_try_catch()
     cherry_pick_wrapper a6304eaaefc24d2c3c59d57606c059cdd75b1dd4 "$EDXAPP_SU_EMAIL"
 
     # Apply https://github.com/Microsoft/edx-configuration/pull/92
-    cherry_pick_wrapper d20f121a5181a283a89565ce5207d08d2a2dcc45 "$EDXAPP_SU_EMAIL"
+    count=$(grep -c -i "name: install python requirements" playbooks/roles/edxapp/tasks/deploy.yml)
+    if [[ "$count" -lt "2" ]] ; then
+        cherry_pick_wrapper 5ed320bea2174c37d28b9cc6fe14fa90d83220dd "$EDXAPP_SU_EMAIL"
+    fi
     set +e
 }
 
@@ -337,7 +340,7 @@ link_oxa_tools_repo()
         # Is the git repo oxa-tools?
         pushd ..
         actualRemote=`git config --get remote.origin.url | grep -o 'github.com.*' | sed 's/\.git//g'`
-        count=`echo $OXA_TOOLS_REPO | grep -i $actualRemote | wc -l`
+        count=`echo $OXA_TOOLS_REPO | grep -i -c $actualRemote`
         if [[ "$count" -gt "0" ]] ; then
             # Is the repo already at the desired path?
             pushd ..
