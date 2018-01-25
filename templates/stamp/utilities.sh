@@ -336,7 +336,7 @@ retry-command()
     local tasksOfPrev=
     local alreadyUpgraded=
     for (( a=1; a<=$retry_count; a++ )) ; do
-        message="$optionalDescription attempt number: $a"
+        message="$optionalDescription attempt number: $a of $retry_count"
 
         # Some failures can be resolved by fixing packages.
         if [[ -n "$fix_packages" ]] ; then
@@ -644,7 +644,7 @@ add_remote()
     local remoteName=$1
     local remoteUrl="$2"
 
-    count=`git remote | grep "$remoteName" | wc -l`
+    count=$(git remote | grep -c "$remoteName")
     if (( "$count" == 0 )) ; then
         git remote add $remoteName $remoteUrl
     fi
