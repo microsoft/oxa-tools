@@ -58,8 +58,8 @@ readonly EDXAPP_DEFAULT_SITE_THEME=comprehensive
 
 MYSQL_ADMIN_USER=
 MYSQL_ADMIN_PASSWORD=
-EDXAPP_ENABLE_COMPREHENSIVE_THEMING=
-COMBINED_LOGIN_REGISTRATION=
+EDXAPP_ENABLE_COMPREHENSIVE_THEMING=false
+COMBINED_LOGIN_REGISTRATION=true
 NGINX_SITES=
 EDXAPP_ENABLE_THIRD_PARTY_AUTH=
 
@@ -173,8 +173,6 @@ set_dynamic_vars()
 
     case "$BRANCH_VERSIONS" in
         edx_f|edx_g|edx_master)
-            EDXAPP_ENABLE_COMPREHENSIVE_THEMING=false
-            COMBINED_LOGIN_REGISTRATION=true
             NGINX_SITES='[certs, cms, lms, forum, xqueue]'
 
             if [[ $BRANCH_VERSIONS == edx_g ]] ; then
@@ -191,8 +189,6 @@ set_dynamic_vars()
             MYSQL_ADMIN_PASSWORD=
         ;;
         *)
-            EDXAPP_ENABLE_COMPREHENSIVE_THEMING=true
-            COMBINED_LOGIN_REGISTRATION=false
             # Microsoft repositories support the lms-preview subdomain.
             NGINX_SITES='[certs, cms, lms, lms-preview, forum, xqueue]'
 
