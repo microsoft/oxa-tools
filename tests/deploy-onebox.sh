@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
-set -e
+set -eo pipefail
 
 # Determine the appropriate github branch to clone
 get_branch()
