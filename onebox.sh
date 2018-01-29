@@ -424,7 +424,7 @@ install-with-edx-native()
     OPENEDX_RELEASE=${EDX_BRANCH#$TAGS}
 
     # Enable retry
-    local utilities=`wget_wrapper "templates/stamp/utilities.sh" $(get_current_org)" "oxa-tools" "$(get_current_branch)"`
+    local utilities=`wget_wrapper "templates/stamp/utilities.sh" "$(get_current_org)" "oxa-tools" "$(get_current_branch)"`
     source $utilities
 
     # 2. Bootstrap the Ansible installation:
