@@ -140,7 +140,8 @@ help()
     echo "        --ansible-public-github-projectname Name of the edx ansible GitHub repository"
     echo "        --ansible-public-github-projectbranch Branch of edx ansible GitHub repository"
     echo "        --edxversion EdX Named-Release to use for this deployment"
-    echo "        --forumversion EdX Named Release to use for the FORUMS component"
+
+echo "        --forumversion EdX Named Release to use for the FORUMS component"
     echo "        --cron Operation mode for the script"
     echo "        --azure-subscription-id  Azure subscription id"
     echo "        --smtp-server FQDN of SMTP server used for relaying deployment and other system notifications"
@@ -170,6 +171,7 @@ help()
     echo "        --servicebus-queue-name Name of servicebus queue to use for notification communications"
     echo "        --servicebus-shared-access-key-name Name of the servicebus shared access policy to use for service bus authentication"
     echo "        --servicebus-shared-access-key Key for the servicebus shared access policy to use for service bus authentication"
+    echo "        --edxapp-secretkey Secret key used to secure the session cookie"
 }
 
 # Parse script parameters
@@ -451,6 +453,9 @@ parse_args()
             --servicebus-shared-access-key)
                 servicebus_shared_access_key="${arg_value}"
                 ;;
+            --edxapp-secretkey)
+                EDXAPP_EDXAPP_SECRET_KEY="${arg_value}"
+                ;;
             -h|--help)  # Helpful hints
                 help
                 exit 2
@@ -512,6 +517,8 @@ persist_deployment_time_values()
     sed -i "s#^EDXAPP_EMAIL_HOST_USER=.*#EDXAPP_EMAIL_HOST_USER=${SMTP_AUTH_USER}#I" $config_file
     sed -i "s#^EDXAPP_EMAIL_HOST_PASSWORD=.*#EDXAPP_EMAIL_HOST_PASSWORD=${SMTP_AUTH_USER_PASSWORD}#I" $config_file
     sed -i "s#^EDXAPP_EMAIL_PORT=.*#EDXAPP_EMAIL_PORT=${SMTP_SERVER_PORT}#I" $config_file
+    
+    sed -i "s#^EDXAPP_EDXAPP_SECRET_KEY=.*#EDXAPP_EDXAPP_SECRET_KEY=${EDXAPP_EDXAPP_SECRET_KEY}#I" $config_file
 
     sed -i "s#^EDXAPP_SU_PASSWORD=.*#EDXAPP_SU_PASSWORD=${EDXAPP_SU_PASSWORD}#I" $config_file
     sed -i "s#^EDXAPP_SU_EMAIL=.*#EDXAPP_SU_EMAIL=${EDXAPP_SU_EMAIL}#I" $config_file
@@ -631,7 +638,7 @@ then
     COMPREHENSIVE_THEMING_PARAMS="--enable-comprehensive-theming \"${EDXAPP_ENABLE_COMPREHENSIVE_THEMING}\" --comprehensive-theming-directory \"${EDXAPP_COMPREHENSIVE_THEME_DIR}\" --comprehensive-theming-name \"${EDXAPP_DEFAULT_SITE_THEME}\""
     AUTHENTICATION_PARAMS="--enable-thirdparty-auth \"${EDXAPP_ENABLE_THIRD_PARTY_AUTH}\" --aad-loginbutton-text \"${EDXAPP_AAD_BUTTON_NAME// /_}\""
     DOMAIN_PARAMS="--base-domain-override \"${DOMAIN_OVERRIDE}\" --domain-separator \"${DOMAIN_SEPARATOR}\""
-    EDXAPP_PARAMS="--edxapp-superuser \"${EDXAPP_SU_USERNAME}\" --edxapp-superuserpassword \"${EDXAPP_SU_PASSWORD}\" --edxapp-superuseremail \"${EDXAPP_SU_EMAIL}\""
+    EDXAPP_PARAMS="--edxapp-superuser \"${EDXAPP_SU_USERNAME}\" --edxapp-superuserpassword \"${EDXAPP_SU_PASSWORD}\" --edxapp-superuseremail \"${EDXAPP_SU_EMAIL}\" --edxapp-secretkey \"${EDXAPP_EDXAPP_SECRET_KEY}\""
     DATABASE_PARAMS="--platform-email \"${PLATFORM_EMAIL}\" --platform-name \"${PLATFORM_NAME}\" --mysql-backupuser \"${MYSQL_BACKUP_USER}\" --mysql-backupuserpassword \"${MYSQL_BACKUP_USER_PASSWORD}\" --mysql-repluser \"${MYSQL_REPL_USER}\" --mysql-repluserpassword \"${MYSQL_REPL_USER_PASSWORD}\" --mysql-adminuser \"${MYSQL_ADMIN_USER}\" --mysql-adminuserpassword \"${MYSQL_ADMIN_PASSWORD}\" --mongo-adminuser \"${MONGO_USER}\" --mongo-adminuserpassword \"${MONGO_PASSWORD}\" --mongo-replicasetkey \"${MONGO_REPLICASET_KEY}\""
     MEMCACHE_PARAMS="--memcache-server \"${MEMCACHE_SERVER}\""
     AZURE_CLI_VERSION="--azurecli-version \"${AZURE_CLI_VERSION}\""
