@@ -278,9 +278,6 @@ required_value()
 verify_state()
 {
     required_value TEMPLATE_TYPE $TEMPLATE_TYPE
-    required_value FORUM_VERSION $FORUM_VERSION
-    required_value AZURE_MEDIA_VERSION $AZURE_MEDIA_VERSION
-    required_value KITCHEN_SINK_COURSE_VERSION $KITCHEN_SINK_COURSE_VERSION
 
     if ! is_valid_arg "jb vmss mongo mysql edxapp fullstack devstack" $EDX_ROLE ; then
       echo "Invalid role specified\n"
