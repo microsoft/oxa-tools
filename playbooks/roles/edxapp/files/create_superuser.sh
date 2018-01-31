@@ -2,7 +2,7 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
-set -ex
+set -x
 
 # collect the input parameters for easy identification/reference
 edxapp_superuser_password=$1
