@@ -649,6 +649,13 @@
             "metadata": {
                 "description": "Zero-based numeric indicator of the Jumpbox used for this bootstrap operation. Zero uses the default *-jb server instead of *-jb[1-2]"
             }
+        },
+        "edxappSecretKey": {
+            "type": "securestring",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Secret key used when securing the session cookie"
+            }
         }
     },
     "variables": {
@@ -964,7 +971,7 @@
         "comprehensiveThemingParameters": "[concat(' --enable-comprehensive-theming ', parameters('enableComprehensiveTheming'), ' --comprehensive-theming-directory ', parameters('comprehensiveThemingDirectory'), ' --comprehensive-theming-name ', parameters('comprehensiveThemingName'))]",
         "authenticationParameters": "[concat(' --enable-thirdparty-auth ', parameters('enableThirdPartyAuth'), ' --aad-loginbutton-text \"', replace(parameters('aadLoginButtonText'), ' ', '_'), '\"')]",
         "databaseParameters": "[concat(' --mongo-adminuser ', parameters('mongoServerAdminUserName'), ' --mongo-adminuserpassword \"', parameters('mongoServerAdminPassword'), '\" --mongo-replicasetkey \"', variables('mongoReplicaSetKey'), '\" --mysql-backupuser ', parameters('mysqlBackupUserName'), ' --mysql-backupuserpassword \"', parameters('mysqlBackupUserPassword'), '\" --mysql-repluser \"', parameters('mysqlServerReplUserName'), '\" --mysql-repluserpassword \"', parameters('mysqlServerReplPassword'), '\" --mysql-adminuser \"', parameters('mysqlServerAdminUserName'), '\" --mysql-adminuserpassword \"', parameters('mysqlServerAdminPassword'), '\" --mysql-repluser \"', parameters('mysqlServerReplUserName'), '\" --mysql-repluserpassword \"', parameters('mysqlServerReplPassword'), '\" --mysql-adminuser \"', parameters('mysqlServerAdminUserName'), '\" --mysql-adminuserpassword \"', parameters('mysqlServerAdminPassword'), '\"')]",
-        "edxappParameters": "[concat(' --platform-email \"', parameters('edxPlatformEmail'), '\" --platform-name \"', base64(parameters('edxPlatformName')), '\" --edxapp-superuser \"', parameters('edxappSuperUserName'), '\" --edxapp-superuserpassword \"', parameters('edxappSuperUserPassword'), '\" --edxapp-superuseremail \"', parameters('edxappSuperUserEmail'), '\"')]",
+        "edxappParameters": "[concat(' --platform-email \"', parameters('edxPlatformEmail'), '\" --platform-name \"', base64(parameters('edxPlatformName')), '\" --edxapp-superuser \"', parameters('edxappSuperUserName'), '\" --edxapp-superuserpassword \"', parameters('edxappSuperUserPassword'), '\" --edxapp-superuseremail \"', parameters('edxappSuperUserEmail'), '\" --edxapp-secretKey \"', parameters('edxappSecretKey'), '\"')]",
         "memcacheParameters": "[concat(' --memcache-server \"', base64(parameters('memcacheServer')), '\"')]",
         "azureCliParameters": "[concat(' --azurecli-version \"', parameters('azureCliVersion'), '\"')]",
         "jumpboxBootstrapParameters": "[concat(' --bootstrap-jumpbox \"', variables('jumpboxBootstrapIndicator'), '\"')]",
