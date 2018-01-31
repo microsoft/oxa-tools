@@ -65,7 +65,7 @@ fi
 # clone repo
 mkdir /oxa
 pushd /oxa
-if git clone --depth=50 --branch=$BRANCH https://${REPO} ; then
+if git clone --quiet --depth=50 --branch=$BRANCH https://${REPO} ; then
     echo "success: clone repo inside of container"
 else
     echo "FAILURE: can't clone repo inside of container"

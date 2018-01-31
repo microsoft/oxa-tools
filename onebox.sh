@@ -428,7 +428,7 @@ install-with-edx-native()
     source $utilities
 
     # 2. Bootstrap the Ansible installation:
-    local ans_bootstrap=`wget_wrapper "util/install/ansible-bootstrap.sh" "${EDX}" "$(get_conf_project_name)" "$OPENEDX_RELEASE"`
+    local ans_bootstrap=`wget_wrapper "util/install/ansible-bootstrap.sh" "${MSFT}" "$E_CONF" "ginkgo1tweaks"`
     set +e
     retry-command "bash $ans_bootstrap" 3 "$ans_bootstrap"
     exit_on_error "Execution of edX ansible bootstrap failed"
@@ -465,7 +465,6 @@ test_args
 
 set_dynamic_vars
 
-set -x
 # We currently use sandbox.sh for ginkgo+. Therefore, it doesn't have our customizations.
 #  - (fullstack) This is because vagrant-fullstack.yml was removed in March 2017 and
 #  - (devstack) Something about our customizations result in an "elastic search" error
