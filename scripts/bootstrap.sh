@@ -2,8 +2,6 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
-set -x
-
 # argument defaults
 EDX_ROLE=""
 DEPLOYMENT_ENV="dev"
@@ -259,7 +257,6 @@ setup_overrides_file()
 required_value()
 {
     if [[ -z $2 ]] ; then
-        set +x
         echo -e "\033[1;36m"
         echo -e "\n\n  Use onebox.sh for fullstack or devstack instead of invoking bootstrap.sh directly.\n\n"
         echo -e '\033[0m'
@@ -619,11 +616,7 @@ setup_overrides_file
 # setup crumbs for tracking purposes
 TARGET_FILE=/var/log/bootstrap-$EDX_ROLE.log
 
-if [ "$CRON_MODE" == "1" ];
-then
-    # turn off the debug messages since we have proper logging by now
-    # set +x
-
+if [[ "$CRON_MODE" == "1" ]] ; then
     echo "Cron execution for ${EDX_ROLE} on ${HOSTNAME} detected."
 
     # check if we need to run the setup
