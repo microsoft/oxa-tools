@@ -53,17 +53,9 @@ else
     exit 1
 fi
 
-# test networking
-apt update
-if apt-get clean; apt-get -d --reinstall install apt | grep "Download complete" ; then
-    echo "success: has networking"
-else
-    echo "FAILURE: no networking"
-    exit 1
-fi
-
 # install git
-if apt install -y git ; then
+apt update -qq
+if apt install git -y -qq ; then
     echo "success: apt install git"
 else
     echo "FAILURE: can't apt install git"
