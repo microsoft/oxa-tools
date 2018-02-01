@@ -638,7 +638,7 @@ then
     COMPREHENSIVE_THEMING_PARAMS="--enable-comprehensive-theming \"${EDXAPP_ENABLE_COMPREHENSIVE_THEMING}\" --comprehensive-theming-directory \"${EDXAPP_COMPREHENSIVE_THEME_DIR}\" --comprehensive-theming-name \"${EDXAPP_DEFAULT_SITE_THEME}\""
     AUTHENTICATION_PARAMS="--enable-thirdparty-auth \"${EDXAPP_ENABLE_THIRD_PARTY_AUTH}\" --aad-loginbutton-text \"${EDXAPP_AAD_BUTTON_NAME// /_}\""
     DOMAIN_PARAMS="--base-domain-override \"${DOMAIN_OVERRIDE}\" --domain-separator \"${DOMAIN_SEPARATOR}\""
-    EDXAPP_PARAMS="--edxapp-superuser \"${EDXAPP_SU_USERNAME}\" --edxapp-superuserpassword \"${EDXAPP_SU_PASSWORD}\" --edxapp-superuseremail \"${EDXAPP_SU_EMAIL}\" --edxapp-secretkey \"${EDXAPP_EDXAPP_SECRET_KEY}\""
+    EDXAPP_PARAMS="--edxapp-superuser \"${EDXAPP_SU_USERNAME}\" --edxapp-superuserpassword \"${EDXAPP_SU_PASSWORD}\" --edxapp-superuseremail \"${EDXAPP_SU_EMAIL}\""
     DATABASE_PARAMS="--platform-email \"${PLATFORM_EMAIL}\" --platform-name \"${PLATFORM_NAME}\" --mysql-backupuser \"${MYSQL_BACKUP_USER}\" --mysql-backupuserpassword \"${MYSQL_BACKUP_USER_PASSWORD}\" --mysql-repluser \"${MYSQL_REPL_USER}\" --mysql-repluserpassword \"${MYSQL_REPL_USER_PASSWORD}\" --mysql-adminuser \"${MYSQL_ADMIN_USER}\" --mysql-adminuserpassword \"${MYSQL_ADMIN_PASSWORD}\" --mongo-adminuser \"${MONGO_USER}\" --mongo-adminuserpassword \"${MONGO_PASSWORD}\" --mongo-replicasetkey \"${MONGO_REPLICASET_KEY}\""
     MEMCACHE_PARAMS="--memcache-server \"${MEMCACHE_SERVER}\""
     AZURE_CLI_VERSION="--azurecli-version \"${AZURE_CLI_VERSION}\""
@@ -659,7 +659,7 @@ then
     SERVICEBUS_PARAMS="--servicebus-namespace '${servicebus_namespace}' --servicebus-queue-name '${servicebus_queue_name}' --servicebus-shared-access-key-name '${servicebus_shared_access_key_name}' --servicebus-shared-access-key '${servicebus_shared_access_key}'"
     
     # Create the cron job & exit
-    INSTALL_COMMAND="sudo flock -n /var/log/bootstrap-run-customization.lock bash $CURRENT_PATH/run-customizations.sh -c $CLOUDNAME -u $OS_ADMIN_USERNAME -i $CUSTOM_INSTALLER_RELATIVEPATH -m $MONITORING_CLUSTER_NAME -s $BOOTSTRAP_PHASE -u $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --crontab-interval $CRONTAB_INTERVAL_MINUTES --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID --smtp-server $SMTP_SERVER --smtp-server-port $SMTP_SERVER_PORT --smtp-auth-user $SMTP_AUTH_USER --smtp-auth-user-password $SMTP_AUTH_USER_PASSWORD --cluster-admin-email $CLUSTER_ADMIN_EMAIL --cluster-name $CLUSTER_NAME ${OXA_TOOLS_GITHUB_PARAMS} ${EDX_CONFIGURATION_GITHUB_PARAMS} ${EDX_PLATFORM_GITHUB_PARAMS} ${EDX_THEME_GITHUB_PARAMS} ${ANSIBLE_GITHUB_PARAMS} ${BACKUP_PARAMS} ${SAMPLE_COURSE_PARAMS} ${COMPREHENSIVE_THEMING_PARAMS} ${AUTHENTICATION_PARAMS} ${DOMAIN_PARAMS} ${EDXAPP_PARAMS} --edxversion ${EDX_VERSION} --forumversion ${FORUM_VERSION} ${DATABASE_PARAMS} ${MEMCACHE_PARAMS} ${AZURE_CLI_VERSION} ${MOBILE_REST_API_PARAMS} ${JUMPBOX_BOOTSTRAP_PARAMS} ${SERVICEBUS_PARAMS} --cron >> $SECONDARY_LOG 2>&1"
+    INSTALL_COMMAND="sudo flock -n /var/log/bootstrap-run-customization.lock bash $CURRENT_PATH/run-customizations.sh -c $CLOUDNAME -u $OS_ADMIN_USERNAME -i $CUSTOM_INSTALLER_RELATIVEPATH -m $MONITORING_CLUSTER_NAME -s $BOOTSTRAP_PHASE -u $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --crontab-interval $CRONTAB_INTERVAL_MINUTES --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID --smtp-server $SMTP_SERVER --smtp-server-port $SMTP_SERVER_PORT --smtp-auth-user $SMTP_AUTH_USER --smtp-auth-user-password $SMTP_AUTH_USER_PASSWORD --cluster-admin-email $CLUSTER_ADMIN_EMAIL --cluster-name $CLUSTER_NAME ${OXA_TOOLS_GITHUB_PARAMS} ${EDX_CONFIGURATION_GITHUB_PARAMS} ${EDX_PLATFORM_GITHUB_PARAMS} ${EDX_THEME_GITHUB_PARAMS} ${ANSIBLE_GITHUB_PARAMS} ${BACKUP_PARAMS} ${SAMPLE_COURSE_PARAMS} ${COMPREHENSIVE_THEMING_PARAMS} ${AUTHENTICATION_PARAMS} ${DOMAIN_PARAMS} ${EDXAPP_PARAMS} --edxversion ${EDX_VERSION} --forumversion ${FORUM_VERSION} ${DATABASE_PARAMS} ${MEMCACHE_PARAMS} ${AZURE_CLI_VERSION} ${MOBILE_REST_API_PARAMS} ${JUMPBOX_BOOTSTRAP_PARAMS} ${SERVICEBUS_PARAMS} --edxapp-secretkey ${EDXAPP_EDXAPP_SECRET_KEY} --cron >> $SECONDARY_LOG 2>&1"
     echo $INSTALL_COMMAND > $CRON_INSTALLER_SCRIPT
 
     # Remove the task if it is already setup
@@ -843,7 +843,8 @@ else
         --servicebus-namespace "${servicebus_namespace}" \
         --servicebus-queue-name "${servicebus_queue_name}" \
         --servicebus-shared-access-key-name "${servicebus_shared_access_key_name}" \
-        --servicebus-shared-access-key "${servicebus_shared_access_key}"
+        --servicebus-shared-access-key "${servicebus_shared_access_key}" \
+        --edxapp-secretkey "${EDXAPP_EDXAPP_SECRET_KEY}"
 
     exit_on_error "OXA stamp customization (${INSTALLER_PATH}) failed" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 fi
