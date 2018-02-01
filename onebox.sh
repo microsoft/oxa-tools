@@ -427,8 +427,6 @@ install-with-edx-native()
     local utilities=`wget_wrapper "templates/stamp/utilities.sh" "$(get_current_org)" "oxa-tools" "$(get_current_branch)"`
     source $utilities
 
-    set -x
-
     # 2. Bootstrap the Ansible installation:
     local ans_bootstrap=`wget_wrapper "util/install/ansible-bootstrap.sh" "${MSFT}" "$E_CONF" "ginkgo1tweaks"`
     set +e

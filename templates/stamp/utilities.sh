@@ -641,13 +641,10 @@ sync_repo()
 
 add_remote()
 {
-    set -x
-
     local remoteName=$1
     local remoteUrl="$2"
 
-    count=$(git remote | grep -c "$remoteName")
-    if (( "$count" == 0 )) ; then
+    if ! ( git remote | grep -c "$remoteName" ) ; then
         git remote add $remoteName $remoteUrl
     fi
     git fetch $remoteName > /dev/null 2>&1
@@ -655,8 +652,6 @@ add_remote()
 
 cherry_pick_wrapper()
 {
-    set -x
-
     local hash=$1
     local email=$2
 
