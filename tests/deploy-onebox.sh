@@ -32,7 +32,7 @@ get_repo()
     echo "$repoInfo"
 }
 
-ONEBOX_PARAMS="--branch ginkgo      --role fullstack"
+ONEBOX_PARAMS="--branch edx_master --role fullstack"
 BRANCH=$(get_branch)
 REPO=$(get_repo)
 FOLDER=$(basename $REPO .git)
