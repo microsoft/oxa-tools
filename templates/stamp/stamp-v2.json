@@ -604,7 +604,6 @@
         },
         "edxPlatformName": {
             "type": "string",
-,
             "defaultValue": "Contoso Learning",
             "metadata": {
                 "description": "Name used to identify the application"
