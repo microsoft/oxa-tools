@@ -939,7 +939,7 @@
         "keyVaultSettings": {
             "enabledForDeployment": "[variables('keyVaultEnabledForDeployment')]",
             "enabledForTemplateDeployment": "[variables('keyVaultEnabledForTemplateDeployment')]",
-            "enabledForVolumeEncryption": "[variables('keyVaultEnabledForVolumeEncryption')]",
+[            "enabledForVolumeEncryption": "[variables('keyVaultEnabledForVolumeEncryption')]",
             "tenantId": "[subscription().tenantId]",
             "accessAccount": "[parameters('keyVaultMasterAccountId')]",
             "tenantKeyAccessPermission": "[parameters('keyVaultMasterAccountKeyAccessPermission')]",
@@ -959,7 +959,7 @@
         "customInstallerKeyVaultParameters": "[concat(' --keyvault-name ', concat(parameters('clusterName'), '-kv'), ' --aad-webclient-id ', parameters('aadWebClientId'), ' --aad-webclient-appkey ', parameters('aadWebClientAppKey'), ' --aad-tenant-id ', parameters('aadTenantId'), ' --azure-subscription-id ', subscription().subscriptionId)]",
         "customInstallerDomainOverrideParameters": "[concat(' --base-domain-override ', parameters('baseDomain'), ' --domain-separator ', parameters('domainSeparator') )]",
         "customInstallerMobileRestApiParameters": "[concat(' --enable-mobile-rest-api \"', parameters('enableMobileRestApi'), '\" ')]",
-        "customInstallerEdxAppSecretKeyParameters": "concat(' --edxapp-secretkey \"', parameters('edxappSecretKey'), '\" ')]",
+        "customInstallerEdxAppSecretKeyParameters": "[concat(' --edxapp-secretkey \"', parameters('edxappSecretKey'), '\" ')]",
         
         "customInstallerOutputRedirect": " >> /var/log/bootstrap.csx.log 2>&1",
         "smtpParameters": "[concat(' --smtp-server ', parameters('smtpServer'), ' --smtp-server-port ', parameters('smtpServerPort'), ' --smtp-auth-user ', parameters('smtpAuthenticationUser'), ' --smtp-auth-user-password ', parameters('smtpAuthenticationUserPassword'), '  --cluster-admin-email ', parameters('clusterAdmininistratorEmailAddress'))]",
