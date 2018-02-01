@@ -939,7 +939,7 @@
         "keyVaultSettings": {
             "enabledForDeployment": "[variables('keyVaultEnabledForDeployment')]",
             "enabledForTemplateDeployment": "[variables('keyVaultEnabledForTemplateDeployment')]",
-[            "enabledForVolumeEncryption": "[variables('keyVaultEnabledForVolumeEncryption')]",
+            "enabledForVolumeEncryption": "[variables('keyVaultEnabledForVolumeEncryption')]",
             "tenantId": "[subscription().tenantId]",
             "accessAccount": "[parameters('keyVaultMasterAccountId')]",
             "tenantKeyAccessPermission": "[parameters('keyVaultMasterAccountKeyAccessPermission')]",
