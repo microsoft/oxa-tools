@@ -6,14 +6,23 @@ set -eo pipefail
 # Determine the appropriate github branch to clone
 get_branch()
 {
-    prefix='* '
+    local branchInfo=
 
-    # Current branch is prefixed with an asterisk. Remove it.
-    branchInfo=`git branch | grep "$prefix" | sed "s/$prefix//g"`
+    if [[ -n $CIRCLE_BRANCH ]] ; then
+        branchInfo=$CIRCLE_BRANCH
+    elif [[ -n $TRAVIS_BRANCH ]] ; then
+        branchInfo=$TRAVIS_BRANCH
+    elif [[ -n $TRAVIS_PULL_REQUEST_BRANCH ]] ; then
+        branchInfo=$TRAVIS_PULL_REQUEST_BRANCH
+    else
+        # Current branch is prefixed with an asterisk. Remove it.
+        local prefix='* '
+        branchInfo=`git branch | grep "$prefix" | sed "s/$prefix//g"`
 
-    # Ensure branch information is useful.
-    if [[ -z "$branchInfo" ]] || [[ $branchInfo == *"no branch"* ]] || [[ $branchInfo == *"detached"* ]] ; then
-        branchInfo="master"
+        # Ensure branch information is useful.
+        if [[ -z "$branchInfo" ]] || [[ $branchInfo == *"no branch"* ]] || [[ $branchInfo == *"detached"* ]] ; then
+            branchInfo="odf_ci2"
+        fi
     fi
 
     echo "$branchInfo"
@@ -21,18 +30,28 @@ get_branch()
 
 get_repo()
 {
-    repoInfo=$(git config --get remote.origin.url)
+    local repoInfo=
 
-    # Convert ssh repo url into https
-    if echo $repoInfo | grep "@.*:.*/" > /dev/null 2>&1 ; then
-        echo $repoInfo | tr @ "\n" | tr : / | tail -1
-        return
+    if [[ -n $TRAVIS_REPO_SLUG ]] ; then
+        repoInfo="github.com/${TRAVIS_REPO_SLUG}"
+    else
+        if [[ -n $CIRCLE_REPOSITORY_URL ]] ; then
+            repoInfo=$CIRCLE_REPOSITORY_URL
+        else
+            repoInfo=$(git config --get remote.origin.url)
+        fi
+
+        # Convert ssh repo url into https
+        if echo $repoInfo | grep "@.*:.*/" > /dev/null 2>&1 ; then
+            echo $repoInfo | tr @ "\n" | tr : / | tail -1
+            return
+        fi
     fi
 
     echo "$repoInfo"
 }
 
-ONEBOX_PARAMS="--branch dev --role fullstack"
+ONEBOX_PARAMS="--branch dev --role devstack"
 BRANCH=$(get_branch)
 REPO=$(get_repo)
 FOLDER=$(basename $REPO .git)
