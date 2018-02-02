@@ -32,6 +32,14 @@ jobs:
         - run:
             name: run tests
             command: source ./tests/deploy-onebox.sh
+  test2:
+    environment:
+      - ONEBOX_PARAMS: "--branch Dev --Role Devstack"
+    <<: *sharedSetup
+  test3:
+    environment:
+      - ONEBOX_PARAMS: "--branch Ginkgo --Role Fullstack"
+    <<: *sharedSetup
   test4:
     environment:
       - ONEBOX_PARAMS: "--branch Ginkgo --Role Devstack"
@@ -40,11 +48,18 @@ jobs:
     environment:
       - ONEBOX_PARAMS: "--branch Edx_master --Role Fullstack"
     <<: *sharedSetup
+  test6:
+    environment:
+      - ONEBOX_PARAMS: "--branch Edx_master --Role Devstack"
+    <<: *sharedSetup
 
 workflows:
   version: 2
   all:
     jobs:
       - test1
+      - test2
+      - test3
       - test4
       - test5
+      - test6

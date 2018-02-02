@@ -61,6 +61,7 @@ CONTAINER_NAME=$(echo "$ONEBOX_PARAMS" | tr -d "-" | tr -d " ")
 echo "BRANCH=$BRANCH, REPO=$REPO, FOLDER=$FOLDER"
 echo "ONEBOX_PARAMS=$ONEBOX_PARAMS"
 echo "CONTAINER_NAME=$CONTAINER_NAME"
+echo
 
 # keep alive
 bash ./tests/keep-alive.sh &
