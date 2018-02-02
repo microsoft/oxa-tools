@@ -13,8 +13,8 @@ jobs:
     steps:
       - checkout
 
-      <<: &containerSetup
-        - run: |
+      - run: |
+        <<: &containerSetup
             docker pull solita/ubuntu-systemd:16.04
             docker run --rm --privileged -v /:/host solita/ubuntu-systemd:16.04 setup
             # Prepare cgroup on the host at /tmp/cgroup to avoid error: "failed to connect to bus: no such file or directory"
@@ -43,7 +43,8 @@ jobs:
     steps:
       - checkout
 
-      <<: *containerSetup
+      - run: |
+        <<: *containerSetup
 
       - run: |
           # Host entries from edx-configuration/playbooks/roles/local_dev/tasks/main.yml
