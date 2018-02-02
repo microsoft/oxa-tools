@@ -5,9 +5,7 @@
 seconds=$((9 * 60))
 message="Ah, ha, ha, ha, stayin' alive, stayin' alive"
 
-for (( a=1; a<=5; a++ )) ; do
-    echo "$message"
+for (( a=1; a<=7; a++ )) ; do
     sleep $seconds
+    echo "$message"
 done
-
-echo "$message"
