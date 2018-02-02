@@ -219,7 +219,7 @@
         },
         "smtpAuthenticationUserPassword": {
             "value": "{SMTPAUTHENTICATIONUSERPASSWORD}"
-        },
+,        },
         "clusterAdmininistratorEmailAddress": {
             "value": "{ADMINEMAILADDRESS}"
         },
@@ -282,6 +282,9 @@
         },
         "edxPlatformEmail": {
             "value": "{EDXPLATFORMEMAIL}"
+        },
+        "edxappSecretKey": {
+            "value": "{EDXAPPSECRETKEY}"
         }
     }
 }
