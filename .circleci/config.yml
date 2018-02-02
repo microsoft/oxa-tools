@@ -11,10 +11,10 @@ jobs:
     environment:
       - ONEBOX_PARAMS: "--branch dev --Role Fullstack"
     steps:
-      - checkout
+      <<: &containerSetup
+        - checkout
 
-      - run: |
-        <<: &containerSetup
+        - run: |
             docker pull solita/ubuntu-systemd:16.04
             docker run --rm --privileged -v /:/host solita/ubuntu-systemd:16.04 setup
             # Prepare cgroup on the host at /tmp/cgroup to avoid error: "failed to connect to bus: no such file or directory"
@@ -41,10 +41,7 @@ jobs:
     environment:
       - ONEBOX_PARAMS: "--branch Edx_master --Role Devstack"
     steps:
-      - checkout
-
-      - run: |
-        <<: *containerSetup
+      <<: *containerSetup
 
       - run: |
           # Host entries from edx-configuration/playbooks/roles/local_dev/tasks/main.yml
