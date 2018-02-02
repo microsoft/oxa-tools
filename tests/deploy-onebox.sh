@@ -53,7 +53,6 @@ get_repo()
     echo "$repoInfo"
 }
 
-ONEBOX_PARAMS="--branch ginkgo --role fullstack"
 BRANCH=$(get_branch)
 REPO=$(get_repo)
 FOLDER=$(basename $REPO .git)
@@ -65,7 +64,8 @@ env
 bash ./tests/keep-alive.sh &
 
 # Connect to container
-docker exec -i stepdo0 /bin/bash -s <<EOF
+containerName=$(echo "$ONEBOX_PARAMS" | tr -d "-" | tr -d " ")
+docker exec -i $containerName /bin/bash -s <<EOF
 
 # test systemd
 if systemctl > /dev/null ; then
