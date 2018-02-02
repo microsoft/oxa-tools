@@ -517,8 +517,6 @@ persist_deployment_time_values()
     sed -i "s#^EDXAPP_EMAIL_HOST_USER=.*#EDXAPP_EMAIL_HOST_USER=${SMTP_AUTH_USER}#I" $config_file
     sed -i "s#^EDXAPP_EMAIL_HOST_PASSWORD=.*#EDXAPP_EMAIL_HOST_PASSWORD=${SMTP_AUTH_USER_PASSWORD}#I" $config_file
     sed -i "s#^EDXAPP_EMAIL_PORT=.*#EDXAPP_EMAIL_PORT=${SMTP_SERVER_PORT}#I" $config_file
-    
-    sed -i "s#^EDXAPP_EDXAPP_SECRET_KEY=.*#EDXAPP_EDXAPP_SECRET_KEY=${EDXAPP_EDXAPP_SECRET_KEY}#I" $config_file
 
     sed -i "s#^EDXAPP_SU_PASSWORD=.*#EDXAPP_SU_PASSWORD=${EDXAPP_SU_PASSWORD}#I" $config_file
     sed -i "s#^EDXAPP_SU_EMAIL=.*#EDXAPP_SU_EMAIL=${EDXAPP_SU_EMAIL}#I" $config_file
@@ -571,6 +569,15 @@ persist_deployment_time_values()
         sed -i "s#^OAUTH_ENFORCE_SECURE=.*#OAUTH_ENFORCE_SECURE=${EDXAPP_ENABLE_MOBILE_REST_API}#I" $config_file
     else
         log "Mobile Rest API override not specified"
+    fi
+    
+    # check for Secret Key override
+    if [[ ! -z ${EDXAPP_EDXAPP_SECRET_KEY} ]];
+    then
+        log "Overriding 'EDXAPP_EDXAPP_SECRET_KEY'"
+        sed -i "s#^EDXAPP_EDXAPP_SECRET_KEY=.*#EDXAPP_EDXAPP_SECRET_KEY=${EDXAPP_EDXAPP_SECRET_KEY}#I" $config_file
+    else
+        log "Secret Key not specified"
     fi
 
     # Re-source the cloud configurations
@@ -645,6 +652,9 @@ then
 
     # Mobile rest api parameter
     MOBILE_REST_API_PARAMS="--enable-mobile-rest-api \"${EDXAPP_ENABLE_MOBILE_REST_API}\""
+    
+    # Secret Key parameter
+    EDXAPP_EDXAPP_SECRET_KEY_PARAMS="--edxapp-secretkey \"${EDXAPP_EDXAPP_SECRET_KEY}""
 
     # Jumpbox Bootstrap-Only mode indicator
     JUMPBOX_BOOTSTRAP_PARAMS="--bootstrap-jumpbox \"${JUMPBOX_BOOTSTRAP}\""
@@ -659,7 +669,7 @@ then
     SERVICEBUS_PARAMS="--servicebus-namespace '${servicebus_namespace}' --servicebus-queue-name '${servicebus_queue_name}' --servicebus-shared-access-key-name '${servicebus_shared_access_key_name}' --servicebus-shared-access-key '${servicebus_shared_access_key}'"
     
     # Create the cron job & exit
-    INSTALL_COMMAND="sudo flock -n /var/log/bootstrap-run-customization.lock bash $CURRENT_PATH/run-customizations.sh -c $CLOUDNAME -u $OS_ADMIN_USERNAME -i $CUSTOM_INSTALLER_RELATIVEPATH -m $MONITORING_CLUSTER_NAME -s $BOOTSTRAP_PHASE -u $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --crontab-interval $CRONTAB_INTERVAL_MINUTES --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID --smtp-server $SMTP_SERVER --smtp-server-port $SMTP_SERVER_PORT --smtp-auth-user $SMTP_AUTH_USER --smtp-auth-user-password $SMTP_AUTH_USER_PASSWORD --cluster-admin-email $CLUSTER_ADMIN_EMAIL --cluster-name $CLUSTER_NAME ${OXA_TOOLS_GITHUB_PARAMS} ${EDX_CONFIGURATION_GITHUB_PARAMS} ${EDX_PLATFORM_GITHUB_PARAMS} ${EDX_THEME_GITHUB_PARAMS} ${ANSIBLE_GITHUB_PARAMS} ${BACKUP_PARAMS} ${SAMPLE_COURSE_PARAMS} ${COMPREHENSIVE_THEMING_PARAMS} ${AUTHENTICATION_PARAMS} ${DOMAIN_PARAMS} ${EDXAPP_PARAMS} --edxversion ${EDX_VERSION} --forumversion ${FORUM_VERSION} ${DATABASE_PARAMS} ${MEMCACHE_PARAMS} ${AZURE_CLI_VERSION} ${MOBILE_REST_API_PARAMS} ${JUMPBOX_BOOTSTRAP_PARAMS} ${SERVICEBUS_PARAMS} --edxapp-secretkey ${EDXAPP_EDXAPP_SECRET_KEY} --cron >> $SECONDARY_LOG 2>&1"
+    INSTALL_COMMAND="sudo flock -n /var/log/bootstrap-run-customization.lock bash $CURRENT_PATH/run-customizations.sh -c $CLOUDNAME -u $OS_ADMIN_USERNAME -i $CUSTOM_INSTALLER_RELATIVEPATH -m $MONITORING_CLUSTER_NAME -s $BOOTSTRAP_PHASE -u $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --crontab-interval $CRONTAB_INTERVAL_MINUTES --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID --smtp-server $SMTP_SERVER --smtp-server-port $SMTP_SERVER_PORT --smtp-auth-user $SMTP_AUTH_USER --smtp-auth-user-password $SMTP_AUTH_USER_PASSWORD --cluster-admin-email $CLUSTER_ADMIN_EMAIL --cluster-name $CLUSTER_NAME ${OXA_TOOLS_GITHUB_PARAMS} ${EDX_CONFIGURATION_GITHUB_PARAMS} ${EDX_PLATFORM_GITHUB_PARAMS} ${EDX_THEME_GITHUB_PARAMS} ${ANSIBLE_GITHUB_PARAMS} ${BACKUP_PARAMS} ${SAMPLE_COURSE_PARAMS} ${COMPREHENSIVE_THEMING_PARAMS} ${AUTHENTICATION_PARAMS} ${DOMAIN_PARAMS} ${EDXAPP_PARAMS} --edxversion ${EDX_VERSION} --forumversion ${FORUM_VERSION} ${DATABASE_PARAMS} ${MEMCACHE_PARAMS} ${AZURE_CLI_VERSION} ${MOBILE_REST_API_PARAMS} ${JUMPBOX_BOOTSTRAP_PARAMS} ${SERVICEBUS_PARAMS} ${EDXAPP_EDXAPP_SECRET_KEY_PARAMS} --cron >> $SECONDARY_LOG 2>&1"
     echo $INSTALL_COMMAND > $CRON_INSTALLER_SCRIPT
 
     # Remove the task if it is already setup
