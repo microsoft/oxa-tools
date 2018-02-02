@@ -26,5 +26,6 @@
     "AzureCliVersion": "",
     "EnableMobileRestApi": null,
     "BranchName": "",
-    "JumpboxNumber": 0    
+    "JumpboxNumber": 0,
+    "EdxAppSecretKey": ""
 }
