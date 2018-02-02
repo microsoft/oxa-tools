@@ -32,7 +32,9 @@ get_repo()
 {
     local repoInfo=
 
-    if [[ -n $TRAVIS_REPO_SLUG ]] ; then
+    if [[ -n $CIRCLE_PROJECT_USERNAME ]] && [[ $CIRCLE_PROJECT_REPONAME ]] ; then
+        repoInfo="github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
+    elif [[ -n $TRAVIS_REPO_SLUG ]] ; then
         repoInfo="github.com/${TRAVIS_REPO_SLUG}"
     else
         if [[ -n $CIRCLE_REPOSITORY_URL ]] ; then
@@ -51,7 +53,7 @@ get_repo()
     echo "$repoInfo"
 }
 
-ONEBOX_PARAMS="--branch dev --role devstack"
+ONEBOX_PARAMS="--branch ginkgo --role devstack"
 BRANCH=$(get_branch)
 REPO=$(get_repo)
 FOLDER=$(basename $REPO .git)
