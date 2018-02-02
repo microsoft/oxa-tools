@@ -4,58 +4,56 @@
 #
 version: 2
 jobs:
-  fsCurrent:
-    build:
-      # VM allows for "priveleged" containers.
-      machine: true
-      working_directory: ~/repo
-      environment:
-        - ONEBOX_PARAMS: "--branch dev --Role Fullstack"
-      steps:
-        <<: &containerSetup
-          - checkout
-
-          - run: |
-              docker pull solita/ubuntu-systemd:16.04
-              docker run --rm --privileged -v /:/host solita/ubuntu-systemd:16.04 setup
-              # Prepare cgroup on the host at /tmp/cgroup to avoid error: "failed to connect to bus: no such file or directory"
-              sudo mkdir -p /tmp/cgroup/systemd && sudo mount -t cgroup systemd /tmp/cgroup/systemd -o ro,noexec,nosuid,nodev,none,name=systemd
+  build:
+    # VM allows for "priveleged" containers.
+    machine: true
+    working_directory: ~/repo
+    environment:
+      - ONEBOX_PARAMS: "--branch dev --Role Fullstack"
+    steps:
+      <<: &containerSetup
+        - checkout
 
         - run: |
-            # Host entries from edx-configuration/playbooks/roles/local_dev/tasks/main.yml
-            # "priveleged" to support THP changes in edx-configuration/playbooks/roles/mongo_3_2/tasks/main.yml
-            docker run -d --name $(echo "$ONEBOX_PARAMS" | tr -d "-" | tr -d " ")  \
-                          --add-host "localhost preview.localhost":127.0.0.1 \
-                          --privileged \
-                          --security-opt seccomp=unconfined \
-                          --tmpfs /run \
-                          --tmpfs /run/lock \
-                          -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
-                          -t solita/ubuntu-systemd:16.04
-        - run:
-            name: run tests
-            command: source ./tests/deploy-onebox.sh
-  dsMaster:
-    build:
-      # VM allows for "priveleged" containers.
-      machine: true
-      working_directory: ~/repo
-      environment:
-        - ONEBOX_PARAMS: "--branch Edx_master --Role Devstack"
-      steps:
-        <<: *containerSetup
+            docker pull solita/ubuntu-systemd:16.04
+            docker run --rm --privileged -v /:/host solita/ubuntu-systemd:16.04 setup
+            # Prepare cgroup on the host at /tmp/cgroup to avoid error: "failed to connect to bus: no such file or directory"
+            sudo mkdir -p /tmp/cgroup/systemd && sudo mount -t cgroup systemd /tmp/cgroup/systemd -o ro,noexec,nosuid,nodev,none,name=systemd
 
-        - run: |
-            # Host entries from edx-configuration/playbooks/roles/local_dev/tasks/main.yml
-            # "priveleged" to support THP changes in edx-configuration/playbooks/roles/mongo_3_2/tasks/main.yml
-            docker run -d --name $(echo "$ONEBOX_PARAMS" | tr -d "-" | tr -d " ")  \
-                          --add-host "localhost preview.localhost":127.0.0.1 \
-                          --privileged \
-                          --security-opt seccomp=unconfined \
-                          --tmpfs /run \
-                          --tmpfs /run/lock \
-                          -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
-                          -t solita/ubuntu-systemd:16.04
-        - run:
-            name: run tests
-            command: source ./tests/deploy-onebox.sh
+      - run: |
+          # Host entries from edx-configuration/playbooks/roles/local_dev/tasks/main.yml
+          # "priveleged" to support THP changes in edx-configuration/playbooks/roles/mongo_3_2/tasks/main.yml
+          docker run -d --name $(echo "$ONEBOX_PARAMS" | tr -d "-" | tr -d " ")  \
+                        --add-host "localhost preview.localhost":127.0.0.1 \
+                        --privileged \
+                        --security-opt seccomp=unconfined \
+                        --tmpfs /run \
+                        --tmpfs /run/lock \
+                        -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
+                        -t solita/ubuntu-systemd:16.04
+      - run:
+          name: run tests
+          command: source ./tests/deploy-onebox.sh
+  test:
+    # VM allows for "priveleged" containers.
+    machine: true
+    working_directory: ~/repo
+    environment:
+      - ONEBOX_PARAMS: "--branch Edx_master --Role Devstack"
+    steps:
+      <<: *containerSetup
+
+      - run: |
+          # Host entries from edx-configuration/playbooks/roles/local_dev/tasks/main.yml
+          # "priveleged" to support THP changes in edx-configuration/playbooks/roles/mongo_3_2/tasks/main.yml
+          docker run -d --name $(echo "$ONEBOX_PARAMS" | tr -d "-" | tr -d " ")  \
+                        --add-host "localhost preview.localhost":127.0.0.1 \
+                        --privileged \
+                        --security-opt seccomp=unconfined \
+                        --tmpfs /run \
+                        --tmpfs /run/lock \
+                        -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
+                        -t solita/ubuntu-systemd:16.04
+      - run:
+          name: run tests
+          command: source ./tests/deploy-onebox.sh
