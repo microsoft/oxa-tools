@@ -32,7 +32,11 @@ jobs:
         - run:
             name: run tests
             command: source ./tests/deploy-onebox.sh
-  test2:
+  test4:
+    environment:
+      - ONEBOX_PARAMS: "--branch Ginkgo --Role Devstack"
+    <<: *sharedSetup
+  test5:
     environment:
       - ONEBOX_PARAMS: "--branch Edx_master --Role Fullstack"
     <<: *sharedSetup

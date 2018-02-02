@@ -56,16 +56,17 @@ get_repo()
 BRANCH=$(get_branch)
 REPO=$(get_repo)
 FOLDER=$(basename $REPO .git)
-echo "BRANCH=$BRANCH, REPO=$REPO, FOLDER=$FOLDER, ONEBOX_PARAMS=$ONEBOX_PARAMS"
+CONTAINER_NAME=$(echo "$ONEBOX_PARAMS" | tr -d "-" | tr -d " ")
 
-env
+echo "BRANCH=$BRANCH, REPO=$REPO, FOLDER=$FOLDER"
+echo "ONEBOX_PARAMS=$ONEBOX_PARAMS"
+echo "CONTAINER_NAME=$CONTAINER_NAME"
 
 # keep alive
 bash ./tests/keep-alive.sh &
 
 # Connect to container
-containerName=$(echo "$ONEBOX_PARAMS" | tr -d "-" | tr -d " ")
-docker exec -i $containerName /bin/bash -s <<EOF
+docker exec -i $CONTAINER_NAME /bin/bash -s <<EOF
 
 # test systemd
 if systemctl > /dev/null ; then
