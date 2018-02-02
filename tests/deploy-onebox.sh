@@ -32,12 +32,13 @@ get_repo()
     echo "$repoInfo"
 }
 
-ONEBOX_PARAMS="--branch edx_master --role fullstack"
+ONEBOX_PARAMS="--branch dev --role fullstack"
 BRANCH=$(get_branch)
 REPO=$(get_repo)
 FOLDER=$(basename $REPO .git)
 echo "BRANCH=$BRANCH, REPO=$REPO, FOLDER=$FOLDER, ONEBOX_PARAMS=$ONEBOX_PARAMS"
 
+env
 
 # keep alive
 bash ./tests/keep-alive.sh &
