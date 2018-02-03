@@ -629,7 +629,7 @@ if [ "$CRON_MODE" == "0" ];
 then
     log "Setting up cron job for executing customization from '${HOSTNAME}' for the OXA Stamp"
 
-    # todo: switch to bulk referencing all parameters and passing along
+\    # todo: switch to bulk referencing all parameters and passing along
     # todo: add encoding/decoding for other parameters that support blank spaces in their value
     # decode the input now that we need to use the variable
     PLATFORM_NAME=`echo ${PLATFORM_NAME} | base64`
@@ -654,7 +654,7 @@ then
     MOBILE_REST_API_PARAMS="--enable-mobile-rest-api \"${EDXAPP_ENABLE_MOBILE_REST_API}\""
     
     # Secret Key parameter
-    EDXAPP_EDXAPP_SECRET_KEY_PARAMS="--edxapp-secretkey \"${EDXAPP_EDXAPP_SECRET_KEY}""
+    EDXAPP_EDXAPP_SECRET_KEY_PARAMS="--edxapp-secretkey \"${EDXAPP_EDXAPP_SECRET_KEY}\""
 
     # Jumpbox Bootstrap-Only mode indicator
     JUMPBOX_BOOTSTRAP_PARAMS="--bootstrap-jumpbox \"${JUMPBOX_BOOTSTRAP}\""
