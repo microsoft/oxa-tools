@@ -25,8 +25,7 @@ fix_platform()
 
     log "cherry-pick change to support MSA"
 
-    count=`grep -i "live" lms/envs/aws.py | wc -l`
-    if (( "$count" == 0 )) ; then
+    if ! ( grep -i "live" lms/envs/aws.py ) ; then
         log "Ensure remote has commit"
         add_remote msft_plat https://github.com/microsoft/edx-platform.git
 
@@ -36,8 +35,7 @@ fix_platform()
 
         # Ginkgo and later fix. Applying part of
         # https://github.com/Microsoft/edx-platform/compare/ginkgo1...Microsoft:ginkgo1tweaks
-        count=`grep -i "social_core" lms/envs/aws.py | wc -l`
-        if (( "$count" > 0 )) ; then
+        if grep -i "social_core" lms/envs/aws.py ; then
             hash=dd939e404c9f762b71eabb67f3340c14ba5ba9c3
         fi
 

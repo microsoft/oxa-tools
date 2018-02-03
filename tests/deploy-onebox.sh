@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
-set -eo pipefail
+set -e
 
 # Determine the appropriate github branch to clone
 get_branch()
@@ -54,6 +54,9 @@ get_repo()
 }
 
 BRANCH=$(get_branch)
+
+set -o pipefail
+
 REPO=$(get_repo)
 FOLDER=$(basename $REPO .git)
 CONTAINER_NAME=$(echo "$ONEBOX_PARAMS" | tr -d "-" | tr -d " ")

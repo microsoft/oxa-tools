@@ -283,8 +283,7 @@ verify_state()
 fix_jdk()
 {
     # Apply https://github.com/edx/configuration/pull/3881
-    count=$(grep -i -c "8u65" playbooks/roles/oraclejdk/defaults/main.yml)
-    if [[ "$count" -gt "0" ]] ; then
+    if grep -i "8u65" playbooks/roles/oraclejdk/defaults/main.yml ; then
         cherry_pick_wrapper 0ca865c9b0da42bed83459389ae35e2551860472 "$EDXAPP_SU_EMAIL"
     fi
 }
@@ -292,8 +291,7 @@ fix_jdk()
 fix_npm_python()
 {
     # Apply https://github.com/edx/configuration/pull/4101
-    count=$(grep -i -c "node_modules" playbooks/roles/edxapp/tasks/deploy.yml)
-    if (( "$count" == 0 )) ; then
+    if ! ( grep -i "node_modules" playbooks/roles/edxapp/tasks/deploy.yml ) ; then
         cherry_pick_wrapper 075d69e6c7c5330732ec75346d02df32d087aa92 "$EDXAPP_SU_EMAIL"
     fi
 }
@@ -303,8 +301,7 @@ fix_hosts_file()
     set -e
     # Apply https://github.com/Microsoft/edx-configuration/pull/90
     add_remote msft_conf "https://github.com/microsoft/edx-configuration.git"
-    count=$(grep -c "127.0.0.1 localhost" playbooks/roles/local_dev/tasks/main.yml)
-    if [[ "$count" -gt "0" ]] ; then
+    if grep "127.0.0.1 localhost" playbooks/roles/local_dev/tasks/main.yml ; then
         cherry_pick_wrapper f3d59dd09dbbd8b60c9049292c3c814f4de715c5 "$EDXAPP_SU_EMAIL"
     fi
     set +e
