@@ -53,7 +53,9 @@ PLATFORM_VERSION=oxa/master.fic
 THEME_REPO=https://github.com/Microsoft/edx-theme.git
 THEME_VERSION=oxa/master.fic
 EDX_VERSION=open-release/ficus.master
-FORUM_VERSION=open-release/ficus.master
+FORUM_VERSION=oxa/master.fic
+AZURE_MEDIA_VERSION=oxa/master.fic
+KITCHEN_SINK_COURSE_VERSION=oxa/master.fic
 
 # fullstack uses default EMAIL_HOST=localhost
 # config/stamp/stamp.yml
