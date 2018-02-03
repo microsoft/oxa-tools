@@ -21,7 +21,7 @@ get_branch()
 
         # Ensure branch information is useful.
         if [[ -z "$branchInfo" ]] || [[ $branchInfo == *"no branch"* ]] || [[ $branchInfo == *"detached"* ]] ; then
-            branchInfo="odf_ci2"
+            branchInfo="oxa/dev.fic"
         fi
     fi
 
