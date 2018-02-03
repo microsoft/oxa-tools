@@ -52,18 +52,72 @@ jobs:
     environment:
       - ONEBOX_PARAMS: "--branch Edx_master --Role Devstack"
     <<: *sharedSetup
+  test7:
+    environment:
+      - ONEBOX_PARAMS: "--branch Release --Role Fullstack"
+    <<: *sharedSetup
+  test8:
+    environment:
+      - ONEBOX_PARAMS: "--branch Release --Role Devstack"
+    <<: *sharedSetup
+  test9:
+    environment:
+      - ONEBOX_PARAMS: "--branch Master --Role Fullstack"
+    <<: *sharedSetup
+  test10:
+    environment:
+      - ONEBOX_PARAMS: "--branch Master --Role Devstack"
+    <<: *sharedSetup
 
+# Jobs are sorted from longest duration to shortest (approximately)
+# This generally means the shortest duration overall.
 workflows:
   version: 2
   all:
-    # Jobs are sorted from longest duration to shortest (approximately)
-    # This generally means the shortest duration overall.
     jobs:
-      # This one can take a little over two hours which is the timeout on circleci
-      # If we want to re-nenable this then we'll need to do some "perf tuning"
-      #- test5
+      - test3
+          <<: &releaseFilter
+            filters:
+              branches:
+                only:
+                  - oxa/release.fic
+      - test6
+          <<: *releaseFilter
+      - test4
+          <<: *releaseFilter
+      - test2
+          <<: &devFilter
+            filters:
+              branches:
+                only:
+                  - oxa/dev.fic
+      - test8
+          <<: *releaseFilter
+      - test10
+          <<: &masterFilter
+            filters:
+              branches:
+                only:
+                  - oxa/master.fic
+      - test1
+          <<: *devFilter
+      - test7
+          <<: *releaseFilter
+      - test9
+          <<: *masterFilter
+  scheduled:
+    triggers:
+      - schedule:
+        cron: "7 */25 * * *"
+        filters:
+          branches:
+            only:
+            - oxa/dev.fic
+    jobs:
+      # test5 takes a little over two hours which is the timeout on circleci
+      # If we want to re-nenable it then we'll need to do some "perf tuning"
       - test3
       - test6
-      - test2
       - test4
+      - test2
       - test1
