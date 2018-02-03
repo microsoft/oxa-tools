@@ -56,10 +56,14 @@ jobs:
 workflows:
   version: 2
   all:
+    # Jobs are sorted from longest duration to shortest (approximately)
+    # This generally means the shortest duration overall.
     jobs:
-      - test1
-      - test2
+      # This one can take a little over two hours which is the timeout on circleci
+      # If we want to re-nenable this then we'll need to do some "perf tuning"
+      #- test5
       - test3
-      - test4
-      - test5
       - test6
+      - test2
+      - test4
+      - test1
