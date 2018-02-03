@@ -76,13 +76,16 @@ workflows:
   all:
     jobs:
       - test3
+          filters:
+            branches:
+              only:
+                - oxa/release.fic
+      - test6
           <<: &releaseFilter
             filters:
               branches:
                 only:
                   - oxa/release.fic
-      - test6
-          <<: *releaseFilter
       - test4
           <<: *releaseFilter
       - test2
