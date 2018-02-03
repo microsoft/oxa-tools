@@ -75,38 +75,35 @@ workflows:
   version: 2
   all:
     jobs:
-      - test3
-          filters:
-            branches:
-              only:
-                - oxa/release.fic
-      - test6
+      - test3:
           <<: &releaseFilter
             filters:
               branches:
                 only:
                   - oxa/release.fic
-      - test4
+      - test6:
           <<: *releaseFilter
-      - test2
+      - test4:
+          <<: *releaseFilter
+      - test2:
           <<: &devFilter
             filters:
               branches:
                 only:
                   - oxa/dev.fic
-      - test8
+      - test8:
           <<: *releaseFilter
-      - test10
+      - test10:
           <<: &masterFilter
             filters:
               branches:
                 only:
                   - oxa/master.fic
-      - test1
+      - test1:
           <<: *devFilter
-      - test7
+      - test7:
           <<: *releaseFilter
-      - test9
+      - test9:
           <<: *masterFilter
   scheduled:
     triggers:
