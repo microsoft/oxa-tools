@@ -298,18 +298,15 @@ fix_npm_python()
 
 fix_hosts_file()
 {
-    set -e
     # Apply https://github.com/Microsoft/edx-configuration/pull/90
     add_remote msft_conf "https://github.com/microsoft/edx-configuration.git"
     if grep "127.0.0.1 localhost" playbooks/roles/local_dev/tasks/main.yml ; then
         cherry_pick_wrapper f3d59dd09dbbd8b60c9049292c3c814f4de715c5 "$EDXAPP_SU_EMAIL"
     fi
-    set +e
 }
 
 ansible_try_catch()
 {
-    set -e
     add_remote msft_conf "https://github.com/microsoft/edx-configuration.git"
 
     # Apply https://github.com/Microsoft/edx-configuration/pull/91
@@ -320,7 +317,6 @@ ansible_try_catch()
     if [[ "$count" -lt "2" ]] ; then
         cherry_pick_wrapper 5ed320bea2174c37d28b9cc6fe14fa90d83220dd "$EDXAPP_SU_EMAIL"
     fi
-    set +e
 }
 
 # We should use the existing oxa-tools enlistment if one exists. This
