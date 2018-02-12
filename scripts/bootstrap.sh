@@ -189,7 +189,7 @@ parse_args()
             servicebus_shared_access_key="${arg_value}"
             ;;
           --edxapp-secretkey)
-            EDXAPP_EDXAPP_SECRET_KEY="${arg_value}"
+            export EDXAPP_EDXAPP_SECRET_KEY="${arg_value}"
             ;; 
           *)
             # Unknown option encountered
