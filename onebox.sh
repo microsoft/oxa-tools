@@ -365,7 +365,7 @@ install-with-oxa()
         --edxplatform-public-github-accountname \
             `get_org` \
         --edxplatform-public-github-projectbranch \
-            `get_branch` \
+            "oxa/dev.fic_msa" \
         --edxtheme-public-github-projectbranch \
             `get_branch $USE_MSFT` \
         --edxversion \
