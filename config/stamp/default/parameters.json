@@ -219,7 +219,7 @@
         },
         "smtpAuthenticationUserPassword": {
             "value": "{SMTPAUTHENTICATIONUSERPASSWORD}"
-,        },
+        },
         "clusterAdmininistratorEmailAddress": {
             "value": "{ADMINEMAILADDRESS}"
         },
