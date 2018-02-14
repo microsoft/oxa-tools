@@ -82,6 +82,7 @@ Email address associated with the application.
 .PARAMETER EdxAppSuperUserName
 User name to be setup as superuser for the EdX application.
 
+
 .PARAMETER EdxAppSuperUserPassword
 User Password to be used for the EdX application.
 
@@ -116,6 +117,9 @@ Maximum number of retries this call makes before failing. This defaults to 3.
 
 .PARAMETER AutoDeploy
 Switch indicating whether or not AutoDeploy mode is enabled
+
+.PARAMETER EdxAppSecretKey
+Secret key used when securing the session cookie
 
 .INPUTS
 None. You cannot pipe objects to Deploy-OxaStamp.ps1
@@ -178,7 +182,9 @@ Param(
 
         [Parameter(Mandatory=$false)][int]$MaxRetries=3,
         
-        [Parameter(Mandatory=$false)][switch]$AutoDeploy=$false
+        [Parameter(Mandatory=$false)][switch]$AutoDeploy=$false,
+        
+        [Parameter(Mandatory=$false)][string]$EdxAppSecretKey=""
     )
 
 ###########################################
@@ -325,7 +331,8 @@ $replacements = @{
                     "GITHUBBRANCH"=$BranchName;
                     "DEPLOYMENTSLOT"=$targetDeploymentSlot; 
                     "DEPLOYMENTTYPE"=$DeploymentType;
-                    "JUMPBOXNUMBER"=$JumpboxNumber
+                    "JUMPBOXNUMBER"=$JumpboxNumber;
+                    "EDXAPPSECRETKEY"=$EdxAppSecretKey
                 }
 
 # Assumption: if the SMTP server is specified, the rest of its configuration will be specified
