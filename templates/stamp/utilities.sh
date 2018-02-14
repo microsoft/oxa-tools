@@ -620,8 +620,9 @@ sync_repo()
 
         if ! sudo git pull --all --tags --prune ; then
             # A commit without a corresponding upstream branch is currently checked out
-	    # Let's sync with the remote for now and rely on the checkout below to align
-	    sudo git fetch --all --tags --prune
+            # Let's sync with the remote for now and rely on the checkout below to align
+            # the local code
+            sudo git fetch --all --tags --prune
             exit_on_error "Failed syncing repository $repo_url to $repo_path"
         fi
 
