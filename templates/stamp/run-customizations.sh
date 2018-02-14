@@ -730,7 +730,17 @@ storageAccountEndpointSuffix=`get_azure_storage_endpoint_suffix ${encoded_azure_
 storage_connection_string=`generate_azure_storage_connection_string "${AZURE_ACCOUNT_NAME}" "${AZURE_ACCOUNT_KEY}" "${storageAccountEndpointSuffix}"`
 
 # create storage container for edxapp:migrate & other reporting features (containers for the database backup will be created dynamically)
-powershell -file $INSTALLER_BASEPATH/Create-StorageContainer.ps1 -AadWebClientId $AAD_WEBCLIENT_ID -AadWebClientAppKey $AAD_WEBCLIENT_APPKEY -AadTenantId $AAD_TENANT_ID -AzureSubscriptionId $AZURE_SUBSCRIPTION_ID -StorageAccountName "${AZURE_ACCOUNT_NAME}" -StorageAccountKey "${AZURE_ACCOUNT_KEY}" -StorageContainerNames "uploads,reports,tracking" -AzureCliVersion $AZURE_CLI_VERSION -AzureStorageConnectionString "${storage_connection_string}"
+powershell -file $INSTALLER_BASEPATH/Create-StorageContainer.ps1 \
+    -AadWebClientId $AAD_WEBCLIENT_ID \
+    -AadWebClientAppKey $AAD_WEBCLIENT_APPKEY \
+    -AadTenantId $AAD_TENANT_ID \
+    -AzureSubscriptionId $AZURE_SUBSCRIPTION_ID \
+    -StorageAccountName "${AZURE_ACCOUNT_NAME}" \
+    -StorageAccountKey "${AZURE_ACCOUNT_KEY}" \
+    -StorageContainerNames "reports,tracking" \
+    -PublicStorageContainerNames "uploads" \
+    -AzureCliVersion $AZURE_CLI_VERSION \
+    -AzureStorageConnectionString "${storage_connection_string}"
 exit_on_error "Failed creating container(s) for edxapp:migrate (uploads,reports,tracking) in '${AZURE_ACCOUNT_NAME}'" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
 # Create a link to the utilities.sh library to be used by the other installer scripts

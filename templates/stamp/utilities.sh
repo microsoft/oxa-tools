@@ -35,6 +35,7 @@ ERROR_TOOLS_INSTALLER_FAILED=7401
 ERROR_SSHKEYROTATION_INSTALLER_FAILED=7501
 ERROR_MEMCACHED_INSTALLER_FAILED=7601
 ERROR_PIP_INSTALLER_FAILED=7701
+ERROR_DJANGO_MIGRATIONS_FAILED=7801
 
 # Mysql failover related errors
 ERROR_MYSQL_FAILOVER_INVALIDPROXYPORT=7601
@@ -388,6 +389,26 @@ retry-command()
 }
 
 #############################################################################
+# Uninstall Browsers
+#############################################################################
+
+remove_browsers()
+{
+    if type firefox >/dev/null 2>&1 ; then
+        log "Un-installing firefox...The proper version will be installed later"
+        apt-wrapper "purge firefox"
+    fi
+
+    if type google-chrome-stable >/dev/null 2>&1 ; then
+        log "Un-installing chrome...The proper version will be installed later"
+        apt-wrapper "purge google-chrome-stable"
+    fi
+
+    # Package that comes with firefox.
+    apt-wrapper "remove hunspell-en-us"
+}
+
+#############################################################################
 # Setup Sudo
 #############################################################################
 
@@ -471,7 +492,7 @@ setup-ssh()
 
 get_github_url()
 {
-    if [ -z $3 ]; then
+    if [[ -z $3 ]] ; then
         echo "https://github.com/$1/$2.git"
     else
         echo "https://$3@github.com/$1/$2.git"
@@ -521,8 +542,7 @@ clean_repository()
     REPO_PATH=$1
 
     log "Cleaning up the cloned GitHub Repository at '${REPO_PATH}'"
-    if [ -d "$REPO_PATH" ]; 
-    then
+    if [[ -d "$REPO_PATH" ]] ; then
         rm -rf $REPO_PATH
     fi
 }

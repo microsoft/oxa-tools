@@ -1,7 +1,7 @@
 ---
 - name: Apply theming compile assets workaround
   sudo: yes
-  shell: bash ./update_theme.sh "{{ theme_branch }}" "{{ theme_repo }}" "{{ EDXAPP_THEME_ENVIRONMENT }}" "{{ EDXAPP_COMPREHENSIVE_THEME_DIRS }}"
+  shell: bash ./update_theme.sh "{{ theme_branch }}" "{{ theme_repo }}" "{{ EDXAPP_THEME_ENVIRONMENT }}" "{{ EDXAPP_COMPREHENSIVE_THEME_DIRS }}" "{{ oxa_tools_path }}" "{{ secrets_path }}" "{{ edx_platform_path }}"
   args:
     chdir: "{{ edxapp_files_path }}"
   register: bash_theme
@@ -10,9 +10,20 @@
 # Print the shell tasks's stdout and stderr.
 - debug: var="bash_theme.stdout_lines + [ bash_theme.stderr ]"
 
+- name: Enable Microsoft OAUTH
+  sudo: yes
+  shell: bash ./enable_msft_oauth.sh "{{ msft_auth }}" "{{ edx_platform_path }}" "{{ oxa_tools_path }}" "{{ EDXAPP_SU_EMAIL }}"
+  args:
+    chdir: "{{ edxapp_files_path }}"
+  register: bash_oauth
+  when: "{{ EDXAPP_FEATURES.ENABLE_THIRD_PARTY_AUTH }}"
+
+# Print the shell tasks's stdout and stderr.
+- debug: var="bash_oauth.stdout_lines + [ bash_oauth.stderr ]"
+
 - name: Create the super user
   sudo: yes
-  shell: bash ./create_superuser.sh "{{ EDXAPP_SU_PASSWORD }}" "{{ EDXAPP_SU_EMAIL }}" "{{ EDXAPP_SU_USERNAME }}"
+  shell: bash ./create_superuser.sh "{{ EDXAPP_SU_PASSWORD }}" "{{ EDXAPP_SU_EMAIL }}" "{{ EDXAPP_SU_USERNAME }}" "{{ edx_platform_path }}"
   args:
     chdir: "{{ edxapp_files_path }}"
   register: bash_superuser
@@ -22,10 +33,11 @@
 
 - name: Import kitchen sink course
   sudo: yes
-  shell: bash ./import_kitchensink_course.sh "{{ EDXAPP_IMPORT_KITCHENSINK_COURSE }}"
+  shell: bash ./import_kitchensink_course.sh "{{ oxa_tools_path }}" "{{ edx_platform_path }}" "{{ kitchen_sink_course_version }}"
   args:
     chdir: "{{ edxapp_files_path }}"
   register: bash_kitchen
+  when: "{{ EDXAPP_IMPORT_KITCHENSINK_COURSE }}"
 
 # Print the shell tasks's stdout and stderr.
 - debug: var="bash_kitchen.stdout_lines + [ bash_kitchen.stderr ]"
