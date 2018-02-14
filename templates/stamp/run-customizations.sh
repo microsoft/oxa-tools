@@ -629,7 +629,7 @@ if [ "$CRON_MODE" == "0" ];
 then
     log "Setting up cron job for executing customization from '${HOSTNAME}' for the OXA Stamp"
 
-\    # todo: switch to bulk referencing all parameters and passing along
+    # todo: switch to bulk referencing all parameters and passing along
     # todo: add encoding/decoding for other parameters that support blank spaces in their value
     # decode the input now that we need to use the variable
     PLATFORM_NAME=`echo ${PLATFORM_NAME} | base64`
