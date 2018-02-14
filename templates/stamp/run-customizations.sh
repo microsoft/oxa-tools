@@ -572,7 +572,7 @@ persist_deployment_time_values()
     fi
     
     # check for Secret Key override
-    if [[ ! -z ${EDXAPP_SECRET_KEY} ]];
+    if [[ -n ${EDXAPP_SECRET_KEY} ]];
     then
         log "Overriding 'EDXAPP_SECRET_KEY'"
         sed -i "s#^EDXAPP_SECRET_KEY=.*#EDXAPP_SECRET_KEY=${EDXAPP_SECRET_KEY}#I" $config_file
