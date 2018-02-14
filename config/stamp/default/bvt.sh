@@ -120,6 +120,7 @@ MYSQL_SERVER_LIST=10.0.0.16,10.0.0.17,10.0.0.18
 MYSQL_MASTER_PORT=3306
 
 # Superuser Information (this gives front door access to the application. This value must be updated.)
+CREATE_SUPER_USER=True
 EDXAPP_SU_PASSWORD=
 EDXAPP_SU_EMAIL=
 EDXAPP_SU_USERNAME=
