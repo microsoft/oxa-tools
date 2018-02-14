@@ -141,7 +141,7 @@ help()
     echo "        --ansible-public-github-projectbranch Branch of edx ansible GitHub repository"
     echo "        --edxversion EdX Named-Release to use for this deployment"
 
-echo "        --forumversion EdX Named Release to use for the FORUMS component"
+    echo "        --forumversion EdX Named Release to use for the FORUMS component"
     echo "        --cron Operation mode for the script"
     echo "        --azure-subscription-id  Azure subscription id"
     echo "        --smtp-server FQDN of SMTP server used for relaying deployment and other system notifications"
