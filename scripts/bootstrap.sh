@@ -467,7 +467,7 @@ edx_installation_playbook()
     exit_on_error "Single VM instance of EDX has a hard requirement on systemd and its systemctl functionality"
 
     EDXAPP_COMPREHENSIVE_THEME_DIR=`echo $EDXAPP_COMPREHENSIVE_THEME_DIRS | tr -d [ | tr -d ] | tr -d " " | tr -d \"`
-    make_theme_dir "$EDXAPP_COMPREHENSIVE_THEME_DIR" "$EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME"
+    clone_theme_dir "$EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME" "$EDX_THEME_REPO" "$EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH" "$EDXAPP_COMPREHENSIVE_THEME_DIR"
 
     # We've been experiencing intermittent failures on ficus. Simply retrying
     # mitigates the problem, but we should solve the underlying cause(s) soon.

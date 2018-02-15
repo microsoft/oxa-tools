@@ -655,21 +655,24 @@ cherry_pick_wrapper()
 #############################################################################
 # Create theme directory before edx playbook
 #############################################################################
-make_theme_dir()
+clone_theme_dir()
 {
-    EDXAPP_COMPREHENSIVE_THEME_DIR="$1"
-    EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME="$2"
+    EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME="$1"
+    EDX_THEME_REPO="$2"
+    EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="$3"
+    EDXAPP_COMPREHENSIVE_THEME_DIR="$4"
 
     # When the comprehensive theming dirs is specified, edxapp:migrate task fails with :  ImproperlyConfigured: COMPREHENSIVE_THEME_DIRS
-    # As an interim mitigation, create the folder if the path specified is not under the edx-platform directory (where the default themes directory is)
-    if [[ -n "${EDXAPP_COMPREHENSIVE_THEME_DIR}" ]] && [[ ! -d "${EDXAPP_COMPREHENSIVE_THEME_DIR}" ]] ; then
-        # now check if the path specified is within the default edx-platform/themes directory
+    # because the theme folder doesn't exist on disk. Therefore, we create the theme folder by cloning the theme repo.
+    if [[ -n "${EDXAPP_COMPREHENSIVE_THEME_DIR}" ]] ; then
+        # Now we check if the path specified is within the default edx-platform/themes directory (which is already guarenteed to exist)
         if [[ "${EDXAPP_COMPREHENSIVE_THEME_DIR}" == *"${EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME}"* ]] ; then
             log "'${EDXAPP_COMPREHENSIVE_THEME_DIR}' falls under the default theme directory. Skipping creation since the edx-platform clone will create it."
         else
-            log "Creating comprehensive themeing directory at ${EDXAPP_COMPREHENSIVE_THEME_DIR}"
-            mkdir -p "${EDXAPP_COMPREHENSIVE_THEME_DIR}"
+            log "Creating comprehensive theming directory at ${EDXAPP_COMPREHENSIVE_THEME_DIR}"
+            sync_repo $EDX_THEME_REPO $EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH $EDXAPP_COMPREHENSIVE_THEME_DIR
             chown -R edxapp:edxapp "${EDXAPP_COMPREHENSIVE_THEME_DIR}"
+            sudo chmod -R u+rw "${EDXAPP_COMPREHENSIVE_THEME_DIR}"
         fi
     fi
 }
