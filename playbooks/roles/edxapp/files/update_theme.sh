@@ -64,8 +64,9 @@ copy_images()
 src_utils
 theme_path=$(get_theme_directory)
 
+#todo: consider reducing duplication by invoking clone_theme_dir directly
+
 # Download comprehensive theming from github
-clean_repository $theme_path
 sync_repo $EDX_THEME_REPO $THEME_BRANCH $theme_path
 
 copy_images

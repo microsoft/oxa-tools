@@ -705,7 +705,8 @@ exit_on_error "Configuring the mailer failed"
 install-tools
 
 if [[ "$MACHINE_ROLE" == "jumpbox" ]] || [[ "$MACHINE_ROLE" == "vmss" ]] ; then
-    make_theme_dir "$EDXAPP_COMPREHENSIVE_THEME_DIR" "$EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME"
+    EDX_THEME_REPO=$(get_github_url ${EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME} ${EDX_THEME_PUBLIC_GITHUB_PROJECTNAME})
+    clone_theme_dir "$EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME" "$EDX_THEME_REPO" "$EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH" "$EDXAPP_COMPREHENSIVE_THEME_DIR"
 fi
 
 # 2. Install & Configure the infrastructure & EdX applications
