@@ -65,7 +65,7 @@ src_utils
 theme_path=$(get_theme_directory)
 
 # Download comprehensive theming from github
-if false && clean_repository $theme_path ; then
+if clean_repository $theme_path ; then
     sync_repo $EDX_THEME_REPO $THEME_BRANCH $theme_path
 else
     # Deletion of theming directory failed
