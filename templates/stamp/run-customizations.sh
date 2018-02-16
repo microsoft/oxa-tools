@@ -112,7 +112,7 @@ servicebus_shared_access_key=""
 
 # Azure Mysql Server
 azure_mysql_server_fqdn=""
-zure_mysql_server_name=""
+azure_mysql_server_name=""
 
 help()
 {
@@ -541,6 +541,7 @@ persist_deployment_time_values()
     then
         log "Overriding Mysql Master IP with address of azure mysql server: ${azure_mysql_server_fqdn}"
         sed -i "s#^MYSQL_MASTER_IP=.*#MYSQL_MASTER_IP=${azure_mysql_server_fqdn}#I" $config_file
+        sed -i "s#^MYSQL_CLOUD_SERVER_NAME=.*#MYSQL_CLOUD_SERVER_NAME=${azure_mysql_server_name}#I" $config_file
         sed -i "s#^MYSQL_SERVER_LIST=.*#MYSQL_SERVER_LIST=#I" $config_file
 
         # TODO: Refactor to leverage single path and reuse
