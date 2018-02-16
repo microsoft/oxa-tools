@@ -131,9 +131,9 @@ exec_mongo() {
     # if repository path is not specified, default it to the user's home directory'
     if [ -z $EXTRA_ARGS ]
     then
-        ssh -o "StrictHostKeyChecking=no" $ADMIN_USER@$HOST "cd ~/stamp && chmod 755 ~/stamp/$MONGO_INSTALLER_SCRIPT && sudo ~/stamp/$MONGO_INSTALLER_SCRIPT -i $MONGO_INSTALLER_BASE_URL -b $MONGO_INSTALLER_PACKAGE_NAME -r $MONGO_REPLICASET_NAME -k $MONGO_REPLICASET_KEY -u $MONGO_USER -p $MONGO_PASSWORD_TEMP -x $MONGO_SERVER_IP_PREFIX -n $NODE_COUNT -o $MONGO_SERVER_IP_OFFSET"
+        ssh -o "StrictHostKeyChecking=no" "${ADMIN_USER}@${HOST}" "cd ~/stamp && chmod 755 ~/stamp/${MONGO_INSTALLER_SCRIPT} && sudo ~/stamp/${MONGO_INSTALLER_SCRIPT} -i ${MONGO_INSTALLER_BASE_URL} -b ${MONGO_INSTALLER_PACKAGE_NAME} -r ${MONGO_REPLICASET_NAME} -k ${MONGO_REPLICASET_KEY} -u ${MONGO_USER} -p ${MONGO_PASSWORD_TEMP} -x ${MONGO_SERVER_IP_PREFIX} -n ${NODE_COUNT} -o ${MONGO_SERVER_IP_OFFSET}"
     else
-        ssh -o "StrictHostKeyChecking=no" $ADMIN_USER@$HOST "cd ~/stamp && chmod 755 ~/stamp/$MONGO_INSTALLER_SCRIPT && sudo ~/stamp/$MONGO_INSTALLER_SCRIPT -i $MONGO_INSTALLER_BASE_URL -b $MONGO_INSTALLER_PACKAGE_NAME -r $MONGO_REPLICASET_NAME -k $MONGO_REPLICASET_KEY -u $MONGO_USER -p $MONGO_PASSWORD_TEMP -x $MONGO_SERVER_IP_PREFIX -n $NODE_COUNT -o $MONGO_SERVER_IP_OFFSET -l"
+        ssh -o "StrictHostKeyChecking=no" "${ADMIN_USER}@${HOST}" "cd ~/stamp && chmod 755 ~/stamp/${MONGO_INSTALLER_SCRIPT} && sudo ~/stamp/$MONGO_INSTALLER_SCRIPT -i ${MONGO_INSTALLER_BASE_URL} -b ${MONGO_INSTALLER_PACKAGE_NAME} -r ${MONGO_REPLICASET_NAME} -k ${MONGO_REPLICASET_KEY} -u ${MONGO_USER} -p ${MONGO_PASSWORD_TEMP} -x ${MONGO_SERVER_IP_PREFIX} -n ${NODE_COUNT} -o ${MONGO_SERVER_IP_OFFSET} -l"
     fi 
 
     exit_on_error "Mongo installation failed for $HOST" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
@@ -230,6 +230,7 @@ DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
 EOF
 
             # execute the query
+            # TODO: Refactor
             mysql -h $MYSQL_MASTER_IP -u root -p$MYSQL_ADMIN_PASSWORD< ./$temp_query_file
 
             # remove the temp file (security reasons)
