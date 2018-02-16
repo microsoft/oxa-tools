@@ -73,13 +73,13 @@ else
     # Scrub contents of theming directory
     pushd $theme_path
     rm -rf *
-    rm -rf .*
+    rm -rf .git*
 
     # Clone repo to a temporary directory
     sync_repo $EDX_THEME_REPO $THEME_BRANCH /tmp/$theme_path
 
     # Copy git repository information
-    cp -r /tmp/$theme_path/.git $theme_path/
+    cp -r /tmp/$theme_path/.git .
 
     # Restore files
     git checkout -- .
