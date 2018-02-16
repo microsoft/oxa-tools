@@ -379,6 +379,9 @@ configure_db_users
 
 # Step 7
 configure_replicaset
+exit_on_error "Unable to complete the replicaset configuration"
+
+echo "Completed replicaset configuration. Exiting now..."
 
 # Exit (proudly)
 exit 0
