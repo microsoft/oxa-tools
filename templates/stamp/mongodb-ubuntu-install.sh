@@ -310,7 +310,10 @@ start_mongodb()
     if (( $(echo "$OS_VER > 16" | bc -l) ))
     then
         systemctl start mongodb
+        exit_on_error "Unable to start Mongo Server"
+
         systemctl enable mongodb
+        exit_on_error "Unable to enable Mongo Server for startup"
     else
         service mongod start
     fi
