@@ -65,8 +65,29 @@ src_utils
 theme_path=$(get_theme_directory)
 
 # Download comprehensive theming from github
-clean_repository $theme_path
-sync_repo $EDX_THEME_REPO $THEME_BRANCH $theme_path
+if clean_repository $theme_path ; then
+    sync_repo $EDX_THEME_REPO $THEME_BRANCH $theme_path
+else
+    # Deletion of theming directory failed
+
+    # Scrub contents of theming directory
+    pushd $theme_path
+    rm -rf *
+    rm -rf .git*
+
+    # Clone repo to a temporary directory
+    sync_repo $EDX_THEME_REPO $THEME_BRANCH /tmp/$theme_path
+
+    # Copy git repository information
+    cp -r /tmp/$theme_path/.git .
+
+    # Restore files
+    git checkout -- .
+    popd
+
+    # Remove temporary directory
+    rm -rf /tmp/$theme_path
+fi
 
 copy_images
 
