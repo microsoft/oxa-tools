@@ -4,16 +4,12 @@
   apt: pkg=memcached state=present
   tags:
     - memcached
-  
-- name: Update Memcached configuration to allow remote connections
-  hosts: all
-  sudo: True
-  tasks:
-  - name: Update Memcached bind address
-    lineinfile:
-      dest: /etc/memcached.conf
-      regexp: '^-l 127.0.0.1'
-      state: absent
+
+- name: Update Memcached bind address
+  lineinfile:
+    dest: /etc/memcached.conf
+    regexp: '^-l 127.0.0.1'
+    state: absent
 
 - name: Restart Memcached
   service: name=memcached state=restarted
