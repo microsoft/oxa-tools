@@ -20,7 +20,7 @@ fi
 
 mysql edxapp --host="${mysql_host_name}" --user="${mysql_user_name}" --password="${mysql_user_password}"  < edxapp.sql
 
-if [[ "${aad_enable}" == "true" ] ; then
+if [[ "${aad_enable}" == "true" ]] ; then
     echo "BEGIN; " > edxapp_aad.sql
     echo "DELETE FROM third_party_auth_oauth2providerconfig where backend_name='azuread-oauth2';" >> edxapp_aad.sql
     echo "INSERT INTO third_party_auth_oauth2providerconfig " >> edxapp_aad.sql
