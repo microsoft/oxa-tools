@@ -14,5 +14,6 @@
       dest: /etc/memcached.conf
       regexp: '^-l 127.0.0.1'
       state: absent
-  - name: Restart Memcached
-    service: name=memcached state=restarted
+
+- name: Restart Memcached
+  service: name=memcached state=restarted
