@@ -546,14 +546,14 @@ persist_deployment_time_values()
 
         # TODO: Refactor to leverage single path and reuse
         # Mysql Credentials 
-        sed -i "s#^MYSQL_ADMIN_USER=.*#MYSQL_ADMIN_USER=${MYSQL_ADMIN_USER}@${azure_mysql_server_name}#I" $config_file
+        sed -i "s#^MYSQL_ADMIN_USER=.*#MYSQL_ADMIN_USER=${MYSQL_ADMIN_USER}#I" $config_file
         sed -i "s#^MYSQL_ADMIN_PASSWORD=.*#MYSQL_ADMIN_PASSWORD=${MYSQL_ADMIN_PASSWORD}#I" $config_file
-        sed -i "s#^MYSQL_TEMP_USER=.*#MYSQL_TEMP_USER=${MYSQL_BACKUP_USER}@${azure_mysql_server_name}#I" $config_file
+        sed -i "s#^MYSQL_TEMP_USER=.*#MYSQL_TEMP_USER=${MYSQL_BACKUP_USER}#I" $config_file
         sed -i "s#^MYSQL_TEMP_PASSWORD=.*#MYSQL_TEMP_PASSWORD=${MYSQL_BACKUP_USER_PASSWORD}#I" $config_file
 
-        sed -i "s#^MYSQL_USER=.*#MYSQL_USER=${MYSQL_REPL_USER}@${azure_mysql_server_name}#I" $config_file
+        sed -i "s#^MYSQL_USER=.*#MYSQL_USER=${MYSQL_REPL_USER}#I" $config_file
         sed -i "s#^MYSQL_PASSWORD=.*#MYSQL_PASSWORD=${MYSQL_REPL_USER_PASSWORD}#I" $config_file
-        sed -i "s#^MYSQL_REPL_USER=.*#MYSQL_REPL_USER=${MYSQL_REPL_USER}@${azure_mysql_server_name}#I" $config_file
+        sed -i "s#^MYSQL_REPL_USER=.*#MYSQL_REPL_USER=${MYSQL_REPL_USER}#I" $config_file
         sed -i "s#^MYSQL_REPL_USER_PASSWORD=.*#MYSQL_REPL_USER_PASSWORD=${MYSQL_REPL_USER_PASSWORD}#I" $config_file
 
     else
