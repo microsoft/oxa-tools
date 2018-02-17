@@ -315,7 +315,7 @@ fi
 # This execution is now generic and will account for machine roles
 # TODO: break out shared functionalities to utilities so that they can be called independently
 bash $CURRENT_PATH/bootstrap-db.sh -e $CLOUD_NAME --phase $BOOTSTRAP_PHASE --tools-version-override $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID --cluster-admin-email $CLUSTER_ADMIN_EMAIL --cluster-name $CLUSTER_NAME
-exit_on_error "Phase 0 Bootstrap for Mongo & Mysql failed for $HOST" 1 "${MAIL_SUBJECT} Failed" "$CLUSTER_ADMIN_EMAIL" "$PRIMARY_LOG" "$SECONDARY_LOG"
+exit_on_error "Phase 0 Bootstrap for Mongo & Mysql failed for $HOSTNAME" 1 "${MAIL_SUBJECT} Failed" "$CLUSTER_ADMIN_EMAIL" "$PRIMARY_LOG" "$SECONDARY_LOG"
 
 # OpenEdX Bootstrap (EdX Database - Mysql & EdX App - VMSS)
 # Due to custom script extension execution timeout limitations (40mins/90mins), we need to move Phase 1 bootstrap (AppTier Bootstrap) to a 

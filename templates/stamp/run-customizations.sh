@@ -536,7 +536,6 @@ persist_deployment_time_values()
     
     # Support Azure Mysql
     # The server name/ip isn't known before the deployment and therefore this override is required
-    # also reset reference to the mysql server list
     if [[ -n "${azure_mysql_server_fqdn}" ]];
     then
         log "Overriding Mysql Master IP with address of azure mysql server: ${azure_mysql_server_fqdn}"
@@ -544,7 +543,14 @@ persist_deployment_time_values()
         sed -i "s#^MYSQL_CLOUD_SERVER_NAME=.*#MYSQL_CLOUD_SERVER_NAME=${azure_mysql_server_name}#I" $config_file
         sed -i "s#^MYSQL_SERVER_LIST=.*#MYSQL_SERVER_LIST=#I" $config_file
 
-        # TODO: Refactor to leverage single path and reuse
+        # For VMSS instances, the mysql user needs to be qualified with the Azure cloud db server name
+        if [[ "$MACHINE_ROLE" == "vmss" ]] ; then
+            log "Adding azure mysql server name qualifier to the mysql login user name"
+            MYSQL_ADMIN_USER="${MYSQL_ADMIN_USER}@${azure_mysql_server_name}"
+            MYSQL_BACKUP_USER="${MYSQL_BACKUP_USER}@${azure_mysql_server_name}"
+            MYSQL_REPL_USER="${MYSQL_REPL_USER}@${azure_mysql_server_name}"
+        fi
+
         # Mysql Credentials 
         sed -i "s#^MYSQL_ADMIN_USER=.*#MYSQL_ADMIN_USER=${MYSQL_ADMIN_USER}#I" $config_file
         sed -i "s#^MYSQL_ADMIN_PASSWORD=.*#MYSQL_ADMIN_PASSWORD=${MYSQL_ADMIN_PASSWORD}#I" $config_file
@@ -556,21 +562,20 @@ persist_deployment_time_values()
         sed -i "s#^MYSQL_REPL_USER=.*#MYSQL_REPL_USER=${MYSQL_REPL_USER}#I" $config_file
         sed -i "s#^MYSQL_REPL_USER_PASSWORD=.*#MYSQL_REPL_USER_PASSWORD=${MYSQL_REPL_USER_PASSWORD}#I" $config_file
 
-    else
-
-        # Mysql Credentials
-        sed -i "s#^MYSQL_ADMIN_USER=.*#MYSQL_ADMIN_USER=${MYSQL_ADMIN_USER}#I" $config_file
-        sed -i "s#^MYSQL_ADMIN_PASSWORD=.*#MYSQL_ADMIN_PASSWORD=${MYSQL_ADMIN_PASSWORD}#I" $config_file
-
-        sed -i "s#^MYSQL_TEMP_USER=.*#MYSQL_TEMP_USER=${MYSQL_BACKUP_USER}#I" $config_file
-        sed -i "s#^MYSQL_TEMP_PASSWORD=.*#MYSQL_TEMP_PASSWORD=${MYSQL_BACKUP_USER_PASSWORD}#I" $config_file
-
-        sed -i "s#^MYSQL_USER=.*#MYSQL_USER=${MYSQL_REPL_USER}#I" $config_file
-        sed -i "s#^MYSQL_PASSWORD=.*#MYSQL_PASSWORD=${MYSQL_REPL_USER_PASSWORD}#I" $config_file
-        sed -i "s#^MYSQL_REPL_USER=.*#MYSQL_REPL_USER=${MYSQL_REPL_USER}#I" $config_file
-        sed -i "s#^MYSQL_REPL_USER_PASSWORD=.*#MYSQL_REPL_USER_PASSWORD=${MYSQL_REPL_USER_PASSWORD}#I" $config_file
-
     fi
+
+    # Mysql Credentials
+    sed -i "s#^MYSQL_ADMIN_USER=.*#MYSQL_ADMIN_USER=${MYSQL_ADMIN_USER}#I" $config_file
+    sed -i "s#^MYSQL_ADMIN_PASSWORD=.*#MYSQL_ADMIN_PASSWORD=${MYSQL_ADMIN_PASSWORD}#I" $config_file
+
+    sed -i "s#^MYSQL_TEMP_USER=.*#MYSQL_TEMP_USER=${MYSQL_BACKUP_USER}#I" $config_file
+    sed -i "s#^MYSQL_TEMP_PASSWORD=.*#MYSQL_TEMP_PASSWORD=${MYSQL_BACKUP_USER_PASSWORD}#I" $config_file
+
+    sed -i "s#^MYSQL_USER=.*#MYSQL_USER=${MYSQL_REPL_USER}#I" $config_file
+    sed -i "s#^MYSQL_PASSWORD=.*#MYSQL_PASSWORD=${MYSQL_REPL_USER_PASSWORD}#I" $config_file
+    sed -i "s#^MYSQL_REPL_USER=.*#MYSQL_REPL_USER=${MYSQL_REPL_USER}#I" $config_file
+    sed -i "s#^MYSQL_REPL_USER_PASSWORD=.*#MYSQL_REPL_USER_PASSWORD=${MYSQL_REPL_USER_PASSWORD}#I" $config_file
+
 
     if [ ! -z ${DOMAIN_OVERRIDE} ]; 
     then
