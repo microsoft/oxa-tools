@@ -55,7 +55,8 @@
         "frontendVmStorageAccountCount": "[length(variables('uniqueStringArray'))]",
 
         "commandToExecute1": "[replace(parameters('customSettings').commandToExecute, parameters('customSettings').storageKeyPlaceholder, parameters('customSettings').secureGenericStorageAccountKey)]",
-        "commandToExecute2": "[replace(variables('commandToExecute1'), parameters('customSettings').servicebusKeyPlaceholder, parameters('customSettings').secureServicebusSharedAccessKey)]"
+        "commandToExecute2": "[replace(variables('commandToExecute1'), parameters('customSettings').servicebusKeyPlaceholder, parameters('customSettings').secureServicebusSharedAccessKey)]",
+        "commandToExecute3": "[replace(variables('commandToExecute1'), parameters('customSettings').cosmosDbKeyPlaceholder, parameters('customSettings').secureCosmosDbSharedAccessKey)]"
     },
 
     "resources": [
@@ -427,7 +428,7 @@
                                         "fileUris": "[parameters('customSettings').vmScripts]"
                                     },
                                     "protectedSettings": {
-                                        "commandToExecute": "[variables('commandToExecute2')]"
+                                        "commandToExecute": "[variables('commandToExecute3')]"
                                     }
                                 }
                             },
