@@ -399,12 +399,11 @@ update_stamp_jb()
     exit_on_error "Execution of OXA MySQL playbook failed" 1 "${SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
 
     # if the Memcache Server is different than the Mysql Master server, we have to install memcache with default configs
-    if [ "$MEMCACHE_SERVER_IP" != "$MYSQL_MASTER_IP" ];
-    then
-        log "Installing Memcache on $MEMCACHE_SERVER_IP and $MEMCACHE_SERVER2_IP"
-        $ANSIBLE_PLAYBOOK -i $MEMCACHE_SERVER_IP,$MEMCACHE_SERVER2_IP, $OXA_SSH_ARGS -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "memcached"
-        exit_on_error "Execution of OXA alternate memcache playbook task failed" 1 "${SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
-    fi
+    # TODO: remove - transition to REDIS 
+    # Ensure that memcache is installed on both primary and secondary servers
+    log "Installing Memcache on $MEMCACHE_SERVER_IP and $MEMCACHE_SERVER2_IP"
+    $ANSIBLE_PLAYBOOK -i $MEMCACHE_SERVER_IP,$MEMCACHE_SERVER2_IP, $OXA_SSH_ARGS -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "memcached"
+    exit_on_error "Execution of OXA alternate memcache playbook task failed" 1 "${SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
 }
 
 update_stamp_vmss() 

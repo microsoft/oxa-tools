@@ -379,6 +379,10 @@ fi
 
 exit_on_error "OXA Installation failed" 1 "${MAIL_SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
 
+: '
+# TODO: remove - transition to REDIS 
+# TODO: keep the setup of primary & secondary memcache to playbooks
+
 if [ "$MACHINE_ROLE" == "jumpbox" ];
 then
 
@@ -398,7 +402,8 @@ then
         --oxatools-public-github-projectbranch "${OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH}" \
         --oxatools-repository-path "${REPO_ROOT}/${OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME}" \
         --cluster-admin-email "${CLUSTER_ADMIN_EMAIL}" \
-        --target-user "${OS_ADMIN_USERNAME}"
+        --target-user "${OS_ADMIN_USERNAME}" \
+        --backend-server-list
 
     exit_on_error "Unable to install secondary memcache server." 1 "${MAIL_SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
 
@@ -407,6 +412,7 @@ then
 
     log "Completed installation of secondary memcached."
 fi
+'
 
 # at this point, we have succeeded
 log "${NOTIFICATION_MESSAGE}"
