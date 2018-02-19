@@ -556,6 +556,10 @@ persist_deployment_time_values()
 
         # azure cosmosdb uses a known port
         sed -i "s#^MONGO_PORT=.*#MONGO_PORT=10255#I" $config_file    
+
+        # set the host name/list and reset the replicaset name (used in forming the EDXAPP_MONGO_HOSTS)
+        sed -i "s#^MONGO_SERVER_LIST=.*#MONGO_SERVER_LIST=${azure_cosmosdb_account_name}.documents.azure.com#I" $config_file
+        sed -i "s#^MONGO_REPLICASET_NAME=.*#MONGO_REPLICASET_NAME=#I" $config_file
     else
         # default configuration for non-managed instance
         sed -i "s#^MONGO_USER=.*#MONGO_USER=${MONGO_USER}#I" $config_file
@@ -726,6 +730,9 @@ then
 
     # Azure Mysql parameters
     AZURE_MYSQL_PARAMS="--azure-mysql-server-fqdn \"${azure_mysql_server_fqdn}\" --azure-mysql-server-name \"${azure_mysql_server_name}\""
+
+    # Azure CosmosDb parameters
+    AZURE_COSMOSDB_PARAMS="--azure-cosmosdb-account-name \"${azure_cosmosdb_account_name}\" --azure-cosmosdb-shared-access-key \"${azure_cosmosdb_shared_access_key}\""
 
     # Create the cron job & exit
     INSTALL_COMMAND="sudo flock -n /var/log/bootstrap-run-customization.lock bash $CURRENT_PATH/run-customizations.sh -c $CLOUDNAME -u $OS_ADMIN_USERNAME -i $CUSTOM_INSTALLER_RELATIVEPATH -m $MONITORING_CLUSTER_NAME -s $BOOTSTRAP_PHASE -u $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --crontab-interval $CRONTAB_INTERVAL_MINUTES --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID --smtp-server $SMTP_SERVER --smtp-server-port $SMTP_SERVER_PORT --smtp-auth-user $SMTP_AUTH_USER --smtp-auth-user-password $SMTP_AUTH_USER_PASSWORD --cluster-admin-email $CLUSTER_ADMIN_EMAIL --cluster-name $CLUSTER_NAME ${OXA_TOOLS_GITHUB_PARAMS} ${EDX_CONFIGURATION_GITHUB_PARAMS} ${EDX_PLATFORM_GITHUB_PARAMS} ${EDX_THEME_GITHUB_PARAMS} ${ANSIBLE_GITHUB_PARAMS} ${BACKUP_PARAMS} ${SAMPLE_COURSE_PARAMS} ${COMPREHENSIVE_THEMING_PARAMS} ${AUTHENTICATION_PARAMS} ${DOMAIN_PARAMS} ${EDXAPP_PARAMS} --edxversion ${EDX_VERSION} --forumversion ${FORUM_VERSION} ${DATABASE_PARAMS} ${MEMCACHE_PARAMS} ${AZURE_CLI_VERSION} ${MOBILE_REST_API_PARAMS} ${JUMPBOX_BOOTSTRAP_PARAMS} ${SERVICEBUS_PARAMS} ${AZURE_MYSQL_PARAMS} --cron >> $SECONDARY_LOG 2>&1"
