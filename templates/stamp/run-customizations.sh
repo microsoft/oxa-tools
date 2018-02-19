@@ -622,6 +622,7 @@ persist_deployment_time_values()
     then
         log "Overriding 'MEMCACHE_SERVER_IP'"
         sed -i "s#^MEMCACHE_SERVER_IP=.*#MEMCACHE_SERVER_IP=${MEMCACHE_SERVER}#I" $config_file
+        sed -i "s#^MEMCACHE_SERVER2_IP=.*#MEMCACHE_SERVER2_IP=${MEMCACHE_SERVER}#I" $config_file
     else
         log "Memcache Server override not specified"
     fi
