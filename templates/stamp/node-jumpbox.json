@@ -94,7 +94,7 @@
                                 "id": "[parameters('networkSettings').subnetRef]"
                             },
                             "privateIPAllocationMethod": "Static",
-                            "privateIPAddress": "[concat(parameters('networkSettings').serverIpPrefix, '4']",
+                            "privateIPAddress": "[concat(parameters('networkSettings').serverIpPrefix, '4')]",
                             "publicIpAddress": {
                                 "id": "[resourceId(resourceGroup().name,'Microsoft.Network/publicIpAddresses', concat(parameters('networkSettings').clusterJumpBoxName, parameters('networkSettings').publicIPAddressNameSuffix))]"
                             }
