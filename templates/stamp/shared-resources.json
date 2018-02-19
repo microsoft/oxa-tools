@@ -25,6 +25,12 @@
             "metadata": {
                 "Description": "Service Bus  settings object"
             }  
+        },
+        "cosmosDbSettings": {
+            "type": "object",
+            "metadata": {
+                "Description": "Cosmos Db settings object"
+            }  
         }            
     },
     "variables": {
@@ -267,20 +273,20 @@
         {
             "name": "azureCosmosDb",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('apiVersion')]",
-            "condition": "[variables('resourcesToDeploy')[parameters('deploymentType')].mongo]",
+            "apiVersion": "[parameters('apiSettings').apiVersion]",
+            "condition": "[parameters('cosmosDbSettings').deploy]",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[variables('azureCosmosDbNodeTemplateUrl')]",
+                    "uri": "[parameters('cosmosDbSettings').templateUrl')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
                     "networkSettings": {
-                        "value": "[variables('networkSettings')]"
+                        "value": "[parameters('networkSettings')]"
                     },
                     "apiSettings": {
-                        "value": "[variables('apiSettings')]"
+                        "value": "[parameters('apiSettings')]"
                     }
                 }
             }
