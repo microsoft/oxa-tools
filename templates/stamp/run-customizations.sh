@@ -114,6 +114,10 @@ servicebus_shared_access_key=""
 azure_mysql_server_fqdn=""
 azure_mysql_server_name=""
 
+# Azure Cosmos Database Account
+azure_cosmosdb_account_name=""
+azure_cosmosdb_shared_access_key=""
+
 help()
 {
     echo "This script bootstraps the OXA Stamp"
@@ -176,6 +180,8 @@ help()
     echo "        --servicebus-shared-access-key Key for the servicebus shared access policy to use for service bus authentication"
     echo "        --azure-mysql-server-fqdn FQDN of the Azure Mysql Server to use for this cluster"
     echo "        --azure-mysql-server-name Name of the Azure Mysql Server to use for this cluster"
+    echo "        --azure-cosmosdb-account-name="
+    echo "        --azure-cosmosdb-shared-access-key="
 }
 
 # Parse script parameters
@@ -463,6 +469,12 @@ parse_args()
             --azure-mysql-server-name)
                 azure_mysql_server_name="${arg_value}"
                 ;;
+            --azure-cosmosdb-account-name)
+                azure_cosmosdb_account_name="${arg_value}"
+                ;;
+            --azure-cosmosdb-shared-access-key)
+                azure_cosmosdb_shared_access_key="${arg_value}"
+                ;;
             -h|--help)  # Helpful hints
                 help
                 exit 2
@@ -530,10 +542,27 @@ persist_deployment_time_values()
     sed -i "s#^EDXAPP_SU_USERNAME=.*#EDXAPP_SU_USERNAME=${EDXAPP_SU_USERNAME}#I" $config_file
 
     # Mongo Credentials
-    sed -i "s#^MONGO_USER=.*#MONGO_USER=${MONGO_USER}#I" $config_file
-    sed -i "s#^MONGO_PASSWORD=.*#MONGO_PASSWORD=${MONGO_PASSWORD}#I" $config_file
-    sed -i "s#^MONGO_REPLICASET_KEY=.*#MONGO_REPLICASET_KEY=${MONGO_REPLICASET_KEY}#I" $config_file
-    
+    # save the cosmosdb access key (this is only available at deploy-time or post deployment after the resource has been provisioned)
+    # Saving here supports configuration for vmss and other roles that need access to the cosmos db
+    if [[ -n ${azure_cosmosdb_account_name} ]];
+    then
+        # configure credentials for cosmos db: 
+        # user name = account name, password = shared access key, ssl=true, port=xxx
+        sed -i "s#^MONGO_USER=.*#MONGO_USER=${azure_cosmosdb_account_name}#I" $config_file
+        sed -i "s#^MONGO_PASSWORD=.*#MONGO_PASSWORD=${azure_cosmosdb_shared_access_key}#I" $config_file
+
+        # SSL connections are required since communication happens over open internet
+        sed -i "s#^MONGO_USE_SSL=.*#MONGO_USE_SSL=true#I" $config_file
+
+        # azure cosmosdb uses a known port
+        sed -i "s#^MONGO_PORT=.*#MONGO_PORT=10255#I" $config_file    
+    else
+        # default configuration for non-managed instance
+        sed -i "s#^MONGO_USER=.*#MONGO_USER=${MONGO_USER}#I" $config_file
+        sed -i "s#^MONGO_PASSWORD=.*#MONGO_PASSWORD=${MONGO_PASSWORD}#I" $config_file
+        sed -i "s#^MONGO_REPLICASET_KEY=.*#MONGO_REPLICASET_KEY=${MONGO_REPLICASET_KEY}#I" $config_file
+    fi
+
     # Support Azure Mysql
     # The server name/ip isn't known before the deployment and therefore this override is required
     if [[ -n "${azure_mysql_server_fqdn}" ]];
