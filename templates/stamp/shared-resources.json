@@ -278,7 +278,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[parameters('cosmosDbSettings').templateUrl)]",
+                    "uri": "[parameters('cosmosDbSettings').templateUrl]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
