@@ -263,6 +263,27 @@
                     }
                 }
             ]
+        },
+        {
+            "name": "azureCosmosDb",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('apiVersion')]",
+            "condition": "[variables('resourcesToDeploy')[parameters('deploymentType')].mongo]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('azureCosmosDbNodeTemplateUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "networkSettings": {
+                        "value": "[variables('networkSettings')]"
+                    },
+                    "apiSettings": {
+                        "value": "[variables('apiSettings')]"
+                    }
+                }
+            }
         }
     ]
 }
