@@ -187,60 +187,6 @@ setup()
     sudo chown -R $ADMIN_USER:$ADMIN_USER $OXA_PATH
 
     wget -q https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/shared_scripts/ubuntu/vm-disk-utils-0.1.sh -O $OXA_TOOLS_PATH/templates/stamp/vm-disk-utils-0.1.sh
-
-    if [ "$MACHINE_ROLE" == "jumpbox" ] && [ "$BOOTSTRAP_PHASE" == "0" ] ;
-    then
-        # check if this is already done
-        
-        if [ ! -e $TARGET_FILE ];
-        then
-            # Setup each mongo server
-            count=1
-            mongo_servers=(`echo $MONGO_SERVER_LIST | tr , ' ' `)
-            for ip in "${mongo_servers[@]}"; do
-                last=
-                if [[ $count == ${#mongo_servers[@]} ]]; then
-                    last="-l"
-                fi
-
-                exec_mongo $ip $count $last
-                ((count++))
-            done
- 
-            # Setup each mysql server
-            # With Azure Mysql, this isn't necessary
-            #count=1
-            #mysql_servers=(`echo $MYSQL_SERVER_LIST | tr , ' ' `)
-            #for ip in "${mysql_servers[@]}"; do
-                # exec_mysql $ip $count
-            #    ((count++))
-            #done
-
-            # Secure the mysql installation after replication has been setup (only run against the Mysql Master)
-            # Specifically: remove anonymous users, remove root network login (only local host allowed), remove test db
-            # This step was previously executed during the replication configuration but it may be contributing to breaking replication immediately following setup
-            log "Securing Mysql Installation: removing anonymous users, removing root network login, removing test databases"
-
-            # generate the query
-            temp_query_file="tmp.query.secure.sql"
-            tee ./$temp_query_file > /dev/null <<EOF
-DELETE FROM mysql.user WHERE User='';
-DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
-DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
-EOF
-
-            # execute the query
-            # TODO: Refactor
-            mysql -h $MYSQL_MASTER_IP -u root -p$MYSQL_ADMIN_PASSWORD< ./$temp_query_file
-
-            # remove the temp file (security reasons)
-            rm $temp_query_file
-        else
-            log "Skipping the 'Infrastructure Bootstrap - Server Application Installation' since this is already done"
-        fi
-    else
-        log "Skipping the 'Infrastructure Bootstrap - Server Application Installation'"
-    fi
 }
 
 setup_overrides()
