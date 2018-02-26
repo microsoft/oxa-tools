@@ -4,7 +4,7 @@
 #
 version: 2
 jobs:
-  test1:
+  FsDevFic:
     environment:
       - ONEBOX_PARAMS: "--branch Dev --Role Fullstack"
     <<: &sharedSetup
@@ -32,39 +32,39 @@ jobs:
         - run:
             name: run tests
             command: source ./tests/deploy-onebox.sh
-  test2:
+  DsDevFic:
     environment:
       - ONEBOX_PARAMS: "--branch Dev --Role Devstack"
     <<: *sharedSetup
-  test3:
+  FsGink:
     environment:
       - ONEBOX_PARAMS: "--branch Ginkgo --Role Fullstack"
     <<: *sharedSetup
-  test4:
+  DsGink:
     environment:
       - ONEBOX_PARAMS: "--branch Ginkgo --Role Devstack"
     <<: *sharedSetup
-  test5:
+  FsEdxMaster:
     environment:
       - ONEBOX_PARAMS: "--branch Edx_master --Role Fullstack"
     <<: *sharedSetup
-  test6:
+  DsEdxMaster:
     environment:
       - ONEBOX_PARAMS: "--branch Edx_master --Role Devstack"
     <<: *sharedSetup
-  test7:
+  FsReleaseFic:
     environment:
       - ONEBOX_PARAMS: "--branch Release --Role Fullstack"
     <<: *sharedSetup
-  test8:
+  DsReleaseFic:
     environment:
       - ONEBOX_PARAMS: "--branch Release --Role Devstack"
     <<: *sharedSetup
-  test9:
+  FsMasterFic:
     environment:
       - ONEBOX_PARAMS: "--branch Master --Role Fullstack"
     <<: *sharedSetup
-  test10:
+  DsMasterFic:
     environment:
       - ONEBOX_PARAMS: "--branch Master --Role Devstack"
     <<: *sharedSetup
@@ -75,35 +75,35 @@ workflows:
   version: 2
   all:
     jobs:
-      - test3:
+      - FsGink:
           <<: &releaseFilter
             filters:
               branches:
                 only:
                   - oxa/release.fic
-      - test6:
+      - DsEdxMaster:
           <<: *releaseFilter
-      - test4:
+      - DsGink:
           <<: *releaseFilter
-      - test2:
+      - DsDevFic:
           <<: &devFilter
             filters:
               branches:
                 only:
                   - oxa/dev.fic
-      - test8:
+      - DsReleaseFic:
           <<: *releaseFilter
-      - test10:
+      - DsMasterFic:
           <<: &masterFilter
             filters:
               branches:
                 only:
                   - oxa/master.fic
-      - test1:
+      - FsDevFic:
           <<: *devFilter
-      - test7:
+      - FsReleaseFic:
           <<: *releaseFilter
-      - test9:
+      - FsMasterFic:
           <<: *masterFilter
   scheduled:
     triggers:
@@ -114,10 +114,10 @@ workflows:
             only:
             - oxa/dev.fic
     jobs:
-      # test5 takes a little over two hours which is the timeout on circleci
+      # FsEdxMaster takes a little over two hours which is the timeout on circleci
       # If we want to re-nenable it then we'll need to do some "perf tuning"
-      - test3
-      - test6
-      - test4
-      - test2
-      - test1
+      - FsGink
+      - DsEdxMaster
+      - DsGink
+      - DsDevFic
+      - FsDevFic
