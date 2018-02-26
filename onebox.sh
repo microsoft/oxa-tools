@@ -9,6 +9,8 @@ set -ae
 # static strings
 readonly MSFT="microsoft"
 readonly EDX="edx"
+readonly CONF="configuration"
+readonly E_CONF="${EDX}-${CONF}"
 readonly USE_MSFT="useMsftRepo"
 readonly TAGS="tags/"
 readonly FICUS="${TAGS}open-release/ficus.1"
@@ -259,6 +261,20 @@ get_branch()
     fi
 }
 
+get_current_org()
+{
+    organization=$MSFT
+
+    if git status > /dev/null ; then
+        remoteUrl="$(git config --get remote.origin.url)"
+        if echo $remoteUrl | grep -i "http" > /dev/null ; then
+            organization=$(echo $remoteUrl | tr / "\n" | head -4 | tail -1)
+        fi
+    fi
+
+    echo $organization
+}
+
 get_current_branch()
 {
     prefix='* '
@@ -310,10 +326,10 @@ get_conf_project_name()
 {
     case "$BRANCH_VERSIONS" in
         edx_f|edx_g|edx_master)
-            echo "configuration"
+            echo "$CONF"
         ;;
         *)
-            echo "edx-configuration"
+            echo "$E_CONF"
         ;;
     esac
 }
@@ -344,7 +360,7 @@ wget_wrapper()
 
 install-with-oxa()
 {
-    bootstrap=`wget_wrapper "scripts/bootstrap.sh" "${MSFT}" "oxa-tools" "$(get_current_branch)"`
+    bootstrap=`wget_wrapper "scripts/bootstrap.sh" "$(get_current_org)" "oxa-tools" "$(get_current_branch)"`
 
     bash $bootstrap \
         --role \
@@ -355,6 +371,8 @@ install-with-oxa()
             "dev" \
         --msft-oauth \
             $MSFT_AUTH \
+        --oxatools-public-github-accountname \
+            `get_current_org` \
         --oxatools-public-github-projectbranch \
             `get_current_branch` \
         --edxconfiguration-public-github-accountname \
@@ -410,24 +428,28 @@ install-with-edx-native()
     # 1. Set the OPENEDX_RELEASE variable:
     OPENEDX_RELEASE=${EDX_BRANCH#$TAGS}
 
+    # Enable retry
+    local utilities=`wget_wrapper "templates/stamp/utilities.sh" "$(get_current_org)" "oxa-tools" "$(get_current_branch)"`
+    source $utilities
+
     # 2. Bootstrap the Ansible installation:
-    local ans_bootstrap=`wget_wrapper "util/install/ansible-bootstrap.sh" "${EDX}" "$(get_conf_project_name)" "$OPENEDX_RELEASE"`
-    sudo bash $ans_bootstrap
+    local ans_bootstrap=`wget_wrapper "util/install/ansible-bootstrap.sh" "${MSFT}" "$E_CONF" "ginkgo1tweaks"`
+    set +e
+    retry-command "bash $ans_bootstrap" 3 "$ans_bootstrap"
+    exit_on_error "Execution of edX ansible bootstrap failed"
+    set -e
 
     # 3. (Optional) If this is a new installation, randomize the passwords:
     # todo: reconcile this w/ -d and /oxa/oxa.yml
     local gen_pass=`wget_wrapper "util/install/generate-passwords.sh" "${EDX}" "$(get_conf_project_name)" "$OPENEDX_RELEASE"`
     bash $gen_pass
 
-    # 3b Enable retry
-    local utilities=`wget_wrapper "templates/stamp/utilities.sh" "${MSFT}" "oxa-tools" "$(get_current_branch)"`
-    source $utilities
-
     # 4. Install Open edX:
-    local sandbox=`wget_wrapper "util/install/sandbox.sh" "${EDX}" "$(get_conf_project_name)" "$OPENEDX_RELEASE"`
+    local sandbox=`wget_wrapper "util/install/sandbox.sh" "${MSFT}" "$E_CONF" "ginkgo1tweaks"`
     devstack_preconditions $sandbox
     set +e
-    retry-command "bash $sandbox" 8 "$sandbox" "fixPackages"
+    retry-command "bash $sandbox --skip-tags=edxapp-sandbox" 8 "$sandbox" "fixPackages"
+    exit_on_error "Execution of edX sandbox playbook failed"
     set -e
 
     # get status of edx services
@@ -448,7 +470,6 @@ test_args
 
 set_dynamic_vars
 
-set -x
 # We currently use sandbox.sh for ginkgo+. Therefore, it doesn't have our customizations.
 #  - (fullstack) This is because vagrant-fullstack.yml was removed in March 2017 and
 #  - (devstack) Something about our customizations result in an "elastic search" error
