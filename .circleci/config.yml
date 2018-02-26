@@ -77,30 +77,22 @@ workflows:
     jobs:
       - FsGink:
           <<: &releaseFilter
-            filters:
-              branches:
-                only:
-                  - oxa/release.fic
+            branches:
+              only:
+                - oxa/release.fic
       - DsEdxMaster:
           <<: *releaseFilter
       - DsGink:
           <<: *releaseFilter
       - DsDevFic:
-          <<: &devFilter
-            filters:
-              branches:
-                only:
-                  - oxa/dev.fic
       - DsReleaseFic:
           <<: *releaseFilter
       - DsMasterFic:
           <<: &masterFilter
-            filters:
-              branches:
-                only:
-                  - oxa/master.fic
+            branches:
+              only:
+                - oxa/master.fic
       - FsDevFic:
-          <<: *devFilter
       - FsReleaseFic:
           <<: *releaseFilter
       - FsMasterFic:
