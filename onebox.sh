@@ -49,6 +49,7 @@ readonly PREVIEW_URL=$BASE_URL
 readonly PLATFORM_NAME="$MSFT Learning on $HOSTNAME"
 readonly EDXAPP_IMPORT_KITCHENSINK_COURSE=true
 readonly NGINX_ENABLE_SSL=false
+readonly CREATE_SUPER_USER=true
 readonly EDXAPP_SU_EMAIL="${EDXAPP_SU_USERNAME}@${MSFT}.com"
 readonly PLATFORM_EMAIL="$EDXAPP_SU_EMAIL"
 readonly EDXAPP_COMPREHENSIVE_THEME_DIRS='[ "/edx/app/edxapp/themes" ]'

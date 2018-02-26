@@ -52,6 +52,7 @@ EDX_VERSION="open-release/ficus.master"
 FORUM_VERSION="open-release/ficus.master"
 AZURE_MEDIA_VERSION="oxa/master.fic"
 KITCHEN_SINK_COURSE_VERSION="oxa/master.fic"
+EDXAPP_EDXAPP_SECRET_KEY=""
 
 # script used for triggering background installation (setup in cron)
 CRON_INSTALLER_SCRIPT=""
@@ -185,6 +186,9 @@ parse_args()
           --servicebus-shared-access-key)
             servicebus_shared_access_key="${arg_value}"
             ;;
+          --edxapp-secretkey)
+            export EDXAPP_EDXAPP_SECRET_KEY="${arg_value}"
+            ;; 
           *)
             # Unknown option encountered
             echo "Option '${BOLD}$1${NORM} ${arg_value}' not allowed."
