@@ -75,5 +75,5 @@ workflows:
   version: 2
   all:
     jobs:
-      - DsDevFic:
-      - FsDevFic:
+      - DsDevFic
+      - FsDevFic
