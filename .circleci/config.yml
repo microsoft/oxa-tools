@@ -76,12 +76,10 @@ workflows:
   all:
     jobs:
       - DsDevFic:
-          filters:
-            branches:
-              only:
-                - odf_branchFilters
+          <<: &devFilter
+            filters:
+              branches:
+                only:
+                  - odf_branchFilters
       - FsDevFic:
-          filters:
-            branches:
-              only:
-                - odf_branchFilters
+          <<: *devFilter
