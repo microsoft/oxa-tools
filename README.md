@@ -1,6 +1,6 @@
 # oxa-tools
 
-Deploying and maintaining Open edX on Azure
+Deploying and maintaining Open edX on Azure.
 
 ## Deploying single machine instance (for development and test)
 
