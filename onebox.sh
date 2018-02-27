@@ -53,6 +53,10 @@ readonly PLATFORM_EMAIL="$EDXAPP_SU_EMAIL"
 readonly EDXAPP_COMPREHENSIVE_THEME_DIRS='[ "/edx/app/edxapp/themes" ]'
 readonly EDXAPP_DEFAULT_SITE_THEME=comprehensive
 
+# Security
+readonly EDXAPP_ENABLE_CONNECTION_LIMITING=true
+readonly EDXAPP_ENABLE_RATE_LIMITING=true
+
 ##########################
 # Dynamic settings. Assigned later on based on onebox.sh param arguments.
 ##########################
