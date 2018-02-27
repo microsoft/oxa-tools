@@ -75,11 +75,13 @@ workflows:
   version: 2
   all:
     jobs:
-      DsDevFic:
-        branches:
-          only:
-            - odf_branchFilters
-      FsDevFic:
-        branches:
-          only:
-            - odf_branchFilters
+      - DsDevFic:
+          filters:
+            branches:
+              only:
+                - odf_branchFilters
+      - FsDevFic:
+          filters:
+            branches:
+              only:
+                - odf_branchFilters
