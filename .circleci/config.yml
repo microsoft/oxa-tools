@@ -105,19 +105,20 @@ workflows:
           <<: *releaseFilter
       - FsMasterFic:
           <<: *masterFilter
-  daily:
-    triggers:
-      - schedule:
-          cron: "*/3 * * * *"
-          filters:
-            branches:
-              only:
-              - odf_branchFilters
-    jobs:
-      # FsEdxMaster takes a little over two hours which is the timeout on circleci
-      # If we want to re-nenable it then we'll need to do some "perf tuning"
-      - FsGink
-      - DsEdxMaster
-      - DsGink
-      - DsDevFic
-      - FsDevFic
+# todo: enable cron builds
+#  daily:
+#    triggers:
+#      - schedule:
+#          cron: "7 */25 * * *"
+#          filters:
+#            branches:
+#              only:
+#              - oxa/dev.fic
+#    jobs:
+#      # FsEdxMaster takes a little over two hours which is the timeout on circleci
+#      # If we want to re-nenable it then we'll need to do some "perf tuning"
+#      - FsGink
+#      - DsEdxMaster
+#      - DsGink
+#      - DsDevFic
+#      - FsDevFic
