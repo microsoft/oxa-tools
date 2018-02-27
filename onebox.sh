@@ -3,7 +3,7 @@
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
 # Export all bash variable assignments (for use by sub-processes)
-# Immmediately exit on error
+# Immmediately exit on error.
 set -ae
 
 # static strings
