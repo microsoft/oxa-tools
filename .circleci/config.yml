@@ -79,7 +79,7 @@ workflows:
           branches:
             only:
               - odf_branchFilters
-      - FsDevFic
+      - FsDevFic:
           branches:
             only:
               - odf_branchFilters
