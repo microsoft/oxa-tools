@@ -383,7 +383,7 @@ try
     {
         # kick off full deployment
         # we may need to replace the default resource group name in the parameters file
-        Log-Message "Stamp Deployment - Cluster: $ResourceGroupName | Template: $KeyVaultDeploymentArmTemplateFile | Parameters file: $($tempParametersFile)"
+        Log-Message "Stamp Deployment - Cluster: $ResourceGroupName | Template: $FullDeploymentArmTemplateFile | Parameters file: $($tempParametersFile)"
         $deploymentStatus = New-OxaResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $FullDeploymentArmTemplateFile -TemplateParameterFile $tempParametersFile -MaxRetries $MaxRetries;
         
         # output the full deployment status
