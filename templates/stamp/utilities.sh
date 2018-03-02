@@ -336,7 +336,7 @@ retry-command()
     local tasksOfPrev=
     local alreadyUpgraded=
     for (( a=1; a<=$retry_count; a++ )) ; do
-        message="$optionalDescription attempt number: $a"
+        message="$optionalDescription attempt number: $a of $retry_count"
 
         # Some failures can be resolved by fixing packages.
         if [[ -n "$fix_packages" ]] ; then
@@ -636,6 +636,18 @@ sync_repo()
 
     exit_on_error "Failed checking out branch $repo_version from repository $repo_url in $repo_path"
     popd
+}
+
+add_remote()
+{
+    local remoteName=$1
+    local remoteUrl="$2"
+
+    if ! ( git remote | grep "$remoteName" ) ; then
+        git remote add $remoteName $remoteUrl
+    fi
+
+    git fetch $remoteName > /dev/null 2>&1
 }
 
 cherry_pick_wrapper()

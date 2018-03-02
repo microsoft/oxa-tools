@@ -123,7 +123,7 @@
             "value": "open-release/ficus.master"
         },
         "edxForumVersion": {
-            "value": "open-release/ficus.master"
+            "value": "{GITHUBBRANCH}"
         },
         "armTemplateRelativePath": {
             "value": "templates/stamp"
@@ -244,6 +244,12 @@
         "edxappSuperUserEmail": {
             "value": "{ADMINEMAILADDRESS}"
         },
+        "edxPlatformName": {
+            "value": "{EDXPLATFORMNAME}"
+        },
+        "edxPlatformEmail": {
+            "value": "{EDXPLATFORMEMAIL}"
+        },
         "azureCliVersion": {
             "value": "{AZURECLIVERSION}"
         },
@@ -253,11 +259,8 @@
         "deploymentType": {
             "value": "{DEPLOYMENTTYPE}"
         },
-        "edxPlatformName": {
-            "value": "{EDXPLATFORMNAME}"
-        },
-        "edxPlatformEmail": {
-            "value": "{EDXPLATFORMEMAIL}"
+        "edxappSecretKey": {
+            "value": "{EDXAPPSECRETKEY}"
         }
     }
 }
