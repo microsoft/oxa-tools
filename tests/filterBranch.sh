@@ -28,12 +28,6 @@ get_base_branch()
         local apiURL=$(echo "$CIRCLE_PULL_REQUEST" | sed "s#/$g/#/api.$g/repos/#g" | sed "s#/pull/#/pulls/#g") > /dev/null
         baseBranch=$(curl -sSl $apiURL | jq -r '.base.ref')
     fi
-    #todo: do extra work to find the PR url from github because
-    #  the current solution relies on $CIRCLE_PULL_REQUEST
-    #  which is only set for commits that happen AFTER the
-    #  PR is submitted.
-    #  The tentative workaround for this is to update circle
-    #  settings to "only build pull requests"
 
     echo "$baseBranch"
 }
