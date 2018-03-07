@@ -93,3 +93,19 @@ jobs:
       - ONEBOX_PARAMS: "--branch Master --Role Devstack"
       - ONLY_BRANCHES: "oxa/master.fic"
     <<: *sharedSetup
+
+# Jobs are sorted from longest duration to shortest (approximately)
+# This generally means the shortest duration overall.
+workflows:
+  version: 2
+  all:
+    jobs:
+      - FsGink
+      - DsEdxMaster
+      - DsGink
+      - DsDevFic
+      - DsReleaseFic
+      - DsMasterFic
+      - FsDevFic
+      - FsReleaseFic
+      - FsMasterFic
