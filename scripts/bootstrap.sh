@@ -2,8 +2,6 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
-set -x
-
 # argument defaults
 EDX_ROLE=""
 DEPLOYMENT_ENV="dev"
@@ -270,7 +268,6 @@ setup_overrides_file()
 required_value()
 {
     if [[ -z $2 ]] ; then
-        set +x
         echo -e "\033[1;36m"
         echo -e "\n\n  Use onebox.sh for fullstack or devstack instead of invoking bootstrap.sh directly.\n\n"
         echo -e '\033[0m'
@@ -299,17 +296,40 @@ verify_state()
 
 fix_jdk()
 {
-    count=`grep -i "8u65" playbooks/roles/oraclejdk/defaults/main.yml | wc -l`
-    if [[ "$count" -gt "0" ]] ; then
+    # Apply https://github.com/edx/configuration/pull/3881
+    if grep -i "8u65" playbooks/roles/oraclejdk/defaults/main.yml ; then
         cherry_pick_wrapper 0ca865c9b0da42bed83459389ae35e2551860472 "$EDXAPP_SU_EMAIL"
     fi
 }
 
 fix_npm_python()
 {
-    count=`grep -i "node_modules" playbooks/roles/edxapp/tasks/deploy.yml | wc -l`
-    if (( "$count" == 0 )) ; then
+    # Apply https://github.com/edx/configuration/pull/4101
+    if ! ( grep -i "node_modules" playbooks/roles/edxapp/tasks/deploy.yml ) ; then
         cherry_pick_wrapper 075d69e6c7c5330732ec75346d02df32d087aa92 "$EDXAPP_SU_EMAIL"
+    fi
+}
+
+fix_hosts_file()
+{
+    # Apply https://github.com/Microsoft/edx-configuration/pull/90
+    add_remote msft_conf "https://github.com/microsoft/edx-configuration.git"
+    if grep "127.0.0.1 localhost" playbooks/roles/local_dev/tasks/main.yml ; then
+        cherry_pick_wrapper f3d59dd09dbbd8b60c9049292c3c814f4de715c5 "$EDXAPP_SU_EMAIL"
+    fi
+}
+
+ansible_try_catch()
+{
+    add_remote msft_conf "https://github.com/microsoft/edx-configuration.git"
+
+    # Apply https://github.com/Microsoft/edx-configuration/pull/91
+    cherry_pick_wrapper a6304eaaefc24d2c3c59d57606c059cdd75b1dd4 "$EDXAPP_SU_EMAIL"
+
+    # Apply https://github.com/Microsoft/edx-configuration/pull/92
+    count=$(grep -c -i "name: install python requirements" playbooks/roles/edxapp/tasks/deploy.yml)
+    if [[ "$count" -lt "2" ]] ; then
+        cherry_pick_wrapper 5ed320bea2174c37d28b9cc6fe14fa90d83220dd "$EDXAPP_SU_EMAIL"
     fi
 }
 
@@ -324,7 +344,7 @@ link_oxa_tools_repo()
         # Is the git repo oxa-tools?
         pushd ..
         actualRemote=`git config --get remote.origin.url | grep -o 'github.com.*' | sed 's/\.git//g'`
-        count=`echo $OXA_TOOLS_REPO | grep -i $actualRemote | wc -l`
+        count=`echo $OXA_TOOLS_REPO | grep -i -c $actualRemote`
         if [[ "$count" -gt "0" ]] ; then
             # Is the repo already at the desired path?
             pushd ..
@@ -385,10 +405,15 @@ setup()
 
     # run edx bootstrap and install requirements
     cd $CONFIGURATION_PATH
+
+    # Cherry pick fixes
     fix_jdk
     fix_npm_python
+    fix_hosts_file
+    ansible_try_catch
+
     ANSIBLE_BOOTSTRAP_SCRIPT=util/install/ansible-bootstrap.sh
-    bash $ANSIBLE_BOOTSTRAP_SCRIPT
+    retry-command "bash $ANSIBLE_BOOTSTRAP_SCRIPT" 3 "$ANSIBLE_BOOTSTRAP_SCRIPT"
     exit_on_error "Failed executing $ANSIBLE_BOOTSTRAP_SCRIPT"
 
     pip install -r requirements.txt
@@ -598,11 +623,7 @@ setup_overrides_file
 # setup crumbs for tracking purposes
 TARGET_FILE=/var/log/bootstrap-$EDX_ROLE.log
 
-if [ "$CRON_MODE" == "1" ];
-then
-    # turn off the debug messages since we have proper logging by now
-    # set +x
-
+if [[ "$CRON_MODE" == "1" ]] ; then
     echo "Cron execution for ${EDX_ROLE} on ${HOSTNAME} detected."
 
     # check if we need to run the setup
