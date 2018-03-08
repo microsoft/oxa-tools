@@ -93,7 +93,7 @@ Invoke-RepositorySync -Branch $Branch -Tag $Tag -EnlistmentRootPath (Get-Item $c
 # sync the secondary repository (if specified)
 if ($ConfigurationRepositoryPath)
 {
-    Invoke-RepositorySync -BranchOrTag $Branch -Tag $Tag -EnlistmentRootPath $ConfigurationRepositoryPath -MaxRetries $MaxRetries
+    Invoke-RepositorySync -Branch $Branch -Tag $Tag -EnlistmentRootPath $ConfigurationRepositoryPath -MaxRetries $MaxRetries
 }
 
 # get a list of required deployment parameter (as specified in the main deployment script)
@@ -180,7 +180,7 @@ try
         $keyVaultDeploymentParameters['DeploymentType'] = $calculatedDeploymentType
         $mainDeploymentScriptParameters['DeploymentType'] = $calculatedDeploymentType
 
-        $deploymentMessage = "Starting '$($calculatedDeploymentType.ToUpper())' deployment."
+        $deploymentMessage = "Starting '$($calculatedDeploymentType.ToUpper())' deployment to $($Cloud) ($($ResourceGroupName))."
         Log-Message $deploymentMessage
 
         New-DeploymentNotificationEmail -Subject $deploymentMessage -Parameters $keyVaultDeploymentParameters -MessageBody $deploymentMessage
