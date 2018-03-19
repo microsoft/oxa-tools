@@ -56,6 +56,10 @@ readonly EDXAPP_COMPREHENSIVE_THEME_DIRS='[ "/edx/app/edxapp/themes" ]'
 readonly EDXAPP_DEFAULT_SITE_THEME=comprehensive
 readonly ENABLE_LTI_PROVIDER=false
 
+# Security
+readonly EDXAPP_ENABLE_CONNECTION_LIMITING=false
+readonly EDXAPP_ENABLE_RATE_LIMITING=false
+
 ##########################
 # Dynamic settings. Assigned later on based on onebox.sh param arguments.
 ##########################
