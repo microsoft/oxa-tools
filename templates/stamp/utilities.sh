@@ -618,7 +618,7 @@ sync_repo()
     else
         pushd $repo_path
 
-        if is_valid_branch get_current_branch ; then
+        if is_valid_branch $(get_current_branch) ; then
             # git pull is a fetch then merge, but merge only
             # makes sense when the local repo has a branch.
             sudo git pull --all --tags --prune
