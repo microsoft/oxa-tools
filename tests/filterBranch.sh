@@ -55,9 +55,11 @@ branch_in_list()
     return 1
 }
 
+CURRENT_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 env
+source $CURRENT_SCRIPT_DIR/../templates/stamp/utilities.sh
 sudo apt -qq update > /dev/null 2>&1 
-sudo apt -qq install -y jq curl > /dev/null 2>&1 
+sudo apt -qq install -y jq curl > /dev/null 2>&1
 
 echo
 echo "ONLY_BRANCHES=$ONLY_BRANCHES"

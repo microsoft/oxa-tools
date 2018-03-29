@@ -53,6 +53,8 @@ get_repo()
     echo "$repoInfo"
 }
 
+CURRENT_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source $CURRENT_SCRIPT_DIR/../templates/stamp/utilities.sh
 BRANCH=$(get_branch)
 
 set -o pipefail
