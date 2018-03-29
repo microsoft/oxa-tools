@@ -272,8 +272,13 @@ get_current_org()
 
     if git status > /dev/null ; then
         remoteUrl="$(git config --get remote.origin.url)"
-        if echo $remoteUrl | grep -i "http" > /dev/null ; then
-            organization=$(echo $remoteUrl | tr / "\n" | head -4 | tail -1)
+
+        if echo $repoInfo | grep "@.*:.*/" > /dev/null 2>&1 ; then
+            #ssh
+            organization=$(echo $remoteUrl | tr : "\n" | tr / "\n" | head -2 | tail -1)
+        else
+            #http or https
+            organization=$(echo $remoteUrl | tr / "\n" | tail -2 | head -1)
         fi
     fi
 

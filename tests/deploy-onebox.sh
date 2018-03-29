@@ -45,8 +45,7 @@ get_repo()
 
         # Convert ssh repo url into https
         if echo $repoInfo | grep "@.*:.*/" > /dev/null 2>&1 ; then
-            echo $repoInfo | tr @ "\n" | tr : / | tail -1
-            return
+            repoInfo=$(echo $repoInfo | tr : / | sed "s#git@#https://#g")
         fi
     fi
 
