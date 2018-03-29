@@ -37,7 +37,7 @@ branch_in_list()
     for filter in $ONLY_BRANCHES; do
         if [[ $branch == $filter ]] ; then
             echo
-            echo "branch in filter"
+            log "branch in filter"
             return 0
         fi
     done
@@ -52,10 +52,10 @@ sudo apt -qq update > /dev/null 2>&1
 sudo apt -qq install -y jq curl > /dev/null 2>&1
 
 echo
-echo "ONLY_BRANCHES=$ONLY_BRANCHES"
+log "ONLY_BRANCHES=$ONLY_BRANCHES"
 
 current_branch=$(get_branch)
-echo "current_branch=$current_branch"
+log "current_branch=$current_branch"
 if is_valid_branch $current_branch ; then
     if branch_in_list $current_branch ; then
         exit 0
@@ -63,7 +63,7 @@ if is_valid_branch $current_branch ; then
 fi
 
 base_branch=$(get_base_branch)
-echo "base_branch=$base_branch"
+log "base_branch=$base_branch"
 if is_valid_branch $base_branch ; then
     if branch_in_list $base_branch ; then
         exit 0
@@ -71,5 +71,5 @@ if is_valid_branch $base_branch ; then
 fi
 
 echo
-echo "branch NOT in filter"
+log "branch NOT in filter"
 exit 1

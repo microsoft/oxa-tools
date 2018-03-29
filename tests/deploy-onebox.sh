@@ -19,7 +19,7 @@ get_branch()
 
         # Ensure branch information is useful.
         if ! is_valid_branch $branchInfo ; then
-            echo "Unable to determine branch for testing"
+            log "Unable to determine branch for testing"
             exit 1
         fi
     fi
@@ -60,10 +60,10 @@ REPO=$(get_repo)
 FOLDER=$(basename $REPO .git)
 CONTAINER_NAME=$(echo "$ONEBOX_PARAMS" | tr -d "-" | tr -d " ")
 
-echo "BRANCH=$BRANCH, REPO=$REPO, FOLDER=$FOLDER"
-echo "ONEBOX_PARAMS=$ONEBOX_PARAMS"
-echo "CONTAINER_NAME=$CONTAINER_NAME"
-echo
+log "BRANCH=$BRANCH, REPO=$REPO, FOLDER=$FOLDER"
+log "ONEBOX_PARAMS=$ONEBOX_PARAMS"
+log "CONTAINER_NAME=$CONTAINER_NAME"
+log
 
 # keep alive
 bash ./tests/keep-alive.sh &
