@@ -3,16 +3,14 @@
 
 set -e
 
-get_current_branch()
+get_branch()
 {
     local branchInfo=
 
     if [[ -n $CIRCLE_BRANCH ]] ; then
         branchInfo=$CIRCLE_BRANCH
     else
-        # Current branch is prefixed with an asterisk. Remove it.
-        local prefix='* '
-        branchInfo=$(git branch | grep "$prefix" | sed "s/$prefix//g")
+        branchInfo=$(get_current_branch)
     fi
 
     echo "$branchInfo"
@@ -30,14 +28,6 @@ get_base_branch()
     fi
 
     echo "$baseBranch"
-}
-
-is_valid_branch()
-{
-    local branch=$1
-
-    # Is branch useful?
-    [[ -n "$branch" ]] && [[ $branch != null ]] && [[ $branch != *"no branch"* ]] && [[ $branch != *"detached"* ]]
 }
 
 branch_in_list()
@@ -64,7 +54,7 @@ sudo apt -qq install -y jq curl > /dev/null 2>&1
 echo
 echo "ONLY_BRANCHES=$ONLY_BRANCHES"
 
-current_branch=$(get_current_branch)
+current_branch=$(get_branch)
 echo "current_branch=$current_branch"
 if is_valid_branch $current_branch ; then
     if branch_in_list $current_branch ; then

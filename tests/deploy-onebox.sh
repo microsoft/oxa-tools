@@ -15,13 +15,12 @@ get_branch()
     elif [[ -n $TRAVIS_PULL_REQUEST_BRANCH ]] ; then
         branchInfo=$TRAVIS_PULL_REQUEST_BRANCH
     else
-        # Current branch is prefixed with an asterisk. Remove it.
-        local prefix='* '
-        branchInfo=`git branch | grep "$prefix" | sed "s/$prefix//g"`
+        branchInfo=$(get_current_branch)
 
         # Ensure branch information is useful.
-        if [[ -z "$branchInfo" ]] || [[ $branchInfo == *"no branch"* ]] || [[ $branchInfo == *"detached"* ]] ; then
-            branchInfo="oxa/dev.fic"
+        if ! is_valid_branch $branchInfo ; then
+            echo "Unable to determine branch for testing"
+            exit 1
         fi
     fi
 
