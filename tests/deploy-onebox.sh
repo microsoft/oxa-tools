@@ -30,22 +30,23 @@ get_branch()
 
 get_repo()
 {
+    local protocol="https://"
     local repoInfo=
 
     if [[ -n $CIRCLE_PROJECT_USERNAME ]] && [[ $CIRCLE_PROJECT_REPONAME ]] ; then
-        repoInfo="github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
+        repoInfo="${protocol}github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
     elif [[ -n $TRAVIS_REPO_SLUG ]] ; then
-        repoInfo="github.com/${TRAVIS_REPO_SLUG}"
+        repoInfo="${protocol}github.com/${TRAVIS_REPO_SLUG}"
     else
         if [[ -n $CIRCLE_REPOSITORY_URL ]] ; then
-            repoInfo=$CIRCLE_REPOSITORY_URL
+            repoInfo="${protocol}${CIRCLE_REPOSITORY_URL}"
         else
             repoInfo=$(git config --get remote.origin.url)
         fi
 
-        # Convert ssh repo url into https
+        # Convert ssh repo into https
         if echo $repoInfo | grep "@.*:.*/" > /dev/null 2>&1 ; then
-            repoInfo=$(echo $repoInfo | tr : / | sed "s#git@#https://#g")
+            repoInfo=$(echo $repoInfo | tr : / | sed "s#git@#${protocol}#g")
         fi
     fi
 
@@ -91,7 +92,7 @@ fi
 # clone repo
 mkdir /oxa
 pushd /oxa
-if git clone --quiet --depth=50 --branch=$BRANCH https://${REPO} ; then
+if git clone --quiet --depth=50 --branch=$BRANCH ${REPO} ; then
     echo "success: clone repo inside of container"
 else
     echo "FAILURE: can't clone repo inside of container"
