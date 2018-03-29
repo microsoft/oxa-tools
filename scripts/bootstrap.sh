@@ -313,7 +313,7 @@ fix_npm_python()
 fix_hosts_file()
 {
     # Apply https://github.com/Microsoft/edx-configuration/pull/90
-    add_remote msft_conf "https://github.com/microsoft/edx-configuration.git"
+    add_remote msft_conf $(get_github_url microsoft edx-configuration)
     if grep "127.0.0.1 localhost" playbooks/roles/local_dev/tasks/main.yml ; then
         cherry_pick_wrapper f3d59dd09dbbd8b60c9049292c3c814f4de715c5 "$EDXAPP_SU_EMAIL"
     fi
@@ -321,7 +321,7 @@ fix_hosts_file()
 
 ansible_try_catch()
 {
-    add_remote msft_conf "https://github.com/microsoft/edx-configuration.git"
+    add_remote msft_conf $(get_github_url microsoft edx-configuration)
 
     # Apply https://github.com/Microsoft/edx-configuration/pull/91
     cherry_pick_wrapper a6304eaaefc24d2c3c59d57606c059cdd75b1dd4 "$EDXAPP_SU_EMAIL"

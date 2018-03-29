@@ -27,7 +27,7 @@ fix_platform()
 
     if ! ( grep -i "live" lms/envs/aws.py ) ; then
         log "Ensure remote has commit"
-        add_remote msft_plat https://github.com/microsoft/edx-platform.git
+        add_remote msft_plat $(get_github_url microsoft edx-platform)
 
         # Ficus fix. Apply
         # https://github.com/Microsoft/edx-platform/pull/158

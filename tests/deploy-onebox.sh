@@ -32,10 +32,8 @@ get_repo()
     local protocol="https://"
     local repoInfo=
 
-    if [[ -n $CIRCLE_PROJECT_USERNAME ]] && [[ $CIRCLE_PROJECT_REPONAME ]] ; then
-        repoInfo="${protocol}github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
-    elif [[ -n $TRAVIS_REPO_SLUG ]] ; then
-        repoInfo="${protocol}github.com/${TRAVIS_REPO_SLUG}"
+    if [[ -n $CIRCLE_PROJECT_USERNAME ]] && [[ -n $CIRCLE_PROJECT_REPONAME ]] ; then
+        repoInfo=$(get_github_url $CIRCLE_PROJECT_USERNAME $CIRCLE_PROJECT_REPONAME)
     else
         if [[ -n $CIRCLE_REPOSITORY_URL ]] ; then
             repoInfo="${protocol}${CIRCLE_REPOSITORY_URL}"
