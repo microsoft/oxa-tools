@@ -618,7 +618,13 @@ sync_repo()
     else
         pushd $repo_path
 
-        sudo git fetch --all --tags --prune
+        if is_valid_branch $(get_current_branch) ; then
+            # git pull is a fetch then merge, but merge only
+            # makes sense when the local repo has a branch.
+            sudo git pull --all --tags --prune
+        else
+            sudo git fetch --all --tags --prune
+        fi
         exit_on_error "Failed syncing repository $repo_url to $repo_path"
 
         popd
@@ -662,6 +668,21 @@ cherry_pick_wrapper()
 
     git cherry-pick -x --strategy=recursive -X theirs $hash --keep-redundant-commits
     exit_on_error "Failed to cherry pick essential fix"
+}
+
+get_current_branch()
+{
+    # Current branch is prefixed with an asterisk. Remove it.
+    local prefix='* '
+    echo $(git branch | grep "$prefix" | sed "s/$prefix//g")
+}
+
+is_valid_branch()
+{
+    local branch=$1
+
+    # Is branch useful?
+    [[ -n "$branch" ]] && [[ $branch != null ]] && [[ $branch != *"no branch"* ]] && [[ $branch != *"detached"* ]]
 }
 
 #############################################################################
