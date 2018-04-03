@@ -307,11 +307,12 @@ start_mongodb()
 {
     log "Starting MongoDB daemon processes"
 
+    set -x  # for debugging purposes
     if (( $(echo "$OS_VER > 16" | bc -l) ))
     then
         # add configuration reload in case it has changed
         systemctl daemon-reload
-        
+
         systemctl start mongodb
         systemctl enable mongodb
     else
