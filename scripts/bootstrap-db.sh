@@ -126,10 +126,10 @@ exec_mongo() {
     # Setup Mongo
     scp -o "StrictHostKeyChecking=no" -r $OXA_TOOLS_PATH/templates/stamp $ADMIN_USER@$HOST:~
 
+    set -x
     MONGO_PASSWORD_TEMP=`echo $MONGO_PASSWORD | base64`
 
     # if repository path is not specified, default it to the user's home directory'
-    set -x
     if [ -z $EXTRA_ARGS ]
     then
         ssh -o "StrictHostKeyChecking=no" ${ADMIN_USER}@${HOST} "cd ~/stamp && chmod 755 ~/stamp/${MONGO_INSTALLER_SCRIPT} && sudo ~/stamp/${MONGO_INSTALLER_SCRIPT} -i ""${MONGO_INSTALLER_BASE_URL}"" -b ""${MONGO_INSTALLER_PACKAGE_NAME}"" -r $MONGO_REPLICASET_NAME -k ""${MONGO_REPLICASET_KEY}"" -u ""${MONGO_USER}"" -p ""${MONGO_PASSWORD_TEMP}"" -x ""${MONGO_SERVER_IP_PREFIX}"" -n ""${NODE_COUNT}"" -o ""${MONGO_SERVER_IP_OFFSET}"""
