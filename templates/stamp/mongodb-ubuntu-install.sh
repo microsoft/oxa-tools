@@ -309,6 +309,9 @@ start_mongodb()
 
     if (( $(echo "$OS_VER > 16" | bc -l) ))
     then
+        # add configuration reload in case it has changed
+        systemctl daemon-reload
+        
         systemctl start mongodb
         systemctl enable mongodb
     else
