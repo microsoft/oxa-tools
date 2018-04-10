@@ -59,9 +59,6 @@ wait_interval_seconds=10
 # allow the user to specify which vmss instances to update. the expected value is the VMSS deployment id
 vmss_deployment_id=""
 
-# cloud being deployed
-cloud="bvt"
-
 #############################################################################
 # parse the command line arguments
 
@@ -225,9 +222,15 @@ copy_files()
 update_permissions()
 {
     file_path="${1}"
+    add_execute_permission="${2}"
 
     # setting permission for edxapp usage
-    chmod -R 644 "${file_path}"
+    if [[ -z "${add_execute_permission}" ]]; then
+        chmod -R 644 "${file_path}"
+    elif
+        chmod -R 766 "${file_path}"
+    fi
+
     exit_on_error "Could not change permissions on '${file_path}' on ${HOSTNAME}!" "${error_ccbg_update_failed}" "${notification_email_subject}" "${cluster_admin_email}"
 
     chown -R edxapp:edxapp "${file_path}"
@@ -361,7 +364,7 @@ then
 
     log "Copying grades v1 files"
     copy_files "${source_file}" "${destination_file}"
-    update_permissions "${local_edx_platform_base_path}/${source_relative_path}/v1"
+    update_permissions "${local_edx_platform_base_path}/${source_relative_path}/v1" "1"
     
     # Copy: Supporting files
     support_files="lms/urls.py common/djangoapps/enrollment/data.py common/djangoapps/enrollment/tests/test_data.py"
