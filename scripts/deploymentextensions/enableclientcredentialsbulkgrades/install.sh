@@ -228,7 +228,7 @@ update_permissions()
     if [[ -z "${add_execute_permission}" ]]; then
         chmod -R 644 "${file_path}"
     else
-        chmod 766 "${file_path}"
+        chmod 755 "${file_path}"
     fi
 
     exit_on_error "Could not change permissions on '${file_path}' on ${HOSTNAME}!" "${error_ccbg_update_failed}" "${notification_email_subject}" "${cluster_admin_email}"
