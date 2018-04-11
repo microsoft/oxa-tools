@@ -52,18 +52,16 @@ EDXAPP_MKTG_URL_LINK_MAP:
   DN: "dn"
 
 # Country made required field in registration.
-EDXAPP_REGISTRATION_EXTRA_FIELDS: 
+EDXAPP_REGISTRATION_EXTRA_FIELDS:
   city: "hidden"
-  country: "hidden"
-  disclosure_notice: "required"
-  gender: "hidden"
-  goals: "hidden"
-  honor_code: "hidden"
-  language: "hidden"
-  level_of_education: "hidden"
+  country: "required"
+  gender: "optional"
+  goals: "optional"
+  honor_code: "required"
+  level_of_education: "optional"
   mailing_address: "hidden"
-  terms_of_service: "required"
-  year_of_birth: "hidden"  
+  year_of_birth: "hidden"
+  language: "optional"
 
 # Enable social sharing icons for courses. For now we are just enabling linkedin. 
 # Facebook and Twitter is not enabled for now.
