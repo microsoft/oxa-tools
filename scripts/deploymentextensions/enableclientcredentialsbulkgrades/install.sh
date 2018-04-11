@@ -227,7 +227,7 @@ update_permissions()
     # setting permission for edxapp usage
     if [[ -z "${add_execute_permission}" ]]; then
         chmod -R 644 "${file_path}"
-    elif
+    else
         chmod 766 "${file_path}"
     fi
 
