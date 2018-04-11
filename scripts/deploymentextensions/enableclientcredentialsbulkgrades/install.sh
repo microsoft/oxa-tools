@@ -228,7 +228,7 @@ update_permissions()
     if [[ -z "${add_execute_permission}" ]]; then
         chmod -R 644 "${file_path}"
     elif
-        chmod -R 766 "${file_path}"
+        chmod 766 "${file_path}"
     fi
 
     exit_on_error "Could not change permissions on '${file_path}' on ${HOSTNAME}!" "${error_ccbg_update_failed}" "${notification_email_subject}" "${cluster_admin_email}"
@@ -365,9 +365,10 @@ then
     log "Copying grades v1 files"
     copy_files "${source_file}" "${destination_file}"
     update_permissions "${local_edx_platform_base_path}/${source_relative_path}/v1" "1"
+    update_permissions "${local_edx_platform_base_path}/${source_relative_path}/v1/tests" "1"
     
     # Copy: Supporting files
-    support_files="lms/urls.py common/djangoapps/enrollment/data.py common/djangoapps/enrollment/tests/test_data.py"
+    support_files="lms/djangoapps/grades/api/urls.py common/djangoapps/enrollment/data.py common/djangoapps/enrollment/tests/test_data.py"
     support_files="${support_files} lms/djangoapps/courseware/exceptions.py openedx/core/djangoapps/oauth_dispatch/dot_overrides.py"
     support_files="${support_files} openedx/core/djangoapps/oauth_dispatch/tests/test_dot_adapter.py openedx/core/djangoapps/oauth_dispatch/tests/test_views.py"
 
