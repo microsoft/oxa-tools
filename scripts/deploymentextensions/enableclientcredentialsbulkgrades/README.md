@@ -4,7 +4,12 @@
 This deployment enables the client credentials & bulk grades on Ficus for existing OXA STAMP clusters. These changes enable Microsoft to get additional learner data for reporting purposes.
 
 **Important**:
-Before running the deployment extension, please confirm the following that you have deployed Open edX using _Microsoft STAMP ARM template_; which is running Ficus X.X version of Open edX avaliable from http://github.com/microsoft/edx-platform **oxa/master.fic** branch. Please do not run this extension, if you are **NOT** using _Microsoft STAMP ARM Template_.
+Before running the deployment extension, please confirm the following that you have deployed Open edX using _Microsoft STAMP ARM template_; which is running Ficus.1 version of Open edX avaliable from http://github.com/microsoft/edx-platform **oxa/master.fic** branch. Please do not run this extension, if you are **NOT** using _Microsoft STAMP ARM Template_.
+
+If you don't meet these conditions and would still like to apply the changes, please reference the following PRs:
+1. https://github.com/Microsoft/edx-platform/pull/228 
+1. https://github.com/Microsoft/edx-platform/pull/233 
+
 
 **Parameters**
 1. _target-user_: operating system user account whose authorized key is being updated
