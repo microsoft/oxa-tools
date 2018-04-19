@@ -3,16 +3,14 @@
 
 set -e
 
-get_current_branch()
+get_branch()
 {
     local branchInfo=
 
     if [[ -n $CIRCLE_BRANCH ]] ; then
         branchInfo=$CIRCLE_BRANCH
     else
-        # Current branch is prefixed with an asterisk. Remove it.
-        local prefix='* '
-        branchInfo=$(git branch | grep "$prefix" | sed "s/$prefix//g")
+        branchInfo=$(get_current_branch)
     fi
 
     echo "$branchInfo"
@@ -32,14 +30,6 @@ get_base_branch()
     echo "$baseBranch"
 }
 
-is_valid_branch()
-{
-    local branch=$1
-
-    # Is branch useful?
-    [[ -n "$branch" ]] && [[ $branch != null ]] && [[ $branch != *"no branch"* ]] && [[ $branch != *"detached"* ]]
-}
-
 branch_in_list()
 {
     local branch=$1
@@ -47,7 +37,7 @@ branch_in_list()
     for filter in $ONLY_BRANCHES; do
         if [[ $branch == $filter ]] ; then
             echo
-            echo "branch in filter"
+            log "branch in filter"
             return 0
         fi
     done
@@ -55,15 +45,17 @@ branch_in_list()
     return 1
 }
 
+CURRENT_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 env
+source $CURRENT_SCRIPT_DIR/../templates/stamp/utilities.sh
 sudo apt -qq update > /dev/null 2>&1 
-sudo apt -qq install -y jq curl > /dev/null 2>&1 
+sudo apt -qq install -y jq curl > /dev/null 2>&1
 
 echo
-echo "ONLY_BRANCHES=$ONLY_BRANCHES"
+log "ONLY_BRANCHES=$ONLY_BRANCHES"
 
-current_branch=$(get_current_branch)
-echo "current_branch=$current_branch"
+current_branch=$(get_branch)
+log "current_branch=$current_branch"
 if is_valid_branch $current_branch ; then
     if branch_in_list $current_branch ; then
         exit 0
@@ -71,7 +63,7 @@ if is_valid_branch $current_branch ; then
 fi
 
 base_branch=$(get_base_branch)
-echo "base_branch=$base_branch"
+log "base_branch=$base_branch"
 if is_valid_branch $base_branch ; then
     if branch_in_list $base_branch ; then
         exit 0
@@ -79,5 +71,5 @@ if is_valid_branch $base_branch ; then
 fi
 
 echo
-echo "branch NOT in filter"
+log "branch NOT in filter"
 exit 1

@@ -280,7 +280,7 @@ parse_args $@ # pass existing command line arguments
 ##
 BOOTSTRAP_HOME=$(dirname $0)
 OXA_PATH=/oxa
-OXA_TOOLS_REPO="https://github.com/microsoft/oxa-tools.git"
+OXA_TOOLS_REPO=$(get_github_url microsoft oxa-tools)
 OXA_TOOLS_PATH=$OXA_PATH/oxa-tools
 OXA_TOOLS_CONFIG_PATH=$OXA_PATH/oxa-tools-config
 CONFIGURATION_PATH=$OXA_PATH/configuration
