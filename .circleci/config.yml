@@ -1,0 +1,111 @@
+# Python CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-python/ for more details
+#
+
+# For branch filtering, we use ONLY_BRANCHES (a space delimited list) and filterBranch.sh
+# more information can be found at https://github.com/sdolenc/circleCi_prsBranchFilter
+
+version: 2
+jobs:
+  FsDevFic:
+    environment:
+      - ONEBOX_PARAMS: "--branch Dev --Role Fullstack"
+      - ONLY_BRANCHES: "oxa/dev.fic"
+    <<: &sharedSetup
+      # VM allows for "priveleged" containers.
+      machine: true
+      working_directory: ~/repo
+      steps:
+        - checkout
+        - run:
+            name: run tests
+            command: |
+              if bash ./tests/filterBranch.sh ; then
+                echo "running tests!"
+                echo
+
+                docker pull solita/ubuntu-systemd:16.04
+                docker run --rm --privileged -v /:/host solita/ubuntu-systemd:16.04 setup
+                # Prepare cgroup on the host at /tmp/cgroup to avoid error: "failed to connect to bus: no such file or directory"
+                sudo mkdir -p /tmp/cgroup/systemd && sudo mount -t cgroup systemd /tmp/cgroup/systemd -o ro,noexec,nosuid,nodev,none,name=systemd
+
+                # Host entries from edx-configuration/playbooks/roles/local_dev/tasks/main.yml
+                # "priveleged" to support THP changes in edx-configuration/playbooks/roles/mongo_3_2/tasks/main.yml
+                docker run -d --name $(echo "$ONEBOX_PARAMS" | tr -d "-" | tr -d " ")  \
+                              --add-host "localhost preview.localhost":127.0.0.1 \
+                              --privileged \
+                              --security-opt seccomp=unconfined \
+                              --tmpfs /run \
+                              --tmpfs /run/lock \
+                              -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
+                              -t solita/ubuntu-systemd:16.04
+
+                source ./tests/deploy-onebox.sh
+
+                echo
+                echo "tests complete!"
+              else
+                echo "skipping tests!"
+              fi
+  DsDevFic:
+    environment:
+      - ONEBOX_PARAMS: "--branch Dev --Role Devstack"
+      - ONLY_BRANCHES: "oxa/dev.fic"
+    <<: *sharedSetup
+  FsGink:
+    environment:
+      - ONEBOX_PARAMS: "--branch Ginkgo --Role Fullstack"
+      - ONLY_BRANCHES: "oxa/release.fic"
+    <<: *sharedSetup
+  DsGink:
+    environment:
+      - ONEBOX_PARAMS: "--branch Ginkgo --Role Devstack"
+      - ONLY_BRANCHES: "oxa/release.fic"
+    <<: *sharedSetup
+  FsEdxMaster:
+    environment:
+      - ONEBOX_PARAMS: "--branch Edx_master --Role Fullstack"
+      - ONLY_BRANCHES: "oxa/master.fic"
+    <<: *sharedSetup
+  DsEdxMaster:
+    environment:
+      - ONEBOX_PARAMS: "--branch Edx_master --Role Devstack"
+      - ONLY_BRANCHES: "oxa/master.fic"
+    <<: *sharedSetup
+  FsReleaseFic:
+    environment:
+      - ONEBOX_PARAMS: "--branch Release --Role Fullstack"
+      - ONLY_BRANCHES: "oxa/release.fic"
+    <<: *sharedSetup
+  DsReleaseFic:
+    environment:
+      - ONEBOX_PARAMS: "--branch Release --Role Devstack"
+      - ONLY_BRANCHES: "oxa/release.fic"
+    <<: *sharedSetup
+  FsMasterFic:
+    environment:
+      - ONEBOX_PARAMS: "--branch Master --Role Fullstack"
+      - ONLY_BRANCHES: "oxa/master.fic"
+    <<: *sharedSetup
+  DsMasterFic:
+    environment:
+      - ONEBOX_PARAMS: "--branch Master --Role Devstack"
+      - ONLY_BRANCHES: "oxa/master.fic"
+    <<: *sharedSetup
+
+# Jobs are sorted from longest duration to shortest (approximately)
+# This generally means the shortest duration overall.
+workflows:
+  version: 2
+  all:
+    jobs:
+      - FsGink
+      - DsEdxMaster
+      - DsGink
+      - DsDevFic
+      - DsReleaseFic
+      - DsMasterFic
+      - FsDevFic
+      - FsReleaseFic
+      - FsMasterFic

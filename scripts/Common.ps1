@@ -340,7 +340,7 @@ function Authenticate-AzureRmUser
             [Parameter(Mandatory=$false)][boolean]$IsCli2=$false
          )
 
-    Log-Message "Logging in as service principal for '$($AadTenantId)'"
+    Log-Message "Logging in as service principal for '$($AadTenantId)' | Client='$($AadWebClientId)'"
     if ($IsCli2)
     {
         $results = az login -u $AadWebClientId --service-principal --tenant $AadTenantId -p $AadWebClientAppKey --output json | Out-String
@@ -2799,14 +2799,14 @@ function New-OxaCertificateBasedServicePrincipal
                 Log-Message "'$($servicePrincipal.DisplayName)' already has access to the the subscription."
                 $awaitingServicePrincipalRoleAssignment = $false
             }
-        }
-        else
-        {
-            # display the error information
-            Capture-ErrorStack
+            else
+            {
+                # display the error information
+                Capture-ErrorStack
 
-            Log-Message "Waiting $($waitIntervalSeconds) seconds for service principal application to be created"
-            Start-Sleep -Seconds $waitIntervalSeconds    
+                Log-Message "Waiting $($waitIntervalSeconds) seconds for service principal application to be created"
+                Start-Sleep -Seconds $waitIntervalSeconds    
+            }
         }
         
         # check if the wait duration has been exceeded
@@ -3659,15 +3659,33 @@ function New-DeploymentNotificationEmail
     $smtpClient.EnableSSL = $true
     $smtpClient.Credentials = New-Object System.Net.NetworkCredential($smtpAuthenticationUser, $smtpAuthenticationUserPassword)
 
-    try
+    # add some resilience to the mail exchange. Make 3 attempts and if it still fails continue
+    $remainingEmailExchangeAttempts = 3
+
+    while($remainingEmailExchangeAttempts -gt 0)
     {
-        $smtpClient.Send($message)
-        Log-Message "[OK]" -Foregroundcolor Green -SkipTimestamp
-    }
-    catch
-    {
-        Log-Message "[Failed]" -Foregroundcolor Red -SkipTimestamp
-        Log-Message "Failed sending message using $($smtpServer): $($_)"
+        # reduce the remaining attempts
+        $remainingEmailExchangeAttempts--
+
+        try
+        {
+            $smtpClient.Send($message)
+            Log-Message "[OK]" -Foregroundcolor Green -SkipTimestamp
+
+            break
+        }
+        catch
+        {
+            # throttle back the email exchange: add delay between retries
+            start-sleep -Seconds 5
+
+            if ($remainingEmailExchangeAttempts -eq 0)
+            {
+                # only provide failure notification when retry attempts all fail
+                Log-Message "[Failed]" -Foregroundcolor Red -SkipTimestamp
+                Log-Message "Failed sending message using $($smtpServer): $($_)"
+            }
+        }
     }
 }
 
@@ -3817,7 +3835,7 @@ function Invoke-RepositorySync
     # 1. git is already installed and the path to the git executable has been set in system PATH environment variable
     # 2. git authentication has been setup (ie: ssh key configured with appropriate access)
 
-    Log-Message "Syncing git repository at $($EnlistmentRootPath): Branch/Tag=$($BranchOrTag)"
+    Log-Message "Syncing git repository at $($EnlistmentRootPath): Branch/Tag=$($Branch)|$($Tag)"
 
     pushd $EnlistmentRootPath
 
