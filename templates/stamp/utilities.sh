@@ -1794,3 +1794,108 @@ install-servicebus-tools()
     # pip install azure
     pipinstall-package "azure"
 }
+
+authenticate-azureuser()
+{
+    # Login via azure cli
+
+    # parameters:
+    aad_webclient_id="${1}"
+    aad_tenant_id="${2}"
+    aad_webclient_appkey="${3}"
+    cluster_admin_email="${4}"
+    azure_subscription_id="${5}"
+    auth_error_code="${6:-30001}"
+    notification_email_subject="Failed authenticating user via azure cli"
+
+    # all parameters must have a value
+    if [[ -z "${aad_tenant_id}" ]] || [[ -z "${aad_tenant_id}" ]] || [[ -z "${aad_tenant_id}" ]] || [[ -z "${aad_tenant_id}" ]] || [[ -z "${aad_tenant_id}" ]] || [[ -z "${aad_tenant_id}" ]]; then
+        log "All parameters must be specified: Aad WebClient Id, Tenant Id, App Key, cluster admin email, subscription"
+        exit 1
+    fi
+
+    # this call requires azure cli2
+    # login
+    results=`az login -u $aad_webclient_id --service-principal --tenant $aad_tenant_id -p $aad_webclient_appkey --output json`
+    exit_on_error "Could not login to azure with the provided service principal credential from '${HOSTNAME}' !" "${auth_error_code}" "${notification_email_subject}" "${cluster_admin_email}"
+
+    # select the appropriate subscription to set the execution context
+    az account set --subscription "${azure_subscription_id}"
+    exit_on_error "Could not set the azure subscription context to ${azure_subscription_id} from '${HOSTNAME}' !" "${auth_error_code}" "${notification_email_subject}" "${cluster_admin_email}"
+}
+
+get-cluster-vmss-instances-ips()
+{
+    # Get the IP address of all VMSS instances in the target cluster conditionally filtered by deployment Id. 
+    # if the user specifies a deployment id as a filter, all only the target/filtered 
+    # vmss will be returned
+
+    # Parameters
+    azure_resource_group="${1}"
+    vmss_deployment_id="${2}"
+    cluster_admin_email="${3}"
+    error_code="${4:-30002}"
+    error_notification_email_subject="Failed getting the VMSS instance IPs"
+
+    # we must have the resource group
+    if [[ -z "${azure_resource_group}" ]]; then
+        log "Resource group not specified"
+        exit 1
+    fi
+    
+    # It is assumed that you have already performed an Azure Cli RM login: authenticate-azureuser
+    # If the user specifies a VMSS filter (the deploymentId), list only that VMSS. Otherwise, list all VMSSs.
+    vmss_ids_array=(`az vmss list --resource-group ${azure_resource_group} | jq -r '.[] | .id'`)
+    exit_on_error "Could not get a list of the VMSSs in the '${azure_resource_group}' resource group from '${HOSTNAME}' !"
+
+    vmss_ids_list=""
+    for vmss_id in "${vmss_ids_array[@]}";
+    do
+        if [[ -z $vmss_deployment_id ]] || ( [[ -n $vmss_deployment_id ]] && [[ $vmss_id == *"vmss-$vmss_deployment_id" ]] );
+        then
+            # the user has specified a filter, apply it
+            vmss_ids_list="${vmss_id} ${vmss_ids_list}"
+        fi
+    done
+
+    # trim the trailing space
+    vmss_ids_list="$(echo -e "${vmss_ids_list}" | tr -d '[:space:]')"
+
+    # The structure of the response differ when multiple VMSSs are involved. Therefore, we have to account for that.
+    vmss_instance_list=`az vmss list-instances --resource-group "${azure_resource_group}" --ids "${vmss_ids_list}"`
+    exit_on_error "Could not get a list of the VMs in the identified VMSSs' !" "${error_code}" "${error_notification_email_subject}" "${cluster_admin_email}"
+
+    # convert the list to an array for processing
+    filtered_vmss_ids_array=($vmss_ids_list)
+
+    if [[ ${#filtered_vmss_ids_array[@]} -gt 1 ]]; then
+        vmss_nic_array=(`echo $vmss_instance_list | jq -r '.[][] .networkProfile.networkInterfaces[] .id'`)
+    else
+        vmss_nic_array=(`echo $vmss_instance_list | jq -r '.[] .networkProfile.networkInterfaces[] .id'`)
+    fi
+
+    exit_on_error "Could not process the vmss instance list!" "${error_code}" "${error_notification_email_subject}" "${cluster_admin_email}"
+
+    # The final list of Ip addresses associated with the VMs in the targeted VMSS(s).
+    vmss_ips_master_list=""
+
+    # Iterate all NICs only add unique value to the array
+    for vmss_nic in "${vmss_nic_array[@]}";
+    do
+        vmss_ips_list=`az vmss nic list --ids "${vmss_nic}" | jq -r '.[] .ipConfigurations[] .privateIpAddress'`
+        exit_on_error "Could not get a list of the IPs for the identified VMSSs' !" "${error_code}" "${error_notification_email_subject}" "${cluster_admin_email}"
+
+        # add to the master list
+        vmss_ips_master_list+="${vmss_ips_list} ${vmss_ips_master_list}"
+    done
+
+    # trim the trailing space
+    vmss_ips_master_list="$(echo -e "${vmss_ips_master_list}" | tr -d '[:space:]')"
+
+    # The master list will have duplicates. Prune it.
+    pruned_vmss_ips_master_list=`echo $vmss_ips_master_list | tr ' ' '\n' | sort -u`
+
+    # return a list of VMSS Ids
+    # the consumer is expected to convert the list to an array for further processing
+    echo $pruned_vmss_ips_master_list
+}
