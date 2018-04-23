@@ -93,6 +93,11 @@ jobs:
       - ONEBOX_PARAMS: "--branch Master --Role Devstack"
       - ONLY_BRANCHES: "oxa/master.fic"
     <<: *sharedSetup
+  FsGink:
+    environment:
+      - ONEBOX_PARAMS: "--branch Hawthorne --Role Fullstack"
+      - ONLY_BRANCHES: "haw-container-push"
+    <<: *sharedSetup
 
 # Jobs are sorted from longest duration to shortest (approximately)
 # This generally means the shortest duration overall.

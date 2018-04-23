@@ -15,6 +15,7 @@ readonly USE_MSFT="useMsftRepo"
 readonly TAGS="tags/"
 readonly FICUS="${TAGS}open-release/ficus.1"
 readonly GINKGO="${TAGS}open-release/ginkgo.2"
+readonly HAWTHORNE="open-release/hawthrone.beta.1"
 readonly FS="fullstack"
 readonly DS="devstack"
 
@@ -163,6 +164,9 @@ parse_branch()
         ginkgo|up_g|ed_g|g|edx_ginkgo)
             echo "edx_g"
         ;;
+        hawthorne|up_h|ed_h|h|edx_hawthorne)
+            echo "edx_h"
+        ;;
         *)
             # no additional mappings for edx_master (at this time)
             echo "$userInput"
@@ -187,6 +191,8 @@ set_dynamic_vars()
 
             if [[ $BRANCH_VERSIONS == edx_g ]] ; then
                 EDX_BRANCH=$GINKGO
+            elif [[ $BRANCH_VERSIONS == edx_h ]] ; then
+                EDX_BRANCH=$HAWTHORNE
             elif [[ $BRANCH_VERSIONS == edx_master ]] ; then
                 EDX_BRANCH=master
             fi
@@ -483,7 +489,7 @@ set_dynamic_vars
 # We currently use sandbox.sh for ginkgo+. Therefore, it doesn't have our customizations.
 #  - (fullstack) This is because vagrant-fullstack.yml was removed in March 2017 and
 #  - (devstack) Something about our customizations result in an "elastic search" error
-if [[ $BRANCH_VERSIONS == edx_g ]] || [[ $BRANCH_VERSIONS == edx_master ]] ; then
+if [[ $BRANCH_VERSIONS == edx_g ]] || [[ $BRANCH_VERSIONS == edx_h ]] || [[ $BRANCH_VERSIONS == edx_master ]] ; then
     install-with-edx-native
 else
     install-with-oxa
