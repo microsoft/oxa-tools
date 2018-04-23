@@ -93,7 +93,7 @@ jobs:
       - ONEBOX_PARAMS: "--branch Master --Role Devstack"
       - ONLY_BRANCHES: "oxa/master.fic"
     <<: *sharedSetup
-  FsHaw:
+  FsHawthorne:
     environment:
       - ONEBOX_PARAMS: "--branch Hawthorne --Role Fullstack"
       - ONLY_BRANCHES: "haw-container-push"
@@ -106,7 +106,7 @@ workflows:
   all:
     jobs:
       - FsGink
-      - FsHaw
+      - FsHawthorne
       - DsEdxMaster
       - DsGink
       - DsDevFic
