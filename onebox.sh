@@ -239,7 +239,7 @@ test_args()
 
     echo -e "\n BRANCH_VERSIONS is set to $BRANCH_VERSIONS"
     case "$BRANCH_VERSIONS" in
-        stable|release|edge|edx_f|edx_g|edx_master)
+        stable|release|edge|edx_f|edx_g|edx_h|edx_master)
             echo ""
         ;;
         *)
@@ -329,7 +329,7 @@ harden()
 get_org()
 {
     case "$BRANCH_VERSIONS" in
-        edx_f|edx_g|edx_master)
+        edx_f|edx_g|edx_h|edx_master)
             echo "$EDX"
         ;;
         *)
@@ -341,7 +341,7 @@ get_org()
 get_conf_project_name()
 {
     case "$BRANCH_VERSIONS" in
-        edx_f|edx_g|edx_master)
+        edx_f|edx_g|edx_h|edx_master)
             echo "$CONF"
         ;;
         *)
