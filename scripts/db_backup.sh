@@ -112,9 +112,9 @@ source_wrapper()
 validate_db_type()
 {
     # validate argument
-    if [[ "$DATABASE_TYPE" != "mongo" ]] && [[ "$DATABASE_TYPE" != "mysql" ]]; then
+    if [[ "$DATABASE_TYPE" != "mongo" ]] && [[ "$DATABASE_TYPE" != "mysql" ]] && [[ "$DATABASE_TYPE" != "trackinglogs" ]]; then
         log "$DATABASE_TYPE is not supported"
-        log "Databse type must be mongo or mysql"
+        log "Databse type must be mongo or mysql or trackinglogs"
         help
         exit 3
     fi
@@ -136,6 +136,10 @@ validate_remote_storage()
 
     # Container names cannot contain underscores or uppercase characters
     CONTAINER_NAME="${DATABASE_TYPE}-backup"
+    if [[ "$DATABASE_TYPE" == "trackinglogs" ]]
+    then
+        CONTAINER_NAME="tracking"
+    fi
 }
 
 validate_settings()
@@ -143,8 +147,11 @@ validate_settings()
     validate_db_type
     validate_remote_storage
 
-    if [[ ! -d "$BACKUP_LOCAL_PATH" ]]; then
-        mkdir -p "$BACKUP_LOCAL_PATH"
+    if [[ "$DATABASE_TYPE" == "mongo" ]] || [[ "$DATABASE_TYPE" == "mysql" ]]
+    then
+        if [[ ! -d "$BACKUP_LOCAL_PATH" ]]; then
+            mkdir -p "$BACKUP_LOCAL_PATH"
+        fi
     fi
 }
 
@@ -387,6 +394,65 @@ cleanup_old_remote_files()
     set -x
 }
 
+cleanup_old_tracking_logs()
+{
+    if [ -z $BACKUP_RETENTIONDAYS ]
+    then
+        log "No database retention length provided."
+        return
+    fi
+
+    echo "Getting list of files and extracting their age"
+    echo "files older than $BACKUP_RETENTIONDAYS days will be removed"
+
+    # Calculate cutoff time.
+    logs_currentSeconds=$(date --date="`date`" +%s)
+    logs_retentionPeriod=$(( $BACKUP_RETENTIONDAYS * 24 * 60 * 60 ))
+    logs_cutoffInSeconds=$(( $logs_currentSeconds - $logs_retentionPeriod ))
+
+    # This is very noisy. We'll use log to communicate status.
+    set +x
+
+    # Get file list with lastModified meta-data. We'll use this to extract dates.
+    if [[ $AZURE_CLI_VERSION == "1" ]]; then
+        # cli 1.0
+        azure storage blob list $CONTAINER_NAME --json | jq -r '.[] | .name + "_" + .lastModified' > tracklogsblobs.json
+    else
+        # cli 2.0
+        az storage blob list --connection-string "${AZURE_STORAGE_CONNECTIONSTRING}" --container-name $CONTAINER_NAME -o json | jq -r '.[] | .name + "_" + .properties.lastModified' > tracklogsblobs.json
+    fi
+
+    while read obj ; do
+        
+        # Split BlobName and BlobDate from below String Format; Split by underscore
+        # test1/test2/tracking.log-20170801-1501586221.gz_Sun, 07 Jan 2018 19:39:33 GMT
+        blobName=`echo $obj | cut -d _ -f -1`
+        blobDate=`echo $obj | cut -d _ -f 2-`
+        
+        logs_fileDateInSeconds=$(date --date="$blobDate" +%s)
+
+        if [[ $logs_cutoffInSeconds -ge $logs_fileDateInSeconds ]]
+        then
+            log "deleting $blobName"
+        
+            if [[ $AZURE_CLI_VERSION == "1" ]]; then
+                # cli 1.0
+                azure storage blob delete -q $CONTAINER_NAME $blobName
+            else
+                # cli 2.0
+                # failure here isn't critical, so ignoring response
+                az storage blob delete --connection-string "${AZURE_STORAGE_CONNECTIONSTRING}" --container-name "${CONTAINER_NAME}" --name "${blobName}" -o json
+            fi
+        else
+            log "keeping $blobName"
+        fi
+        echo " "
+
+    done < tracklogsblobs.json
+    rm tracklogsblobs.json
+}
+
+
 # Parse script argument(s)
 parse_args $@
 
@@ -401,16 +467,12 @@ source_wrapper $UTILITIES_FILE
 # Script self-idenfitication
 print_script_header
 
-log "Begin execution of $DATABASE_TYPE backup script using '${DATABASE_TYPE}' dump command."
-
 # Settings
 source_wrapper $SETTINGS_FILE
 
 # Pre-conditionals
 exit_if_limited_user
 validate_settings
-
-set_path_names
 
 # install requisite tools (if necessary)
 log "Conditionally installing requisite tools for backup operations"
@@ -426,17 +488,28 @@ fi
 
 install-json-processor
 
-# Cleanup previous runs.
-cleanup_local_copies
+if [[ "$DATABASE_TYPE" == "mongo" ]] || [[ "$DATABASE_TYPE" == "mysql" ]]
+then
+    log "Begin execution of $DATABASE_TYPE backup script using '${DATABASE_TYPE}' dump command."
 
-create_compressed_db_dump
+    set_path_names
 
-copy_db_to_azure_storage
+    # Cleanup previous runs.
+    cleanup_local_copies
 
-# Cleanup residue from this run.
-cleanup_local_copies
+    create_compressed_db_dump
 
-# Cleanup old remote files
-cleanup_old_remote_files
+    copy_db_to_azure_storage
 
-log "Backup complete!"
+    # Cleanup residue from this run.
+    cleanup_local_copies
+
+    # Cleanup old remote files
+    cleanup_old_remote_files
+
+    log "Backup complete!"
+elif [[ "$DATABASE_TYPE" == "trackinglogs" ]]
+then
+   #Cleanup old tracking logs
+    cleanup_old_tracking_logs
+fi

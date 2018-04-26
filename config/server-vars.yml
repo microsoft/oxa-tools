@@ -7,6 +7,7 @@ EDXAPP_PLATFORM_NAME: "%%PLATFORM_NAME%%"
 EDXAPP_TIME_ZONE: "America/Los_Angeles"
 
 # Superuser information
+CREATE_SUPER_USER: %%CREATE_SUPER_USER%%
 EDXAPP_SU_PASSWORD: "%%EDXAPP_SU_PASSWORD%%" 
 EDXAPP_SU_EMAIL: "%%EDXAPP_SU_EMAIL%%"
 EDXAPP_SU_USERNAME: "%%EDXAPP_SU_USERNAME%%"
@@ -53,15 +54,16 @@ EDXAPP_MKTG_URL_LINK_MAP:
 # Country made required field in registration.
 EDXAPP_REGISTRATION_EXTRA_FIELDS: 
   city: "hidden"
-  country: "required"
-  gender: "optional"
-  goals: "optional"
-  honor_code: "required"
-  level_of_education: "optional"
+  country: "hidden"
+  disclosure_notice: "required"
+  gender: "hidden"
+  goals: "hidden"
+  honor_code: "hidden"
+  language: "hidden"
+  level_of_education: "hidden"
   mailing_address: "hidden"
-  year_of_birth: "hidden"
-  language: "optional"
-
+  terms_of_service: "required"
+  year_of_birth: "hidden"  
 
 # Enable social sharing icons for courses. For now we are just enabling linkedin. 
 # Facebook and Twitter is not enabled for now.
@@ -73,12 +75,9 @@ EDXAPP_SOCIAL_SHARING_SETTINGS:
   DASHBOARD_LINKEDIN: true
   DASHBOARD_TWITTER: false
 
-
-
 # Order of the social media links we want learners to see in the footer
 # We can also add facebook, twitter, youtube, google_plus and reddit here later if we enable them in SOCIAL_SHARING_SETTINGS above
 EDXAPP_SOCIAL_MEDIA_FOOTER_NAMES: [ "linkedin" ]
-
 
 # see: http://edx.readthedocs.org/projects/edx-installing-configuring-and-running/en/latest/feature_flags/feature_flag_index.html
 EDXAPP_FEATURES:  
@@ -101,7 +100,7 @@ EDXAPP_FEATURES:
   OAUTH_ENFORCE_SECURE: %%OAUTH_ENFORCE_SECURE%%
   ENABLE_COMBINED_LOGIN_REGISTRATION: %%COMBINED_LOGIN_REGISTRATION%%
   # ENABLE_CSMH_EXTENDED: true
-  ENABLE_LTI_PROVIDER: false
+  ENABLE_LTI_PROVIDER: %%ENABLE_LTI_PROVIDER%%
   
 # Comprehensive Theming Configuration
 EDXAPP_COMPREHENSIVE_THEME_DIRS: %%EDXAPP_COMPREHENSIVE_THEME_DIRS%%
@@ -114,12 +113,18 @@ COMPREHENSIVE_THEME_DIRS: "{{ EDXAPP_COMPREHENSIVE_THEME_DIRS }}"
 EDXAPP_GRADE_STORAGE_KWARGS:
   container: "reports"
 EDXAPP_GRADE_STORAGE_CONTAINER: "reports"
+
 # overriding the default value from 5 to 50. we don't want to stop the retry's at any point.  
 EDXAPP_RETRY_ACTIVATION_EMAIL_MAX_ATTEMPTS: 50
+
 # overriding the default value from 0.5 to 2. 
 EDXAPP_RETRY_ACTIVATION_EMAIL_TIMEOUT: 2
+
+# Security
 EDXAPP_SESSION_INACTIVITY_TIMEOUT_IN_SECONDS: 1800
 EDXAPP_X_FRAME_OPTIONS: "SAMEORIGIN"
+NGINX_ENABLE_SSL: %%NGINX_ENABLE_SSL%%
+NGINX_REDIRECT_TO_HTTPS: %%NGINX_ENABLE_SSL%%
 EDXAPP_CSRF_COOKIE_SECURE: %%NGINX_ENABLE_SSL%%
 
 EDXAPP_LTI_USER_EMAIL_DOMAIN: "lti.openedx.microsoft.com"
@@ -127,8 +132,38 @@ EDXAPP_LTI_USER_EMAIL_DOMAIN: "lti.openedx.microsoft.com"
 # Default log levels: DEBUG, INFO, WARNING, ERROR, CRITICAL
 #EDXAPP_LOG_LEVEL: 'INFO'
 
-#Cookies API url
+# Cookies API url
 EDXAPP_API_COOKIE_URL: "%%EDXAPP_COOKIE_API_URL%%"
 
 # View live drop down for CMS
 EDXAPP_ENABLE_MULTI_SITE_VIEWLIVE_DROPDOWN: "%%EDXAPP_ENABLE_MULTI_SITE_VIEWLIVE_DROPDOWN%%"
+# Shared Mongo Settings
+MONGO_BIND_IP: "0.0.0.0"
+EDXAPP_MONGO_USE_SSL: False
+EDXAPP_MONGO_USER: '%%MONGO_USER%%'
+EDXAPP_MONGO_PASSWORD: '%%MONGO_PASSWORD%%'
+
+# Shared Forum Settings
+FORUM_MONGO_DATABASE: "cs_comments_service"
+FORUM_MONGO_PORT: "27017"
+FORUM_MONGO_TAGS: !!null
+FORUM_MONGO_USER: '%%MONGO_USER%%'
+FORUM_MONGO_PASSWORD: '%%MONGO_PASSWORD%%'
+FORUM_MONGO_URL: "mongodb://{{ FORUM_MONGO_USER }}:{{ FORUM_MONGO_PASSWORD }}@{%- for host in FORUM_MONGO_HOSTS -%}{{ host }}:{{ FORUM_MONGO_PORT }}{%- if not loop.last -%},{%- endif -%}{%- endfor -%}/{{ FORUM_MONGO_DATABASE }}?replicaSet={{ MONGO_REPLICASET_NAME }}{%- if FORUM_MONGO_TAGS -%}&tags={{ FORUM_MONGO_TAGS }}{%- endif -%}"
+
+# Configure DNS for site and email links
+EDXAPP_SITE_NAME: "%%LMS_URL%%"
+EDXAPP_CMS_SITE_NAME: "%%CMS_URL%%"
+EDXAPP_LMS_BASE: "{{ EDXAPP_SITE_NAME }}"
+EDXAPP_CMS_BASE: "{{ EDXAPP_CMS_SITE_NAME }}"
+
+EDXAPP_LMS_NGINX_PORT: 80
+EDXAPP_LMS_SSL_NGINX_PORT: 443
+
+EDXAPP_LMS_PREVIEW_NGINX_PORT: 18020
+EDXAPP_LMS_PREVIEW_SSL_NGINX_PORT: 48020
+EDXAPP_LMS_PREVIEW_SSL_NGINX_FRONTEND_PORT: 443
+
+EDXAPP_CMS_NGINX_PORT: 18010
+EDXAPP_CMS_SSL_NGINX_PORT: 48010
+EDXAPP_CMS_SSL_NGINX_FRONTEND_PORT: 443

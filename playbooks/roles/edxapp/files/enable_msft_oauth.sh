@@ -25,21 +25,17 @@ fix_platform()
 
     log "cherry-pick change to support MSA"
 
-    count=`grep -i "live" lms/envs/aws.py | wc -l`
-    if (( "$count" == 0 )) ; then
+    if ! ( grep -i "live" lms/envs/aws.py ) ; then
         log "Ensure remote has commit"
-        count=`git remote | grep "msft_plat" | wc -l`
-        if (( "$count" == 0 )) ; then
-            git remote add msft_plat https://github.com/microsoft/edx-platform.git
-        fi
-        git fetch msft_plat > /dev/null 2>&1
+        add_remote msft_plat https://github.com/microsoft/edx-platform.git
 
-        # Ficus Fix
-        hash=86a53b8353ac76fbb761d4fa465bc0f363e264b3
+        # Ficus fix. Apply
+        # https://github.com/Microsoft/edx-platform/pull/158
+        hash=030848e7d7c79dccd080df77f02894426c3232fd
 
-        # Ginkgo fix
-        count=`grep -i "social_core" lms/envs/aws.py | wc -l`
-        if (( "$count" > 0 )) ; then
+        # Ginkgo and later fix. Applying part of
+        # https://github.com/Microsoft/edx-platform/compare/ginkgo1...Microsoft:ginkgo1tweaks
+        if grep -i "social_core" lms/envs/aws.py ; then
             hash=dd939e404c9f762b71eabb67f3340c14ba5ba9c3
         fi
 
