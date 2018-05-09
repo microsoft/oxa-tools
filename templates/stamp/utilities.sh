@@ -1667,6 +1667,9 @@ install-tools()
         log "Installing Mysql Utilities on ${HOSTNAME}"
         install-mysql-utilities
     fi
+
+    # install OMI for azure instrumentation
+    install-omi
 }
 
 #############################################################################
@@ -1793,4 +1796,58 @@ install-servicebus-tools()
 
     # pip install azure
     pipinstall-package "azure"
+}
+
+install-omi()
+{
+    # There is a bug related to crontab entry in the OMI package.
+    # This bug occurs on systems that don’t have Kerberos installed, and causes an error email to be generated every minute. 
+    # OMI 1.4.1-1+ addressed this issue but hasn't been included as part of the base Ubuntu Image we use.
+    # Therefore, it is necessary to ensure that the latest OMI package is always installed.
+
+    log "Installing latest OMI package"
+    
+    #get openssl version
+    package_ssl_version=`openssl version | grep -Eo "(([0-9])\.){2}"`
+
+    if [ $(echo "${package_ssl_version::-1} > 1.0" | bc -l) == 1 ]; then
+        # SSL 1.1.*
+        package_ssl_version="ssl_110"
+    else
+        # SSL 1.0
+        package_ssl_version="ssl_100"
+    fi
+
+    log "Open SSL version = $package_ssl_version"
+
+    # temporary files to save the latest repo metadata & the latest package files
+    omi_json=/tmp/omi.latest.json
+    omi_deb=/tmp/omi.latest.deb
+
+    # get the repo metadata & parse
+    log "Downloading omi repository metadata"
+    wget https://api.github.com/repos/microsoft/omi/releases/latest -O $omi_json
+    exit_on_error "Failed downloading repository release metadata on ${HOSTNAME} !" $ERROR_OMI_INSTALLER_FAILED
+
+    latest_package_url=`cat $omi_json | jq -r --arg SSL_VERSION "${package_ssl_version}" '.assets[] | select(.browser_download_url | contains($SSL_VERSION)) | select(.browser_download_url | contains(".deb")) | select(.browser_download_url | contains("x64")).browser_download_url'`
+
+    # verify the parsed output is available
+    if [[ -z ${latest_package_url} ]]; then
+        log "Could not parse the latest package url"
+        exit 1
+    fi
+
+    # download the latest package file & install
+    log "Installing $latest_package_url"
+    wget $latest_package_url -O $omi_deb
+    exit_on_error "Failed downloading latest OMI package from  ${latest_package_url} on ${HOSTNAME} !" $ERROR_OMI_INSTALLER_FAILED
+
+    dpkg -i $omi_deb
+    exit_on_error "Failed installing latest OMI package on ${HOSTNAME} !" $ERROR_OMI_INSTALLER_FAILED
+
+
+    # clean up
+    echo "Cleaning up temp files"
+    rm $omi_json
+    rm $omi_deb
 }
