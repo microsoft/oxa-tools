@@ -193,11 +193,11 @@ parse_args()
             ;; 
           --edxapp-lms-allowed-hosts)
             # Convert space delimited list of domains to array
-            export EDXAPP_LMS_ALLOWED_HOSTS="(${arg_value})"
+            export EDXAPP_LMS_ALLOWED_HOSTS=("${arg_value}")
             ;;
           --edxapp-cms-allowed-hosts)
             # Convert space delimited list of doamins to array
-            export EDXAPP_CMS_ALLOWED_HOSTS="(${arg_value})"
+            export EDXAPP_CMS_ALLOWED_HOSTS=("${arg_value}")
             ;;
           *)
             # Unknown option encountered
