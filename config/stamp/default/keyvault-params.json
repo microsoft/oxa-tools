@@ -29,6 +29,6 @@
     "BranchName": "",
     "JumpboxNumber": 0,
     "EdxAppSecretKey": "",
-    "EdxAppLmsAllowedHosts",
-    "EdxAppCmsAllowedHosts"
+    "EdxAppLmsAllowedHosts: "",
+    "EdxAppCmsAllowedHosts: ""
 }
