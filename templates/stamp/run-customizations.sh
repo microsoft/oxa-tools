@@ -598,12 +598,12 @@ persist_deployment_time_values()
     fi
 
     # Check for CMS whitelist of allowed hosts override
-    if [[ -n ${EDXAPP_CMS_ALLOWED_HOSTS}  ]];
+    if [[ -n ${EDXAPP_CMS_ALLOWED_HOSTS} ]];  
+    then
        log "Overriding 'EDXAPP_CMS_ALLOWED_HOSTS'"
        sed -i "s#^EDXAPP_CMS_ALLOWED_HOSTS=.*#EDXAPP_CMS_ALLOWED_HOSTS=${EDXAPP_CMS_ALLOWED_HOSTS}#I" $config_file
-    then
-       log "CMS whitelist of allowed hosts not specified"
     else
+       log "CMS whitelist of allowed hosts not specified"
     fi
 
     # Re-source the cloud configurations
@@ -912,7 +912,9 @@ else
         --servicebus-queue-name "${servicebus_queue_name}" \
         --servicebus-shared-access-key-name "${servicebus_shared_access_key_name}" \
         --servicebus-shared-access-key "${servicebus_shared_access_key}" \
-        --edxapp-secretkey "${EDXAPP_SECRET_KEY}"
+        --edxapp-secretkey "${EDXAPP_SECRET_KEY}" \
+        --edxapp-lms-allowed-hosts "${EDXAPP_LMS_ALLOWED_HOSTS}" \
+        --edxapp-cms-allowed-hosts "${EDXAPP_CMS_ALLOWED_HOSTS}"
 
     exit_on_error "OXA stamp customization (${INSTALLER_PATH}) failed" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 fi
