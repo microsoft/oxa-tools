@@ -190,9 +190,9 @@ Param(
         
         [Parameter(Mandatory=$false)][switch]$AutoDeploy=$false,
         
-        [Parameter(Mandatory=$false)][string]$EdxAppSecretKey=""
+        [Parameter(Mandatory=$false)][string]$EdxAppSecretKey="",
         
-        [Parameter(Mandatory=$false)][string]$EdxAppLmsAllowedHosts=""
+        [Parameter(Mandatory=$false)][string]$EdxAppLmsAllowedHosts="",
         
         [Parameter(Mandatory=$false)][string]$EdxAppCmsAllowedHosts=""
     )
