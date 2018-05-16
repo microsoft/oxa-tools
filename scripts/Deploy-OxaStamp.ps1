@@ -194,7 +194,7 @@ Param(
         
         [Parameter(Mandatory=$false)][string]$EdxAppLmsAllowedHosts=""
         
-        [Parameter(Mandatory=$false)[string]$EdxAppCmsAllowedHosts=""
+        [Parameter(Mandatory=$false)][string]$EdxAppCmsAllowedHosts=""
     )
 
 ###########################################
