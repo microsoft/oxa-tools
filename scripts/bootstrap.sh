@@ -192,12 +192,12 @@ parse_args()
             export EDXAPP_EDXAPP_SECRET_KEY="${arg_value}"
             ;; 
           --edxapp-lms-allowed-hosts)
-            # Convert space delimited list of domains to array
-            export EDXAPP_LMS_ALLOWED_HOSTS=("${arg_value}")
+            # Convert list of domains from comma delimited string to space delimited string then to array
+            export EDXAPP_LMS_ALLOWED_HOSTS==(${"${arg_value}"//,/ })
             ;;
           --edxapp-cms-allowed-hosts)
-            # Convert space delimited list of doamins to array
-            export EDXAPP_CMS_ALLOWED_HOSTS=("${arg_value}")
+            # Convert list of domains from comma delimited string to space delimited string then to array  
+            export EDXAPP_CMS_ALLOWED_HOSTS=(${"${arg_value}"//,/ })
             ;;
           *)
             # Unknown option encountered
