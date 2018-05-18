@@ -53,8 +53,8 @@ FORUM_VERSION="open-release/ficus.master"
 AZURE_MEDIA_VERSION="oxa/master.fic"
 KITCHEN_SINK_COURSE_VERSION="oxa/master.fic"
 EDXAPP_EDXAPP_SECRET_KEY=""
-EDXAPP_LMS_ALLOWED_HOSTS=""
-EDXAPP_CMS_ALLOWED_HOSTS=""
+EDXAPP_LMS_ALLOWED_HOSTS=[]
+EDXAPP_CMS_ALLOWED_HOSTS=[]
 
 # script used for triggering background installation (setup in cron)
 CRON_INSTALLER_SCRIPT=""
@@ -193,11 +193,13 @@ parse_args()
             ;; 
           --edxapp-lms-allowed-hosts)
             # Convert list of domains from comma delimited string to space delimited string then to array
-            export EDXAPP_LMS_ALLOWED_HOSTS=(${"${arg_value}"//,/ })
+            #export EDXAPP_LMS_ALLOWED_HOSTS=(${"${arg_value}"//,/ })
+            export EDXAPP_LMS_ALLOWED_HOSTS="${arg_value}"
             ;;
           --edxapp-cms-allowed-hosts)
             # Convert list of domains from comma delimited string to space delimited string then to array  
-            export EDXAPP_CMS_ALLOWED_HOSTS=(${"${arg_value}"//,/ })
+            #export EDXAPP_CMS_ALLOWED_HOSTS=(${"${arg_value}"//,/ })
+            export EDXAPP_CMS_ALLOWED_HOSTS="${arg_value}"
             ;;
           *)
             # Unknown option encountered
