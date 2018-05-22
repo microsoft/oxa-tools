@@ -189,7 +189,7 @@ parse_args()
             servicebus_shared_access_key="${arg_value}"
             ;;
           --edxapp-secretkey)
-            export EDXAPP_EDXAPP_SECRET_KEY="${arg_value}"export EDXAPP_LMS_ALLOWED_HOSTS=
+            export EDXAPP_EDXAPP_SECRET_KEY="${arg_value}"
             ;; 
           --edxapp-lms-allowed-hosts)
             # Convert list of domains from comma delimited string to space delimited string then to array
