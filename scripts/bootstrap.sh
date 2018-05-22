@@ -189,17 +189,19 @@ parse_args()
             servicebus_shared_access_key="${arg_value}"
             ;;
           --edxapp-secretkey)
-            export EDXAPP_EDXAPP_SECRET_KEY="${arg_value}"
+            export EDXAPP_EDXAPP_SECRET_KEY="${arg_value}"export EDXAPP_LMS_ALLOWED_HOSTS=
             ;; 
           --edxapp-lms-allowed-hosts)
             # Convert list of domains from comma delimited string to space delimited string then to array
             log "EDXAPP_LMS_ALLOWED_HOSTS=${arg_value}"
-            export EDXAPP_LMS_ALLOWED_HOSTS=(${"${arg_value}"//,/ })
+            #export EDXAPP_LMS_ALLOWED_HOSTS=(${"${arg_value}"//,/ })
+            export EDXAPP_LMS_ALLOWED_HOSTS=${arg_value}"
             ;;
           --edxapp-cms-allowed-hosts)
             # Convert list of domains from comma delimited string to space delimited string then to array 
             log "EDXAPP_CMS_ALLOWED_HOSTS=${arg_value}"
-            export EDXAPP_CMS_ALLOWED_HOSTS=(${"${arg_value}"//,/ })
+            #export EDXAPP_CMS_ALLOWED_HOSTS=(${"${arg_value}"//,/ })
+            export EDXAPP_CMS_ALLOWED_HOSTS=${arg_value}"
             ;;
           *)
             # Unknown option encountered
