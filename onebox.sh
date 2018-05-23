@@ -221,10 +221,11 @@ set_dynamic_vars()
 
 test_args()
 {
+    echo -e "\033[1;36m"
+
+    echo -e "\n TEMPLATE_TYPE is set to $TEMPLATE_TYPE"
     if [[ $TEMPLATE_TYPE != $FS ]] && [[ $TEMPLATE_TYPE != $DS ]] ; then
         set +x
-        echo -e "\033[1;36m"
-        echo -e "\n TEMPLATE_TYPE is set to $TEMPLATE_TYPE"
         echo -e " but should be $FS or $DS."
         echo -e " Use the -r param argument.\n"
         echo -e '\033[0m'
@@ -234,17 +235,27 @@ test_args()
     echo -e "\n BRANCH_VERSIONS is set to $BRANCH_VERSIONS"
     case "$BRANCH_VERSIONS" in
         stable|release|edge|edx_f|edx_g|edx_master)
-            echo ""
+            echo -e ""
         ;;
         *)
             set +x
-            echo -e "\033[1;36m"
-            echo -e " but should be stable OR release OR edge OR edx .\n"
+            echo -e " but should be stable OR release OR edge OR edx_* .\n"
             echo -e " Use the -b param argument.\n"
             echo -e '\033[0m'
             exit 1
         ;;
     esac
+
+    if [[ $TEMPLATE_TYPE == $DS ]] && [[ $BRANCH_VERSIONS == edx_master ]] ; then
+        set +x
+        echo -e " this SKU cannot be deployed because"
+        echo -e " https://github.com/edx/configuration/pull/4492/"
+        echo -e " removed playbooks/vagrant-devstack.yml \n"
+        echo -e '\033[0m'
+        exit 1
+    fi
+
+    echo -e '\033[0m'
 }
 
 ##########################

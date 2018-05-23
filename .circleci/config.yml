@@ -100,8 +100,9 @@ workflows:
   version: 2
   all:
     jobs:
+    # - FsEdxMaster #todo: this SKU generally succeeeds, but the total runtime exceeds CircleCi's timeout
       - FsGink
-      - DsEdxMaster
+    # - DsEdxMaster #todo: https://github.com/edx/configuration/pull/4492/ removed playbooks/vagrant-devstack.yml
       - DsGink
       - DsDevFic
       - DsReleaseFic
