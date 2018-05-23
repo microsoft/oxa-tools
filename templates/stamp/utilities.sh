@@ -894,6 +894,10 @@ install-azure-cli-2()
         log "Adding Azure Cli 2.0 Repository for package installation"
         echo "deb [arch=amd64] https://apt-mo.trafficmanager.net/repos/azure-cli/ wheezy main" | tee /etc/apt/sources.list.d/azure-cli.list
         apt-key adv --keyserver apt-mo.trafficmanager.net --recv-keys 417A0893
+	
+	# This signing key is deprecated, and will be replaced at the end of May 2018. 
+	# In order to keep getting updates with apt, make sure that you also install the new key
+	curl -L https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
 
         log "Installing Azure CLI 2.0 pre-requisites"
         install-wrapper "apt-transport-https"
