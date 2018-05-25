@@ -1643,6 +1643,12 @@ move_mysql_datadirectory()
     exit_on_error "Could not start mysql server after moving its data directory on '${HOSTNAME}' !" "${ERROR_MYSQL_DATADIRECTORY_MOVE_FAILED}" "${subject}" $admin_email_address
 }
 
+add-key-adv()
+{
+    sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EB3E94ADBE1229CF
+    sudo apt-get update
+}
+
 #############################################################################
 # Wrapper function for doing role-based tools installation
 #############################################################################
@@ -1652,7 +1658,10 @@ install-tools()
 
     # Most docker containers don't have sudo pre-installed.
     install-sudo
-
+    
+    #load pub key of azur-cli
+    add-key-adv
+    
     # "desktop environment" flavors of ubuntu like xubuntu don't come with full ssh, but server edition generaly does"
     install-ssh
     install-git
