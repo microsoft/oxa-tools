@@ -27,7 +27,7 @@ PREVIEW_URL=preview.$BASE_URL
 TEMPLATE_TYPE=stamp # stamp|fullstack|devstack
 CLUSTERNAME={CLUSTERNAME}
 ADMIN_USER=oxaadmin
-OXA_TOOLS_VERSION=oxa/master.fic
+OXA_TOOLS_VERSION=haw_test
 
 # config/server-vars.yml
 #YOUTUBE_API_KEY=todo
@@ -47,15 +47,15 @@ EDXAPP_EMAIL_UNIVERSITY="${PLATFORM_EMAIL}"
 
 # config/versions.yml
 CONFIGURATION_REPO=https://github.com/Microsoft/edx-configuration.git
-CONFIGURATION_VERSION=oxa/master.fic
+CONFIGURATION_VERSION=haw_test
 PLATFORM_REPO=https://github.com/Microsoft/edx-platform.git
-PLATFORM_VERSION=oxa/master.fic
+PLATFORM_VERSION=haw_test
 THEME_REPO=https://github.com/Microsoft/edx-theme.git
-THEME_VERSION=oxa/master.fic
+THEME_VERSION=haw_test
 EDX_VERSION=open-release/ficus.master
-FORUM_VERSION=oxa/master.fic
-AZURE_MEDIA_VERSION=oxa/master.fic
-KITCHEN_SINK_COURSE_VERSION=oxa/master.fic
+FORUM_VERSION=haw_test
+AZURE_MEDIA_VERSION=haw_test
+KITCHEN_SINK_COURSE_VERSION=haw_test
 
 # fullstack uses default EMAIL_HOST=localhost
 # config/stamp/stamp.yml

@@ -14,7 +14,7 @@ TARGET_FILE=""
 # Settings for the OXA-Tools public repository 
 OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
 OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME="oxa-tools"
-OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master.fic"
+OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH="haw_test"
 
 # this is the operational branch for the OXA_TOOLS public git project
 OXA_TOOLS_VERSION=""
@@ -23,7 +23,7 @@ OXA_TOOLS_VERSION=""
 # There are cases where we want to override the edx-configuration repository itself
 EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
 EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME="edx-configuration"
-EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master.fic"
+EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH="haw_test"
 
 # this is the operational branch for the EDX_CONFIGURATION public git project
 CONFIGURATION_VERSION=""
@@ -32,13 +32,13 @@ CONFIGURATION_VERSION=""
 # There are cases where we want to override the edx-platform repository itself
 EDX_PLATFORM_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
 EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME="edx-platform"
-EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master.fic"
+EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH="haw_test"
 
 # EdX Theme
 # There are cases where we want to override the edx-platform repository itself
 EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
 EDX_THEME_PUBLIC_GITHUB_PROJECTNAME="edx-theme"
-EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master.fic"
+EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="haw_test"
 EDX_THEME_NAME="default"
 
 # EdX Ansible
@@ -50,8 +50,8 @@ ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH="master"
 # MISC
 EDX_VERSION="open-release/hawthorn.beta1"
 FORUM_VERSION="open-release/hawthorn.beta1"
-AZURE_MEDIA_VERSION="oxa/master.fic"
-KITCHEN_SINK_COURSE_VERSION="oxa/master.fic"
+AZURE_MEDIA_VERSION="haw_test"
+KITCHEN_SINK_COURSE_VERSION="haw_test"
 EDXAPP_EDXAPP_SECRET_KEY=""
 
 # script used for triggering background installation (setup in cron)

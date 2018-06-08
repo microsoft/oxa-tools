@@ -66,12 +66,12 @@ jobs:
   FsEdxMaster:
     environment:
       - ONEBOX_PARAMS: "--branch Edx_master --Role Fullstack"
-      - ONLY_BRANCHES: "oxa/master.fic"
+      - ONLY_BRANCHES: "haw_test"
     <<: *sharedSetup
   DsEdxMaster:
     environment:
       - ONEBOX_PARAMS: "--branch Edx_master --Role Devstack"
-      - ONLY_BRANCHES: "oxa/master.fic"
+      - ONLY_BRANCHES: "haw_test"
     <<: *sharedSetup
   FsReleaseFic:
     environment:
@@ -86,12 +86,12 @@ jobs:
   FsMasterFic:
     environment:
       - ONEBOX_PARAMS: "--branch Master --Role Fullstack"
-      - ONLY_BRANCHES: "oxa/master.fic"
+      - ONLY_BRANCHES: "haw_test"
     <<: *sharedSetup
   DsMasterFic:
     environment:
       - ONEBOX_PARAMS: "--branch Master --Role Devstack"
-      - ONLY_BRANCHES: "oxa/master.fic"
+      - ONLY_BRANCHES: "haw_test"
     <<: *sharedSetup
 
 # Jobs are sorted from longest duration to shortest (approximately)
