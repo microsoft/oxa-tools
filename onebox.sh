@@ -483,7 +483,7 @@ set_dynamic_vars
 # We currently use sandbox.sh for ginkgo+. Therefore, it doesn't have our customizations.
 #  - (fullstack) This is because vagrant-fullstack.yml was removed in March 2017 and
 #  - (devstack) Something about our customizations result in an "elastic search" error
-if [[ $BRANCH_VERSIONS == edx_g ]] || [[ $BRANCH_VERSIONS == edx_master ]] ; then
+if [[ $BRANCH_VERSIONS == haw_test ]] || [[ $BRANCH_VERSIONS == edx_master ]] ; then
     install-with-edx-native
 else
     install-with-oxa
