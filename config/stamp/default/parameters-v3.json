@@ -120,7 +120,7 @@
             "value": "master"
         },
         "edxVersion": {
-            "value": "open-release/ficus.master"
+            "value": "open-release/hawthorn.beta1"
         },
         "edxForumVersion": {
             "value": "{GITHUBBRANCH}"
