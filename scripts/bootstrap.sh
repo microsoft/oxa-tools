@@ -48,8 +48,8 @@ ANSIBLE_PUBLIC_GITHUB_PROJECTNAME="ansible"
 ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH="master"
 
 # MISC
-EDX_VERSION="open-release/ficus.master"
-FORUM_VERSION="open-release/ficus.master"
+EDX_VERSION="open-release/hawthorn.beta1"
+FORUM_VERSION="open-release/hawthorn.beta1"
 AZURE_MEDIA_VERSION="oxa/master.fic"
 KITCHEN_SINK_COURSE_VERSION="oxa/master.fic"
 EDXAPP_EDXAPP_SECRET_KEY=""
