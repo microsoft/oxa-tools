@@ -892,7 +892,6 @@ install-azure-cli-2()
 
         log "Install Azure CLI 2.0"
         log "Adding Azure Cli 2.0 Repository for package installation"
-<<<<<<< HEAD
         
         # Azure udpate their signing key:
         # See more details here: https://docs.microsoft.com/en-us/cli/azure/install-azure-cli-apt?view=azure-cli-latest#signingKey
