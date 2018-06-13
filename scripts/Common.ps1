@@ -660,7 +660,7 @@ function Start-AzureCommand
                 "Get-AzureRmResource"
                 {
                     # Azure Powershell 6.0.0+ required
-                    # Find-AzureRmResource was merged into Get-AzureRmResource
+                    # Find-AzureRmResource was merged into Get-AzureRmResource since v6.0.0.
                     # Release Notes: https://github.com/Azure/azure-powershell/releases/tag/v6.0.0-May2018
                     $response = Get-AzureRmResource -ResourceGroupName $InputParameters['ResourceGroupName'] -ResourceType $InputParameters['ResourceType'] -Verbose ;  
                 }
