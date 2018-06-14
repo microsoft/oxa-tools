@@ -657,9 +657,12 @@ function Start-AzureCommand
             # handle the commands appropriately
             switch ($InputParameters['Command']) 
             {
-                "Find-AzureRmResource"
+                "Get-AzureRmResource"
                 {
-                    $response = Find-AzureRmResource -ResourceGroupNameContains $InputParameters['ResourceGroupName'] -ResourceType $InputParameters['ResourceType'] -Verbose ;  
+                    # Azure Powershell 6.0.0+ required
+                    # Find-AzureRmResource was merged into Get-AzureRmResource since v6.0.0.
+                    # Release Notes: https://github.com/Azure/azure-powershell/releases/tag/v6.0.0-May2018
+                    $response = Get-AzureRmResource -ResourceGroupName $InputParameters['ResourceGroupName'] -ResourceType $InputParameters['ResourceType'] -Verbose ;  
                 }
                 
                 "Get-AzureRmLoadBalancer"
@@ -930,7 +933,7 @@ function Find-OxaResource
     [hashtable]$inputParameters = @{
                                         "ResourceGroupName" = $ResourceGroupName;
                                         "ResourceType" = $ResourceType;
-                                        "Command" = "Find-AzureRmResource";
+                                        "Command" = "Get-AzureRmResource";
                                         "Activity" = "Fetching all azure resources of '$($ResourceType)' type from resource group '$($ResourceGroupName)'"
                                         "ExecutionContext" = $Context;
                                         "MaxRetries" = $MaxRetries;
