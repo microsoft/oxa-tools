@@ -2,32 +2,43 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
-set -x
+set -ex
 
-# If set to true import Kitchen Sink Course, otherwise do nothing
-# EDXAPP_IMPORT_KITCHENSINK_COURSE: true
-if [ "$1" == "true" ] || [ "$1" == "True" ]; then
-	# Remove if kitchen sink course folder exists
-	if [[ -d /tmp/ks_source ]]; then
-	  sudo rm -fr /tmp/ks_source
-	fi
+oxa_tools_path=$1
+edx_platform_path=$2
+kitchen_sink_course_branch=$3
+course_path=/tmp/ks_source
 
-	# Create folder for kitchen sink course
-	sudo mkdir /tmp/ks_source
-	cd /tmp
+src_utils()
+{
+    pushd $oxa_tools_path
 
-	# Download kitchen sink course from github to folder /tmp/ks_source 
-	sudo git clone https://github.com/Microsoft/oxa_kitchen_sink.git ks_source
+    echo "source utilities"
+    source templates/stamp/utilities.sh
 
-	sudo chown -R edxapp:www-data /tmp/ks_source
+    popd
+}
 
-	# Go to edx-platform folder for importing
-	cd /edx/app/edxapp/edx-platform/
+##########################
+# Execution Starts
+##########################
 
-	# Import kitchen sink course into the platform
-	sudo -u www-data /edx/bin/python.edxapp ./manage.py cms --settings=aws import /edx/var/edxapp/data /tmp/ks_source
-fi
+src_utils
 
+# Download kitchen sink course from github
+clone_repository \
+    "Microsoft" \
+    "oxa_kitchen_sink" \
+    $kitchen_sink_course_branch \
+    '' \
+    $course_path
 
+sudo chown -R edxapp:www-data $course_path
 
+# Go to edx-platform folder for importing
+pushd $edx_platform_path
 
+# Import kitchen sink course into the platform
+sudo -u www-data /edx/bin/python.edxapp ./manage.py cms --settings=aws import /edx/var/edxapp/data $course_path
+
+popd

@@ -3,19 +3,20 @@
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
 # Export all bash variable assignments (for use by sub-processes)
-# Write all commands to the console
 # Immmediately exit on error
-set -axe
+set -ae
 
 # static strings
 readonly MSFT="microsoft"
 readonly EDX="edx"
+readonly CONF="configuration"
+readonly E_CONF="${EDX}-${CONF}"
 readonly USE_MSFT="useMsftRepo"
-readonly USE_FICUS="useFicusTag"
 readonly TAGS="tags/"
-readonly FICUS1="${TAGS}open-release/ficus.1"
-readonly FICUS4="${TAGS}open-release/ficus.4"
-readonly GINKGO1="${TAGS}open-release/ginkgo.1"
+readonly FICUS="${TAGS}open-release/ficus.1"
+readonly GINKGO="${TAGS}open-release/ginkgo.2"
+readonly FS="fullstack"
+readonly DS="devstack"
 
 ##########################
 # Script Defaults that can be overriden via
@@ -23,9 +24,10 @@ readonly GINKGO1="${TAGS}open-release/ginkgo.1"
 # - assignment here
 ##########################
 
-TEMPLATE_TYPE=fullstack # fullstack or devstack
+TEMPLATE_TYPE=$FS       # fullstack or devstack
 BRANCH_VERSIONS=edge    # edge or release or stable or edx
 DEFAULT_PASSWORD=
+MSFT_AUTH=
 
 ##########################
 # Settings
@@ -46,12 +48,18 @@ readonly CMS_URL=$BASE_URL
 readonly PREVIEW_URL=$BASE_URL
 readonly PLATFORM_NAME="$MSFT Learning on $HOSTNAME"
 readonly EDXAPP_IMPORT_KITCHENSINK_COURSE=true
-readonly EDXAPP_ENABLE_THIRD_PARTY_AUTH=false
 readonly NGINX_ENABLE_SSL=false
+readonly CREATE_SUPER_USER=true
 readonly EDXAPP_SU_EMAIL="${EDXAPP_SU_USERNAME}@${MSFT}.com"
 readonly PLATFORM_EMAIL="$EDXAPP_SU_EMAIL"
 readonly EDXAPP_COMPREHENSIVE_THEME_DIRS='[ "/edx/app/edxapp/themes" ]'
 readonly EDXAPP_DEFAULT_SITE_THEME=comprehensive
+readonly ENABLE_LTI_PROVIDER=false
+readonly ENABLE_AZURE_MEDIA_SERVICES_XBLOCK=false
+
+# Security
+readonly EDXAPP_ENABLE_CONNECTION_LIMITING=false
+readonly EDXAPP_ENABLE_RATE_LIMITING=false
 
 ##########################
 # Dynamic settings. Assigned later on based on onebox.sh param arguments.
@@ -62,16 +70,17 @@ MYSQL_ADMIN_PASSWORD=
 EDXAPP_ENABLE_COMPREHENSIVE_THEMING=
 COMBINED_LOGIN_REGISTRATION=
 NGINX_SITES=
+EDXAPP_ENABLE_THIRD_PARTY_AUTH=
 
 # The upstream tag in common with our forks
 # is ficus1 (edx-platform and configuration)
-EDX_BRANCH=$FICUS1
+EDX_BRANCH=$FICUS
 
 ##########################
 # Script Parameter Arguments
 ##########################
 
-parse_args() 
+parse_args()
 {
     while [[ "$#" -gt 0 ]] ; do
         arg_value="${2}"
@@ -85,21 +94,27 @@ parse_args()
          # Log input parameters to facilitate troubleshooting
         echo "Option '${1}' set with value '"${arg_value}"'"
 
-        case "$1" in
+        # convert to lowercase
+        case "${1,,}" in
           -r|--role|-s|--stack)
             # convert to lowercase
             TEMPLATE_TYPE=`parse_template "${arg_value,,}"`
             ;;
-          -b|--branches)
+          -b|--branches|--branch)
             # convert to lowercase
             BRANCH_VERSIONS=`parse_branch "${arg_value,,}"`
             ;;
           -d|--default-password)
             DEFAULT_PASSWORD="${arg_value}"
             ;;
+          --msft-oauth|--msft-auth)
+            # convert to lowercase
+            MSFT_AUTH="${arg_value,,}"
+            ;;
           *)
             # Unknown option encountered
             echo "Option '${BOLD}$1${NORM} ${arg_value}' not allowed."
+            exit 1
             ;;
         esac
 
@@ -118,10 +133,10 @@ parse_template()
 
     case "$userInput" in
         full|fs|f)
-            echo "fullstack"
+            echo "$FS"
         ;;
         dev|ds|d)
-            echo "devstack"
+            echo "$DS"
         ;;
         *)
             echo "$userInput"
@@ -137,10 +152,10 @@ parse_branch()
         production|prod|master)
             echo "stable"
         ;;
-        pre|bvt|int)
+        pre|beta|int)
             echo "release"
         ;;
-        development|dev|beta)
+        development|dev|bvt)
             echo "edge"
         ;;
         ficus|up|ed|f|edx_ficus|edx|upstream)
@@ -150,6 +165,7 @@ parse_branch()
             echo "edx_g"
         ;;
         *)
+            # no additional mappings for edx_master (at this time)
             echo "$userInput"
         ;;
     esac
@@ -164,45 +180,53 @@ set_dynamic_vars()
     EDXAPP_SU_PASSWORD=`harden $EDXAPP_SU_PASSWORD`
     VAGRANT_USER_PASSWORD=$EDXAPP_SU_PASSWORD
 
-    # The upstream doesn't have the relevant
-    # changes to leverage MYSQL_ADMIN_PASSWORD
-    # For details, see msft/edx-configuration commit:
-    # 65e2668672bda0112a64aabb86cf532ad228c4fa
-    if [[ $BRANCH_VERSIONS == edge ]]; then
-        MYSQL_ADMIN_USER=lexoxamysqladmin
-        MYSQL_ADMIN_PASSWORD=`harden $MYSQL_ADMIN_PASSWORD`
-    else
-        MYSQL_ADMIN_USER=root
-        MYSQL_ADMIN_PASSWORD=
-    fi
-    set -x
-
     case "$BRANCH_VERSIONS" in
-        edx_f|edx_g)
+        edx_f|edx_g|edx_master)
             EDXAPP_ENABLE_COMPREHENSIVE_THEMING=false
             COMBINED_LOGIN_REGISTRATION=true
             NGINX_SITES='[certs, cms, lms, forum, xqueue]'
+
+            if [[ $BRANCH_VERSIONS == edx_g ]] ; then
+                EDX_BRANCH=$GINKGO
+            elif [[ $BRANCH_VERSIONS == edx_master ]] ; then
+                EDX_BRANCH=master
+            fi
+
+            # The upstream doesn't have the relevant
+            # changes to leverage MYSQL_ADMIN_PASSWORD
+            # For details, see msft/edx-configuration commit:
+            # 65e2668672bda0112a64aabb86cf532ad228c4fa
+            MYSQL_ADMIN_USER=root
+            MYSQL_ADMIN_PASSWORD=
         ;;
         *)
             EDXAPP_ENABLE_COMPREHENSIVE_THEMING=true
             COMBINED_LOGIN_REGISTRATION=false
             # Microsoft repositories support the lms-preview subdomain.
             NGINX_SITES='[certs, cms, lms, lms-preview, forum, xqueue]'
+
+            MYSQL_ADMIN_USER=lexoxamysqladmin
+            MYSQL_ADMIN_PASSWORD=`harden $MYSQL_ADMIN_PASSWORD`
         ;;
     esac
 
-    if [[ $BRANCH_VERSIONS == edx_g ]] ; then
-        EDX_BRANCH=$GINKGO1
-    fi
+    case "$MSFT_AUTH" in
+        prod|int)
+            EDXAPP_ENABLE_THIRD_PARTY_AUTH=true
+        ;;
+        *)
+            EDXAPP_ENABLE_THIRD_PARTY_AUTH=false
+        ;;
+    esac
 }
 
 test_args()
 {
-    if [[ $TEMPLATE_TYPE != fullstack ]] && [[ $TEMPLATE_TYPE != devstack ]] ; then
+    if [[ $TEMPLATE_TYPE != $FS ]] && [[ $TEMPLATE_TYPE != $DS ]] ; then
         set +x
         echo -e "\033[1;36m"
         echo -e "\n TEMPLATE_TYPE is set to $TEMPLATE_TYPE"
-        echo -e " but should be fullstack or devstack."
+        echo -e " but should be $FS or $DS."
         echo -e " Use the -r param argument.\n"
         echo -e '\033[0m'
         exit 1
@@ -210,7 +234,7 @@ test_args()
 
     echo -e "\n BRANCH_VERSIONS is set to $BRANCH_VERSIONS"
     case "$BRANCH_VERSIONS" in
-        stable|release|edge|edx_f|edx_g)
+        stable|release|edge|edx_f|edx_g|edx_master)
             echo ""
         ;;
         *)
@@ -231,26 +255,35 @@ test_args()
 get_branch()
 {
     override=$1
-    useOldDevStyle=$2
 
     if [[ $BRANCH_VERSIONS == stable ]] ; then
         echo "oxa/master.fic"
     elif [[ $BRANCH_VERSIONS == release ]] ; then
         echo "oxa/release.fic"
     elif [[ $BRANCH_VERSIONS == edge ]] || [[ $override == $USE_MSFT ]] ; then
-        if [[ -n $useOldDevStyle ]] ; then
-            # Legacy switch
-            echo "oxa/devfic"
-        else
-            echo "oxa/dev.fic"
-        fi
-    elif [[ $BRANCH_VERSIONS == edx_g ]] && [[ $override == $USE_FICUS ]] ; then
-        # GINKGO1 edx-configuration doesn't work. Use ficus4 instead.
-        # Devstack fails because elastic search fails to initialize
-        echo "$FICUS4"
+        echo "oxa/dev.fic"
     else
         echo "$EDX_BRANCH"
     fi
+}
+
+get_current_org()
+{
+    organization=$MSFT
+
+    if git status > /dev/null ; then
+        remoteUrl="$(git config --get remote.origin.url)"
+
+        if echo $repoInfo | grep "@.*:.*/" > /dev/null 2>&1 ; then
+            #ssh
+            organization=$(echo $remoteUrl | tr : "\n" | tr / "\n" | head -2 | tail -1)
+        else
+            #http or https
+            organization=$(echo $remoteUrl | tr / "\n" | tail -2 | head -1)
+        fi
+    fi
+
+    echo $organization
 }
 
 get_current_branch()
@@ -262,7 +295,7 @@ get_current_branch()
 
     # Ensure branch information is useful.
     if [[ -z "$branchInfo" ]] || [[ $branchInfo == *"no branch"* ]] || [[ $branchInfo == *"detached"* ]] ; then
-        branchInfo=`get_branch $USE_MSFT oldDevStyle`
+        branchInfo=`get_branch $USE_MSFT`
     fi
 
     echo "$branchInfo"
@@ -291,7 +324,7 @@ harden()
 get_org()
 {
     case "$BRANCH_VERSIONS" in
-        edx_f|edx_g)
+        edx_f|edx_g|edx_master)
             echo "$EDX"
         ;;
         *)
@@ -303,11 +336,11 @@ get_org()
 get_conf_project_name()
 {
     case "$BRANCH_VERSIONS" in
-        edx_f|edx_g)
-            echo "configuration"
+        edx_f|edx_g|edx_master)
+            echo "$CONF"
         ;;
         *)
-            echo "edx-configuration"
+            echo "$E_CONF"
         ;;
     esac
 }
@@ -338,7 +371,7 @@ wget_wrapper()
 
 install-with-oxa()
 {
-    bootstrap=`wget_wrapper "scripts/bootstrap.sh" "${MSFT}" "oxa-tools" "$(get_current_branch)"`
+    bootstrap=`wget_wrapper "scripts/bootstrap.sh" "$(get_current_org)" "oxa-tools" "$(get_current_branch)"`
 
     bash $bootstrap \
         --role \
@@ -347,6 +380,10 @@ install-with-oxa()
             8 \
         --environment \
             "dev" \
+        --msft-oauth \
+            $MSFT_AUTH \
+        --oxatools-public-github-accountname \
+            `get_current_org` \
         --oxatools-public-github-projectbranch \
             `get_current_branch` \
         --edxconfiguration-public-github-accountname \
@@ -354,7 +391,7 @@ install-with-oxa()
         --edxconfiguration-public-github-projectname \
             `get_conf_project_name` \
         --edxconfiguration-public-github-projectbranch \
-            `get_branch $USE_FICUS` \
+            `get_branch` \
         --edxplatform-public-github-accountname \
             `get_org` \
         --edxplatform-public-github-projectbranch \
@@ -364,7 +401,35 @@ install-with-oxa()
         --edxversion \
             $EDX_BRANCH \
         --forumversion \
-            $EDX_BRANCH
+            `get_branch` \
+        --azure-media-version \
+            `get_branch $USE_MSFT` \
+        --kitchen-sink-course-version \
+            `get_branch $USE_MSFT`
+}
+
+devstack_preconditions()
+{
+    sandbox_path=$1
+
+    if [[ $TEMPLATE_TYPE == $DS ]]; then
+        # Use devstack playbook
+        chmod 777 $sandbox_path
+        sed -i "s|edx_sandbox|vagrant-devstack|g" $sandbox_path
+
+        # Create required vagrant user account to avoid fatal error
+        if ! id -u vagrant > /dev/null 2>&1 ; then
+            adduser --disabled-password --gecos "" vagrant
+        fi
+
+        # Set the vagrant password
+        if [[ -n $VAGRANT_USER_PASSWORD ]] ; then
+            usermod --password $(echo $VAGRANT_USER_PASSWORD | openssl passwd -1 -stdin) vagrant
+        fi
+
+        # Devstack installs specific versions of chrome and firefox
+        remove_browsers
+    fi
 }
 
 install-with-edx-native()
@@ -374,47 +439,52 @@ install-with-edx-native()
     # 1. Set the OPENEDX_RELEASE variable:
     OPENEDX_RELEASE=${EDX_BRANCH#$TAGS}
 
+    # Enable retry
+    local utilities=`wget_wrapper "templates/stamp/utilities.sh" "$(get_current_org)" "oxa-tools" "$(get_current_branch)"`
+    source $utilities
+
     # 2. Bootstrap the Ansible installation:
-    local ans_bootstrap=`wget_wrapper "util/install/ansible-bootstrap.sh" "${EDX}" "$(get_conf_project_name)" "$OPENEDX_RELEASE"`
-    sudo bash $ans_bootstrap
+    local ans_bootstrap=`wget_wrapper "util/install/ansible-bootstrap.sh" "${MSFT}" "$E_CONF" "ginkgo1tweaks"`
+    set +e
+    retry-command "bash $ans_bootstrap" 3 "$ans_bootstrap"
+    exit_on_error "Execution of edX ansible bootstrap failed"
+    set -e
 
     # 3. (Optional) If this is a new installation, randomize the passwords:
-    # todo: reconcile this w/ -d
+    # todo: reconcile this w/ -d and /oxa/oxa.yml
     local gen_pass=`wget_wrapper "util/install/generate-passwords.sh" "${EDX}" "$(get_conf_project_name)" "$OPENEDX_RELEASE"`
     bash $gen_pass
 
-    #todo: 3c link file to /oxa/oxa.yml
-
-    # 3b Enable retry
-    local utilities=`wget_wrapper "templates/stamp/utilities.sh" "${MSFT}" "oxa-tools" "$(get_current_branch)"`
-    source $utilities
-
     # 4. Install Open edX:
-    local sandbox=`wget_wrapper "util/install/sandbox.sh" "${EDX}" "$(get_conf_project_name)" "$OPENEDX_RELEASE"`
+    local sandbox=`wget_wrapper "util/install/sandbox.sh" "${MSFT}" "$E_CONF" "ginkgo1tweaks"`
+    devstack_preconditions $sandbox
     set +e
-    retry-command "bash $sandbox" 8 "$sandbox" "fixPackages"
+    retry-command "bash $sandbox --skip-tags=edxapp-sandbox" 8 "$sandbox" "fixPackages"
+    exit_on_error "Execution of edX sandbox playbook failed"
     set -e
 
     # get status of edx services
-    /edx/bin/supervisorctl status
+    /edx/bin/supervisorctl status || true
 }
 
 ##########################
 # Execution Starts
 ##########################
 
-echo "installing pwgen and wget..."
+echo "installing pwgen, wget, ssh..."
 apt update -qq
-apt install -y -qq pwgen wget
+apt install -y -qq pwgen wget ssh
 
 parse_args "$@"
 
 test_args
 
 set_dynamic_vars
- 
-# vagrant-fullstack.yml was removed in March 2017 so we use sandbox.sh
-if [[ $TEMPLATE_TYPE == fullstack ]] && [[ $BRANCH_VERSIONS == edx_g ]] ; then
+
+# We currently use sandbox.sh for ginkgo+. Therefore, it doesn't have our customizations.
+#  - (fullstack) This is because vagrant-fullstack.yml was removed in March 2017 and
+#  - (devstack) Something about our customizations result in an "elastic search" error
+if [[ $BRANCH_VERSIONS == edx_g ]] || [[ $BRANCH_VERSIONS == edx_master ]] ; then
     install-with-edx-native
 else
     install-with-oxa

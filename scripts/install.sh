@@ -82,6 +82,7 @@ help()
     echo "        --crontab-interval         Crontab Interval minutes"
     echo "        --keyvault-name            Name of the key vault"
     echo "        --aad-webclient-id         Id of AAD web client (service principal)"
+
     echo "        --aad-webclient-appkey     Application key for the AAD web client"
     echo "        --aad-tenant-id            AAD Tenant Id"
     echo "        --oxatools-public-github-accountname Name of the account that owns the oxa-tools GitHub repository"
@@ -108,6 +109,7 @@ help()
     echo "        --servicebus-queue-name Name of servicebus queue to use for notification communications"
     echo "        --servicebus-shared-access-key-name Name of the servicebus shared access policy to use for service bus authentication"
     echo "        --servicebus-shared-access-key Key for the servicebus shared access policy to use for service bus authentication"
+    echo "        --edxapp-secretkey Secret key used to secure the session cookie"
 }
 
 # Parse script parameters
@@ -241,6 +243,9 @@ parse_args()
             --servicebus-shared-access-key)
                 servicebus_shared_access_key="${arg_value}"
                 ;;
+            --edxapp-secretkey)
+                EDXAPP_SECRET_KEY="${arg_value}"
+                ;;
             -h|--help)  # Helpful hints
                 help
                 exit 2
@@ -360,7 +365,7 @@ then
     # servicebus notification parameters
     SERVICEBUS_PARAMS="--servicebus-namespace '${servicebus_namespace}' --servicebus-queue-name '${servicebus_queue_name}' --servicebus-shared-access-key-name '${servicebus_shared_access_key_name}' --servicebus-shared-access-key '${servicebus_shared_access_key}'"
     
-    INSTALL_COMMAND="sudo flock -n /var/log/bootstrap.lock bash $REPO_ROOT/$OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME/scripts/bootstrap.sh -e $CLOUD_NAME --role $SHORT_ROLE_NAME --installer-script-path $CRON_INSTALLER_SCRIPT --cluster-admin-email $CLUSTER_ADMIN_EMAIL --cluster-name $CLUSTER_NAME ${OXA_TOOLS_GITHUB_PARAMS} ${EDX_CONFIGURATION_GITHUB_PARAMS} ${EDX_PLATFORM_GITHUB_PARAMS} ${EDX_THEME_GITHUB_PARAMS} ${ANSIBLE_GITHUB_PARAMS} ${SERVICEBUS_PARAMS} --edxversion $EDX_VERSION --forumversion $FORUM_VERSION --cron >> /var/log/bootstrap.log 2>&1"
+    INSTALL_COMMAND="sudo flock -n /var/log/bootstrap.lock bash $REPO_ROOT/$OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME/scripts/bootstrap.sh -e $CLOUD_NAME --role $SHORT_ROLE_NAME --installer-script-path $CRON_INSTALLER_SCRIPT --cluster-admin-email $CLUSTER_ADMIN_EMAIL --cluster-name $CLUSTER_NAME ${OXA_TOOLS_GITHUB_PARAMS} ${EDX_CONFIGURATION_GITHUB_PARAMS} ${EDX_PLATFORM_GITHUB_PARAMS} ${EDX_THEME_GITHUB_PARAMS} ${ANSIBLE_GITHUB_PARAMS} ${SERVICEBUS_PARAMS} --edxversion $EDX_VERSION --forumversion $FORUM_VERSION --edxapp-secretkey $EDXAPP_SECRET_KEY --cron >> /var/log/bootstrap.log 2>&1"
     echo $INSTALL_COMMAND > $CRON_INSTALLER_SCRIPT
 
     # Remove the task if it is already setup

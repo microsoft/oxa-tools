@@ -3,7 +3,7 @@
 EDXAPP_EXTRA_REQUIREMENTS:
  - name: git+https://github.com/pmitros/DoneXBlock.git@1ce0ac14d9f3df3083b951262ec82e84b58d16d1#egg=done-xblock
  - name: git+https://github.com/edx-solutions/xblock-drag-and-drop-v2.git@v2.0.11#egg=xblock-drag-and-drop-v2
- - name: git+https://github.com/Microsoft/xblock-azure-media-services.git@master#egg=azure-media-services
+ - name: git+https://github.com/Microsoft/xblock-azure-media-services.git@{{azure_media_version}}#egg=azure-media-services
  - name: git+https://github.com/OfficeDev/xblock-officemix.git@3f876b5f0267b017812620239533a29c7d562d24#egg=officemix
  - name: git+https://github.com/edx/edx-ora2.git@1.2.0#egg=ora2==1.2.0
  - name: git+https://github.com/edx/xblock-lti-consumer.git@v1.1.2#egg=lti_consumer-xblock==1.1.2

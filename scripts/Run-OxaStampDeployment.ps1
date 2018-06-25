@@ -93,7 +93,7 @@ Invoke-RepositorySync -Branch $Branch -Tag $Tag -EnlistmentRootPath (Get-Item $c
 # sync the secondary repository (if specified)
 if ($ConfigurationRepositoryPath)
 {
-    Invoke-RepositorySync -BranchOrTag $Branch -Tag $Tag -EnlistmentRootPath $ConfigurationRepositoryPath -MaxRetries $MaxRetries
+    Invoke-RepositorySync -Branch $Branch -Tag $Tag -EnlistmentRootPath $ConfigurationRepositoryPath -MaxRetries $MaxRetries
 }
 
 # get a list of required deployment parameter (as specified in the main deployment script)
@@ -180,7 +180,7 @@ try
         $keyVaultDeploymentParameters['DeploymentType'] = $calculatedDeploymentType
         $mainDeploymentScriptParameters['DeploymentType'] = $calculatedDeploymentType
 
-        $deploymentMessage = "Starting '$($calculatedDeploymentType.ToUpper())' deployment."
+        $deploymentMessage = "Starting '$($calculatedDeploymentType.ToUpper())' deployment to $($Cloud) ($($ResourceGroupName))."
         Log-Message $deploymentMessage
 
         New-DeploymentNotificationEmail -Subject $deploymentMessage -Parameters $keyVaultDeploymentParameters -MessageBody $deploymentMessage
@@ -189,7 +189,18 @@ try
         if ($calculatedDeploymentType -ieq "upgrade")
         {
             # Clear the messaging queue
-            Clear-OxaMessagingQueue -ResourceGroupName $ResourceGroupName -MaxRetries $MaxRetries
+            try 
+            {
+                Clear-OxaMessagingQueue -ResourceGroupName $ResourceGroupName -MaxRetries $MaxRetries
+            }
+            catch 
+            {
+                # in first run deployments, the resource may not exist
+                if ($_.Exception.Message -imatch "Operation returned an invalid status code 'NotFound'")
+                {
+                    Log-Message "Service bus doesn't exist in the deployment. It will be created later. Skipping clearing the messaging queue."
+                }
+            }
         }
 
         # trigger the deployment

@@ -53,7 +53,9 @@ PLATFORM_VERSION=oxa/master.fic
 THEME_REPO=https://github.com/Microsoft/edx-theme.git
 THEME_VERSION=oxa/master.fic
 EDX_VERSION=open-release/ficus.master
-FORUM_VERSION=open-release/ficus.master
+FORUM_VERSION=oxa/master.fic
+AZURE_MEDIA_VERSION=oxa/master.fic
+KITCHEN_SINK_COURSE_VERSION=oxa/master.fic
 
 # fullstack uses default EMAIL_HOST=localhost
 # config/stamp/stamp.yml
@@ -125,6 +127,7 @@ MYSQL_CLOUD_DB=true
 MYSQL_CLOUD_SERVER_NAME=
 
 # Superuser Information (this gives front door access to the application. This value must be updated.)
+CREATE_SUPER_USER=True
 EDXAPP_SU_PASSWORD=
 EDXAPP_SU_EMAIL=
 EDXAPP_SU_USERNAME=
@@ -156,3 +159,10 @@ MEMCACHE_SERVER2_IP="{MEMCACHE_SERVER_IP}"
 EDXAPP_ENABLE_OAUTH2_PROVIDER=false
 EDXAPP_ENABLE_MOBILE_REST_API=false
 OAUTH_ENFORCE_SECURE=false
+
+# Security
+EDXAPP_ENABLE_CONNECTION_LIMITING=true
+EDXAPP_ENABLE_RATE_LIMITING=true
+
+ENABLE_LTI_PROVIDER=false
+ENABLE_AZURE_MEDIA_SERVICES_XBLOCK=false

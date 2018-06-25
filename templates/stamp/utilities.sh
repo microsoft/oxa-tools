@@ -35,6 +35,7 @@ ERROR_TOOLS_INSTALLER_FAILED=7401
 ERROR_SSHKEYROTATION_INSTALLER_FAILED=7501
 ERROR_MEMCACHED_INSTALLER_FAILED=7601
 ERROR_PIP_INSTALLER_FAILED=7701
+ERROR_DJANGO_MIGRATIONS_FAILED=7801
 
 # Mysql failover related errors
 ERROR_MYSQL_FAILOVER_INVALIDPROXYPORT=7601
@@ -335,7 +336,7 @@ retry-command()
     local tasksOfPrev=
     local alreadyUpgraded=
     for (( a=1; a<=$retry_count; a++ )) ; do
-        message="$optionalDescription attempt number: $a"
+        message="$optionalDescription attempt number: $a of $retry_count"
 
         # Some failures can be resolved by fixing packages.
         if [[ -n "$fix_packages" ]] ; then
@@ -385,6 +386,26 @@ retry-command()
     done
 
     return $result
+}
+
+#############################################################################
+# Uninstall Browsers
+#############################################################################
+
+remove_browsers()
+{
+    if type firefox >/dev/null 2>&1 ; then
+        log "Un-installing firefox...The proper version will be installed later"
+        apt-wrapper "purge firefox"
+    fi
+
+    if type google-chrome-stable >/dev/null 2>&1 ; then
+        log "Un-installing chrome...The proper version will be installed later"
+        apt-wrapper "purge google-chrome-stable"
+    fi
+
+    # Package that comes with firefox.
+    apt-wrapper "remove hunspell-en-us"
 }
 
 #############################################################################
@@ -471,7 +492,7 @@ setup-ssh()
 
 get_github_url()
 {
-    if [ -z $3 ]; then
+    if [[ -z $3 ]] ; then
         echo "https://github.com/$1/$2.git"
     else
         echo "https://$3@github.com/$1/$2.git"
@@ -521,8 +542,7 @@ clean_repository()
     REPO_PATH=$1
 
     log "Cleaning up the cloned GitHub Repository at '${REPO_PATH}'"
-    if [ -d "$REPO_PATH" ]; 
-    then
+    if [[ -d "$REPO_PATH" ]] ; then
         rm -rf $REPO_PATH
     fi
 }
@@ -598,7 +618,13 @@ sync_repo()
     else
         pushd $repo_path
 
-        sudo git fetch --all --tags --prune
+        if is_valid_branch $(get_current_branch) ; then
+            # git pull is a fetch then merge, but merge only
+            # makes sense when the local repo has a branch.
+            sudo git pull --all --tags --prune
+        else
+            sudo git fetch --all --tags --prune
+        fi
         exit_on_error "Failed syncing repository $repo_url to $repo_path"
 
         popd
@@ -618,6 +644,18 @@ sync_repo()
     popd
 }
 
+add_remote()
+{
+    local remoteName=$1
+    local remoteUrl="$2"
+
+    if ! ( git remote | grep "$remoteName" ) ; then
+        git remote add $remoteName $remoteUrl
+    fi
+
+    git fetch $remoteName > /dev/null 2>&1
+}
+
 cherry_pick_wrapper()
 {
     local hash=$1
@@ -630,6 +668,21 @@ cherry_pick_wrapper()
 
     git cherry-pick -x --strategy=recursive -X theirs $hash --keep-redundant-commits
     exit_on_error "Failed to cherry pick essential fix"
+}
+
+get_current_branch()
+{
+    # Current branch is prefixed with an asterisk. Remove it.
+    local prefix='* '
+    echo $(git branch | grep "$prefix" | sed "s/$prefix//g")
+}
+
+is_valid_branch()
+{
+    local branch=$1
+
+    # Is branch useful?
+    [[ -n "$branch" ]] && [[ $branch != null ]] && [[ $branch != *"no branch"* ]] && [[ $branch != *"detached"* ]]
 }
 
 #############################################################################
@@ -839,8 +892,12 @@ install-azure-cli-2()
 
         log "Install Azure CLI 2.0"
         log "Adding Azure Cli 2.0 Repository for package installation"
-        echo "deb [arch=amd64] https://apt-mo.trafficmanager.net/repos/azure-cli/ wheezy main" | tee /etc/apt/sources.list.d/azure-cli.list
-        apt-key adv --keyserver apt-mo.trafficmanager.net --recv-keys 417A0893
+        
+        # Azure udpate their signing key:
+        # See more details here: https://docs.microsoft.com/en-us/cli/azure/install-azure-cli-apt?view=azure-cli-latest#signingKey
+        AZ_REPO=$(lsb_release -cs)
+        echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | sudo tee /etc/apt/sources.list.d/azure-cli.list
+        curl -L https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
 
         log "Installing Azure CLI 2.0 pre-requisites"
         install-wrapper "apt-transport-https"
@@ -1635,6 +1692,9 @@ install-tools()
         log "Installing Mysql Utilities on ${HOSTNAME}"
         install-mysql-utilities
     fi
+
+    # install OMI for azure instrumentation
+    install-omi
 }
 
 #############################################################################
@@ -1761,4 +1821,58 @@ install-servicebus-tools()
 
     # pip install azure
     pipinstall-package "azure"
+}
+
+install-omi()
+{
+    # There is a bug related to crontab entry in the OMI package.
+    # This bug occurs on systems that don’t have Kerberos installed, and causes an error email to be generated every minute. 
+    # OMI 1.4.1-1+ addressed this issue but hasn't been included as part of the base Ubuntu Image we use.
+    # Therefore, it is necessary to ensure that the latest OMI package is always installed.
+
+    log "Installing latest OMI package"
+    
+    #get openssl version
+    package_ssl_version=`openssl version | grep -Eo "(([0-9])\.){2}"`
+
+    if [ $(echo "${package_ssl_version::-1} > 1.0" | bc -l) == 1 ]; then
+        # SSL 1.1.*
+        package_ssl_version="ssl_110"
+    else
+        # SSL 1.0
+        package_ssl_version="ssl_100"
+    fi
+
+    log "Open SSL version = $package_ssl_version"
+
+    # temporary files to save the latest repo metadata & the latest package files
+    omi_json=/tmp/omi.latest.json
+    omi_deb=/tmp/omi.latest.deb
+
+    # get the repo metadata & parse
+    log "Downloading omi repository metadata"
+    wget https://api.github.com/repos/microsoft/omi/releases/latest -O $omi_json
+    exit_on_error "Failed downloading repository release metadata on ${HOSTNAME} !" $ERROR_OMI_INSTALLER_FAILED
+
+    latest_package_url=`cat $omi_json | jq -r --arg SSL_VERSION "${package_ssl_version}" '.assets[] | select(.browser_download_url | contains($SSL_VERSION)) | select(.browser_download_url | contains(".deb")) | select(.browser_download_url | contains("x64")).browser_download_url'`
+
+    # verify the parsed output is available
+    if [[ -z ${latest_package_url} ]]; then
+        log "Could not parse the latest package url"
+        exit 1
+    fi
+
+    # download the latest package file & install
+    log "Installing $latest_package_url"
+    wget $latest_package_url -O $omi_deb
+    exit_on_error "Failed downloading latest OMI package from  ${latest_package_url} on ${HOSTNAME} !" $ERROR_OMI_INSTALLER_FAILED
+
+    dpkg -i $omi_deb
+    exit_on_error "Failed installing latest OMI package on ${HOSTNAME} !" $ERROR_OMI_INSTALLER_FAILED
+
+
+    # clean up
+    echo "Cleaning up temp files"
+    rm $omi_json
+    rm $omi_deb
 }

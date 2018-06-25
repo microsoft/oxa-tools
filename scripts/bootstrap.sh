@@ -2,13 +2,12 @@
 # Copyright (c) Microsoft Corporation. All Rights Reserved.
 # Licensed under the MIT license. See LICENSE file on the project webpage for details.
 
-set -x
-
 # argument defaults
 EDX_ROLE=""
 DEPLOYMENT_ENV="dev"
 CRON_MODE=0
 RETRY_COUNT=5
+MSFT_AUTH=
 TARGET_FILE=""
 
 # Oxa Tools
@@ -50,8 +49,10 @@ ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH="master"
 
 # MISC
 EDX_VERSION="open-release/ficus.master"
-#FORUM_VERSION="mongoid5-release"
 FORUM_VERSION="open-release/ficus.master"
+AZURE_MEDIA_VERSION="oxa/master.fic"
+KITCHEN_SINK_COURSE_VERSION="oxa/master.fic"
+EDXAPP_EDXAPP_SECRET_KEY=""
 
 # script used for triggering background installation (setup in cron)
 CRON_INSTALLER_SCRIPT=""
@@ -71,8 +72,8 @@ servicebus_shared_access_key=""
 
 display_usage()
 {
-  echo "Usage: $0 [-r|--role {jb|vmss|mongo|mysql|edxapp|fullstack|devstack}] [-e|--environment {dev|bvt|prod}] [--cron] --keyvault-name {azure keyvault name} --aad-webclient-id {AAD web application client id} --aad-webclient-appkey {AAD web application client key} --aad-tenant-id {AAD Tenant to authenticate against} --azure-subscription-id {Azure subscription Id}"
-  exit 1
+    echo "Usage: $0 [-r|--role {jb|vmss|mongo|mysql|edxapp|fullstack|devstack}] [-e|--environment {dev|bvt|prod}] [--cron] --keyvault-name {azure keyvault name} --aad-webclient-id {AAD web application client id} --aad-webclient-appkey {AAD web application client key} --aad-tenant-id {AAD Tenant to authenticate against} --azure-subscription-id {Azure subscription Id}"
+    exit 1
 }
 
 parse_args() 
@@ -98,6 +99,10 @@ parse_args()
             ;;
           -e|--environment)
             DEPLOYMENT_ENV="${arg_value,,}" # convert to lowercase
+            ;;
+          --msft-oauth)
+            # convert to lowercase
+            MSFT_AUTH="${arg_value,,}"
             ;;
           --cron)
             CRON_MODE=1
@@ -150,8 +155,14 @@ parse_args()
           --edxversion)
             EDX_VERSION="${arg_value}"
             ;;
-           --forumversion)
+          --forumversion)
             FORUM_VERSION="${arg_value}"
+            ;;
+          --azure-media-version)
+            export AZURE_MEDIA_VERSION="${arg_value}"
+            ;;
+          --kitchen-sink-course-version)
+            export KITCHEN_SINK_COURSE_VERSION="${arg_value}"
             ;;
           --installer-script-path)
             CRON_INSTALLER_SCRIPT="${arg_value}"
@@ -175,6 +186,9 @@ parse_args()
           --servicebus-shared-access-key)
             servicebus_shared_access_key="${arg_value}"
             ;;
+          --edxapp-secretkey)
+            export EDXAPP_EDXAPP_SECRET_KEY="${arg_value}"
+            ;; 
           *)
             # Unknown option encountered
             echo "Option '${BOLD}$1${NORM} ${arg_value}' not allowed."
@@ -242,10 +256,10 @@ setup_overrides_file()
 
     # in order to support deployment-time configuration bootstrap (specifying repository & branch for the key bits: Oxa-Tools, EdX Platform, EdX Theme, Edx Configuration)
     # we have to allow settings for each of these repositories to override whatever existing settings there are
-    EDX_CONFIGURATION_REPO="https://github.com/${EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME}/${EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME}.git"
-    EDX_PLATFORM_REPO="https://github.com/${EDX_PLATFORM_PUBLIC_GITHUB_ACCOUNTNAME}/${EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME}.git"
-    EDX_THEME_REPO="https://github.com/${EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME}/${EDX_THEME_PUBLIC_GITHUB_PROJECTNAME}.git"
-    EDX_ANSIBLE_REPO="https://github.com/${ANSIBLE_PUBLIC_GITHUB_ACCOUNTNAME}/${ANSIBLE_PUBLIC_GITHUB_PROJECTNAME}.git"
+    EDX_CONFIGURATION_REPO=$(get_github_url ${EDX_CONFIGURATION_PUBLIC_GITHUB_ACCOUNTNAME} ${EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTNAME})
+    EDX_PLATFORM_REPO=$(get_github_url ${EDX_PLATFORM_PUBLIC_GITHUB_ACCOUNTNAME} ${EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME})
+    EDX_THEME_REPO=$(get_github_url ${EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME} ${EDX_THEME_PUBLIC_GITHUB_PROJECTNAME})
+    EDX_ANSIBLE_REPO=$(get_github_url ${ANSIBLE_PUBLIC_GITHUB_ACCOUNTNAME} ${ANSIBLE_PUBLIC_GITHUB_PROJECTNAME})
 
     # setup the deployment overrides (for debugging and deployment-time control of repositories used)
     setup_deployment_overrides $OXA_ENV_OVERRIDE_FILE $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH $EDX_CONFIGURATION_REPO $EDX_CONFIGURATION_PUBLIC_GITHUB_PROJECTBRANCH $EDX_PLATFORM_REPO $EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH $EDX_THEME_REPO $EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH $EDX_VERSION $FORUM_VERSION $EDX_ANSIBLE_REPO $ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH
@@ -254,7 +268,6 @@ setup_overrides_file()
 required_value()
 {
     if [[ -z $2 ]] ; then
-        set +x
         echo -e "\033[1;36m"
         echo -e "\n\n  Use onebox.sh for fullstack or devstack instead of invoking bootstrap.sh directly.\n\n"
         echo -e '\033[0m'
@@ -266,13 +279,16 @@ required_value()
 verify_state()
 {
     required_value TEMPLATE_TYPE $TEMPLATE_TYPE
+    required_value FORUM_VERSION $FORUM_VERSION
+    required_value AZURE_MEDIA_VERSION $AZURE_MEDIA_VERSION
+    required_value KITCHEN_SINK_COURSE_VERSION $KITCHEN_SINK_COURSE_VERSION
 
     if ! is_valid_arg "jb vmss mongo mysql edxapp fullstack devstack" $EDX_ROLE ; then
       echo "Invalid role specified\n"
       display_usage
     fi
 
-    if ! is_valid_arg "dev bvt prod" $DEPLOYMENT_ENV ; then
+    if ! is_valid_arg "dev bvt int prod" $DEPLOYMENT_ENV ; then
       echo "Invalid environment specified\n"
       display_usage
     fi
@@ -280,17 +296,40 @@ verify_state()
 
 fix_jdk()
 {
-    count=`grep -i "8u65" playbooks/roles/oraclejdk/defaults/main.yml | wc -l`
-    if [[ "$count" -gt "0" ]] ; then
+    # Apply https://github.com/edx/configuration/pull/3881
+    if grep -i "8u65" playbooks/roles/oraclejdk/defaults/main.yml ; then
         cherry_pick_wrapper 0ca865c9b0da42bed83459389ae35e2551860472 "$EDXAPP_SU_EMAIL"
     fi
 }
 
 fix_npm_python()
 {
-    count=`grep -i "node_modules" playbooks/roles/edxapp/tasks/deploy.yml | wc -l`
-    if (( "$count" == 0 )) ; then
+    # Apply https://github.com/edx/configuration/pull/4101
+    if ! ( grep -i "node_modules" playbooks/roles/edxapp/tasks/deploy.yml ) ; then
         cherry_pick_wrapper 075d69e6c7c5330732ec75346d02df32d087aa92 "$EDXAPP_SU_EMAIL"
+    fi
+}
+
+fix_hosts_file()
+{
+    # Apply https://github.com/Microsoft/edx-configuration/pull/90
+    add_remote msft_conf $(get_github_url microsoft edx-configuration)
+    if grep "127.0.0.1 localhost" playbooks/roles/local_dev/tasks/main.yml ; then
+        cherry_pick_wrapper f3d59dd09dbbd8b60c9049292c3c814f4de715c5 "$EDXAPP_SU_EMAIL"
+    fi
+}
+
+ansible_try_catch()
+{
+    add_remote msft_conf $(get_github_url microsoft edx-configuration)
+
+    # Apply https://github.com/Microsoft/edx-configuration/pull/91
+    cherry_pick_wrapper a6304eaaefc24d2c3c59d57606c059cdd75b1dd4 "$EDXAPP_SU_EMAIL"
+
+    # Apply https://github.com/Microsoft/edx-configuration/pull/92
+    count=$(grep -c -i "name: install python requirements" playbooks/roles/edxapp/tasks/deploy.yml)
+    if [[ "$count" -lt "2" ]] ; then
+        cherry_pick_wrapper 5ed320bea2174c37d28b9cc6fe14fa90d83220dd "$EDXAPP_SU_EMAIL"
     fi
 }
 
@@ -305,7 +344,7 @@ link_oxa_tools_repo()
         # Is the git repo oxa-tools?
         pushd ..
         actualRemote=`git config --get remote.origin.url | grep -o 'github.com.*' | sed 's/\.git//g'`
-        count=`echo $OXA_TOOLS_REPO | grep -i $actualRemote | wc -l`
+        count=`echo $OXA_TOOLS_REPO | grep -i -c $actualRemote`
         if [[ "$count" -gt "0" ]] ; then
             # Is the repo already at the desired path?
             pushd ..
@@ -366,10 +405,15 @@ setup()
 
     # run edx bootstrap and install requirements
     cd $CONFIGURATION_PATH
+
+    # Cherry pick fixes
     fix_jdk
     fix_npm_python
+    fix_hosts_file
+    ansible_try_catch
+
     ANSIBLE_BOOTSTRAP_SCRIPT=util/install/ansible-bootstrap.sh
-    bash $ANSIBLE_BOOTSTRAP_SCRIPT
+    retry-command "bash $ANSIBLE_BOOTSTRAP_SCRIPT" 3 "$ANSIBLE_BOOTSTRAP_SCRIPT"
     exit_on_error "Failed executing $ANSIBLE_BOOTSTRAP_SCRIPT"
 
     pip install -r requirements.txt
@@ -419,93 +463,98 @@ update_stamp_vmss()
 }
 
 update_scalable_mongo() {
-  # edx playbooks - mongo
-  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_mongo.yml
-  exit_on_error "Execution of edX Mongo playbook failed"
+    # edx playbooks - mongo
+    $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_mongo.yml
+    exit_on_error "Execution of edX Mongo playbook failed"
 
-  # oxa playbooks - mongo (enable when customized)
-  #$ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mongo"
-  #exit_on_error "Execution of OXA Mongo playbook failed"
+    # oxa playbooks - mongo (enable when customized)
+    #$ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mongo"
+    #exit_on_error "Execution of OXA Mongo playbook failed"
 }
 
 update_scalable_mysql() {
-  # edx playbooks - mysql and memcached
-  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_mysql.yml
-  exit_on_error "Execution of edX MySQL playbook failed"
-  # minimize tags? "install:base,install:system-requirements,install:configuration,install:app-requirements,install:code"
-  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_sandbox.yml -e "migrate_db=yes" --tags "edxapp-sandbox,install,migrate"
-  exit_on_error "Execution of edX MySQL migrations failed"
+    # edx playbooks - mysql and memcached
+    $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_mysql.yml
+    exit_on_error "Execution of edX MySQL playbook failed"
+    # minimize tags? "install:base,install:system-requirements,install:configuration,install:app-requirements,install:code"
+    $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_sandbox.yml -e "migrate_db=yes" --tags "edxapp-sandbox,install,migrate"
+    exit_on_error "Execution of edX MySQL migrations failed"
 
-  # oxa playbooks - mysql
-  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mysql"
-  exit_on_error "Execution of OXA MySQL playbook failed"
+    # oxa playbooks - mysql
+    $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mysql"
+    exit_on_error "Execution of OXA MySQL playbook failed"
 }
 
 edx_installation_playbook()
 {
-  systemctl >/dev/null 2>&1
-  exit_on_error "Single VM instance of EDX has a hard requirement on systemd and its systemctl functionality"
+    systemctl >/dev/null 2>&1
+    exit_on_error "Single VM instance of EDX has a hard requirement on systemd and its systemctl functionality"
 
-  EDXAPP_COMPREHENSIVE_THEME_DIR=`echo $EDXAPP_COMPREHENSIVE_THEME_DIRS | tr -d [ | tr -d ] | tr -d " " | tr -d \"`
-  make_theme_dir "$EDXAPP_COMPREHENSIVE_THEME_DIR" "$EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME"
+    EDXAPP_COMPREHENSIVE_THEME_DIR=`echo $EDXAPP_COMPREHENSIVE_THEME_DIRS | tr -d [ | tr -d ] | tr -d " " | tr -d \"`
+    make_theme_dir "$EDXAPP_COMPREHENSIVE_THEME_DIR" "$EDX_PLATFORM_PUBLIC_GITHUB_PROJECTNAME"
 
-  # We've been experiencing intermittent failures on ficus. Simply retrying
-  # mitigates the problem, but we should solve the underlying cause(s) soon.
-  command="$ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG vagrant-${EDX_ROLE}.yml"
-  retry-command "$command" "$RETRY_COUNT" "${EDX_ROLE} installation" "fixPackages"
-  exit_on_error "Execution of edX ${EDX_ROLE} playbook failed"
+    # We've been experiencing intermittent failures on ficus. Simply retrying
+    # mitigates the problem, but we should solve the underlying cause(s) soon.
+    command="$ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG vagrant-${EDX_ROLE}.yml"
+    retry-command "$command" "$RETRY_COUNT" "${EDX_ROLE} installation" "fixPackages"
+    exit_on_error "Execution of edX ${EDX_ROLE} playbook failed"
 
-  # oxa playbooks - all (single VM)
-  $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK $THEME_ARGS -e "edxrole=$EDX_ROLE"
-  exit_on_error "Execution of OXA playbook failed"
+    # oxa playbooks - all (single VM)
+    $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK $THEME_ARGS -e "edxrole=$EDX_ROLE"
+    exit_on_error "Execution of OXA playbook failed"
 }
 
-update_fullstack() {
-  # edx playbooks - fullstack (single VM)
-  edx_installation_playbook
+update_fullstack()
+{
+    # edx playbooks - fullstack (single VM)
+    edx_installation_playbook
 
-  # get status of edx services
-  /edx/bin/supervisorctl status
+    # get status of edx services
+    /edx/bin/supervisorctl status
 }
 
-update_devstack() {
-  if ! id -u vagrant > /dev/null 2>&1; then
-    # create required vagrant user account to avoid fatal error
-    sudo adduser --disabled-password --gecos "" vagrant
+update_devstack()
+{
+    if ! id -u vagrant > /dev/null 2>&1 ; then
+        # create required vagrant user account to avoid fatal error
+        adduser --disabled-password --gecos "" vagrant
 
-    # set the vagrant password
-    if [[ -n $VAGRANT_USER_PASSWORD ]] ; then
-      sudo usermod --password $(echo $VAGRANT_USER_PASSWORD | openssl passwd -1 -stdin) vagrant
+        # set the vagrant password
+        if [[ -n $VAGRANT_USER_PASSWORD ]] ; then
+            usermod --password $(echo $VAGRANT_USER_PASSWORD | openssl passwd -1 -stdin) vagrant
+        fi
     fi
-  fi
 
-  # create some required directories to avoid fatal errors
-  if [[ ! -d /edx/app/ecomworker ]] ; then
-    sudo mkdir -p /edx/app/ecomworker
-  fi
+    # create some required directories to avoid fatal errors
+    if [[ ! -d /edx/app/ecomworker ]] ; then
+        mkdir -p /edx/app/ecomworker
+    fi
 
-  if [[ ! -d /home/vagrant/share_x11 ]] ; then
-    sudo mkdir -p /home/vagrant/share_x11
-  fi
+    if [[ ! -d /home/vagrant/share_x11 ]] ; then
+        mkdir -p /home/vagrant/share_x11
+    fi
 
-  if [[ ! -d /edx/app/ecommerce ]] ; then
-    sudo mkdir -p /edx/app/ecommerce
-  fi
+    if [[ ! -d /edx/app/ecommerce ]] ; then
+        mkdir -p /edx/app/ecommerce
+    fi
 
-  if [[ ! -f /home/vagrant/.bashrc ]] ; then
-    # create empty .bashrc file to avoid fatal error
-    sudo touch /home/vagrant/.bashrc
-  fi
+    if [[ ! -f /home/vagrant/.bashrc ]] ; then
+        # create empty .bashrc file to avoid fatal error
+        touch /home/vagrant/.bashrc
+    fi
 
-  if $(stat -c "%U" /home/vagrant) != "vagrant"; then
-    # Change the owner of the /home/vagrant folder and its subdirectories to the vagrant user account
-    # to avoid an error in TASK: [local_dev | login share X11 auth to app users] related to file
-    # "/home/vagrant/share_x11/share_x11.j2" msg: chown failed: failed to look up user vagrant
-    sudo chown -hR vagrant /home/vagrant
-  fi
+    if $(stat -c "%U" /home/vagrant) != "vagrant" ; then
+        # Change the owner of the /home/vagrant folder and its subdirectories to the vagrant user account
+        # to avoid an error in TASK: [local_dev | login share X11 auth to app users] related to file
+        # "/home/vagrant/share_x11/share_x11.j2" msg: chown failed: failed to look up user vagrant
+        chown -hR vagrant /home/vagrant
+    fi
 
-  # edx playbooks - devstack (single VM)
-  edx_installation_playbook
+    # devstack installs specific versions of chrome and firefox
+    remove_browsers
+
+    # edx playbooks - devstack (single VM)
+    edx_installation_playbook
 }
 
 ###############################################
@@ -545,7 +594,7 @@ BOOTSTRAP_HOME=$(readlink -f $(dirname $0))
 OXA_PATH="/oxa"
 
 # OXA Tools
-OXA_TOOLS_REPO="https://github.com/${OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME}/${OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME}.git"
+OXA_TOOLS_REPO=$(get_github_url ${OXA_TOOLS_PUBLIC_GITHUB_ACCOUNTNAME} ${OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME})
 OXA_TOOLS_PATH=$OXA_PATH/$OXA_TOOLS_PUBLIC_GITHUB_PROJECTNAME
 
 # OXA Tools Config
@@ -573,11 +622,7 @@ setup_overrides_file
 # setup crumbs for tracking purposes
 TARGET_FILE=/var/log/bootstrap-$EDX_ROLE.log
 
-if [ "$CRON_MODE" == "1" ];
-then
-    # turn off the debug messages since we have proper logging by now
-    # set +x
-
+if [[ "$CRON_MODE" == "1" ]] ; then
     echo "Cron execution for ${EDX_ROLE} on ${HOSTNAME} detected."
 
     # check if we need to run the setup
@@ -626,7 +671,7 @@ setup
 PATH=$PATH:/edx/bin
 ANSIBLE_PLAYBOOK=ansible-playbook
 OXA_PLAYBOOK=$OXA_TOOLS_PATH/playbooks/oxa_configuration.yml
-OXA_PLAYBOOK_ARGS="-e oxa_tools_path=$OXA_TOOLS_PATH -e template_type=$TEMPLATE_TYPE"
+OXA_PLAYBOOK_ARGS="-e oxa_tools_path=$OXA_TOOLS_PATH -e oxa_tools_config_path=$OXA_TOOLS_CONFIG_PATH -e template_type=$TEMPLATE_TYPE -e msft_auth=$MSFT_AUTH"
 THEME_ARGS="-e theme_branch=$EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH -e theme_repo=$EDX_THEME_REPO"
 OXA_SSH_ARGS="-u $ADMIN_USER --private-key=/home/$ADMIN_USER/.ssh/id_rsa"
 

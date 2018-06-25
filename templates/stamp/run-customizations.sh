@@ -148,6 +148,7 @@ help()
     echo "        --ansible-public-github-projectname Name of the edx ansible GitHub repository"
     echo "        --ansible-public-github-projectbranch Branch of edx ansible GitHub repository"
     echo "        --edxversion EdX Named-Release to use for this deployment"
+
     echo "        --forumversion EdX Named Release to use for the FORUMS component"
     echo "        --cron Operation mode for the script"
     echo "        --azure-subscription-id  Azure subscription id"
@@ -642,6 +643,15 @@ persist_deployment_time_values()
     else
         log "Mobile Rest API override not specified"
     fi
+    
+    # check for Secret Key override
+    if [[ -n ${EDXAPP_SECRET_KEY} ]];
+    then
+        log "Overriding 'EDXAPP_SECRET_KEY'"
+        sed -i "s#^EDXAPP_SECRET_KEY=.*#EDXAPP_SECRET_KEY=${EDXAPP_SECRET_KEY}#I" $config_file
+    else
+        log "Secret Key not specified"
+    fi
 
     # Re-source the cloud configurations
     source $config_file
@@ -715,6 +725,9 @@ then
 
     # Mobile rest api parameter
     MOBILE_REST_API_PARAMS="--enable-mobile-rest-api \"${EDXAPP_ENABLE_MOBILE_REST_API}\""
+    
+    # Secret Key parameter
+    EDXAPP_SECRET_KEY_PARAMS="--edxapp-secretkey \"${EDXAPP_SECRET_KEY}\""
 
     # Jumpbox Bootstrap-Only mode indicator
     JUMPBOX_BOOTSTRAP_PARAMS="--bootstrap-jumpbox \"${JUMPBOX_BOOTSTRAP}\""
@@ -813,7 +826,17 @@ storageAccountEndpointSuffix=`get_azure_storage_endpoint_suffix ${encoded_azure_
 storage_connection_string=`generate_azure_storage_connection_string "${AZURE_ACCOUNT_NAME}" "${AZURE_ACCOUNT_KEY}" "${storageAccountEndpointSuffix}"`
 
 # create storage container for edxapp:migrate & other reporting features (containers for the database backup will be created dynamically)
-powershell -file $INSTALLER_BASEPATH/Create-StorageContainer.ps1 -AadWebClientId $AAD_WEBCLIENT_ID -AadWebClientAppKey $AAD_WEBCLIENT_APPKEY -AadTenantId $AAD_TENANT_ID -AzureSubscriptionId $AZURE_SUBSCRIPTION_ID -StorageAccountName "${AZURE_ACCOUNT_NAME}" -StorageAccountKey "${AZURE_ACCOUNT_KEY}" -StorageContainerNames "uploads,reports,tracking" -AzureCliVersion $AZURE_CLI_VERSION -AzureStorageConnectionString "${storage_connection_string}"
+powershell -file $INSTALLER_BASEPATH/Create-StorageContainer.ps1 \
+    -AadWebClientId $AAD_WEBCLIENT_ID \
+    -AadWebClientAppKey $AAD_WEBCLIENT_APPKEY \
+    -AadTenantId $AAD_TENANT_ID \
+    -AzureSubscriptionId $AZURE_SUBSCRIPTION_ID \
+    -StorageAccountName "${AZURE_ACCOUNT_NAME}" \
+    -StorageAccountKey "${AZURE_ACCOUNT_KEY}" \
+    -StorageContainerNames "reports,tracking" \
+    -PublicStorageContainerNames "uploads" \
+    -AzureCliVersion $AZURE_CLI_VERSION \
+    -AzureStorageConnectionString "${storage_connection_string}"
 exit_on_error "Failed creating container(s) for edxapp:migrate (uploads,reports,tracking) in '${AZURE_ACCOUNT_NAME}'" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 
 # Create a link to the utilities.sh library to be used by the other installer scripts
@@ -860,6 +883,32 @@ then
                 "${MONGO_USER}" "${MONGO_PASSWORD}"
 
     exit_on_error "Failed setting up the Mongo Database backup" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
+
+    # Setup tracking logs
+    DATABASE_TYPE_TO_BACKUP="trackinglogs"
+    DATABASE_BACKUP_LOG="/var/log/backup_${DATABASE_TYPE_TO_BACKUP}.log"
+    setup_backup \
+        "${INSTALLER_BASEPATH}/configuration_${DATABASE_TYPE_TO_BACKUP}.sh" \
+        "${DATABASE_BACKUP_SCRIPT}" \
+        "${DATABASE_BACKUP_LOG}" \
+        "${BACKUP_STORAGEACCOUNT_NAME}" \
+        "${BACKUP_STORAGEACCOUNT_KEY}" \
+        "${MONGO_BACKUP_FREQUENCY}" \
+        "${MONGO_BACKUP_RETENTIONDAYS}" \
+        "${MONGO_REPLICASET_CONNECTIONSTRING}" \
+        "${MYSQL_MASTER_IP}" \
+        "${DATABASE_TYPE_TO_BACKUP}" \
+        "${MONGO_USER}" \
+        "${MONGO_PASSWORD}" \
+        "${BACKUP_LOCAL_PATH}" \
+        "${MYSQL_MASTER_PORT}" \
+        "${CLUSTER_ADMIN_EMAIL}" \
+        "${AZURE_CLI_VERSION}" \
+        "${encoded_azure_storage_endpoint_suffix}" \
+        "${MONGO_USER}" \
+        "${MONGO_PASSWORD}"
+
+    exit_on_error "Failed setting up the Tracking Logs" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 fi
 
 #####################################
