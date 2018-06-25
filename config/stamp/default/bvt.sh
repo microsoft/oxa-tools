@@ -75,9 +75,11 @@ NGINX_SSL_KEY="/oxa/oxa-tools-config/env/${ENVIRONMENT}/cert.key"
 # MONGO
 ##########################
 
-# Mongo Credentials
+# Mongo Credentials & connection
 MONGO_USER=
 MONGO_PASSWORD=
+MONGO_USE_SSL=false
+MONGO_PORT=27017
 
 # Mongo Replicaset Credentials
 MONGO_REPLICASET_KEY=
@@ -90,6 +92,8 @@ MONGO_INSTALLER_PACKAGE_NAME=mongodb-org
 MONGO_SERVER_IP_PREFIX=10.0.0.
 MONGO_SERVER_IP_OFFSET=10
 MONGO_SERVER_LIST=10.0.0.11,10.0.0.12,10.0.0.13
+MONGO_SERVER1_IP=10.0.0.11
+MONGO_SERVER2_IP=10.0.0.12
 
 ##########################
 # MYSQL
@@ -116,6 +120,9 @@ MYSQL_PACKAGE_VERSION="5.6"
 MYSQL_MASTER_IP=10.0.0.16
 MYSQL_SERVER_LIST=10.0.0.16,10.0.0.17,10.0.0.18
 MYSQL_MASTER_PORT=3306
+MYSQL_HOST_SSL_CA=/etc/ssl/certs/Baltimore_CyberTrust_Root.pem
+MYSQL_CLOUD_DB=true
+MYSQL_CLOUD_SERVER_NAME=
 
 # Superuser Information (this gives front door access to the application. This value must be updated.)
 EDXAPP_SU_PASSWORD=
@@ -142,7 +149,8 @@ EDXAPP_IMPORT_KITCHENSINK_COURSE={EDXAPP_IMPORT_KITCHENSINK_COURSE}
 # In order to support multiple VMSS resources, we have to support multiple memcache target servers to avoid collision of cache keys that result in 
 # broken application experiences (cache poisoning). It is therefore necessary to add explicit configuration for the memcache server and allow 
 # deployment-time overrides.
-MEMCACHE_SERVER_IP=$MYSQL_MASTER_IP
+MEMCACHE_SERVER_IP="{MONGO_SERVER1_IP}"
+MEMCACHE_SERVER2_IP="{MEMCACHE_SERVER_IP}"
 
 # Conditionally enabling Mobile Rest Api in support of MPP integration scenarios
 EDXAPP_ENABLE_OAUTH2_PROVIDER=false
