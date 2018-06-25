@@ -618,7 +618,7 @@
         },
         "deploymentType": {
             "type": "string",
-            "defaultValue": "upgrade",
+            "defaultValue": "bootstrap",
             "allowedValues": [
                 "bootstrap",
                 "upgrade",
@@ -636,7 +636,18 @@
             "metadata": {
                 "description": "Zero-based numeric indicator of the Jumpbox used for this bootstrap operation. Zero uses the default *-jb server instead of *-jb[1-2]"
             }
-        }
+        },
+        "azureDatabaseSku":{  
+            "type":"string",
+            "allowedValues":[  
+               "MYSQLS100",
+               "MYSQLB50"
+            ],
+            "defaultValue":"MYSQLB50",
+            "metadata":{  
+               "description":"Azure database for MySQL sku name : MYSQLB100 (Standard 100 DTU tier, 125GB Space) or MYSQLB50 (Basic 50 DTU tier, 50GB Space)"
+            }
+         }
     },
     "variables": {
         "defaultApiVersion": "2015-05-01-preview",
@@ -650,12 +661,14 @@
         "mediaServicesApiVersion": "2015-10-01",
         "storageApiVersion": "2016-01-01",
         "servicebusApiVersion": "2017-04-01",
+        "azureMysqlApiVersion": "2016-02-01-privatepreview",
+        "azureCosmosDbApiVersion": "2015-04-08",
         
         "virtualMachineExtensionsApiVersion": "[variables('defaultApiVersion')]",
         "virtualMachineApiVersion": "[variables('defaultApiVersion')]",
         "slot1Status": "[if(equals(parameters('deploymentSlot'), 'slot1'), 'Enabled','Disabled')]",
         "slot2Status": "[if(equals(parameters('deploymentSlot'), 'slot2'), 'Enabled','Disabled')]",
-        "memcacheServer": "[if(equals(parameters('deploymentSlot'), 'slot1'), '10.0.0.16','10.0.0.17')]",
+        "memcacheServer": "[if(equals(parameters('deploymentSlot'), 'slot1'), '10.0.0.4','10.0.0.4')]",
 
         "diagnosticStorageAccountName": "[concat(toLower(parameters('clusterName')), 'diagnostics')]",
         "storageAccountName": "[concat(toLower(parameters('clusterName')), 'vhdsa')]",
@@ -691,11 +704,31 @@
         "keyVaultEnabledForVolumeEncryption": true,
         "keyVaultTenantId": "[subscription().subscriptionId]",
 
+        "clusterAzureMysqlDataNodeName": "[concat(parameters('clusterName'), '-my')]",
+        "clusterAzureCosmosDbDataNodeName": "[concat(parameters('clusterName'), '-cdb')]",
+
         "defaultSASKeyName": "RootManageSharedAccessKey",
         "serviceBusNameSpace": "[concat(parameters('clusterName'), '-sbn')]",
         "serviceBusQueueName": "[concat(parameters('clusterName'), '-sbq')]",
         "authRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/authorizationRules', variables('serviceBusNameSpace'), variables('defaultSASKeyName'))]",
+        "cosmosDBAccountResourceId": "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('clusterAzureCosmosDbDataNodeName'))]",
         
+        "azureMysqlSkuInfo": {
+            "MYSQLS100": {
+                "databaseDTU": 100,
+                "databaseSkuName": "MYSQLS100",
+                "databaseSkuSizeMB": 128000,
+                "databaseSkuTier": "Standard"
+            },
+            "MYSQLB50": {
+                "databaseDTU": 50,
+                "databaseSkuName": "MYSQLB50",
+                "databaseSkuSizeMB": 51200,
+                "databaseSkuTier": "Basic"
+
+            }
+        },
+
         "resourcesToDeploy": {
             "bootstrap": {
                 "sharedResources": true,
@@ -733,6 +766,7 @@
         },
         "jumpboxBootstrapIndicator": "[if(greater(parameters('bootstrapJumpbox'), 0), 1, 0)]",
         "jumpboxNameSuffix": "[if(greater(parameters('bootstrapJumpbox'), 0), parameters('bootstrapJumpbox'), '')]",
+        
         "networkSettings": {
             "virtualNetworkName": "[variables('virtualNetworkName')]",
             "clusterName": "[parameters('clusterName')]",
@@ -761,8 +795,10 @@
             "clusterJumpBoxDomainName": "[concat(parameters('clusterName'), 'jb', variables('jumpboxNameSuffix'))]",
             "clusterMongoDataNodeName": "[concat(parameters('clusterName'), '-mongo')]",
             "clusterMongoDataNodeDomainName": "[concat(parameters('clusterName'), 'mongo')]",
+            "clusterAzureCosmosDbDataNodeName": "[variables('clusterAzureCosmosDbDataNodeName')]",
             "clusterMysqlDataNodeName": "[concat(parameters('clusterName'), '-mysql')]",
             "clusterMysqlDataNodeDomainName": "[concat(parameters('clusterName'), 'mysql')]",
+            "clusterAzureMysqlDataNodeName": "[variables('clusterAzureMysqlDataNodeName')]",
             "clusterVirtualMachineScaleSetName": "[variables('vmssName')]",
             "clusterVirtualMachineScaleSetDomainName": "[concat(parameters('clusterName'), 'vmss')]",
             "clusterVirtualMachineScaleSetSettingsName": "[variables('vmssAutoScaleSettingsName')]",
@@ -950,7 +986,9 @@
             "keyVaultApiversion": "[variables('keyVaultApiversion')]",
             "trafficManagerApiversion": "[variables('trafficManagerApiversion')]",
             "mediaServicesApiVersion": "[variables('mediaServicesApiVersion')]",
-            "serviceBusApiVersion": "[variables('servicebusApiVersion')]"          
+            "serviceBusApiVersion": "[variables('servicebusApiVersion')]",
+            "azureMysqlApiVersion": "[variables('azureMysqlApiVersion')]",
+            "azureCosmosDbApiVersion": "[variables('azureCosmosDbApiVersion')]"
         },
         "keyVaultSettings": {
             "enabledForDeployment": "[variables('keyVaultEnabledForDeployment')]",
@@ -961,6 +999,10 @@
             "tenantKeyAccessPermission": "[parameters('keyVaultMasterAccountKeyAccessPermission')]",
             "tenantSecretAccessPermission": "[parameters('keyVaultMasterAccountSecretAccessPermission')]",
             "sku": "[parameters('keyVaultSku')]"
+        },
+        "cosmosDbSettings": {
+            "deploy": "[variables('resourcesToDeploy')[parameters('deploymentType')].mongo]",
+            "templateUrl": "[variables('azureCosmosDbNodeTemplateUrl')]"
         },
 
         "azureSharedScriptUrl": "[concat('https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/shared_scripts/', variables('supportedOSName'), '/')]",
@@ -980,8 +1022,8 @@
         "smtpParameters": "[concat(' --smtp-server ', parameters('smtpServer'), ' --smtp-server-port ', parameters('smtpServerPort'), ' --smtp-auth-user ', parameters('smtpAuthenticationUser'), ' --smtp-auth-user-password ', parameters('smtpAuthenticationUserPassword'), '  --cluster-admin-email ', parameters('clusterAdmininistratorEmailAddress'))]",
 
         "secureGenericStorageAccountId": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/','Microsoft.Storage/storageAccounts/', variables('secureGenericStorageAccountName'))]",
-        "secureGenericStorageAccountKey": "PLACEHOLDER_KEY",
-        "backupParameters": "[concat(' --storage-account-key ', variables('secureGenericStorageAccountKey'),' --storage-account-name ', variables('secureGenericStorageAccountName'), ' --mongo-backup-frequency \"', replace(parameters('mongoBackupFrequency'), ' ', '_'), '\" --mysql-backup-frequency \"', replace(parameters('mysqlBackupFrequency'), ' ', '_'), '\" --mongo-backup-retention-days ', parameters('mongoBackupRetentionDays'), ' --mysql-backup-retention-days ', parameters('mysqlBackupRetentionDays'))]",
+        "storageKeyPlaceholder": "STORAGE_PLACEHOLDER_KEY",
+        "backupParameters": "[concat(' --storage-account-key ', variables('storageKeyPlaceholder'),' --storage-account-name ', variables('secureGenericStorageAccountName'), ' --mongo-backup-frequency \"', replace(parameters('mongoBackupFrequency'), ' ', '_'), '\" --mysql-backup-frequency \"', replace(parameters('mysqlBackupFrequency'), ' ', '_'), '\" --mongo-backup-retention-days ', parameters('mongoBackupRetentionDays'), ' --mysql-backup-retention-days ', parameters('mysqlBackupRetentionDays'))]",
 
         "sampleCourseParameters": "[concat(' --import-kitchensink-course ', parameters('importKitchenSinkCourse'))]",
         "comprehensiveThemingParameters": "[concat(' --enable-comprehensive-theming ', parameters('enableComprehensiveTheming'), ' --comprehensive-theming-directory ', parameters('comprehensiveThemingDirectory'), ' --comprehensive-theming-name ', parameters('comprehensiveThemingName'))]",
@@ -991,8 +1033,14 @@
         "memcacheParameters": "[concat(' --memcache-server \"', base64(variables('memcacheServer')), '\"')]",
         "azureCliParameters": "[concat(' --azurecli-version \"', parameters('azureCliVersion'), '\"')]",
         "jumpboxBootstrapParameters": "[concat(' --bootstrap-jumpbox \"', variables('jumpboxBootstrapIndicator'), '\"')]",
+        "servicebusKeyPlaceholder": "SERVICEBUS_PLACEHOLDER_KEY",
+        "servicebusParameters": "[concat(' --servicebus-namespace \"', variables('serviceBusNameSpace'), '\" --servicebus-queue-name \"', variables('serviceBusQueueName'), '\" --servicebus-shared-access-key \"', variables('servicebusKeyPlaceholder'), '\"')]",
+        "azureSqlParameters": "[concat(' --azure-mysql-server-name \"', variables('clusterAzureMysqlDataNodeName'),'\" --azure-mysql-server-fqdn \"', concat(variables('clusterAzureMysqlDataNodeName'), '.mysql.database.azure.com'), '\"')]",
 
-        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'), variables('backupParameters'), variables('sampleCourseParameters'), variables('comprehensiveThemingParameters'), variables('authenticationParameters'), variables('customInstallerDomainOverrideParameters'), variables('databaseParameters'), variables('edxappParameters'), variables('memcacheParameters'), variables('azureCliParameters'), variables('customInstallerMobileRestApiParameters'), variables('jumpboxBootstrapParameters'), variables('customInstallerOutputRedirect') )]",
+        "cosmosDbKeyPlaceholder": "COSMOSDB_PLACEHOLDER_KEY",
+        "cosmosDbParameters": "[concat(' --azure-cosmosdb-account-name \"', variables('clusterAzureCosmosDbDataNodeName') ,'\" --azure-cosmosdb-shared-access-key \"', variables('cosmosDbKeyPlaceholder'), '\"')]",
+
+        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'), variables('backupParameters'), variables('sampleCourseParameters'), variables('comprehensiveThemingParameters'), variables('authenticationParameters'), variables('customInstallerDomainOverrideParameters'), variables('databaseParameters'), variables('edxappParameters'), variables('memcacheParameters'), variables('azureCliParameters'), variables('customInstallerMobileRestApiParameters'), variables('jumpboxBootstrapParameters'), variables('servicebusParameters'), variables('azureSqlParameters'), variables('cosmosDbParameters'), variables('customInstallerOutputRedirect') )]",
 
         "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources.json')]",
         "jumpboxTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-jumpbox.json')]",
@@ -1000,6 +1048,8 @@
         "trafficManagerTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-trafficmanager.json')]",
         "mongoNodeTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-mongo.json')]",
         "mysqlNodeTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-mysql.json')]",
+        "azureMysqlNodeTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-mysql-azure.json')]",
+        "azureCosmosDbNodeTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-mongo-azure-cosmosdb.json')]",
         "vmssTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-vmss.json')]",
         "mongoReplicaSetName": "[concat(parameters('clusterName'), 'rs1')]",
         "mongoReplicaSetKey": "[uniqueString(resourceGroup().id)]",
@@ -1030,6 +1080,13 @@
                 "[concat(variables('clusterCustomInstallerScriptFullPath'))]"
             ],
             "regularNodeInstallCommand": "[concat(variables('customInstallerCommand'), ' && ', variables('mysqlDbInstallerCommand'))]"
+        },
+
+        "azureMysqlDBInstallerSettings": {
+            "azureMysqlServerPackageVersion": "[parameters('mysqlServerPackageVersion')]",
+            "azureMysqlServerAdminUserName": "[parameters('mysqlServerAdminUserName')]",
+            "azureMysqlServerAdminPassword": "[parameters('mysqlServerAdminPassword')]",
+            "azureMysqlSkuInfo": "[variables('azureMysqlSkuInfo')[parameters('azureDatabaseSku')]]"
         },
 
         "jumpBoxInstallerSettings": {
@@ -1086,6 +1143,7 @@
             "name": "shared-resources",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[variables('apiVersion')]",
+            "condition": "[variables('resourcesToDeploy')[parameters('deploymentType')].sharedResources]",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -1099,11 +1157,14 @@
                     "apiSettings": {
                         "value": "[variables('apiSettings')]"
                     },
+                    "storageSettings": {
+                        "value": "[variables('storageSettings')]"
+                    },
                     "serviceBusSettings": {
                         "value": "[variables('serviceBusSettings')]"
                     },
-                    "storageSettings": {
-                        "value": "[variables('storageSettings')]"
+                    "cosmosDbSettings" : {
+                        "value": "[variables('cosmosDbSettings')]"
                     }
                 }
             }
