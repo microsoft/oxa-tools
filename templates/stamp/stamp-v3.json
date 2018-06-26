@@ -637,17 +637,24 @@
                 "description": "Zero-based numeric indicator of the Jumpbox used for this bootstrap operation. Zero uses the default *-jb server instead of *-jb[1-2]"
             }
         },
-        "azureDatabaseSku":{  
-            "type":"string",
-            "allowedValues":[  
-               "MYSQLS100",
-               "MYSQLB50"
-            ],
-            "defaultValue":"MYSQLB50",
-            "metadata":{  
-               "description":"Azure database for MySQL sku name : MYSQLB100 (Standard 100 DTU tier, 125GB Space) or MYSQLB50 (Basic 50 DTU tier, 50GB Space)"
+        "edxappSecretKey": {
+            "type": "securestring",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Secret key used when securing the session cookie"
             }
-         }
+        },
+        "azureDatabaseSku": {
+            "type": "string",
+            "allowedValues": [
+                "MYSQLS100",
+                "MYSQLB50"
+            ],
+            "defaultValue": "MYSQLB50",
+            "metadata": {
+                "description": "Azure database for MySQL sku name : MYSQLB100 (Standard 100 DTU tier, 125GB Space) or MYSQLB50 (Basic 50 DTU tier, 50GB Space)"
+            }
+        }
     },
     "variables": {
         "defaultApiVersion": "2015-05-01-preview",
@@ -663,7 +670,7 @@
         "servicebusApiVersion": "2017-04-01",
         "azureMysqlApiVersion": "2016-02-01-privatepreview",
         "azureCosmosDbApiVersion": "2015-04-08",
-        
+
         "virtualMachineExtensionsApiVersion": "[variables('defaultApiVersion')]",
         "virtualMachineApiVersion": "[variables('defaultApiVersion')]",
         "slot1Status": "[if(equals(parameters('deploymentSlot'), 'slot1'), 'Enabled','Disabled')]",
@@ -712,7 +719,7 @@
         "serviceBusQueueName": "[concat(parameters('clusterName'), '-sbq')]",
         "authRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/authorizationRules', variables('serviceBusNameSpace'), variables('defaultSASKeyName'))]",
         "cosmosDBAccountResourceId": "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('clusterAzureCosmosDbDataNodeName'))]",
-        
+
         "azureMysqlSkuInfo": {
             "MYSQLS100": {
                 "databaseDTU": 100,
@@ -766,7 +773,7 @@
         },
         "jumpboxBootstrapIndicator": "[if(greater(parameters('bootstrapJumpbox'), 0), 1, 0)]",
         "jumpboxNameSuffix": "[if(greater(parameters('bootstrapJumpbox'), 0), parameters('bootstrapJumpbox'), '')]",
-        
+
         "networkSettings": {
             "virtualNetworkName": "[variables('virtualNetworkName')]",
             "clusterName": "[parameters('clusterName')]",
@@ -929,7 +936,7 @@
         },
         "serviceBusSettings": {
             "serviceBusNameSpace": "[variables('serviceBusNameSpace')]",
-            "serviceBusQueueName": "[variables('serviceBusQueueName')]"            
+            "serviceBusQueueName": "[variables('serviceBusQueueName')]"
         },
         "jumpboxMachineSettings": {
             "vmSize": "[parameters('jumpBoxVmSize')]",
@@ -1017,6 +1024,7 @@
         "customInstallerKeyVaultParameters": "[concat(' --keyvault-name ', concat(parameters('clusterName'), '-kv'), ' --aad-webclient-id ', parameters('aadWebClientId'), ' --aad-webclient-appkey ', parameters('aadWebClientAppKey'), ' --aad-tenant-id ', parameters('aadTenantId'), ' --azure-subscription-id ', subscription().subscriptionId)]",
         "customInstallerDomainOverrideParameters": "[concat(' --base-domain-override ', parameters('baseDomain'), ' --domain-separator ', parameters('domainSeparator') )]",
         "customInstallerMobileRestApiParameters": "[concat(' --enable-mobile-rest-api \"', parameters('enableMobileRestApi'), '\" ')]",
+        "customInstallerEdxAppSecretKeyParameters": "[concat(' --edxapp-secretkey \"', parameters('edxappSecretKey'), '\" ')]",
 
         "customInstallerOutputRedirect": " >> /var/log/bootstrap.csx.log 2>&1",
         "smtpParameters": "[concat(' --smtp-server ', parameters('smtpServer'), ' --smtp-server-port ', parameters('smtpServerPort'), ' --smtp-auth-user ', parameters('smtpAuthenticationUser'), ' --smtp-auth-user-password ', parameters('smtpAuthenticationUserPassword'), '  --cluster-admin-email ', parameters('clusterAdmininistratorEmailAddress'))]",
@@ -1040,7 +1048,7 @@
         "cosmosDbKeyPlaceholder": "COSMOSDB_PLACEHOLDER_KEY",
         "cosmosDbParameters": "[concat(' --azure-cosmosdb-account-name \"', variables('clusterAzureCosmosDbDataNodeName') ,'\" --azure-cosmosdb-shared-access-key \"', variables('cosmosDbKeyPlaceholder'), '\"')]",
 
-        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'), variables('backupParameters'), variables('sampleCourseParameters'), variables('comprehensiveThemingParameters'), variables('authenticationParameters'), variables('customInstallerDomainOverrideParameters'), variables('databaseParameters'), variables('edxappParameters'), variables('memcacheParameters'), variables('azureCliParameters'), variables('customInstallerMobileRestApiParameters'), variables('jumpboxBootstrapParameters'), variables('servicebusParameters'), variables('azureSqlParameters'), variables('cosmosDbParameters'), variables('customInstallerOutputRedirect') )]",
+        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'), variables('backupParameters'), variables('sampleCourseParameters'), variables('comprehensiveThemingParameters'), variables('authenticationParameters'), variables('customInstallerDomainOverrideParameters'), variables('databaseParameters'), variables('edxappParameters'), variables('memcacheParameters'), variables('azureCliParameters'), variables('customInstallerMobileRestApiParameters'), variables('customInstallerEdxAppSecretKeyParameters'), variables('jumpboxBootstrapParameters'), variables('servicebusParameters'), variables('azureSqlParameters'), variables('cosmosDbParameters'), variables('customInstallerOutputRedirect') )]",
 
         "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources.json')]",
         "jumpboxTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-jumpbox.json')]",

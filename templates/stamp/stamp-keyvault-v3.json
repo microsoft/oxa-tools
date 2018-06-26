@@ -637,17 +637,24 @@
                 "description": "Zero-based numeric indicator of the Jumpbox used for this bootstrap operation. Zero uses the default *-jb server instead of *-jb[1-2]"
             }
         },
-        "azureDatabaseSku":{  
-            "type":"string",
-            "allowedValues":[  
-               "MYSQLS100",
-               "MYSQLB50"
-            ],
-            "defaultValue":"MYSQLB50",
-            "metadata":{  
-               "description":"Azure database for MySQL sku name : MYSQLB100 (Standard 100 DTU tier, 125GB Space) or MYSQLB50 (Basic 50 DTU tier, 50GB Space)"
+        "edxappSecretKey": {
+            "type": "securestring",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Secret key used when securing the session cookie"
             }
-         }
+        },
+        "azureDatabaseSku": {
+            "type": "string",
+            "allowedValues": [
+                "MYSQLS100",
+                "MYSQLB50"
+            ],
+            "defaultValue": "MYSQLB50",
+            "metadata": {
+                "description": "Azure database for MySQL sku name : MYSQLB100 (Standard 100 DTU tier, 125GB Space) or MYSQLB50 (Basic 50 DTU tier, 50GB Space)"
+            }
+        }
     },
     "variables": {
         "defaultApiVersion": "2015-05-01-preview",
