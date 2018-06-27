@@ -37,24 +37,7 @@ EDXAPP_MONGO_PORT: %%MONGO_PORT%%
 # Configure discussion forum settings
 FORUM_SINATRA_ENV: "production"
 FORUM_RACK_ENV: "production"
-FORUM_MONGO_DATABASE: "cs_comments_service"
-FORUM_MONGO_PORT: "{{ EDXAPP_MONGO_PORT }}"
-FORUM_MONGO_TAGS: !!null
 MONGO_REPLICASET_NAME: '%%MONGO_REPLICASET_NAME%%'
-
-# Configure mongo database
-EDXAPP_MONGO_USER: '%%MONGO_USER%%'
-EDXAPP_MONGO_PASSWORD: '%%MONGO_PASSWORD%%'
-
-# Configure forum user, password and connection string
-FORUM_MONGO_USER: '%%MONGO_USER%%'
-FORUM_MONGO_PASSWORD: '%%MONGO_PASSWORD%%'
-FORUM_MONGO_URL: "
-{%- if MONGO_REPLICASET_NAME -%}
-mongodb://{{ FORUM_MONGO_USER }}:{{ FORUM_MONGO_PASSWORD }}@{%- for host in FORUM_MONGO_HOSTS -%}{{ host }}:{{ FORUM_MONGO_PORT }}{%- if not loop.last -%},{%- endif -%}{%- endfor -%}/{{ FORUM_MONGO_DATABASE }}?replicaSet={{ MONGO_REPLICASET_NAME }}{%- if FORUM_MONGO_TAGS -%}&tags={{ FORUM_MONGO_TAGS }}{%- endif -%}
-{%- else -%}
-mongodb://{{ FORUM_MONGO_USER }}:{{ FORUM_MONGO_PASSWORD }}@{{ PARSED_MONGO_HOSTS }}:{{ FORUM_MONGO_PORT }}/{{ FORUM_MONGO_DATABASE }}?ssl=true&replicaSet=globaldb
-{%- endif -%}"
 
 # Configure mysql database
 EDXAPP_MYSQL_USER_ADMIN: '%%MYSQL_ADMIN_USER%%'

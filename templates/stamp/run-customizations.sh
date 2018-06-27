@@ -562,7 +562,7 @@ persist_deployment_time_values()
         # azure cosmosdb uses a known port
         sed -i "s#^MONGO_PORT=.*#MONGO_PORT=10255#I" $config_file    
 
-        # set the host name/list and reset the replicaset name (used in forming the EDXAPP_MONGO_HOSTS)
+        # set the host name/list and reset (set to blank value) the replicaset name (used in forming the EDXAPP_MONGO_HOSTS)
         sed -i "s#^MONGO_SERVER_LIST=.*#MONGO_SERVER_LIST=${azure_cosmosdb_account_name}.documents.azure.com#I" $config_file
         sed -i "s#^MONGO_REPLICASET_NAME=.*#MONGO_REPLICASET_NAME=#I" $config_file
     else
