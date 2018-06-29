@@ -193,11 +193,11 @@ parse_args()
             ;; 
           --edxapp-lms-allowed-hosts)
             # Convert comma delimited list of domains to array and remove leading/trailing spaces
-            OIFS="$IFS"; IFS=","; export EDXAPP_LMS_ALLOWED_HOSTS=(${arg_value// /}); IFS="$OIFS";
+            export EDXAPP_LMS_ALLOWED_HOSTS=$(echo "${arg_value// /}" | sed "s/,/\',\'/g;s/^/\'/;s/$/\'/")
             ;;
           --edxapp-cms-allowed-hosts)
             # Convert comma delimited list of domains to array and remove leading/trailing spaces
-            OIFS="$IFS"; IFS=","; export EDXAPP_CMS_ALLOWED_HOSTS=(${arg_value// /}); IFS="$OIFS";
+            export EDXAPP_CMS_ALLOWED_HOSTS=$(echo "${arg_value// /}" | sed "s/,/\',\'/g;s/^/\'/;s/$/\'/")
             ;;
           *)
             # Unknown option encountered
