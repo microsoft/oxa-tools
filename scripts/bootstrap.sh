@@ -571,6 +571,7 @@ update_devstack()
 ###############################################
 # START CORE EXECUTION
 ###############################################
+set -xv
 
 # get current dir
 CURRENT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
