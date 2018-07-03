@@ -192,11 +192,11 @@ parse_args()
             export EDXAPP_EDXAPP_SECRET_KEY="${arg_value}"
             ;; 
           --edxapp-lms-allowed-hosts)
-            # Convert comma delimited list of domains to array and remove leading/trailing spaces
+            # Remove extra whitespace from comma delimited list of domains and add quotes
             export EDXAPP_LMS_ALLOWED_HOSTS=$(echo "${arg_value// /}" | sed "s/,/\',\'/g;s/^/\'/;s/$/\'/")
             ;;
           --edxapp-cms-allowed-hosts)
-            # Convert comma delimited list of domains to array and remove leading/trailing spaces
+            # Remove extra whitespace from comma delimited list of domains and add quotes
             export EDXAPP_CMS_ALLOWED_HOSTS=$(echo "${arg_value// /}" | sed "s/,/\',\'/g;s/^/\'/;s/$/\'/")
             ;;
           *)
