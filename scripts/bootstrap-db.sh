@@ -187,6 +187,31 @@ setup()
     sudo chown -R $ADMIN_USER:$ADMIN_USER $OXA_PATH
 
     wget -q https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/shared_scripts/ubuntu/vm-disk-utils-0.1.sh -O $OXA_TOOLS_PATH/templates/stamp/vm-disk-utils-0.1.sh
+
+    if [ "$MACHINE_ROLE" == "jumpbox" ] && [ "$BOOTSTRAP_PHASE" == "0" ] ;
+    then
+        # check if this is already done
+        
+        if [ ! -e $TARGET_FILE ];
+        then
+            # Setup each mongo server
+            count=1
+            mongo_servers=(`echo $MONGO_SERVER_LIST | tr , ' ' `)
+            for ip in "${mongo_servers[@]}"; do
+                last=
+                if [[ $count == ${#mongo_servers[@]} ]]; then
+                    last="-l"
+                fi
+
+                exec_mongo $ip $count $last
+                ((count++))
+            done
+        else
+            log "Skipping the 'Infrastructure Bootstrap - Server Application Installation' since this is already done"
+        fi
+    else
+        log "Skipping the 'Infrastructure Bootstrap - Server Application Installation'"
+    fi
 }
 
 setup_overrides()
