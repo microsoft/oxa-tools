@@ -656,7 +656,7 @@
             "metadata": {
                 "description": "Secret key used when securing the session cookie"
             }
-        }},
+        },
         "edxappLmsAllowedHosts": {
             "type": "string",
             "defaultValue": "",
