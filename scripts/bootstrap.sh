@@ -192,12 +192,20 @@ parse_args()
             export EDXAPP_EDXAPP_SECRET_KEY="${arg_value}"
             ;; 
           --edxapp-lms-allowed-hosts)
-            # Remove extra whitespace from comma delimited list of domains and add quotes
-            export EDXAPP_LMS_ALLOWED_HOSTS=$(echo "${arg_value// /}" | sed "s/,/\',\'/g;s/^/\'/;s/$/\'/")
+            if [[ -n "${arg_value}" ]] ; then
+                # Remove extra whitespace from comma delimited list of domains and add quotes
+                export EDXAPP_LMS_ALLOWED_HOSTS=$(echo "${arg_value// /}" | sed "s/,/\',\'/g;s/^/\'/;s/$/\'/")
+            else
+                export EDXAPP_LMS_ALLOWED_HOSTS
+            fi
             ;;
           --edxapp-cms-allowed-hosts)
-            # Remove extra whitespace from comma delimited list of domains and add quotes
-            export EDXAPP_CMS_ALLOWED_HOSTS=$(echo "${arg_value// /}" | sed "s/,/\',\'/g;s/^/\'/;s/$/\'/")
+            if [[ -n "${arg_value}" ]] ; then
+                # Remove extra whitespace from comma delimited list of domains and add quotes
+                export EDXAPP_CMS_ALLOWED_HOSTS=$(echo "${arg_value// /}" | sed "s/,/\',\'/g;s/^/\'/;s/$/\'/")
+            else
+                export EDXAPP_CMS_ALLOWED_HOSTS
+            fi
             ;;
           *)
             # Unknown option encountered
