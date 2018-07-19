@@ -53,6 +53,8 @@ FORUM_VERSION="open-release/ficus.master"
 AZURE_MEDIA_VERSION="oxa/master.fic"
 KITCHEN_SINK_COURSE_VERSION="oxa/master.fic"
 EDXAPP_EDXAPP_SECRET_KEY=""
+EDXAPP_LMS_ALLOWED_HOSTS="'*'"
+EDXAPP_CMS_ALLOWED_HOSTS="'*'"
 
 # script used for triggering background installation (setup in cron)
 CRON_INSTALLER_SCRIPT=""
@@ -189,6 +191,22 @@ parse_args()
           --edxapp-secretkey)
             export EDXAPP_EDXAPP_SECRET_KEY="${arg_value}"
             ;; 
+          --edxapp-lms-allowed-hosts)
+            if [[ -n "${arg_value}" ]] ; then
+                # Remove extra whitespace from comma delimited list of domains and add quotes
+                export EDXAPP_LMS_ALLOWED_HOSTS=$(echo "${arg_value// /}" | sed "s/,/\',\'/g;s/^/\'/;s/$/\'/")
+            else
+                export EDXAPP_LMS_ALLOWED_HOSTS
+            fi
+            ;;
+          --edxapp-cms-allowed-hosts)
+            if [[ -n "${arg_value}" ]] ; then
+                # Remove extra whitespace from comma delimited list of domains and add quotes
+                export EDXAPP_CMS_ALLOWED_HOSTS=$(echo "${arg_value// /}" | sed "s/,/\',\'/g;s/^/\'/;s/$/\'/")
+            else
+                export EDXAPP_CMS_ALLOWED_HOSTS
+            fi
+            ;;
           *)
             # Unknown option encountered
             echo "Option '${BOLD}$1${NORM} ${arg_value}' not allowed."

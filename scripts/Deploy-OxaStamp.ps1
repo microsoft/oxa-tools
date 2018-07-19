@@ -121,6 +121,12 @@ Switch indicating whether or not AutoDeploy mode is enabled
 .PARAMETER EdxAppSecretKey
 Secret key used when securing the session cookie
 
+.PARAMETER EdxAppLmsAllowedHosts
+LMS whitelist of allowed hosts
+
+.PARAMETER EdxAppCmsAllowedHosts
+CMS whitelist of allowed hosts
+
 .INPUTS
 None. You cannot pipe objects to Deploy-OxaStamp.ps1
 
@@ -184,7 +190,11 @@ Param(
         
         [Parameter(Mandatory=$false)][switch]$AutoDeploy=$false,
         
-        [Parameter(Mandatory=$false)][string]$EdxAppSecretKey=""
+        [Parameter(Mandatory=$false)][string]$EdxAppSecretKey="",
+        
+        [Parameter(Mandatory=$false)][string]$EdxAppLmsAllowedHosts="",
+        
+        [Parameter(Mandatory=$false)][string]$EdxAppCmsAllowedHosts=""
     )
 
 ###########################################
@@ -332,7 +342,9 @@ $replacements = @{
                     "DEPLOYMENTSLOT"=$targetDeploymentSlot; 
                     "DEPLOYMENTTYPE"=$DeploymentType;
                     "JUMPBOXNUMBER"=$JumpboxNumber;
-                    "EDXAPPSECRETKEY"=$EdxAppSecretKey
+                    "EDXAPPSECRETKEY"=$EdxAppSecretKey;
+                    "EDXAPPLMSALLOWEDHOSTS"=$EdxAppLmsAllowedHosts;
+                    "EDXAPPCMSALLOWEDHOSTS"=$EdxAppCmsAllowedHosts;
                 }
 
 # Assumption: if the SMTP server is specified, the rest of its configuration will be specified

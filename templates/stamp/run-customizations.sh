@@ -172,6 +172,8 @@ help()
     echo "        --servicebus-shared-access-key-name Name of the servicebus shared access policy to use for service bus authentication"
     echo "        --servicebus-shared-access-key Key for the servicebus shared access policy to use for service bus authentication"
     echo "        --edxapp-secretkey Secret key used to secure the session cookie"
+    echo "        --edxapp-lms-allowed-hosts LMS whitelist of allowed domains"
+    echo "        --edxapp-cms-allowed-hosts CMS whitelist of allowed domains"
 }
 
 # Parse script parameters
@@ -456,6 +458,12 @@ parse_args()
             --edxapp-secretkey)
                 EDXAPP_SECRET_KEY="${arg_value}"
                 ;;
+            --edxapp-lms-allowed-hosts)
+                EDXAPP_LMS_ALLOWED_HOSTS="${arg_value}"
+                ;;
+            --edxapp-cms-allowed-hosts)
+                EDXAPP_CMS_ALLOWED_HOSTS="${arg_value}"
+                ;;
             -h|--help)  # Helpful hints
                 help
                 exit 2
@@ -580,6 +588,24 @@ persist_deployment_time_values()
         log "Secret Key not specified"
     fi
 
+    # Check for LMS whitelist of allowed hosts override
+    if [[ -n ${EDXAPP_LMS_ALLOWED_HOSTS} ]];
+    then
+       log "Overriding 'EDXAPP_LMS_ALLOWED_HOSTS'"
+       sed -i "s#^EDXAPP_LMS_ALLOWED_HOSTS=.*#EDXAPP_LMS_ALLOWED_HOSTS=${EDXAPP_LMS_ALLOWED_HOSTS}#I" $config_file
+    else
+       log "LMS whitelist of allowed hosts not specified"
+    fi
+
+    # Check for CMS whitelist of allowed hosts override
+    if [[ -n ${EDXAPP_CMS_ALLOWED_HOSTS} ]];  
+    then
+       log "Overriding 'EDXAPP_CMS_ALLOWED_HOSTS'"
+       sed -i "s#^EDXAPP_CMS_ALLOWED_HOSTS=.*#EDXAPP_CMS_ALLOWED_HOSTS=${EDXAPP_CMS_ALLOWED_HOSTS}#I" $config_file
+    else
+       log "CMS whitelist of allowed hosts not specified"
+    fi
+
     # Re-source the cloud configurations
     source $config_file
     exit_on_error "Failed sourcing the environment configuration file after transform" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
@@ -656,6 +682,12 @@ then
     # Secret Key parameter
     EDXAPP_SECRET_KEY_PARAMS="--edxapp-secretkey \"${EDXAPP_SECRET_KEY}\""
 
+    # LMS whitelist of allowed hosts parameter
+    EDXAPP_LMS_ALLOWED_HOSTS_PARAMS="--edxapp-lms-allowed-hosts \"${EDXAPP_LMS_ALLOWED_HOSTS}\""
+
+    # CMS whitelist of allowed hosts parameter
+    EDXAPP_CMS_ALLOWED_HOSTS_PARAMS="--edxapp-cms-allowed-hosts \"${EDXAPP_CMS_ALLOWED_HOSTS}\""
+
     # Jumpbox Bootstrap-Only mode indicator
     JUMPBOX_BOOTSTRAP_PARAMS="--bootstrap-jumpbox \"${JUMPBOX_BOOTSTRAP}\""
 
@@ -669,7 +701,7 @@ then
     SERVICEBUS_PARAMS="--servicebus-namespace '${servicebus_namespace}' --servicebus-queue-name '${servicebus_queue_name}' --servicebus-shared-access-key-name '${servicebus_shared_access_key_name}' --servicebus-shared-access-key '${servicebus_shared_access_key}'"
     
     # Create the cron job & exit
-    INSTALL_COMMAND="sudo flock -n /var/log/bootstrap-run-customization.lock bash $CURRENT_PATH/run-customizations.sh -c $CLOUDNAME -u $OS_ADMIN_USERNAME -i $CUSTOM_INSTALLER_RELATIVEPATH -m $MONITORING_CLUSTER_NAME -s $BOOTSTRAP_PHASE -u $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --crontab-interval $CRONTAB_INTERVAL_MINUTES --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID --smtp-server $SMTP_SERVER --smtp-server-port $SMTP_SERVER_PORT --smtp-auth-user $SMTP_AUTH_USER --smtp-auth-user-password $SMTP_AUTH_USER_PASSWORD --cluster-admin-email $CLUSTER_ADMIN_EMAIL --cluster-name $CLUSTER_NAME ${OXA_TOOLS_GITHUB_PARAMS} ${EDX_CONFIGURATION_GITHUB_PARAMS} ${EDX_PLATFORM_GITHUB_PARAMS} ${EDX_THEME_GITHUB_PARAMS} ${ANSIBLE_GITHUB_PARAMS} ${BACKUP_PARAMS} ${SAMPLE_COURSE_PARAMS} ${COMPREHENSIVE_THEMING_PARAMS} ${AUTHENTICATION_PARAMS} ${DOMAIN_PARAMS} ${EDXAPP_PARAMS} --edxversion ${EDX_VERSION} --forumversion ${FORUM_VERSION} ${DATABASE_PARAMS} ${MEMCACHE_PARAMS} ${AZURE_CLI_VERSION} ${MOBILE_REST_API_PARAMS} ${JUMPBOX_BOOTSTRAP_PARAMS} ${SERVICEBUS_PARAMS} ${EDXAPP_SECRET_KEY_PARAMS} --cron >> $SECONDARY_LOG 2>&1"
+    INSTALL_COMMAND="sudo flock -n /var/log/bootstrap-run-customization.lock bash $CURRENT_PATH/run-customizations.sh -c $CLOUDNAME -u $OS_ADMIN_USERNAME -i $CUSTOM_INSTALLER_RELATIVEPATH -m $MONITORING_CLUSTER_NAME -s $BOOTSTRAP_PHASE -u $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --crontab-interval $CRONTAB_INTERVAL_MINUTES --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID --smtp-server $SMTP_SERVER --smtp-server-port $SMTP_SERVER_PORT --smtp-auth-user $SMTP_AUTH_USER --smtp-auth-user-password $SMTP_AUTH_USER_PASSWORD --cluster-admin-email $CLUSTER_ADMIN_EMAIL --cluster-name $CLUSTER_NAME ${OXA_TOOLS_GITHUB_PARAMS} ${EDX_CONFIGURATION_GITHUB_PARAMS} ${EDX_PLATFORM_GITHUB_PARAMS} ${EDX_THEME_GITHUB_PARAMS} ${ANSIBLE_GITHUB_PARAMS} ${BACKUP_PARAMS} ${SAMPLE_COURSE_PARAMS} ${COMPREHENSIVE_THEMING_PARAMS} ${AUTHENTICATION_PARAMS} ${DOMAIN_PARAMS} ${EDXAPP_PARAMS} --edxversion ${EDX_VERSION} --forumversion ${FORUM_VERSION} ${DATABASE_PARAMS} ${MEMCACHE_PARAMS} ${AZURE_CLI_VERSION} ${MOBILE_REST_API_PARAMS} ${JUMPBOX_BOOTSTRAP_PARAMS} ${SERVICEBUS_PARAMS} ${EDXAPP_SECRET_KEY_PARAMS} ${EDXAPP_LMS_ALLOWED_HOSTS_PARAMS} ${EDXAPP_CMS_ALLOWED_HOSTS_PARAMS} --cron >> $SECONDARY_LOG 2>&1"
     echo $INSTALL_COMMAND > $CRON_INSTALLER_SCRIPT
 
     # Remove the task if it is already setup
@@ -880,7 +912,9 @@ else
         --servicebus-queue-name "${servicebus_queue_name}" \
         --servicebus-shared-access-key-name "${servicebus_shared_access_key_name}" \
         --servicebus-shared-access-key "${servicebus_shared_access_key}" \
-        --edxapp-secretkey "${EDXAPP_SECRET_KEY}"
+        --edxapp-secretkey "${EDXAPP_SECRET_KEY}" \
+        --edxapp-lms-allowed-hosts "${EDXAPP_LMS_ALLOWED_HOSTS}" \
+        --edxapp-cms-allowed-hosts "${EDXAPP_CMS_ALLOWED_HOSTS}"
 
     exit_on_error "OXA stamp customization (${INSTALLER_PATH}) failed" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
 fi

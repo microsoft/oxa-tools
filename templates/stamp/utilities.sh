@@ -898,7 +898,7 @@ install-azure-cli-2()
         AZ_REPO=$(lsb_release -cs)
         echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | sudo tee /etc/apt/sources.list.d/azure-cli.list
         curl -L https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
-
+	
         log "Installing Azure CLI 2.0 pre-requisites"
         install-wrapper "apt-transport-https"
 

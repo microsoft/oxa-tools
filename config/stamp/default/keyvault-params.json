@@ -1,3 +1,4 @@
+",
 {
     "ClusterAdministratorEmailAddress": "",
     "SmtpServer": "",
@@ -27,5 +28,7 @@
     "EnableMobileRestApi": null,
     "BranchName": "",
     "JumpboxNumber": 0,
-    "EdxAppSecretKey": ""
+    "EdxAppSecretKey": "",
+    "EdxAppLmsAllowedHosts": "",
+    "EdxAppCmsAllowedHosts": ""
 }
