@@ -15,7 +15,7 @@ azure_cloud_db_server_name="${8}"
 # Qualify the user name for azure cloud db login
 if [[ -n "${azure_cloud_db_server_name}" ]];
 then
-    mysql_user_account="${mysql_user_name}@${azure_cloud_db_server_name}"
+    mysql_user_name="${mysql_user_name}@${azure_cloud_db_server_name}"
 fi  
 
 mysql edxapp --host="${mysql_host_name}" --user="${mysql_user_name}" --password="${mysql_user_password}"  < edxapp.sql
