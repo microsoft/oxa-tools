@@ -17,9 +17,9 @@ ENVIRONMENT=bvt
 
 # the site certificate files (.crt & .key) have to be named after the BASE_URL value
 BASE_URL=bvt.oxa.microsoft.com 
-LMS_URL=lms.$BASE_URL
-CMS_URL=cms.$BASE_URL
-PREVIEW_URL=preview.$BASE_URL
+LMS_URL=mytest_lms.$BASE_URL
+CMS_URL=mytest_cms.$BASE_URL
+PREVIEW_URL=mytest_preview.$BASE_URL
 
 # deployment configuration
 # URL-building will be replaced by the use of LMS_URL | CMS_URL (above)
