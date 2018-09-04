@@ -13,6 +13,7 @@ readonly USE_MSFT="useMsftRepo"
 readonly TAGS="tags/"
 readonly FICUS="${TAGS}open-release/ficus.1"
 readonly GINKGO="${TAGS}open-release/ginkgo.2"
+readonly HAW="${TAGS}open-release/hawthorn.master"
 readonly FS="fullstack"
 readonly DS="devstack"
 
@@ -155,6 +156,9 @@ parse_branch()
         ginkgo|up_g|ed_g|g|edx_ginkgo)
             echo "edx_g"
         ;;
+        haw|edx_haw|hawthorn)
+            echo "haw"
+        ;;
         *)
             # no additional mappings for edx_master (at this time)
             echo "$userInput"
@@ -172,7 +176,7 @@ set_dynamic_vars()
     VAGRANT_USER_PASSWORD=$EDXAPP_SU_PASSWORD
 
     case "$BRANCH_VERSIONS" in
-        edx_f|edx_g|edx_master)
+        edx_f|edx_g|edx_master|haw)
             EDXAPP_ENABLE_COMPREHENSIVE_THEMING=false
             COMBINED_LOGIN_REGISTRATION=true
             NGINX_SITES='[certs, cms, lms, forum, xqueue]'
@@ -181,6 +185,8 @@ set_dynamic_vars()
                 EDX_BRANCH=$GINKGO
             elif [[ $BRANCH_VERSIONS == edx_master ]] ; then
                 EDX_BRANCH=master
+            elif [[ $BRANCH_VERSIONS == haw ]] ; then
+                EDX_BRANCH=$HAW
             fi
 
             # The upstream doesn't have the relevant
@@ -225,7 +231,7 @@ test_args()
 
     echo -e "\n BRANCH_VERSIONS is set to $BRANCH_VERSIONS"
     case "$BRANCH_VERSIONS" in
-        stable|release|edge|edx_f|edx_g|edx_master)
+        stable|release|edge|edx_f|edx_g|edx_master|haw)
             echo ""
         ;;
         *)
@@ -253,6 +259,8 @@ get_branch()
         echo "oxa/release.fic"
     elif [[ $BRANCH_VERSIONS == edge ]] || [[ $override == $USE_MSFT ]] ; then
         echo "oxa/dev.fic"
+    elif [[ $BRANCH_VERSIONS == haw ]] ; then
+        echo "test.hawthorn1"
     else
         echo "$EDX_BRANCH"
     fi
