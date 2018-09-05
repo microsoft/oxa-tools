@@ -467,8 +467,8 @@ edx_installation_playbook()
 
     # We've been experiencing intermittent failures on ficus. Simply retrying
     # mitigates the problem, but we should solve the underlying cause(s) soon.
-    command="$ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG vagrant-${EDX_ROLE}.yml"
-    retry-command "$command" "$RETRY_COUNT" "${EDX_ROLE} installation" "fixPackages"
+    #command="$ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG vagrant-${EDX_ROLE}.yml"
+    #retry-command "$command" "$RETRY_COUNT" "${EDX_ROLE} installation" "fixPackages"
     exit_on_error "Execution of edX ${EDX_ROLE} playbook failed"
 
     # oxa playbooks - all (single VM)
