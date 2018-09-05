@@ -464,7 +464,23 @@ edx_installation_playbook()
 
     # We've been experiencing intermittent failures on ficus. Simply retrying
     # mitigates the problem, but we should solve the underlying cause(s) soon.
-    command="$ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_sandbox.yml"
+    #command="$ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_sandbox.yml"
+    cd $ANSIBLE_PLAYBOOK && sudo -E ansible-playbook -c local ./edx_sandbox.yml -i "localhost," $EXTRA_VARS "$@" ansible_status=$?
+    
+    if [[ $ansible_status -ne 0 ]]; then
+    echo " "
+    echo "========================================"
+    echo "Ansible failed!"
+    echo "----------------------------------------"
+    echo "If you need help, see https://open.edx.org/getting-help ."
+    echo "When asking for help, please provide as much information as you can."
+    echo "These might be helpful:"
+    echo "    Your log file is at $log_file"
+    echo "    Your environment:"
+    env | egrep -i 'version|release' | sed -e 's/^/        /'
+    echo "========================================"
+    fi
+    
     #retry-command "$command" "$RETRY_COUNT" "${EDX_ROLE} installation" "fixPackages"
     exit_on_error "Execution of edX ${EDX_ROLE} playbook failed"
 
