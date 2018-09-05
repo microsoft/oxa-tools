@@ -197,7 +197,7 @@ set_dynamic_vars()
             MYSQL_ADMIN_PASSWORD=
         ;;
         *)
-            EDXAPP_ENABLE_COMPREHENSIVE_THEMING=true
+            EDXAPP_ENABLE_COMPREHENSIVE_THEMING=false
             COMBINED_LOGIN_REGISTRATION=false
             # Microsoft repositories support the lms-preview subdomain.
             NGINX_SITES='[certs, cms, lms, lms-preview, forum, xqueue]'
