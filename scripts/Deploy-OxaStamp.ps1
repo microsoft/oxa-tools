@@ -170,7 +170,7 @@ Param(
 
         [Parameter(Mandatory=$false)][switch]$EnableMobileRestApi=$false,
         
-        [Parameter(Mandatory=$false)][string]$BranchName = "oxa/master.fic",
+        [Parameter(Mandatory=$false)][string]$BranchName = "test.hawthorn1",
 
         [Parameter(Mandatory=$false)][ValidateSet("bootstrap", "upgrade", "swap", "cleanup")][string]$DeploymentType="bootstrap",
 
