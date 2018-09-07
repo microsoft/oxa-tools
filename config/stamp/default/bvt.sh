@@ -27,7 +27,7 @@ PREVIEW_URL=preview.$BASE_URL
 TEMPLATE_TYPE=stamp # stamp|fullstack|devstack
 CLUSTERNAME={CLUSTERNAME}
 ADMIN_USER=oxaadmin
-OXA_TOOLS_VERSION=oxa/master.fic
+OXA_TOOLS_VERSION=test.hawthorn1
 
 # config/server-vars.yml
 #YOUTUBE_API_KEY=todo
@@ -47,12 +47,12 @@ EDXAPP_EMAIL_UNIVERSITY="${PLATFORM_EMAIL}"
 
 # config/versions.yml
 CONFIGURATION_REPO=https://github.com/Microsoft/edx-configuration.git
-CONFIGURATION_VERSION=oxa/master.fic
+CONFIGURATION_VERSION=test.hawthorn1
 PLATFORM_REPO=https://github.com/Microsoft/edx-platform.git
-PLATFORM_VERSION=oxa/master.fic
+PLATFORM_VERSION=test.hawthorn1
 THEME_REPO=https://github.com/Microsoft/edx-theme.git
 THEME_VERSION=oxa/master.fic
-EDX_VERSION=open-release/ficus.master
+EDX_VERSION=open-release/hawthorn.master
 FORUM_VERSION=oxa/master.fic
 AZURE_MEDIA_VERSION=oxa/master.fic
 KITCHEN_SINK_COURSE_VERSION=oxa/master.fic
