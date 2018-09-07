@@ -66,7 +66,7 @@ Param(
         [Parameter(Mandatory=$true)][string]$ClusterAdmininistratorEmailAddress,
         [Parameter(Mandatory=$false)][string]$OxaToolsGithubAccountName="Microsoft",
         [Parameter(Mandatory=$false)][string]$OxaToolsGithubProjectName="oxa-tools",
-        [Parameter(Mandatory=$false)][string]$OxaToolsGithubBranch="oxa/master.fic",
+        [Parameter(Mandatory=$false)][string]$OxaToolsGithubBranch="test.hawthorn1",
         [Parameter(Mandatory=$false)][string]$OxaToolsGithubBranchTag="",
 
         [Parameter(Mandatory=$false)][string]$InstallerPackageName,
