@@ -81,7 +81,7 @@
             "value": "oxa-tools"
         },
         "oxaToolsGithubBranch": {
-            "value": "oxa/master.fic"
+            "value": "test.hawthorn1"
         },
         "edxConfigurationGithubAccountName": {
             "value": "Microsoft"
@@ -90,7 +90,7 @@
             "value": "edx-configuration"
         },
         "edxConfigurationGithubBranch": {
-            "value": "oxa/master.fic"
+            "value": "test.hawthorn1"
         },
         "edxPlatformGithubAccountName": {
             "value": "microsoft"
@@ -99,7 +99,7 @@
             "value": "edx-platform"
         },
         "edxPlatformGithubBranch": {
-            "value": "oxa/master.fic"
+            "value": "test.hawthorn1"
         },
         "edxThemeGithubAccountName": {
             "value": "microsoft"
@@ -108,7 +108,7 @@
             "value": "edx-theme"
         },
         "edxThemeGithubBranch": {
-            "value": "oxa/master.fic"
+            "value": "test.hawthorn1"
         },
         "ansibleGithubAccountName": {
             "value": "edx"

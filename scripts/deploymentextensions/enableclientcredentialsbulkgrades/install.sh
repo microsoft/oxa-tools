@@ -9,7 +9,7 @@
 # 
 # Important:
 # Before running the deployment extension, please confirm the following:
-# You have deployed Open edX using Microsoft STAMP ARM template; which is running Ficus X.X version of Open edX avaliable from http://github.com/microsoft/edx-platform oxa/master.fic branch
+# You have deployed Open edX using Microsoft STAMP ARM template; which is running Ficus X.X version of Open edX avaliable from http://github.com/microsoft/edx-platform test.hawthorn1 branch
 # 
 # Please do not run this extension, if you NOT using Microsoft STAMP ARM Template.
 
@@ -17,14 +17,14 @@
 # Settings for the OXA-Tools public repository
 oxa_tools_public_github_account="Microsoft"
 oxa_tools_public_github_projectname="oxa-tools"
-oxa_tools_public_github_projectbranch="oxa/master.fic"
+oxa_tools_public_github_projectbranch="test.hawthorn1"
 oxa_tools_public_github_branchtag=""
 oxa_tools_repository_path="/oxa/oxa-tools"
 
 # settings for the edx-platform public repository 
 edx_platform_public_github_accountname="Microsoft"
 edx_platform_public_github_projectname="edx-platform"
-edx_platform_public_github_projectbranch="oxa/master.fic"
+edx_platform_public_github_projectbranch="test.hawthorn1"
 edx_platform_public_github_branchtag=""
 edx_platform_temp_repository_path="/tmp/edx-platform"
 

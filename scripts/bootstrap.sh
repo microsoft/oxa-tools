@@ -40,7 +40,7 @@ EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH="test.hawthorn1"
 # There are cases where we want to override the edx-platform repository itself
 EDX_THEME_PUBLIC_GITHUB_ACCOUNTNAME="Microsoft"
 EDX_THEME_PUBLIC_GITHUB_PROJECTNAME="edx-theme"
-EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="oxa/master.fic"
+EDX_THEME_PUBLIC_GITHUB_PROJECTBRANCH="test.hawthorn1"
 EDX_THEME_NAME="default"
 
 # EdX Ansible
@@ -52,8 +52,8 @@ ANSIBLE_PUBLIC_GITHUB_PROJECTBRANCH="master"
 # MISC
 EDX_VERSION="open-release/hawthorn.master"
 FORUM_VERSION="open-release/hawthorn.master"
-AZURE_MEDIA_VERSION="oxa/master.fic"
-KITCHEN_SINK_COURSE_VERSION="oxa/master.fic"
+AZURE_MEDIA_VERSION="test.hawthorn1"
+KITCHEN_SINK_COURSE_VERSION="test.hawthorn1"
 
 # script used for triggering background installation (setup in cron)
 CRON_INSTALLER_SCRIPT=""

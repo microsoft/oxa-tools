@@ -51,11 +51,11 @@ CONFIGURATION_VERSION=test.hawthorn1
 PLATFORM_REPO=https://github.com/Microsoft/edx-platform.git
 PLATFORM_VERSION=test.hawthorn1
 THEME_REPO=https://github.com/Microsoft/edx-theme.git
-THEME_VERSION=oxa/master.fic
+THEME_VERSION=test.hawthorn1
 EDX_VERSION=open-release/hawthorn.master
-FORUM_VERSION=oxa/master.fic
-AZURE_MEDIA_VERSION=oxa/master.fic
-KITCHEN_SINK_COURSE_VERSION=oxa/master.fic
+FORUM_VERSION=test.hawthorn1
+AZURE_MEDIA_VERSION=test.hawthorn1
+KITCHEN_SINK_COURSE_VERSION=test.hawthorn1
 
 # fullstack uses default EMAIL_HOST=localhost
 # config/stamp/stamp.yml

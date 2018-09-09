@@ -254,7 +254,7 @@ get_branch()
     override=$1
 
     if [[ $BRANCH_VERSIONS == stable ]] ; then
-        echo "oxa/master.fic"
+        echo "test.hawthorn1"
     elif [[ $BRANCH_VERSIONS == release ]] ; then
         echo "oxa/release.fic"
     elif [[ $BRANCH_VERSIONS == edge ]] || [[ $override == $USE_MSFT ]] ; then
