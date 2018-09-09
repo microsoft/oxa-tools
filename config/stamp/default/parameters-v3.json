@@ -120,10 +120,10 @@
             "value": "master"
         },
         "edxVersion": {
-            "value": "open-release/ficus.master"
+            "value": "open-release/hawthorn.master"
         },
         "edxForumVersion": {
-            "value": "open-release/ficus.master"
+            "value": "open-release/hawthorn.master"
         },
         "armTemplateRelativePath": {
             "value": "templates/stamp"
