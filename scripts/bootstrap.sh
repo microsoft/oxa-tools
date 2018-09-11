@@ -55,6 +55,9 @@ FORUM_VERSION="open-release/hawthorn.master"
 AZURE_MEDIA_VERSION="test.hawthorn1"
 KITCHEN_SINK_COURSE_VERSION="test.hawthorn1"
 
+# Adding placeholder for EDXAPP SECRET KEY
+EDXAPP_EDXAPP_SECRET_KEY=""
+
 # script used for triggering background installation (setup in cron)
 CRON_INSTALLER_SCRIPT=""
 
@@ -186,6 +189,9 @@ parse_args()
             ;;
           --servicebus-shared-access-key)
             servicebus_shared_access_key="${arg_value}"
+            ;;
+          --edxapp-secretkey)
+            export EDXAPP_EDXAPP_SECRET_KEY="${arg_value}"
             ;;
           *)
             # Unknown option encountered
