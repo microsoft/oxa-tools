@@ -56,7 +56,7 @@ AZURE_MEDIA_VERSION="test.hawthorn1"
 KITCHEN_SINK_COURSE_VERSION="test.hawthorn1"
 
 # Adding placeholder for EDXAPP SECRET KEY
-EDXAPP_EDXAPP_SECRET_KEY=""
+EDXAPP_EDXAPP_SECRET_KEY="DUMMYVALUECHANGEASNEEDED"
 
 # script used for triggering background installation (setup in cron)
 CRON_INSTALLER_SCRIPT=""
