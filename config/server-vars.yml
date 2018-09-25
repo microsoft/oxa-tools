@@ -171,3 +171,7 @@ EDXAPP_LMS_PREVIEW_SSL_NGINX_FRONTEND_PORT: 443
 EDXAPP_CMS_NGINX_PORT: 18010
 EDXAPP_CMS_SSL_NGINX_PORT: 48010
 EDXAPP_CMS_SSL_NGINX_FRONTEND_PORT: 443
+
+# Custom error message on NGINX error pages
+NGINX_SERVER_RATE_LIMIT_ERROR_MSG: 'We have been notified of the error and we are actively working on restoring service.'
+NGINX_SERVER_ERROR_MSG: 'We have been notified of the error and we are actively working on restoring service.'
