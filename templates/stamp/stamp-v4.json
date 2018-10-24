@@ -929,8 +929,6 @@
             "condition": "[variables('resourcesToDeploy')[parameters('deploymentType')].jumpbox]",
             "dependsOn": [
                 "[concat('Microsoft.Resources/deployments/', 'shared-resources')]",
-                "mongoNodesLoop",
-                "mysqlMasterNodeLoop",
                 "keyVault"
             ],
             "properties": {
