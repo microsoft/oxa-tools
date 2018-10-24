@@ -397,7 +397,7 @@
         "clusterCustomInstallerScriptFullPath": "[concat( variables('templateBaseUrl'), parameters('customInstallerLaunchScript') )]",
         "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'), ' -a ', parameters('customInstallerGithubAccountName'),' -n ', parameters('customInstallerGithubProjectName'),' -b ', parameters('customInstallerGithubBranch'),' -i ', parameters('customInstallerMainScriptRelativePath'),' -p ', parameters('customInstallerGithubAccessToken'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'))]",
 
-        "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources.json')]",
+        "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources-4.json')]",
         "jumpboxTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-jumpbox.json')]",
         "vmssTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-vmss-v4.json')]",
 
