@@ -1,0 +1,945 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "clusterName": {
+            "type": "string",
+            "maxLength": 12
+        },
+        "clusterNameDomainName": {
+            "type": "string"
+        },
+        "osFamilySpec": {
+            "type": "string",
+            "defaultValue": "ubuntu",
+            "allowedValues": [
+                "ubuntu"
+            ]
+        },
+        "jumpBoxVmSize": {
+            "type": "string",
+            "defaultValue": "Standard_D1_v2",
+            "allowedValues": [
+                "Standard_D1_v2",
+                "Standard_D2_v2",
+                "Standard_D3_v2",
+                "Standard_D4_v2",
+                "Standard_DS2_v2",
+                "Standard_DS3_v2",
+                "Standard_DS4_v2",
+                "Standard_DS5_v2",
+                "Standard_DS11_v2",
+                "Standard_DS12_v2",
+                "Standard_DS13_v2",
+                "Standard_DS14_v2",
+                "Standard_DS15_v2"
+            ]
+        },
+        "frontendVmSize": {
+            "type": "string",
+            "defaultValue": "Standard_D2_v2",
+            "allowedValues": [
+                "Standard_D1_v2",
+                "Standard_D2_v2",
+                "Standard_D3_v2",
+                "Standard_D4_v2",
+                "Standard_DS2_v2",
+                "Standard_DS3_v2",
+                "Standard_DS4_v2",
+                "Standard_DS5_v2",
+                "Standard_DS11_v2",
+                "Standard_DS12_v2",
+                "Standard_DS13_v2",
+                "Standard_DS14_v2",
+                "Standard_DS15_v2"
+            ],
+            "metadata": {
+                "description": "SKU, or size of the application virtual machine(s)."
+            }
+        },
+        "adminUsername": {
+            "type": "string",
+            "defaultValue": "lexoxaadmin"
+        },
+        "adminPublicKey": {
+            "type": "securestring"
+        },
+        "mongoServerAdminUserName": {
+            "type": "string",
+            "defaultValue": "lexoxamongoadmin"
+        },
+        "mongoServerAdminPassword": {
+            "type": "securestring"
+        },
+        "mysqlServerAdminUserName": {
+            "type": "string",
+            "defaultValue": "lexoxamysqladmin"
+        },
+        "mysqlServerAdminPassword": {
+            "type": "securestring"
+        },
+
+        "deploymentSlot": {
+            "type": "string",
+            "defaultValue": "slot1",
+            "allowedValues": [
+                "slot1",
+                "slot2"
+            ],
+            "metadata": {
+                "description": "Deployment slot for the frontend"
+            }
+        },
+        "autoScaleEnabled": {
+            "type": "bool",
+            "defaultValue": "false",
+            "metadata": {
+                "description": "Indicator of whether or not autoscaling would be enabled on the Vm Scale Set"
+            }
+        },
+        "autoScaleCapacityDefault": {
+            "type": "int",
+            "maxValue": 20,
+            "defaultValue": 5,
+            "metadata": {
+                "description": "Default number of application virtual machines within the VM Scale Set."
+            }
+        },
+        "autoScaleCapacityMaximum": {
+            "type": "int",
+            "maxValue": 20,
+            "defaultValue": 20,
+            "metadata": {
+                "description": "Maximum number of application virtual machines within the VM Scale Set."
+            }
+        },
+        "autoScaleCapacityMinimum": {
+            "type": "int",
+            "maxValue": 20,
+            "defaultValue": 1,
+            "metadata": {
+                "description": "Default number of application virtual machines within the VM Scale Set."
+            }
+        },
+        "oxaToolsGithubAccountName": {
+            "type": "string",
+            "defaultValue": "microsoft",
+            "metadata": {
+                "description": "Name of the account that owns the oxa-tools GitHub repository"
+            }
+        },
+        "oxaToolsGithubProjectName": {
+            "type": "string",
+            "defaultValue": "oxa-tools",
+            "metadata": {
+                "description": "Name of the oxa-tools GitHub repository"
+            }
+        },
+        "oxaToolsGithubBranch": {
+            "type": "string",
+            "defaultValue": "master",
+            "metadata": {
+                "description": "Branch of the oxa-tools GitHub repository"
+            }
+        },
+        "edxConfigurationGithubAccountName": {
+            "type": "string",
+            "defaultValue": "microsoft",
+            "metadata": {
+                "description": "Name of the account that owns the edx configuration repository"
+            }
+        },
+        "edxConfigurationGithubProjectName": {
+            "type": "string",
+            "defaultValue": "edx-configuration",
+            "metadata": {
+                "description": "Name of the edx configuration GitHub repository"
+            }
+        },
+        "edxConfigurationGithubBranch": {
+            "type": "string",
+            "defaultValue": "oxa/master",
+            "metadata": {
+                "description": "Branch of edx configuration GitHub repository"
+            }
+        },
+        "edxPlatformGithubAccountName": {
+            "type": "string",
+            "defaultValue": "microsoft",
+            "metadata": {
+                "description": "Name of the account that owns the edx platform repository"
+            }
+        },
+        "edxPlatformGithubProjectName": {
+            "type": "string",
+            "defaultValue": "edx-platform",
+            "metadata": {
+                "description": "Name of the edx platform GitHub repository"
+            }
+        },
+        "edxPlatformGithubBranch": {
+            "type": "string",
+            "defaultValue": "oxa/master",
+            "metadata": {
+                "description": "Branch of edx platform GitHub repository"
+            }
+        },
+        "edxThemeGithubAccountName": {
+            "type": "string",
+            "defaultValue": "microsoft",
+            "metadata": {
+                "description": "Name of the account that owns the edx theme repository"
+            }
+        },
+        "edxThemeGithubProjectName": {
+            "type": "string",
+            "defaultValue": "edx-theme",
+            "metadata": {
+                "description": "Name of the edx theme GitHub repository"
+            }
+        },
+        "edxThemeGithubBranch": {
+            "type": "string",
+            "defaultValue": "pilot",
+            "metadata": {
+                "description": "Branch of edx theme GitHub repository"
+            }
+        },
+        "ansibleGithubAccountName": {
+            "type": "string",
+            "defaultValue": "edx",
+            "metadata": {
+                "description": "Name of the account that owns the ansible repository"
+            }
+        },
+        "ansibleGithubProjectName": {
+            "type": "string",
+            "defaultValue": "ansible",
+            "metadata": {
+                "description": "Name of the ansible GitHub repository"
+            }
+        },
+        "ansibleGithubBranch": {
+            "type": "string",
+            "defaultValue": "master",
+            "metadata": {
+                "description": "Branch of ansible GitHub repository"
+            }
+        },
+        "edxVersion": {
+            "type": "string",
+            "defaultValue": "named-release/dogwood.rc",
+            "metadata": {
+                "description": "EdX named release (Git Tag) to deploy. See https://openedx.atlassian.net/wiki/display/DOC/Open+edX+Releases for the full list"
+            }
+        },
+        "edxForumVersion": {
+            "type": "string",
+            "defaultValue": "mongoid5-release",
+            "metadata": {
+                "description": "EdX forum version to deploy"
+            }
+        },
+        "armTemplateRelativePath": {
+            "type": "string",
+            "defaultValue": "templates/stamp",
+            "metadata": {
+                "description": "The path relative to the root of the GitHub project's branch where the Azure Arm Template lives"
+            }
+        },
+        "vmssUbuntuOsImageSku": {
+            "type": "string",
+            "defaultValue": "14.04.0-LTS",
+            "allowedValues": [
+                "16.04.0-LTS",
+                "14.04.5-LTS",
+                "12.04.5-LTS"
+            ],
+            "metadata": {
+                "description": "The Azure Ubuntu Image version to use for VMSS instances"
+            }
+        },
+        "defaultUbuntuOsImageSku": {
+            "type": "string",
+            "defaultValue": "16.04.0-LTS",
+            "allowedValues": [
+                "16.04.0-LTS",
+                "14.04.5-LTS",
+                "12.04.5-LTS"
+            ],
+            "metadata": {
+                "description": "The default Azure Ubuntu Image version to use for VMs"
+            }
+        },
+        "jumpBoxDataDiskSizeGB": {
+            "type": "int",
+            "defaultValue": 50,
+            "metadata": {
+                "description": "The size of data disk to provision and attach to the VM"
+            }
+        },
+        "customInstallerLaunchScript": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Name of the bootstrap script to trigger the custom installation. This script will call the customInstallerMainScriptRelativePath"
+            }
+        },
+        "customInstallerMainScriptRelativePath": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Relative path to the custom installer file to execute. This path is relative to the root of github repository."
+            }
+        },
+        "cloud": {
+            "type": "string",
+            "defaultValue": "bvt",
+            "metadata": {
+                "description": "The target cloud/environment"
+            }
+        },
+        "deploymentVersionId": {
+            "type": "string",
+            "defaultValue": "201611211241",
+            "metadata": {
+                "description": "The identifier for versioning bits deployed to VMSS"
+            }
+        },
+        "aadWebClientId": {
+            "type": "string",
+            "metadata": {
+                "description": "Client Id of the AAD user or web application that will have access to the azure keyvault."
+            }
+        },
+        "aadWebClientAppKey": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Client Key of the AAD user or web application that will have access to the azure keyvault."
+            }
+        },
+        "aadTenantId": {
+            "type": "string",
+            "metadata": {
+                "description": "Id of the AAD tenant the user or web application will authenticate against."
+            }
+        },
+        "keyVaultMasterAccountId": {
+            "type": "string",
+            "metadata": {
+                "description": "Object Id of the AAD user or service principal that will have access to the vault. Available from the Get-AzureRMADUser or the Get-AzureRMADServicePrincipal cmdlets"
+            }
+        },
+        "keyVaultMasterAccountKeyAccessPermission": {
+            "type": "array",
+            "defaultValue": [ "all" ],
+            "metadata": {
+                "description": "Permissions to grant user to keys in the vault. Valid values are: all, create, import, update, get, list, delete, backup, restore, encrypt, decrypt, wrapkey, unwrapkey, sign, and verify."
+            }
+        },
+        "keyVaultMasterAccountSecretAccessPermission": {
+            "type": "array",
+            "defaultValue": [ "all" ],
+            "metadata": {
+                "description": "Permissions to grant user to secrets in the vault. Valid values are: all, get, set, list, and delete."
+            }
+        },
+        "keyVaultSku": {
+            "type": "string",
+            "defaultValue": "Standard",
+            "allowedValues": [
+                "Standard",
+                "Premium"
+            ],
+            "metadata": {
+                "description": "SKU for the vault"
+            }
+        },
+        "smtpServer": {
+            "type": "string",
+            "metadata": {
+                "description": "FQDN of SMTP server used for relaying deployment and other system notifications"
+            }
+        },
+        "smtpServerPort": {
+            "type": "string",
+            "metadata": {
+                "description": "Port of SMTP server used for relaying deployment and other system notifications"
+            }
+        },
+        "smtpAuthenticationUser": {
+            "type": "string",
+            "metadata": {
+                "description": "User name for authenticating against the SMTP server used for relaying deployment and other system notifications"
+            }
+        },
+        "smtpAuthenticationUserPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Password for authenticating against the SMTP server used for relaying deployment and other system notifications"
+            }
+        },
+        "clusterAdmininistratorEmailAddress": {
+            "type": "string",
+            "metadata": {
+                "description": "Email address of the administrator where system and other notifications will be sent"
+            }
+        },
+        "importKitchenSinkCourse": {
+            "type": "bool",
+            "defaultValue": true,
+            "metadata": {
+                "description": "Indicator of whether not not to import the Microsoft Kitchen Sink sample course."
+            }
+        },
+        "enableComprehensiveTheming": {
+            "type": "bool",
+            "defaultValue": true,
+            "metadata": {
+                "description": "Indicator of whether not not to enable comprehensive themeing. If this value is set to 'true', make sure to set the themeing directory & default theme name accordingly"
+            }
+        },
+        "comprehensiveThemingDirectory": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Root path to the directory containing the comprehensive themes"
+            }
+        },
+        "comprehensiveThemingName": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Name of the comprehensive available under the 'comprehensiveThemingDirectory' that will be used"
+            }
+        },
+        "enableThirdPartyAuth": {
+            "type": "bool",
+            "defaultValue": true,
+            "metadata": {
+                "description": "Indicator of whether or not third-party authentication will be enabled (ie: AAD, or other OAuth provider)"
+            }
+        },
+        "aadLoginButtonText": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Text for the authentication button"
+            }
+        },
+        "baseDomain": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Domain override for the site. This needs to be the base domain to which cms and lms sub-domains will be added"
+            }
+        },
+        "domainSeparator": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Separator to use for sub-domains (lms|cms|preview)"
+            }
+        },
+        "edxappSuperUserName": {
+            "type": "string",
+            "defaultValue": "oxamaster",
+            "metadata": {
+                "description": "User name  of user with full access to the EDX application"
+            }
+        },
+        "edxappSuperUserPassword": {
+            "type": "securestring",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Password for user with full access to the EDX application"
+            }
+        },
+        "edxappSuperUserEmail": {
+            "type": "string",
+            "defaultValue": "oxamaster",
+            "metadata": {
+                "description": "Email address for the user with full access to the EDX application"
+            }
+        },
+        "edxPlatformName": {
+            "type": "string",
+            "defaultValue": "Contoso Learning",
+            "metadata": {
+                "description": "Name used to identify the application"
+            }
+        },
+        "edxPlatformEmail": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Email address associated with the application"
+            }
+        },
+        "azureCliVersion": {
+            "type": "string",
+            "defaultValue": "2",
+            "allowedValues": [
+                "2",
+                "1"
+            ],
+            "metadata": {
+                "description": "Azure Cli version to use"
+            }
+        },
+        "enableMobileRestApi": {
+            "type": "bool",
+            "defaultValue": "false",
+            "metadata": {
+                "description": "Indicator of whether or not the Mobile Rest Api is enabled for further integration"
+            }
+        },
+        "deploymentType": {
+            "type": "string",
+            "defaultValue": "upgrade",
+            "allowedValues": [
+                "bootstrap",
+                "upgrade",
+                "swap"
+            ],
+            "metadata": {
+                "description": "This will determine which resources to conditionally deploy."
+            }
+        },
+        "bootstrapJumpbox": {
+            "type": "int",
+            "defaultValue": 0,
+            "minValue": 0,
+            "maxValue": 2,
+            "metadata": {
+                "description": "Zero-based numeric indicator of the Jumpbox used for this bootstrap operation. Zero uses the default *-jb server instead of *-jb[1-2]"
+            }
+        },
+        "edxappSecretKey": {
+            "type": "securestring",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Secret key used when securing the session cookie"
+            }
+        },
+        "edxappLmsAllowedHosts": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "LMS whitelist of allowed hosts"
+            }
+        },
+        "edxappCmsAllowedHosts": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "CMS whitelist of allowed hosts"
+            }
+        }
+    },
+    "variables": {
+        "defaultApiVersion": "2015-05-01-preview",
+        "apiVersion": "2016-09-01",
+        "availabilitySetApiVersion": "2015-06-15",
+        "networkApiVersion": "2016-03-30",
+        "computeApiVersion": "2016-03-30",
+        "insightsApiVersion": "2015-04-01",
+        "keyVaultApiversion": "2015-06-01",
+        "trafficManagerApiversion": "2015-11-01",
+        "mediaServicesApiVersion": "2015-10-01",
+        "storageApiVersion": "2016-01-01",
+        "servicebusApiVersion": "2017-04-01",
+        
+        "virtualMachineExtensionsApiVersion": "[variables('defaultApiVersion')]",
+        "virtualMachineApiVersion": "[variables('defaultApiVersion')]",
+        "slot1Status": "[if(equals(parameters('deploymentSlot'), 'slot1'), 'Enabled','Disabled')]",
+        "slot2Status": "[if(equals(parameters('deploymentSlot'), 'slot2'), 'Enabled','Disabled')]",
+        "memcacheServer": "[if(equals(parameters('deploymentSlot'), 'slot1'), '10.0.0.16','10.0.0.17')]",
+
+        "diagnosticStorageAccountName": "[concat(toLower(parameters('clusterName')), 'diagnostics')]",
+        "storageAccountName": "[concat(toLower(parameters('clusterName')), 'vhdsa')]",
+        "secureGenericStorageAccountName": "[concat(toLower(parameters('clusterName')), 'securesa')]",
+        "videoUploadsStorageAccountName": "[concat(toLower(parameters('clusterName')), 'videosa')]",
+        "wamsStorageAccountName": "[concat(toLower(parameters('clusterName')), 'wamssa')]",
+        "mediaServicesAccountName": "[concat(toLower(parameters('clusterName')), 'wamsmedia')]",
+        "storageAccountType": "Standard_LRS",
+        "storageContainer": "[concat('https://', variables('storageAccountName'),'.blob.core.windows.net/vhds/')]",
+        "loadBalancerName": "[concat(parameters('clusterName'), '-lb-', parameters('deploymentSlot'))]",
+        "virtualNetworkName": "[concat(parameters('clusterName'), '-vnet')]",
+        "subnetName": "[concat(parameters('clusterName'), '-subnet')]",
+        "bePoolName": "[concat(parameters('clusterName'), '-bepool-', parameters('deploymentSlot'))]",
+        "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
+        "lbID": "[resourceId('Microsoft.Network/loadBalancers',variables('loadBalancerName'))]",
+
+        "vmssAutoscaleSettingNameSuffix": "-autoscale",
+        "vmssName": "[concat(parameters('clusterName'), '-vmss-', parameters('deploymentVersionId'))]",
+        "vmssAutoScaleSettingsName": "[concat(parameters('clusterName'), '-autoscale-', parameters('deploymentVersionId'))]",
+
+        "cmsPublicAddressName": "cmsPublicAddress",
+        "lmsPublicAddressName": "lmsPublicAddress",
+        "previewPublicAddressName": "previewPublicAddress",
+        "lbProbeLMSName": "tcpProbeLMS",
+        "lbProbeCMSName": "tcpProbeCMS",
+        "lbProbePreviewName": "tcpProbePreview",
+        "lbProbeLMSSSLName": "[concat(variables('lbProbeLMSName'),'SSL')]",
+        "lbProbeCMSSSLName": "[concat(variables('lbProbeCMSName'),'SSL')]",
+        "lbProbePreviewSSLName": "[concat(variables('lbProbePreviewName'),'SSL')]",
+
+        "keyVaultEnabledForDeployment": true,
+        "keyVaultEnabledForTemplateDeployment": true,
+        "keyVaultEnabledForVolumeEncryption": true,
+        "keyVaultTenantId": "[subscription().subscriptionId]",
+
+        "defaultSASKeyName": "RootManageSharedAccessKey",
+        "serviceBusNameSpace": "[concat(parameters('clusterName'), '-sbn')]",
+        "serviceBusQueueName": "[concat(parameters('clusterName'), '-sbq')]",
+        "authRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/authorizationRules', variables('serviceBusNameSpace'), variables('defaultSASKeyName'))]",
+        
+        "resourcesToDeploy": {
+            "bootstrap": {
+                "sharedResources": true,
+                "jumpbox": true,
+                "vmss": true,
+                "keyVault": false,
+                "trafficManagerLms": true,
+                "trafficManagerCms": true,
+                "trafficManagerPreview": true
+            },
+            "upgrade": {
+                "sharedResources": false,
+                "jumpbox": false,
+                "vmss": true,
+                "keyVault": false,
+                "trafficManagerLms": false,
+                "trafficManagerCms": false,
+                "trafficManagerPreview": false
+            },
+            "swap": {
+                "sharedResources": false,
+                "jumpbox": false,
+                "vmss": false,
+                "keyVault": false,
+                "trafficManagerLms": true,
+                "trafficManagerCms": true,
+                "trafficManagerPreview": true
+            }
+        },
+        "jumpboxBootstrapIndicator": "[if(greater(parameters('bootstrapJumpbox'), 0), 1, 0)]",
+        "jumpboxNameSuffix": "[if(greater(parameters('bootstrapJumpbox'), 0), parameters('bootstrapJumpbox'), '')]",
+        "networkSettings": {
+            "virtualNetworkName": "[variables('virtualNetworkName')]",
+            "clusterName": "[parameters('clusterName')]",
+            "networkInterfaceNameSuffix": "-nic",
+            "publicIPAddressNameSuffix": "-ip",
+            "osDiskSuffix": "-osDisk",
+            "availabilitySetNameSuffix": "-as",
+            "ipConfigSuffix": "-ipconfig",
+            "adminUsername": "[parameters('adminUsername')]",
+            "adminPublicKey": "[parameters('adminPublicKey')]",
+            "mongoServerAdminPassword": "[parameters('mongoServerAdminPassword')]",
+            "publicIpAddressType": "Dynamic",
+            "subnetName": "[variables('subnetName')]",
+            "subnetRef": "[concat(variables('vnetID'), '/subnets/', variables('subnetName'))]",
+            "subnetPrefix": "10.0.0.0/24",
+            "addressPrefix": "10.0.0.0/16",
+            "serverIpPrefix": "10.0.0.",
+            "mongoServerIpOffset": 10,
+            "mysqlServerIpOffset": 15,
+            "jbNetworkSecurityGroupName": "[concat(parameters('clusterName'),'-jb-', 'nsg')]",
+            "vmssNetworkSecurityGroupName": "[concat(parameters('clusterName'), '-vmss-', 'nsg')]",
+            "clusterKeyVaultName": "[concat(parameters('clusterName'), '-kv')]",
+            "clusterJumpBoxName": "[concat(parameters('clusterName'), '-jb', variables('jumpboxNameSuffix'))]",
+            "clusterJumpBoxDomainName": "[concat(parameters('clusterName'), 'jb', variables('jumpboxNameSuffix'))]",
+            "clusterVirtualMachineScaleSetName": "[variables('vmssName')]",
+            "clusterVirtualMachineScaleSetDomainName": "[concat(parameters('clusterName'), 'vmss')]",
+            "clusterVirtualMachineScaleSetSettingsName": "[variables('vmssAutoScaleSettingsName')]",
+            "jumpBoxAvailabilitySetFaultDomainCount": "1",
+            "jumpBoxNodeCount": "1",
+
+            "trafficManagerSettings": {
+                "dnsTtlSeconds": 30,
+                "monitorConfigProtocol": "https",
+
+                "lms": {
+                    "name": "[concat('lms-', parameters('clusterName'), '-tm')]",
+                    "monitorConfigPort": 443,
+                    "monitorConfigPath": "/",
+                    "endpoint1": {
+                        "target": "[concat('lms-', parameters('clusterName'), '-slot1.',resourceGroup().location, '.cloudapp.azure.com')]",
+                        "status": "[variables('slot1Status')]",
+                        "location": "[resourceGroup().location]",
+                        "priority": "1"
+                    },
+                    "endpoint2": {
+                        "target": "[concat('lms-', parameters('clusterName'), '-slot2.',resourceGroup().location, '.cloudapp.azure.com')]",
+                        "status": "[variables('slot2Status')]",
+                        "location": "[resourceGroup().location]",
+                        "priority": "2"
+                    }
+                },
+
+                "cms": {
+                    "name": "[concat('cms-', parameters('clusterName'), '-tm')]",
+                    "monitorConfigPort": 443,
+                    "monitorConfigPath": "/",
+                    "endpoint1": {
+                        "target": "[concat('cms-', parameters('clusterName'), '-slot1.',resourceGroup().location, '.cloudapp.azure.com')]",
+                        "status": "[variables('slot1Status')]",
+                        "location": "[resourceGroup().location]",
+                        "priority": "1"
+                    },
+                    "endpoint2": {
+                        "target": "[concat('cms-', parameters('clusterName'), '-slot2.',resourceGroup().location, '.cloudapp.azure.com')]",
+                        "status": "[variables('slot2Status')]",
+                        "location": "[resourceGroup().location]",
+                        "priority": "2"
+                    }
+                },
+
+                "preview": {
+                    "name": "[concat('preview-', parameters('clusterName'), '-tm')]",
+                    "monitorConfigPort": 443,
+                    "monitorConfigPath": "/",
+                    "endpoint1": {
+                        "target": "[concat('preview-', parameters('clusterName'), '-slot1.',resourceGroup().location, '.cloudapp.azure.com')]",
+                        "status": "[variables('slot1Status')]",
+                        "location": "[resourceGroup().location]",
+                        "priority": "1"
+                    },
+                    "endpoint2": {
+                        "target": "[concat('preview-', parameters('clusterName'), '-slot2.',resourceGroup().location, '.cloudapp.azure.com')]",
+                        "status": "[variables('slot2Status')]",
+                        "location": "[resourceGroup().location]",
+                        "priority": "2"
+                    }
+                }
+            },
+
+            "loadbalancerSettings": {
+                "deploymentSlot": "[parameters('deploymentSlot')]",
+                "loadBalancerName": "[variables('loadBalancerName')]",
+                "cmsLoadBalancerDomainName": "[concat('cms-', parameters('clusterNameDomainName'), '-', parameters('deploymentSlot'))]",
+                "lmsLoadBalancerDomainName": "[concat('lms-', parameters('clusterNameDomainName'), '-', parameters('deploymentSlot'))]",
+                "previewLoadBalancerDomainName": "[concat('preview-', parameters('clusterNameDomainName'), '-', parameters('deploymentSlot'))]",
+                "natPoolName": "[concat(parameters('clusterName'), '-natpool')]",
+
+                "cmsPublicAddressName": "[variables('cmsPublicAddressName')]",
+                "lmsPublicAddressName": "[variables('lmsPublicAddressName')]",
+                "previewPublicAddressName": "[variables('previewPublicAddressName')]",
+
+                "cmsIPConfigID": "[concat(variables('lbID'),'/frontendIPConfigurations/', variables('cmsPublicAddressName'))]",
+                "lmsIPConfigID": "[concat(variables('lbID'),'/frontendIPConfigurations/', variables('lmsPublicAddressName'))]",
+                "previewIPConfigID": "[concat(variables('lbID'),'/frontendIPConfigurations/', variables('previewPublicAddressName'))]",
+
+                "frontEndIPConfigID": "[concat(variables('lbID'),'/frontendIPConfigurations/loadBalancerFrontEnd')]",
+                "lbPoolID": "[concat(variables('lbID'),'/backendAddressPools/', variables('bePoolName'))]",
+                "bePoolName": "[variables('bePoolName')]",
+
+                "lbProbeLMSName": "[variables('lbProbeLMSName')]",
+                "lbProbeCMSName": "[variables('lbProbeCMSName')]",
+                "lbProbePreviewName": "[variables('lbProbePreviewName')]",
+                "lbProbeLMSSSLName": "[variables('lbProbeLMSSSLName')]",
+                "lbProbeCMSSSLName": "[variables('lbProbeCMSSSLName')]",
+                "lbProbePreviewSSLName": "[variables('lbProbePreviewSSLName')]",
+
+                "lbProbeLMSID": "[concat(variables('lbID'),'/probes/', variables('lbProbeLMSName'))]",
+                "lbProbeCMSID": "[concat(variables('lbID'),'/probes/', variables('lbProbeCMSName'))]",
+                "lbProbePreviewID": "[concat(variables('lbID'),'/probes/', variables('lbProbePreviewName'))]",
+                "lbProbeLMSSSLID": "[concat(variables('lbID'),'/probes/', variables('lbProbeLMSSSLName'))]",
+                "lbProbeCMSSSLID": "[concat(variables('lbID'),'/probes/', variables('lbProbeCMSSSLName'))]",
+                "lbProbePreviewSSLID": "[concat(variables('lbID'),'/probes/', variables('lbProbePreviewSSLName'))]",
+
+                "natStartPort": 50000,
+                "natEndPort": 50119,
+                "natBackendPort": 22,
+                "AutoscaleEnabled": "[parameters('autoScaleEnabled')]",
+                "AutoscaleCapacityDefault": "[parameters('autoScaleCapacityDefault')]",
+                "AutoscaleCapacityMaximum": "[parameters('autoScaleCapacityMaximum')]",
+                "AutoscaleCapacityMinimum": "[parameters('autoScaleCapacityMinimum')]"
+            }
+        },
+
+        "supportedOSName": "ubuntu",
+        "supportedOSImagePublisher": "Canonical",
+        "supportedOSImageOffer": "UbuntuServer",
+
+        "storageSettings": {
+            "storageContainer": "[variables('storageContainer')]",
+            "storageContainerName": "vhds",
+            "storageAccountType": "[variables('storageAccountType')]",
+            "storageAccountName": "[variables('storageAccountName')]",
+            "diagnosticStorageAccountName": "[variables('diagnosticStorageAccountName')]",
+            "secureGenericStorageAccountName": "[variables('secureGenericStorageAccountName')]",
+            "videoUploadsStorageAccountName": "[variables('videoUploadsStorageAccountName')]",
+            "wamsStorageAccountName": "[variables('wamsStorageAccountName')]",
+            "mediaServicesAccountName": "[variables('mediaServicesAccountName')]"
+        },
+        "serviceBusSettings": {
+            "serviceBusNameSpace": "[variables('serviceBusNameSpace')]",
+            "serviceBusQueueName": "[variables('serviceBusQueueName')]"            
+        },
+        "jumpboxMachineSettings": {
+            "vmSize": "[parameters('jumpBoxVmSize')]",
+            "osImageReference": {
+                "publisher": "[variables('supportedOSImagePublisher')]",
+                "offer": "[variables('supportedOSImageOffer')]",
+                "sku": "[parameters('defaultUbuntuOsImageSku')]",
+                "version": "latest"
+            },
+            "dataDiskSize": "[parameters('jumpBoxDataDiskSizeGB')]"
+        },
+        "frontendMachineSettings": {
+            "vmSize": "[parameters('frontendVmSize')]",
+            "osImageReference": {
+                "publisher": "[variables('supportedOSImagePublisher')]",
+                "offer": "[variables('supportedOSImageOffer')]",
+                "sku": "[parameters('vmssUbuntuOsImageSku')]",
+                "version": "latest"
+            },
+            "capacity": "[parameters('frontendVmSize')]",
+            "dataDiskSize": 256
+        },
+        "apiSettings": {
+            "apiVersion": "[variables('apiVersion')]",
+            "storageApiVersion": "[variables('storageApiVersion')]",
+            "virtualMachineApiVersion": "[variables('virtualMachineApiVersion')]",
+            "availabilitySetApiVersion": "[variables('availabilitySetApiVersion')]",
+            "virtualMachineExtensionsApiVersion": "[variables('virtualMachineExtensionsApiVersion')]",
+            "networkApiVersion": "[variables('networkApiVersion')]",
+            "computeApiVersion": "[variables('computeApiVersion')]",
+            "insightsApiVersion": "[variables('insightsApiVersion')]",
+            "keyVaultApiversion": "[variables('keyVaultApiversion')]",
+            "trafficManagerApiversion": "[variables('trafficManagerApiversion')]",
+            "mediaServicesApiVersion": "[variables('mediaServicesApiVersion')]",
+            "serviceBusApiVersion": "[variables('servicebusApiVersion')]"          
+        },
+        "keyVaultSettings": {
+            "enabledForDeployment": "[variables('keyVaultEnabledForDeployment')]",
+            "enabledForTemplateDeployment": "[variables('keyVaultEnabledForTemplateDeployment')]",
+            "enabledForVolumeEncryption": "[variables('keyVaultEnabledForVolumeEncryption')]",
+            "tenantId": "[subscription().tenantId]",
+            "accessAccount": "[parameters('keyVaultMasterAccountId')]",
+            "tenantKeyAccessPermission": "[parameters('keyVaultMasterAccountKeyAccessPermission')]",
+            "tenantSecretAccessPermission": "[parameters('keyVaultMasterAccountSecretAccessPermission')]",
+            "sku": "[parameters('keyVaultSku')]"
+        },
+
+        "azureSharedScriptUrl": "[concat('https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/shared_scripts/', variables('supportedOSName'), '/')]",
+        "templateBaseUrl": "[concat('https://raw.githubusercontent.com/',parameters('oxaToolsGithubAccountName'), '/', parameters('oxaToolsGithubProjectName'), '/', parameters('oxaToolsGithubBranch'), '/', parameters('armTemplateRelativePath'), '/')]",
+        "clusterCustomInstallerScriptFullPath": "[concat( variables('templateBaseUrl'), parameters('customInstallerLaunchScript') )]",
+        "customInstallerOxaToolsGitHubRepositoryParameters": "[concat(' --oxatools-public-github-accountname ', parameters('oxaToolsGithubAccountName'), ' --oxatools-public-github-projectname ', parameters('oxaToolsGithubProjectName'), ' --oxatools-public-github-projectbranch ', parameters('oxaToolsGithubBranch') )]",
+        "customInstallerEdxConfigurationGitHubRepositoryParameters": "[concat(' --edxconfiguration-public-github-accountname ', parameters('edxConfigurationGithubAccountName'), ' --edxconfiguration-public-github-projectname ', parameters('edxConfigurationGithubProjectName'), ' --edxconfiguration-public-github-projectbranch ', parameters('edxConfigurationGithubBranch') )]",
+        "customInstallerEdxPlatformGitHubRepositoryParameters": "[concat(' --edxplatform-public-github-accountname ', parameters('edxPlatformGithubAccountName'), ' --edxplatform-public-github-projectname ', parameters('edxPlatformGithubProjectName'), ' --edxplatform-public-github-projectbranch ', parameters('edxPlatformGithubBranch') )]",
+        "customInstallerEdxThemeGitHubRepositoryParameters": "[concat(' --edxtheme-public-github-accountname ', parameters('edxThemeGithubAccountName'), ' --edxtheme-public-github-projectname ', parameters('edxThemeGithubProjectName'), ' --edxtheme-public-github-projectbranch ', parameters('edxThemeGithubBranch') )]",
+        "customInstallerAnsibleGitHubRepositoryParameters": "[concat(' --ansible-public-github-accountname ', parameters('ansibleGithubAccountName'), ' --ansible-public-github-projectname ', parameters('ansibleGithubProjectName'), ' --ansible-public-github-projectbranch ', parameters('ansibleGithubBranch') )]",
+        "customInstallerMiscRepositoryVersionParameters": "[concat(' --edxversion ', parameters('edxVersion'), ' --forumversion ', parameters('edxForumVersion'), ' --edxtheme-public-github-projectbranch ', parameters('edxThemeGithubBranch') )]",
+        "customInstallerKeyVaultParameters": "[concat(' --keyvault-name ', concat(parameters('clusterName'), '-kv'), ' --aad-webclient-id ', parameters('aadWebClientId'), ' --aad-webclient-appkey ', parameters('aadWebClientAppKey'), ' --aad-tenant-id ', parameters('aadTenantId'), ' --azure-subscription-id ', subscription().subscriptionId)]",
+        "customInstallerDomainOverrideParameters": "[concat(' --base-domain-override ', parameters('baseDomain'), ' --domain-separator ', parameters('domainSeparator') )]",
+        "customInstallerMobileRestApiParameters": "[concat(' --enable-mobile-rest-api \"', parameters('enableMobileRestApi'), '\" ')]",
+        "customInstallerEdxAppSecretKeyParameters": "[concat(' --edxapp-secretkey \"', parameters('edxappSecretKey'), '\" ')]",
+        "customInstallerEdxAppLmsAllowedHostsParameters": "[concat(' --edxapp-lms-allowed-hosts \"', parameters('edxappLmsAllowedHosts'), '\" ')]",
+        "customInstallerEdxAppCmsAllowedHostsParameters": "[concat(' --edxapp-cms-allowed-hosts \"', parameters('edxappCmsAllowedHosts'), '\" ')]",
+        
+        "customInstallerOutputRedirect": " >> /var/log/bootstrap.csx.log 2>&1",
+        "smtpParameters": "[concat(' --smtp-server ', parameters('smtpServer'), ' --smtp-server-port ', parameters('smtpServerPort'), ' --smtp-auth-user ', parameters('smtpAuthenticationUser'), ' --smtp-auth-user-password ', parameters('smtpAuthenticationUserPassword'), '  --cluster-admin-email ', parameters('clusterAdmininistratorEmailAddress'))]",
+
+        "secureGenericStorageAccountId": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/','Microsoft.Storage/storageAccounts/', variables('secureGenericStorageAccountName'))]",
+        "secureGenericStorageAccountKey": "PLACEHOLDER_KEY",
+
+        "sampleCourseParameters": "[concat(' --import-kitchensink-course ', parameters('importKitchenSinkCourse'))]",
+        "comprehensiveThemingParameters": "[concat(' --enable-comprehensive-theming ', parameters('enableComprehensiveTheming'), ' --comprehensive-theming-directory ', parameters('comprehensiveThemingDirectory'), ' --comprehensive-theming-name ', parameters('comprehensiveThemingName'))]",
+        "authenticationParameters": "[concat(' --enable-thirdparty-auth ', parameters('enableThirdPartyAuth'), ' --aad-loginbutton-text \"', replace(parameters('aadLoginButtonText'), ' ', '_'), '\"')]",
+        "databaseParameters": "[concat(' --mongo-adminuser ', parameters('mongoServerAdminUserName'), ' --mongo-adminuserpassword \"', parameters('mongoServerAdminPassword'), '\" --mysql-adminuser \"', parameters('mysqlServerAdminUserName'), '\" --mysql-adminuserpassword \"', parameters('mysqlServerAdminPassword'), '\" --mysql-adminuser \"', parameters('mysqlServerAdminUserName'), '\" --mysql-adminuserpassword \"', parameters('mysqlServerAdminPassword'), '\"')]",
+        "edxappParameters": "[concat(' --platform-email \"', parameters('edxPlatformEmail'), '\" --platform-name \"', base64(parameters('edxPlatformName')), '\" --edxapp-superuser \"', parameters('edxappSuperUserName'), '\" --edxapp-superuserpassword \"', parameters('edxappSuperUserPassword'), '\" --edxapp-superuseremail \"', parameters('edxappSuperUserEmail'), '\"')]",
+        "memcacheParameters": "[concat(' --memcache-server \"', base64(variables('memcacheServer')), '\"')]",
+        "azureCliParameters": "[concat(' --azurecli-version \"', parameters('azureCliVersion'), '\"')]",
+        "jumpboxBootstrapParameters": "[concat(' --bootstrap-jumpbox \"', variables('jumpboxBootstrapIndicator'), '\"')]",
+
+        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'), variables('backupParameters'), variables('sampleCourseParameters'), variables('comprehensiveThemingParameters'), variables('authenticationParameters'), variables('customInstallerDomainOverrideParameters'), variables('databaseParameters'), variables('edxappParameters'), variables('memcacheParameters'), variables('azureCliParameters'), variables('customInstallerMobileRestApiParameters'), variables('customInstallerEdxAppSecretKeyParameters'), variables('customInstallerEdxAppLmsAllowedHostsParameters'), variables('customInstallerEdxAppCmsAllowedHostsParameters'), variables('jumpboxBootstrapParameters'), variables('customInstallerOutputRedirect') )]",
+
+        "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources.json')]",
+        "jumpboxTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-jumpbox.json')]",
+        "keyvaultTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-keyvault.json')]",
+        "trafficManagerTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-trafficmanager.json')]",
+        "vmssTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-vmss.json')]",
+
+        "installerUtilitiesScript": "utilities.sh",
+
+        "jumpBoxInstallerSettings": {
+            "scriptsToDownload": [
+                "[concat(variables('clusterCustomInstallerScriptFullPath'))]",
+                "[concat(variables('templateBaseUrl'), variables('installerUtilitiesScript'))]"
+            ],
+            "customInstallerCommand": "[variables('customInstallerCommand')]"
+        },
+
+        "vmssInstallerSettings": {
+            "scriptsToDownload": [
+                "[concat(variables('clusterCustomInstallerScriptFullPath'))]",
+                "[concat(variables('templateBaseUrl'), variables('installerUtilitiesScript'))]"
+            ],
+            "customInstallerCommand": "[variables('customInstallerCommand')]"
+        },
+
+        "wadperfcounters1": "<PerformanceCounters scheduledTransferPeriod=\"PT1M\"><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\AvailableMemory\" sampleRate=\"PT15S\" unit=\"Bytes\"><annotation displayName=\"Memory available\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\PercentAvailableMemory\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Mem. percent available\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\UsedMemory\" sampleRate=\"PT15S\" unit=\"Bytes\"><annotation displayName=\"Memory used\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\PercentUsedMemory\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Memory percentage\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\PercentUsedByCache\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Mem. used by cache\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentIdleTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU idle time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentUserTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU user time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentProcessorTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU percentage guest OS\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentIOWaitTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU IO wait time\" locale=\"en-us\"/></PerformanceCounterConfiguration>",
+        "wadperfcounters2": "<PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\BytesPerSecond\" sampleRate=\"PT15S\" unit=\"BytesPerSecond\"><annotation displayName=\"Disk total bytes\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\ReadBytesPerSecond\" sampleRate=\"PT15S\" unit=\"BytesPerSecond\"><annotation displayName=\"Disk read guest OS\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\WriteBytesPerSecond\" sampleRate=\"PT15S\" unit=\"BytesPerSecond\"><annotation displayName=\"Disk write guest OS\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\TransfersPerSecond\" sampleRate=\"PT15S\" unit=\"CountPerSecond\"><annotation displayName=\"Disk transfers\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\ReadsPerSecond\" sampleRate=\"PT15S\" unit=\"CountPerSecond\"><annotation displayName=\"Disk reads\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\WritesPerSecond\" sampleRate=\"PT15S\" unit=\"CountPerSecond\"><annotation displayName=\"Disk writes\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\AverageReadTime\" sampleRate=\"PT15S\" unit=\"Seconds\"><annotation displayName=\"Disk read time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\AverageWriteTime\" sampleRate=\"PT15S\" unit=\"Seconds\"><annotation displayName=\"Disk write time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\AverageTransferTime\" sampleRate=\"PT15S\" unit=\"Seconds\"><annotation displayName=\"Disk transfer time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\AverageDiskQueueLength\" sampleRate=\"PT15S\" unit=\"Count\"><annotation displayName=\"Disk queue length\" locale=\"en-us\"/></PerformanceCounterConfiguration></PerformanceCounters>",
+        "vmssLinuxDiagnosticsSettings": {
+            "diagnosticsStorageAccountName": "[variables('diagnosticStorageAccountName')]",
+            "diagnosticsStorageAccountId": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/','Microsoft.Storage/storageAccounts/', variables('diagnosticStorageAccountName'))]",
+            "wadcfgxstart": "[concat('<WadCfg><DiagnosticMonitorConfiguration>',variables('wadperfcounters1'),variables('wadperfcounters2'),'<Metrics resourceId=\"')]",
+            "wadmetricsresourceid": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name ,'/providers/','Microsoft.Compute/virtualMachineScaleSets/',variables('vmssName'))]",
+            "wadcfgxend": "[concat('\"><MetricAggregation scheduledTransferPeriod=\"PT1H\"/><MetricAggregation scheduledTransferPeriod=\"PT1M\"/></Metrics></DiagnosticMonitorConfiguration></WadCfg>')]"
+        }
+    },
+    "resources": [
+        {
+            "name": "keyVault",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('apiVersion')]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('keyVaultTemplateUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "apiSettings": {
+                        "value": "[variables('apiSettings')]"
+                    },
+                    "networkSettings": {
+                        "value": "[variables('networkSettings')]"
+                    },
+                    "keyVaultSettings": {
+                        "value": "[variables('keyVaultSettings')]"
+                    }
+                }
+            }
+        },
+        {
+            "name": "shared-resources",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('apiVersion')]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('sharedTemplateUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "networkSettings": {
+                        "value": "[variables('networkSettings')]"
+                    },
+                    "apiSettings": {
+                        "value": "[variables('apiSettings')]"
+                    },
+                    "serviceBusSettings": {
+                        "value": "[variables('serviceBusSettings')]"
+                    },
+                    "storageSettings": {
+                        "value": "[variables('storageSettings')]"
+                    }
+                }
+            }
+        }
+    ]
+}
