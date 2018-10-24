@@ -1,0 +1,537 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "apiSettings": {
+            "type": "object",
+            "metadata": {
+                "Description": "API version of the resource type"
+            }
+        },
+        "networkSettings": {
+            "type": "secureObject",
+            "metadata": {
+                "Description": "Network settings object"
+            }
+        },
+        "machineSettings": {
+            "type": "object",
+            "metadata": {
+                "Description": "Machine settings object"
+            }
+        },
+        "storageSettings": {
+            "type": "object",
+            "metadata": {
+                "Description": "Storage settings object"
+            }
+        },
+        "customSettings": {
+            "type": "secureObject",
+            "metadata": {
+                "Description": "Custom settings object"
+            }
+        }
+    },
+
+    "variables": {
+        "cmsIpName": "[concat('lbCms', parameters('networkSettings').publicIPAddressNameSuffix, '-', parameters('networkSettings').loadbalancerSettings.deploymentSlot)]",
+        "lmsIpName": "[concat('lbLms', parameters('networkSettings').publicIPAddressNameSuffix, '-', parameters('networkSettings').loadbalancerSettings.deploymentSlot)]",
+		"previewIpName": "[concat('lbPreview', parameters('networkSettings').publicIPAddressNameSuffix, '-', parameters('networkSettings').loadbalancerSettings.deploymentSlot)]",
+        "cmsIPNamePrefix": "-cms",
+        "lmsIPNamePrefix": "-lms",
+		"previewIPNamePrefix": "-preview",
+        "loadBalancerLMSIpName": "[concat(parameters('networkSettings').loadbalancerSettings.loadBalancerName, variables('cmsIPNamePrefix'), parameters('networkSettings').publicIPAddressNameSuffix)]",
+        "loadBalancerCMSIpName": "[concat(parameters('networkSettings').loadbalancerSettings.loadBalancerName, variables('lmsIPNamePrefix'), parameters('networkSettings').publicIPAddressNameSuffix)]",
+        "loadBalancerPreviewIpName": "[concat(parameters('networkSettings').loadbalancerSettings.loadBalancerName, variables('previewIPNamePrefix'), parameters('networkSettings').publicIPAddressNameSuffix)]",
+		"newStorageAccountSuffix": "[toLower(concat(parameters('networkSettings').clusterName, 'vmsssa'))]",
+        "uniqueStringArray": [
+            "[concat(variables('newStorageAccountSuffix'), '0')]",
+            "[concat(variables('newStorageAccountSuffix'), '1')]",
+            "[concat(variables('newStorageAccountSuffix'), '2')]",
+            "[concat(variables('newStorageAccountSuffix'), '3')]",
+            "[concat(variables('newStorageAccountSuffix'), '4')]"
+        ],
+        "frontendVmStorageAccountCount": "[length(variables('uniqueStringArray'))]",
+
+        "commandToExecute1": "[replace(parameters('customSettings').commandToExecute, parameters('customSettings').storageKeyPlaceholder, parameters('customSettings').secureGenericStorageAccountKey)]",
+        "commandToExecute2": "[replace(variables('commandToExecute1'), parameters('customSettings').servicebusKeyPlaceholder, parameters('customSettings').secureServicebusSharedAccessKey)]"
+    },
+
+    "resources": [
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "name": "[variables('uniqueStringArray')[copyIndex()]]",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "[parameters('apiSettings').storageApiVersion]",
+            "copy": {
+                "name": "storageLoop",
+                "count": "[variables('frontendVmStorageAccountCount')]"
+            },
+            "sku": {
+                "name": "[parameters('storageSettings').storageAccountType]",
+                "tier": "Standard"
+            },
+            "kind": "Storage"
+        },
+        {
+            "name": "[variables('cmsIpName')]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "[parameters('apiSettings').networkApiVersion]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publicIPAllocationMethod": "[parameters('networkSettings').publicIPAddressType]",
+                "dnsSettings": {
+                    "domainNameLabel": "[toLower(parameters('networkSettings').loadbalancerSettings.cmsLoadBalancerDomainName)]"
+                }
+            }
+        },
+        {
+            "name": "[variables('lmsIpName')]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "[parameters('apiSettings').networkApiVersion]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publicIPAllocationMethod": "[parameters('networkSettings').publicIPAddressType]",
+                "dnsSettings": {
+                    "domainNameLabel": "[toLower(parameters('networkSettings').loadbalancerSettings.lmsLoadBalancerDomainName)]"
+                }
+            }
+        },
+        {
+            "name": "[variables('previewIpName')]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "[parameters('apiSettings').networkApiVersion]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publicIPAllocationMethod": "[parameters('networkSettings').publicIPAddressType]",
+                "dnsSettings": {
+                    "domainNameLabel": "[toLower(parameters('networkSettings').loadbalancerSettings.previewLoadBalancerDomainName)]"
+                }
+            }
+        },
+        {
+            "name": "[parameters('networkSettings').loadbalancerSettings.loadBalancerName]",
+            "type": "Microsoft.Network/loadBalancers",
+            "apiVersion": "[parameters('apiSettings').networkApiVersion]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[variables('lmsIpName')]",
+                "[variables('cmsIpName')]",
+				"[variables('previewIpName')]"
+            ],
+            "properties": {
+                "frontendIPConfigurations": [
+                    {
+                        "name": "cmsPublicAddress",
+                        "properties": {
+                            "publicIpAddress": {
+                                "id": "[resourceId(resourceGroup().name,'Microsoft.Network/publicIpAddresses', variables('cmsIpName'))]"
+                            }
+                        }
+                    },
+                    {
+                        "name": "lmsPublicAddress",
+                        "properties": {
+                            "publicIpAddress": {
+                                "id": "[resourceId(resourceGroup().name,'Microsoft.Network/publicIpAddresses', variables('lmsIpName'))]"
+                            }
+                        }
+                    },
+                    {
+                        "name": "previewPublicAddress",
+                        "properties": {
+                            "publicIpAddress": {
+                                "id": "[resourceId(resourceGroup().name,'Microsoft.Network/publicIpAddresses', variables('previewIpName'))]"
+                            }
+                        }
+                    }
+                ],
+                "backendAddressPools": [
+                    {
+                        "name": "[parameters('networkSettings').loadbalancerSettings.bePoolName]"
+                    }
+                ],
+                "loadBalancingRules": [
+                    {
+                        "name": "LBRuleLMS_SSL",
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[parameters('networkSettings').loadbalancerSettings.lmsIPConfigID]"
+                            },
+                            "backendAddressPool": {
+                                "id": "[parameters('networkSettings').loadbalancerSettings.lbPoolID]"
+                            },
+                            "protocol": "tcp",
+                            "frontendPort": 443,
+                            "backendPort": 443,
+                            "enableFloatingIP": false,
+                            "idleTimeoutInMinutes": 5,
+                            "loadDistribution": "SourceIP",
+                            "probe": {
+                                "id": "[parameters('networkSettings').loadbalancerSettings.lbProbeLMSSSLID]"
+                            }
+                        }
+                    },
+                    {
+                        "name": "LBRuleLMS",
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[parameters('networkSettings').loadbalancerSettings.lmsIPConfigID]"
+                            },
+                            "backendAddressPool": {
+                                "id": "[parameters('networkSettings').loadbalancerSettings.lbPoolID]"
+                            },
+                            "protocol": "tcp",
+                            "frontendPort": 80,
+                            "backendPort": 80,
+                            "enableFloatingIP": false,
+                            "idleTimeoutInMinutes": 5,
+                            "loadDistribution": "SourceIP",
+                            "probe": {
+                                "id": "[parameters('networkSettings').loadbalancerSettings.lbProbeLMSID]"
+                            }
+                        }
+                    },
+                    {
+                        "name": "LBRuleCMS_SSL",
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[parameters('networkSettings').loadbalancerSettings.cmsIPConfigID]"
+                            },
+                            "backendAddressPool": {
+                                "id": "[parameters('networkSettings').loadbalancerSettings.lbPoolID]"
+                            },
+                            "protocol": "tcp",
+                            "frontendPort": 443,
+                            "backendPort": 48010,
+                            "enableFloatingIP": false,
+                            "idleTimeoutInMinutes": 5,
+                            "loadDistribution": "SourceIP",
+                            "probe": {
+                                "id": "[parameters('networkSettings').loadbalancerSettings.lbProbeCMSSSLID]"
+                            }
+                        }
+                    },
+                    {
+                        "name": "LBRuleCMS",
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[parameters('networkSettings').loadbalancerSettings.cmsIPConfigID]"
+                            },
+                            "backendAddressPool": {
+                                "id": "[parameters('networkSettings').loadbalancerSettings.lbPoolID]"
+                            },
+                            "protocol": "tcp",
+                            "frontendPort": 80,
+                            "backendPort": 18010,
+                            "enableFloatingIP": false,
+                            "idleTimeoutInMinutes": 5,
+                            "loadDistribution": "SourceIP",
+                            "probe": {
+                                "id": "[parameters('networkSettings').loadbalancerSettings.lbProbeCMSID]"
+                            }
+                        }
+                    },
+                    {
+                        "name": "LBRulePreview_SSL",
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[parameters('networkSettings').loadbalancerSettings.previewIPConfigID]"
+                            },
+                            "backendAddressPool": {
+                                "id": "[parameters('networkSettings').loadbalancerSettings.lbPoolID]"
+                            },
+                            "protocol": "tcp",
+                            "frontendPort": 443,
+                            "backendPort": 48020,
+                            "enableFloatingIP": false,
+                            "idleTimeoutInMinutes": 5,
+                            "loadDistribution": "SourceIP",
+                            "probe": {
+                                "id": "[parameters('networkSettings').loadbalancerSettings.lbProbePreviewSSLID]"
+                            }
+                        }
+                    },
+					{
+                        "name": "LBRulePreview",
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[parameters('networkSettings').loadbalancerSettings.previewIPConfigID]"
+                            },
+                            "backendAddressPool": {
+                                "id": "[parameters('networkSettings').loadbalancerSettings.lbPoolID]"
+                            },
+                            "protocol": "tcp",
+                            "frontendPort": 80,
+                            "backendPort": 18020,
+                            "enableFloatingIP": false,
+                            "idleTimeoutInMinutes": 5,
+                            "loadDistribution": "SourceIP",
+                            "probe": {
+                                "id": "[parameters('networkSettings').loadbalancerSettings.lbProbePreviewID]"
+                            }
+                        }
+                    }
+                ],
+                "probes": [
+                    {
+                        "name": "[parameters('networkSettings').loadbalancerSettings.lbProbeLMSName]",
+                        "properties": {
+                            "protocol": "http",
+                            "port": 80,
+                            "requestPath": "/heartbeat",
+                            "intervalInSeconds": "5",
+                            "numberOfProbes": "6"
+                        }
+                    },
+                    {
+                        "name": "[parameters('networkSettings').loadbalancerSettings.lbProbeLMSSSLName]",
+                        "properties": {
+                            "protocol": "tcp",
+                            "port": 443,
+                            "intervalInSeconds": "5",
+                            "numberOfProbes": "6"
+                        }
+                    },
+                    {
+                        "name": "[parameters('networkSettings').loadbalancerSettings.lbProbeCMSName]",
+                        "properties": {
+                            "protocol": "http",
+                            "port": 18010,
+                            "requestPath": "/heartbeat",
+                            "intervalInSeconds": "5",
+                            "numberOfProbes": "6"
+                        }
+                    },
+                    {
+                        "name": "[parameters('networkSettings').loadbalancerSettings.lbProbeCMSSSLName]",
+                        "properties": {
+                            "protocol": "tcp",
+                            "port": 48010,
+                            "intervalInSeconds": "5",
+                            "numberOfProbes": "6"
+                        }
+                    },
+                    {
+                        "name": "[parameters('networkSettings').loadbalancerSettings.lbProbePreviewName]",
+                        "properties": {
+                            "protocol": "http",
+                            "port": 18020,
+                            "requestPath": "/heartbeat",
+                            "intervalInSeconds": "5",
+                            "numberOfProbes": "6"
+                        }
+                    },
+                    {
+                        "name": "[parameters('networkSettings').loadbalancerSettings.lbProbePreviewSSLName]",
+                        "properties": {
+                            "protocol": "tcp",
+                            "port": 48020,
+                            "intervalInSeconds": "5",
+                            "numberOfProbes": "6"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachineScaleSets",
+			"identity": {
+				"type": "SystemAssigned"
+			}
+            "name": "[parameters('networkSettings').clusterVirtualMachineScaleSetName]",
+            "apiVersion": "[parameters('apiSettings').computeApiVersion]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "storageLoop",
+                "[parameters('networkSettings').loadbalancerSettings.loadBalancerName]"
+            ],
+            "sku": {
+                "name": "[parameters('machineSettings').vmSize]",
+                "tier": "Standard",
+                "capacity": "[parameters('networkSettings').loadbalancerSettings.AutoscaleCapacityDefault]"
+            },
+            "properties": {
+                "overprovision": "true",
+                "upgradePolicy": {
+                    "mode": "Manual"
+                },
+                "virtualMachineProfile": {
+
+                    "storageProfile": {
+                        "osDisk": {
+                            "vhdContainers": [
+                                "[concat('https://', variables('uniqueStringArray')[0], '.blob.core.windows.net/', parameters('storageSettings').storageContainerName)]",
+                                "[concat('https://', variables('uniqueStringArray')[1], '.blob.core.windows.net/', parameters('storageSettings').storageContainerName)]",
+                                "[concat('https://', variables('uniqueStringArray')[2], '.blob.core.windows.net/', parameters('storageSettings').storageContainerName)]",
+                                "[concat('https://', variables('uniqueStringArray')[3], '.blob.core.windows.net/', parameters('storageSettings').storageContainerName)]",
+                                "[concat('https://', variables('uniqueStringArray')[4], '.blob.core.windows.net/', parameters('storageSettings').storageContainerName)]"
+                            ],
+                            "name": "[concat(parameters('networkSettings').clusterVirtualMachineScaleSetName, parameters('networkSettings').osDiskSuffix)]",
+                            "caching": "ReadOnly",
+                            "createOption": "FromImage"
+                        },
+                        "imageReference": "[parameters('machineSettings').osImageReference]"
+                    },
+
+                    "osProfile": {
+                        "computerNamePrefix": "[parameters('networkSettings').clusterVirtualMachineScaleSetDomainName]",
+                        "adminUsername": "[parameters('networkSettings').adminUsername]",
+                        "linuxConfiguration": {
+                            "disablePasswordAuthentication": "true",
+                            "ssh": {
+                                "publicKeys": [
+                                    {
+                                        "path": "[concat('/home/', parameters('networkSettings').adminUsername, '/.ssh/authorized_keys')]",
+                                        "keyData": "[parameters('networkSettings').adminPublicKey]"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+
+                    "networkProfile": {
+                        "networkInterfaceConfigurations": [
+                            {
+                                "name": "[concat(parameters('networkSettings').clusterVirtualMachineScaleSetName, parameters('networkSettings').networkInterfaceNameSuffix)]",
+                                "properties": {
+                                    "primary": "true",
+                                    "ipConfigurations": [
+                                        {
+                                            "name": "[concat(parameters('networkSettings').clusterVirtualMachineScaleSetName, parameters('networkSettings').ipConfigSuffix)]",
+                                            "properties": {
+                                                "subnet": {
+                                                    "id": "[parameters('networkSettings').subnetRef]"
+                                                },
+                                                "loadBalancerBackendAddressPools": [
+                                                    {
+                                                        "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/loadBalancers/', parameters('networkSettings').loadbalancerSettings.loadBalancerName, '/backendAddressPools/', parameters('networkSettings').loadbalancerSettings.bePoolName)]"
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+
+                    "extensionProfile": {
+                        "extensions": [
+                            {
+                                "name": "[concat(parameters('networkSettings').clusterVirtualMachineScaleSetName, '-installoxa')]",
+                                "properties": {
+                                    "publisher": "Microsoft.Azure.Extensions",
+                                    "type": "CustomScript",
+                                    "typeHandlerVersion": "2.0",
+                                    "autoUpgradeMinorVersion": true,
+                                    "settings": {
+                                        "fileUris": "[parameters('customSettings').vmScripts]"
+                                    },
+                                    "protectedSettings": {
+                                        "commandToExecute": "[variables('commandToExecute2')]"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "[concat(parameters('networkSettings').clusterVirtualMachineScaleSetName, '-linuxdiagnostics')]",
+                                "properties": {
+                                    "publisher": "Microsoft.OSTCExtensions",
+                                    "type": "LinuxDiagnostic",
+                                    "typeHandlerVersion": "2.3",
+                                    "autoUpgradeMinorVersion": true,
+                                    "settings": {
+                                        "xmlCfg": "[base64(concat(parameters('customSettings').linuxDiagnosticsSettings.wadcfgxstart, parameters('customSettings').linuxDiagnosticsSettings.wadmetricsresourceid, parameters('customSettings').linuxDiagnosticsSettings.wadcfgxend)) ]",
+                                        "storageAccount": "[parameters('customSettings').linuxDiagnosticsSettings.diagnosticsStorageAccountName]"
+                                    },
+                                    "protectedSettings": {
+                                        "storageAccountName": "[parameters('customSettings').linuxDiagnosticsSettings.diagnosticsStorageAccountName]",
+                                        "storageAccountKey": "[listkeys(parameters('customSettings').linuxDiagnosticsSettings.diagnosticsStorageAccountId , parameters('apiSettings').storageApiVersion).keys[0]]",
+                                        "storageAccountEndPoint": "https://core.windows.net"
+                                    }
+                                }
+                            },
+							{
+                                "name": "ManagedIdentityWindowsExtension",
+                                "properties": {
+                                    "publisher": "Microsoft.ManagedIdentity",
+                                    "type": "ManagedIdentityExtensionForWindows",
+                                    "typeHandlerVersion": "1.0",
+                                    "autoUpgradeMinorVersion": true,
+                                    "settings": {
+                                         "port": 50342
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Insights/autoscaleSettings",
+            "name": "[parameters('networkSettings').clusterVirtualMachineScaleSetSettingsName]",
+            "apiVersion": "[parameters('apiSettings').insightsApiVersion]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[parameters('networkSettings').clusterVirtualMachineScaleSetName]"
+            ],
+            "properties": {
+                "name": "[parameters('networkSettings').clusterVirtualMachineScaleSetSettingsName]",
+                "targetResourceUri": "[concat('/subscriptions/',subscription().subscriptionId, '/resourceGroups/',  resourceGroup().name, '/providers/Microsoft.Compute/virtualMachineScaleSets/', parameters('networkSettings').clusterVirtualMachineScaleSetName)]",
+                "enabled": "[parameters('networkSettings').loadbalancerSettings.AutoscaleEnabled]",
+                "profiles": [
+                    {
+                        "name": "Profile1",
+                        "capacity": {
+                            "minimum": "[parameters('networkSettings').loadbalancerSettings.AutoscaleCapacityMinimum]",
+                            "maximum": "[parameters('networkSettings').loadbalancerSettings.AutoscaleCapacityMaximum]",
+                            "default": "[parameters('networkSettings').loadbalancerSettings.AutoscaleCapacityDefault]"
+                        },
+                        "rules": [
+                            {
+                                "metricTrigger": {
+                                    "metricName": "\\Processor\\PercentProcessorTime",
+                                    "metricNamespace": "",
+                                    "metricResourceUri": "[concat('/subscriptions/',subscription().subscriptionId, '/resourceGroups/',  resourceGroup().name, '/providers/Microsoft.Compute/virtualMachineScaleSets/', parameters('networkSettings').clusterVirtualMachineScaleSetName)]",
+                                    "timeGrain": "PT1M",
+                                    "statistic": "Average",
+                                    "timeWindow": "PT5M",
+                                    "timeAggregation": "Average",
+                                    "operator": "GreaterThan",
+                                    "threshold": 60
+                                },
+                                "scaleAction": {
+                                    "direction": "Increase",
+                                    "type": "ChangeCount",
+                                    "value": "1",
+                                    "cooldown": "PT1M"
+                                }
+                            },
+                            {
+                                "metricTrigger": {
+                                    "metricName": "\\Processor\\PercentProcessorTime",
+                                    "metricNamespace": "",
+                                    "metricResourceUri": "[concat('/subscriptions/',subscription().subscriptionId, '/resourceGroups/',  resourceGroup().name, '/providers/Microsoft.Compute/virtualMachineScaleSets/', parameters('networkSettings').clusterVirtualMachineScaleSetName)]",
+                                    "timeGrain": "PT1M",
+                                    "statistic": "Average",
+                                    "timeWindow": "PT5M",
+                                    "timeAggregation": "Average",
+                                    "operator": "LessThan",
+                                    "threshold": 50
+                                },
+                                "scaleAction": {
+                                    "direction": "Decrease",
+                                    "type": "ChangeCount",
+                                    "value": "1",
+                                    "cooldown": "PT1M"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}
