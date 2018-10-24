@@ -399,7 +399,7 @@
 
         "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources.json')]",
         "jumpboxTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-jumpbox.json')]",
-        "vmssTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-vmss.json')]",
+        "vmssTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-vmss-v4.json')]",
 
         "installerUtilitiesScript": "utilities.sh",
 
