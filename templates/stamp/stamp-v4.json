@@ -965,48 +965,6 @@
                 }
             }
         },
-        {
-            "type": "Microsoft.Resources/deployments",
-            "name": "[concat(variables('networkSettings').clusterMongoDataNodeName, copyindex(1))]",
-            "apiVersion": "[variables('apiVersion')]",
-            "condition": "[variables('resourcesToDeploy')[parameters('deploymentType')].mongo]",
-            "dependsOn": [
-                "[concat('Microsoft.Resources/deployments/', 'shared-resources')]",
-                "keyVault"
-            ],
-            "copy": {
-                "name": "mongoNodesLoop",
-                "count": "[int(variables('networkSettings').mongoDataNodeCount)]"
-            },
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('mongoNodeTemplateUrl')]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "networkSettings": {
-                        "value": "[variables('networkSettings')]"
-                    },
-                    "apiSettings": {
-                        "value": "[variables('apiSettings')]"
-                    },
-                    "machineSettings": {
-                        "value": "[variables('mongoMachineSettings')]"
-                    },
-                    "storageSettings": {
-                        "value": "[variables('storageSettings')]"
-                    },
-                    "customSettings": {
-                        "value": {
-                            "machineIndex": "[copyindex(1)]",
-                            "adminUsername": "[variables('networkSettings').adminUsername]",
-                            "adminPassword": "[variables('networkSettings').mongoServerAdminPassword]"
-                        }
-                    }
-                }
-            }
-        },
 
         {
             "name": "vmss",
