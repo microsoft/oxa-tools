@@ -1012,9 +1012,7 @@
             "apiVersion": "[variables('apiVersion')]",
             "condition": "[variables('resourcesToDeploy')[parameters('deploymentType')].keyVault]",
 			"dependsOn": [
-                "[concat('Microsoft.Resources/deployments/', 'shared-resources')]",
-                "vmss",
-                "jumpbox"
+                "vmss"
             ],
             "properties": {
                 "mode": "Incremental",

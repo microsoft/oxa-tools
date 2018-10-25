@@ -22,7 +22,7 @@
         }
     },
 	"variables": {
-	    "vmssIdentity": "[concat(resourceId('Microsoft.Compute/virtualMachineScaleSets', parameters('networkSettings').clusterVirtualMachineScaleSetName), '/providers/Microsoft.ManagedIdentity/Identities/default')]"
+	    "vmssIdentity": "[concat(resourceId(subscription().subscriptionId, resourceGroup().name, 'Microsoft.Compute/virtualMachineScaleSets', parameters('networkSettings').clusterVirtualMachineScaleSetName), '/providers/Microsoft.ManagedIdentity/Identities/default')]"
     },
     "resources": [
         {
