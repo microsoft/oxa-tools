@@ -58,10 +58,7 @@
                     "name": "[parameters('keyVaultSettings').sku]",
                     "family": "A"
                 }
-            },
-            "dependsOn": [
-                "[resourceId('Microsoft.Compute/virtualMachineScaleSets', parameters('networkSettings').clusterVirtualMachineScaleSetName)]"
-            ]
+            }
         }
     ]
 }

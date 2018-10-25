@@ -971,7 +971,6 @@
             "condition": "[variables('resourcesToDeploy')[parameters('deploymentType')].vmss]",
             "dependsOn": [
                 "[concat('Microsoft.Resources/deployments/', 'shared-resources')]",
-                "keyVault",
                 "jumpbox"
             ],
             "properties": {
@@ -1012,6 +1011,11 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[variables('apiVersion')]",
             "condition": "[variables('resourcesToDeploy')[parameters('deploymentType')].keyVault]",
+			"dependsOn": [
+                "[concat('Microsoft.Resources/deployments/', 'shared-resources')]",
+                "vmss",
+                "jumpbox"
+            ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
