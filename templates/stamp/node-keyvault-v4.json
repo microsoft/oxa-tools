@@ -22,7 +22,8 @@
         }
     },
 	"variables": {
-        "vmssIdentity": "[concat(resourceId('Microsoft.Compute/virtualMachineScaleSets', variables('identity')), '/providers/Microsoft.ManagedIdentity/Identities/default')]"
+	    "vssName": "name": "[parameters('networkSettings').clusterVirtualMachineScaleSetName]",
+        "vmssIdentity": "[concat(resourceId('Microsoft.Compute/virtualMachineScaleSets', variables('vssName')), '/providers/Microsoft.ManagedIdentity/Identities/default')]"
         },
     "resources": [
         {
