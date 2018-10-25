@@ -1017,9 +1017,6 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[variables('apiVersion')]",
             "condition": "[variables('resourcesToDeploy')[parameters('deploymentType')].keyVault]",
-			"dependsOn": [
-                "vmss"
-            ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
