@@ -19,14 +19,11 @@
             "metadata": {
                 "Description": "Key Vault settings object"
             }
-        },
-		"vmssSettings": {
-		    "type": "object",
-			"metadata": {
-			    "Description": "VMSS settings object"
-			}
-		}
+        }
     },
+	"variables": {
+        "vmssIdentity": "[concat(resourceId('Microsoft.Compute/virtualMachineScaleSets', variables('identity')), '/providers/Microsoft.ManagedIdentity/Identities/default')]"
+        },
     "resources": [
         {
             "type": "Microsoft.KeyVault/vaults",
@@ -49,11 +46,11 @@
                         }
                     },
 					{
-					    "tenantId": "[reference([parameters('vmssSettings').identity], '2015-08-31-PREVIEW').tenantId]",
-                        "objectId": "[reference([parameters('vmssSettings').identity], '2015-08-31-PREVIEW').principalId]",
+					    "tenantId": "[reference(variables('vmssIdentity')).tenantId]",
+                        "objectId": "[reference(variables('vmssIdentity')).principalId]", 
 						"permissions": {
-                            "keys": "[parameters('vmssSettings').tenantKeyAccessPermission]",
-                            "secrets": "[parameters('vmssSettings').tenantSecretAccessPermission]"
+                            "keys": "[parameters('keyVaultSettings').tenantKeyAccessPermission]",
+                            "secrets": "[parameters('keyVaultSettings').tenantSecretAccessPermission]"
                         }
 					}
                 ],

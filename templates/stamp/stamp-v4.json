@@ -824,11 +824,6 @@
             "tenantSecretAccessPermission": "[parameters('keyVaultMasterAccountSecretAccessPermission')]",
             "sku": "[parameters('keyVaultSku')]"
         },
-		"vmssSettings": {
-		    "identity": "concat(resourceId('Microsoft.Compute/virtualMachineScaleSets', variables('identity')), '/providers/Microsoft.ManagedIdentity/Identities/default')",
-			"tenantKeyAccessPermission": "[parameters('keyVaultMasterAccountKeyAccessPermission')]",
-			"tenantSecretAccessPermission": "[parameters('keyVaultMasterAccountSecretAccessPermission')]"
-		},
 
         "azureSharedScriptUrl": "[concat('https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/shared_scripts/', variables('supportedOSName'), '/')]",
         "templateBaseUrl": "[concat('https://raw.githubusercontent.com/',parameters('oxaToolsGithubAccountName'), '/', parameters('oxaToolsGithubProjectName'), '/', parameters('oxaToolsGithubBranch'), '/', parameters('armTemplateRelativePath'), '/')]",
@@ -1032,10 +1027,7 @@
                     },
                     "keyVaultSettings": {
                         "value": "[variables('keyVaultSettings')]"
-                    },
-					"vmssSettings": {
-					    "value": "[variables('vmssSettings')]"
-					}
+                    }
                 }
             }
         },
