@@ -881,7 +881,12 @@
                 "[concat(variables('clusterCustomInstallerScriptFullPath'))]",
                 "[concat(variables('templateBaseUrl'), variables('installerUtilitiesScript'))]"
             ],
-            "customInstallerCommand": "[variables('customInstallerCommand')]"
+            "customInstallerCommand": "[variables('customInstallerCommand')]",
+			"linuxDiagnosticsSettings" : "[variables('vmssLinuxDiagnosticsSettings')]",
+			"storageKeyPlaceholder": "[variables('storageKeyPlaceholder')]",
+			"servicebusKeyPlaceholder": "[variables('servicebusKeyPlaceholder')]",
+			"secureGenericStorageAccountKey": "[listKeys(variables('secureGenericStorageAccountId'), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value]",
+			"secureServicebusSharedAccessKey":"[listkeys(variables('authRuleResourceId'), variables('servicebusApiVersion')).primaryKey]"
         },
 
         "wadperfcounters1": "<PerformanceCounters scheduledTransferPeriod=\"PT1M\"><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\AvailableMemory\" sampleRate=\"PT15S\" unit=\"Bytes\"><annotation displayName=\"Memory available\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\PercentAvailableMemory\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Mem. percent available\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\UsedMemory\" sampleRate=\"PT15S\" unit=\"Bytes\"><annotation displayName=\"Memory used\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\PercentUsedMemory\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Memory percentage\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\PercentUsedByCache\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Mem. used by cache\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentIdleTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU idle time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentUserTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU user time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentProcessorTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU percentage guest OS\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentIOWaitTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU IO wait time\" locale=\"en-us\"/></PerformanceCounterConfiguration>",
@@ -971,6 +976,7 @@
             "condition": "[variables('resourcesToDeploy')[parameters('deploymentType')].vmss]",
             "dependsOn": [
                 "[concat('Microsoft.Resources/deployments/', 'shared-resources')]",
+				"keyVault"
                 "jumpbox"
             ],
             "properties": {
@@ -1029,7 +1035,10 @@
                     },
                     "keyVaultSettings": {
                         "value": "[variables('keyVaultSettings')]"
-                    }
+                    },
+					"vmssInstallerSettings": {
+						"value": "[variables('vmssInstallerSettings')]"
+					}
                 }
             }
         },
