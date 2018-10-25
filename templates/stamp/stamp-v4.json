@@ -825,8 +825,7 @@
             "sku": "[parameters('keyVaultSku')]"
         },
 		"vmssSettings": {
-		    "tenantId": "[subscription().tenantId]",
-		    "identity_resource_id": "concat(resourceId('Microsoft.Compute/virtualMachineScaleSets', variables('vmssName')), '/providers/Microsoft.ManagedIdentity/Identities/default')",
+		    "identity": "concat(resourceId('Microsoft.Compute/virtualMachineScaleSets', variables('identity')), '/providers/Microsoft.ManagedIdentity/Identities/default')",
 			"tenantKeyAccessPermission": "[parameters('keyVaultMasterAccountKeyAccessPermission')]",
 			"tenantSecretAccessPermission": "[parameters('keyVaultMasterAccountSecretAccessPermission')]"
 		},
