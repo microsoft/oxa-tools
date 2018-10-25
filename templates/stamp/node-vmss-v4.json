@@ -339,7 +339,7 @@
             "type": "Microsoft.Compute/virtualMachineScaleSets",
 			"identity": {
 				"type": "SystemAssigned"
-			}
+			},
             "name": "[parameters('networkSettings').clusterVirtualMachineScaleSetName]",
             "apiVersion": "[parameters('apiSettings').computeApiVersion]",
             "location": "[resourceGroup().location]",
