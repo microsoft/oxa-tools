@@ -22,9 +22,8 @@
         }
     },
 	"variables": {
-	    "vssName": "[parameters('networkSettings').clusterVirtualMachineScaleSetName]",
-        "vmssIdentity": "[concat(resourceId('Microsoft.Compute/virtualMachineScaleSets', variables('vssName')), '/providers/Microsoft.ManagedIdentity/Identities/default')]"
-        },
+	    "vmssIdentity": "[concat(resourceId('Microsoft.Compute/virtualMachineScaleSets', [parameters('networkSettings').clusterVirtualMachineScaleSetName]), '/providers/Microsoft.ManagedIdentity/Identities/default')]"
+    },
     "resources": [
         {
             "type": "Microsoft.KeyVault/vaults",
