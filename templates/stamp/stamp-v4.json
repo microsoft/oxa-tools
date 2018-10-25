@@ -824,6 +824,12 @@
             "tenantSecretAccessPermission": "[parameters('keyVaultMasterAccountSecretAccessPermission')]",
             "sku": "[parameters('keyVaultSku')]"
         },
+		"vmssSettings": {
+		    "tenantId": "[subscription().tenantId]",
+		    "identity_resource_id": "concat(resourceId('Microsoft.Compute/virtualMachineScaleSets', variables('vmssName')), '/providers/Microsoft.ManagedIdentity/Identities/default')",
+			"tenantKeyAccessPermission": "[parameters('keyVaultMasterAccountKeyAccessPermission')]",
+			"tenantSecretAccessPermission": "[parameters('keyVaultMasterAccountSecretAccessPermission')]"
+		},
 
         "azureSharedScriptUrl": "[concat('https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/shared_scripts/', variables('supportedOSName'), '/')]",
         "templateBaseUrl": "[concat('https://raw.githubusercontent.com/',parameters('oxaToolsGithubAccountName'), '/', parameters('oxaToolsGithubProjectName'), '/', parameters('oxaToolsGithubBranch'), '/', parameters('armTemplateRelativePath'), '/')]",
@@ -862,7 +868,7 @@
 
         "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources-v4.json')]",
         "jumpboxTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-jumpbox.json')]",
-        "keyvaultTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-keyvault.json')]",
+        "keyvaultTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-keyvault-v4.json')]",
         "trafficManagerTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-trafficmanager.json')]",
         "vmssTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-vmss-v4.json')]",
 
@@ -1027,7 +1033,10 @@
                     },
                     "keyVaultSettings": {
                         "value": "[variables('keyVaultSettings')]"
-                    }
+                    },
+					"vmssSettings": {
+					    "value": "[variables('vmssSettings')]"
+					}
                 }
             }
         },
