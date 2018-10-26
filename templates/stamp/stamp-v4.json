@@ -1137,6 +1137,35 @@
                     }
                 }
             }
+        },
+		{
+			"name": "[concat(variables('networkSettings').clusterKeyVaultName, '/add')]",
+            "type": "Microsoft.KeyVault/vaults/accessPolicies",
+            "apiVersion": "[variables('apiVersion')]",
+			"dependsOn": [
+			    "keyvault",
+                "vmss"
+            ],
+            "properties": {
+                "accessPolicies": [
+					{
+                        "tenantId": "[variables('keyVaultSettings').tenantId]",
+                        "objectId": "[variables('keyVaultSettings').accessAccount]",
+                        "permissions": {
+                            "keys": "[variables('keyVaultSettings').tenantKeyAccessPermission]",
+                            "secrets": "[variables('keyVaultSettings').tenantSecretAccessPermission]"
+                        }
+                    },
+                    {
+                        "tenantId": "[reference(concat('Microsoft.Compute/virtualMachineScaleSets/', variables('networkSettings').clusterVirtualMachineScaleSetName, '/', variables('apiVersion'), '/', 'Full')).identity.tenantId]",
+                        "objectId": "[reference(concat('Microsoft.Compute/virtualMachineScaleSets/', variables('networkSettings').clusterVirtualMachineScaleSetName, '/', variables('apiVersion'), '/', 'Full')).identity.principalId]", 
+						"permissions": {
+                            "keys": "all",
+                            "secrets": "all"
+                        }
+                    }
+                ]
+            }
         }
     ],
     "outputs": {

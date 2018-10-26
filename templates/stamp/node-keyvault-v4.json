@@ -33,32 +33,11 @@
                 "enabledForTemplateDeployment": "[parameters('keyVaultSettings').enabledForTemplateDeployment]",
                 "enabledForVolumeEncryption": "[parameters('keyVaultSettings').enabledForVolumeEncryption]",
                 "tenantId": "[parameters('keyVaultSettings').tenantId]",
-                "accessPolicies": [
-                    {
-                        "tenantId": "[parameters('keyVaultSettings').tenantId]",
-                        "objectId": "[parameters('keyVaultSettings').accessAccount]",
-                        "permissions": {
-                            "keys": "[parameters('keyVaultSettings').tenantKeyAccessPermission]",
-                            "secrets": "[parameters('keyVaultSettings').tenantSecretAccessPermission]"
-                        }
-                    },
-					{
-					    "tenantId": "[reference(concat('Microsoft.Compute/virtualMachineScaleSets/', parameters('networkSettings').clusterVirtualMachineScaleSetName, '/', parameters('apiSettings').apiversion, '/', 'Full')).identity.tenantId]",
-                        "objectId": "[reference(concat('Microsoft.Compute/virtualMachineScaleSets/', parameters('networkSettings').clusterVirtualMachineScaleSetName, '/', parameters('apiSettings').apiversion, '/', 'Full')).identity.principalId]", 
-						"permissions": {
-                            "keys": "[parameters('keyVaultSettings').tenantKeyAccessPermission]",
-                            "secrets": "[parameters('keyVaultSettings').tenantSecretAccessPermission]"
-                        }
-					}
-                ],
                 "sku": {
                     "name": "[parameters('keyVaultSettings').sku]",
                     "family": "A"
                 }
-            },
-			dependsOn: [
-			    "[resourceId('Microsoft.Compute/virtualMachineScaleSets', parameters('networkSettings').clusterVirtualMachineScaleSetName)]"
-			]
+            }
         }
     ]
 }
