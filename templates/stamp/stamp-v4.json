@@ -1142,11 +1142,7 @@
 			"name": "[concat(variables('networkSettings').clusterKeyVaultName, '/add')]",
             "type": "Microsoft.KeyVault/vaults/accessPolicies",
             "apiVersion": "[variables('apiVersion')]",
-			"dependsOn": [
-                "vmss",
-                "keyVault"
-            ],
-            "properties": {
+			"properties": {
                 "accessPolicies": [
                     {
                         "tenantId": "[reference(concat('Microsoft.Compute/virtualMachineScaleSets/', variables('networkSettings').clusterVirtualMachineScaleSetName, '/', variables('apiVersion'), '/', 'Full')).identity.tenantId]",
