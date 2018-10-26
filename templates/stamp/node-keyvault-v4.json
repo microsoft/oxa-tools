@@ -21,9 +21,6 @@
             }
         }
     },
-	"variables": {
-	    "vmssIdentity": "[concat(resourceId(subscription().subscriptionId, resourceGroup().name, 'Microsoft.Compute/virtualMachineScaleSets', parameters('networkSettings').clusterVirtualMachineScaleSetName), '/providers/Microsoft.ManagedIdentity/Identities/default')]"
-    },
     "resources": [
         {
             "type": "Microsoft.KeyVault/vaults",
@@ -46,8 +43,8 @@
                         }
                     },
 					{
-					    "tenantId": "[reference(variables('vmssIdentity')).tenantId]",
-                        "objectId": "[reference(variables('vmssIdentity')).principalId]", 
+					    "tenantId": "[reference(concat('Microsoft.Compute/virtualMachineScaleSets', parameters('networkSettings').clusterVirtualMachineScaleSetName, [parameters('apiSettings').apiversion], 'Full')).identity.tenantId]",
+                        "objectId": "[reference(concat('Microsoft.Compute/virtualMachineScaleSets', parameters('networkSettings').clusterVirtualMachineScaleSetName, [parameters('apiSettings').apiversion], 'Full')).identity.principalId]", 
 						"permissions": {
                             "keys": "[parameters('keyVaultSettings').tenantKeyAccessPermission]",
                             "secrets": "[parameters('keyVaultSettings').tenantSecretAccessPermission]"
