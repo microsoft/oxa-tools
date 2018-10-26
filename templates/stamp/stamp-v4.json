@@ -976,7 +976,6 @@
             "condition": "[variables('resourcesToDeploy')[parameters('deploymentType')].vmss]",
             "dependsOn": [
                 "[concat('Microsoft.Resources/deployments/', 'shared-resources')]",
-				"keyVault"
                 "jumpbox"
             ],
             "properties": {
@@ -1142,6 +1141,10 @@
 			"name": "[concat(variables('networkSettings').clusterKeyVaultName, '/add')]",
             "type": "Microsoft.KeyVault/vaults/accessPolicies",
             "apiVersion": "[variables('apiVersion')]",
+			"dependsOn": [
+                "keyVault",
+                "jumpbox"
+            ],
 			"properties": {
                 "accessPolicies": [
                     {
