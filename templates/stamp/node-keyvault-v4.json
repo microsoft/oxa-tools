@@ -43,8 +43,8 @@
                         }
                     },
 					{
-					    "tenantId": "[reference(concat('Microsoft.Compute/virtualMachineScaleSets', parameters('networkSettings').clusterVirtualMachineScaleSetName, parameters('apiSettings').apiversion, 'Full')).identity.tenantId]",
-                        "objectId": "[reference(concat('Microsoft.Compute/virtualMachineScaleSets', parameters('networkSettings').clusterVirtualMachineScaleSetName, parameters('apiSettings').apiversion, 'Full')).identity.principalId]", 
+					    "tenantId": "[reference(concat('Microsoft.Compute/virtualMachineScaleSets/', parameters('networkSettings').clusterVirtualMachineScaleSetName, '/', parameters('apiSettings').apiversion, '/', 'Full')).identity.tenantId]",
+                        "objectId": "[reference(concat('Microsoft.Compute/virtualMachineScaleSets/', parameters('networkSettings').clusterVirtualMachineScaleSetName, '/', parameters('apiSettings').apiversion, '/', 'Full')).identity.principalId]", 
 						"permissions": {
                             "keys": "[parameters('keyVaultSettings').tenantKeyAccessPermission]",
                             "secrets": "[parameters('keyVaultSettings').tenantSecretAccessPermission]"
