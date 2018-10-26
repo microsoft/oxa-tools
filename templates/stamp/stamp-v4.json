@@ -1031,10 +1031,7 @@
                     },
                     "keyVaultSettings": {
                         "value": "[variables('keyVaultSettings')]"
-                    },
-					"vmssInstallerSettings": {
-						"value": "[variables('vmssInstallerSettings')]"
-					}
+                    }
                 }
             }
         },
