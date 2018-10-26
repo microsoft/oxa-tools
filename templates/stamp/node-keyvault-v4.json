@@ -34,6 +34,14 @@
                 "enabledForVolumeEncryption": "[parameters('keyVaultSettings').enabledForVolumeEncryption]",
                 "tenantId": "[parameters('keyVaultSettings').tenantId]",
 				"accessPolicies": [
+				    {
+                        "tenantId": "[parameters('keyVaultSettings').tenantId]",
+                        "objectId": "[parameters('keyVaultSettings').accessAccount]",
+                        "permissions": {
+                            "keys": "[parameters('keyVaultSettings').tenantKeyAccessPermission]",
+                            "secrets": "[parameters('keyVaultSettings').tenantSecretAccessPermission]"
+                        }
+                    }
 				],
                 "sku": {
                     "name": "[parameters('keyVaultSettings').sku]",
