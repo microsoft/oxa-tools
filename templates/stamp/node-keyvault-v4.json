@@ -33,6 +33,8 @@
                 "enabledForTemplateDeployment": "[parameters('keyVaultSettings').enabledForTemplateDeployment]",
                 "enabledForVolumeEncryption": "[parameters('keyVaultSettings').enabledForVolumeEncryption]",
                 "tenantId": "[parameters('keyVaultSettings').tenantId]",
+				"accessPolicies": [
+				],
                 "sku": {
                     "name": "[parameters('keyVaultSettings').sku]",
                     "family": "A"
