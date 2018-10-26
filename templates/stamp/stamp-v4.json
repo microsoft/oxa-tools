@@ -1143,7 +1143,7 @@
             "type": "Microsoft.KeyVault/vaults/accessPolicies",
             "apiVersion": "[variables('apiVersion')]",
 			"dependsOn": [
-			    "keyvault",
+			    "keyVault",
                 "vmss"
             ],
             "properties": {
