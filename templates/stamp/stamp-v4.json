@@ -1133,10 +1133,11 @@
                 "jumpbox"
             ],
 			"properties": {
+				"mode": "Incremental",
                 "accessPolicies": [
                     {
-                        "tenantId": "[reference(concat('Microsoft.Compute/virtualMachineScaleSets/', variables('networkSettings').clusterVirtualMachineScaleSetName, '/', variables('apiVersion'), '/', 'Full')).identity.tenantId]",
-                        "objectId": "[reference(concat('Microsoft.Compute/virtualMachineScaleSets/', variables('networkSettings').clusterVirtualMachineScaleSetName, '/', variables('apiVersion'), '/', 'Full')).identity.principalId]", 
+                        "tenantId": "[reference('vmss').outputs.tenantId.value]",
+                        "objectId": "[reference('vmss').outputs.principalId.value]", 
 						"permissions": {
                             "keys": "all",
                             "secrets": "all"
