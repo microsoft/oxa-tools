@@ -453,7 +453,7 @@
                                 }
                             },
 							{
-                                "name": "ManagedIdentityWindowsExtension",
+                                "name": "[concat(parameters('networkSettings').clusterVirtualMachineScaleSetName, '-managedidentity')]",
                                 "properties": {
                                     "publisher": "Microsoft.ManagedIdentity",
                                     "type": "ManagedIdentityExtensionForWindows",
