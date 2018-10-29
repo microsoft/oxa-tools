@@ -529,8 +529,8 @@
 				"mode": "Incremental",
 				"accessPolicies": [
 					{
-						"tenantId": "[reference(parameters('networkSettings').clusterVirtualMachineScaleSetName).identity.tenantId]",
-						"objectId": "[reference(parameters('networkSettings').clusterVirtualMachineScaleSetName).identity.principalId]", 
+						"tenantId": "[reference('Microsoft.Compute/virtualMachineScaleSets', parameters('networkSettings').clusterVirtualMachineScaleSetName, 'identity')].tenantId",
+						"objectId": "[reference('Microsoft.Compute/virtualMachineScaleSets', parameters('networkSettings').clusterVirtualMachineScaleSetName, 'identity')].principalId]", 
 						"permissions": {
 							"keys": "all",
 							"secrets": "all"
