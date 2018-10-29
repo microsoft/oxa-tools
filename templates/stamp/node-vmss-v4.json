@@ -531,25 +531,28 @@
                         ]
                     }
                 ]
-            },
-			{
-				"name": "[concat(variables('networkSettings').clusterKeyVaultName, '/add')]",
-				"type": "Microsoft.KeyVault/vaults/accessPolicies",
-				"apiVersion": "[variables('apiVersion')]",
-				"properties": {
-					"mode": "Incremental",
-					"accessPolicies": [
-						{
-							"tenantId": "[reference(parameters('networkSettings').clusterVirtualMachineScaleSetName).identity.tenantId]",
-							"objectId": "[reference(parameters('networkSettings').clusterVirtualMachineScaleSetName).identity.principalId]", 
-							"permissions": {
-								"keys": "all",
-								"secrets": "all"
-							}
+            }
+		},
+		{
+			"name": "[concat(variables('networkSettings').clusterKeyVaultName, '/add')]",
+			"type": "Microsoft.KeyVault/vaults/accessPolicies",
+			"apiVersion": "[variables('apiVersion')]",
+			"properties": {
+				"mode": "Incremental",
+				"accessPolicies": [
+					{
+						"tenantId": "[reference(parameters('networkSettings').clusterVirtualMachineScaleSetName).identity.tenantId]",
+						"objectId": "[reference(parameters('networkSettings').clusterVirtualMachineScaleSetName).identity.principalId]", 
+						"permissions": {
+							"keys": "all",
+							"secrets": "all"
 						}
-					]
-				}
-			}
+					}
+				]
+			},
+			"dependsOn": [
+				"[parameters('networkSettings').clusterVirtualMachineScaleSetName]"
+			]
         }
     ],
 	
