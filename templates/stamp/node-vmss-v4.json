@@ -537,11 +537,11 @@
 	
 	"outputs": {
         "tenantId": {
-            "value": "[reference(parameters('networkSettings').clusterVirtualMachineScaleSetName.identity.tenantId)]",
+            "value": "[reference(parameters('networkSettings').clusterVirtualMachineScaleSetName).identity.tenantId]",
             "type" : "string"
         },
 		"principalId": {
-            "value": "[reference(parameters('networkSettings').clusterVirtualMachineScaleSetName.identity.principalId)]",
+            "value": "[reference(parameters('networkSettings').clusterVirtualMachineScaleSetName).identity.principalId]",
             "type" : "string"
         }
     }
