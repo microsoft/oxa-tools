@@ -534,9 +534,9 @@
             }
 		},
 		{
-			"name": "[concat(variables('networkSettings').clusterKeyVaultName, '/add')]",
+			"name": "[concat(parameterss('networkSettings').clusterKeyVaultName, '/add')]",
 			"type": "Microsoft.KeyVault/vaults/accessPolicies",
-			"apiVersion": "[variables('apiVersion')]",
+			"apiVersion": "[parameters('apiSettings').keyVaultApiversion]",
 			"properties": {
 				"mode": "Incremental",
 				"accessPolicies": [
