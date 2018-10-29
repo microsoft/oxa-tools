@@ -451,18 +451,6 @@
                                         "storageAccountEndPoint": "https://core.windows.net"
                                     }
                                 }
-                            },
-							{
-                                "name": "[concat(parameters('networkSettings').clusterVirtualMachineScaleSetName, '-managedidentity')]",
-                                "properties": {
-                                    "publisher": "Microsoft.ManagedIdentity",
-                                    "type": "ManagedIdentityExtensionForWindows",
-                                    "typeHandlerVersion": "1.0",
-                                    "autoUpgradeMinorVersion": true,
-                                    "settings": {
-                                         "port": 50342
-                                    }
-                                }
                             }
                         ]
                     }
