@@ -346,7 +346,7 @@
 			"identity": {
 				"type": "userAssigned",
 				"userAssignedIdentities": {
-					"[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities/BrianTest')]": {}
+					"[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'BrianTest')]": {}
 				}
 			},
             "name": "[parameters('networkSettings').clusterVirtualMachineScaleSetName]",
