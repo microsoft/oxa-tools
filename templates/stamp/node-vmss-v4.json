@@ -335,10 +335,19 @@
                 ]
             }
         },
+		{
+			"type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+			"name": "BrianTest",
+			"apiVersion": "2015-08-31-PREVIEW",
+			"location": "[resourceGroup().location]"
+		},
         {
             "type": "Microsoft.Compute/virtualMachineScaleSets",
 			"identity": {
-				"type": "SystemAssigned"
+				"type": "userAssigned",
+				"userAssignedIdentities": {
+					"[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities/BrianTest')]": {}
+				}
 			},
             "name": "[parameters('networkSettings').clusterVirtualMachineScaleSetName]",
             "apiVersion": "[parameters('apiSettings').computeApiVersion]",
@@ -529,8 +538,8 @@
 				"mode": "Incremental",
 				"accessPolicies": [
 					{
-						"tenantId": "[reference(concat('Microsoft.Compute/virtualMachineScaleSets/', parameters('networkSettings').clusterVirtualMachineScaleSetName), parameters('apiSettings').virtualMachineApiVersion, 'Full').identity.tenantId]",
-						"objectId": "[reference(concat('Microsoft.Compute/virtualMachineScaleSets/', parameters('networkSettings').clusterVirtualMachineScaleSetName), parameters('apiSettings').virtualMachineApiVersion, 'Full').identity.principalId]", 
+						"tenantId": "[reference('Microsoft.ManagedIdentity/userAssignedIdentities/BrianTest/').tenantId]",
+						"objectId": "[reference('Microsoft.ManagedIdentity/userAssignedIdentities/BrianTest/').principalId]", 
 						"permissions": {
 							"keys": "all",
 							"secrets": "all"
