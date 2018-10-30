@@ -530,7 +530,7 @@
 				"accessPolicies": [
 					{
 						"tenantId": "[reference('Microsoft.Compute/virtualMachineScaleSets', parameters('networkSettings').clusterVirtualMachineScaleSetName, 'VirtualMachineScaleSetIdentity')].tenantId",
-						"objectId": "[reference('Microsoft.Compute/virtualMachineScaleSets', parameters('networkSettings').clusterVirtualMachineScaleSetName, 'VirtualMachineScaleSetIdentity')].principalId]", 
+						"objectId": "[reference('Microsoft.Compute/virtualMachineScaleSets', parameters('networkSettings').clusterVirtualMachineScaleSetName, 'VirtualMachineScaleSetIdentity')].principalId", 
 						"permissions": {
 							"keys": "all",
 							"secrets": "all"
