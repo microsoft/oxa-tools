@@ -529,8 +529,8 @@
 				"mode": "Incremental",
 				"accessPolicies": [
 					{
-						"tenantId": "[reference(concat('Microsoft.Compute/virtualMachineScaleSets/', parameters('networkSettings').clusterVirtualMachineScaleSetName)), parameters('apiSettings').virtualMachineApiVersion, 'Full').identity.tenantId]",
-						"objectId": "[reference(concat('Microsoft.Compute/virtualMachineScaleSets/', parameters('networkSettings').clusterVirtualMachineScaleSetName)), parameters('apiSettings').virtualMachineApiVersion, 'Full').identity.principalId]", 
+						"tenantId": "[reference(concat('Microsoft.Compute/virtualMachineScaleSets/', parameters('networkSettings').clusterVirtualMachineScaleSetName), parameters('apiSettings').virtualMachineApiVersion, 'Full').identity.tenantId]",
+						"objectId": "[reference(concat('Microsoft.Compute/virtualMachineScaleSets/', parameters('networkSettings').clusterVirtualMachineScaleSetName), parameters('apiSettings').virtualMachineApiVersion, 'Full').identity.principalId]", 
 						"permissions": {
 							"keys": "all",
 							"secrets": "all"
