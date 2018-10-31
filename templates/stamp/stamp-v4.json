@@ -542,7 +542,7 @@
         "apiVersion": "2016-09-01",
         "availabilitySetApiVersion": "2018-06-01",
         "networkApiVersion": "2018-08-01",
-        "computeApiVersion": "2018-06-01",
+        "computeApiVersion": "2018-06-01-preview",
         "insightsApiVersion": "2015-04-01",
         "keyVaultApiversion": "2018-02-14",
         "trafficManagerApiversion": "2017-05-01",
