@@ -538,8 +538,8 @@
 				"mode": "Incremental",
 				"accessPolicies": [
 					{
-						"tenantId": "[reference('Microsoft.ManagedIdentity/userAssignedIdentities/BrianTest/', '2015-08-31-PREVIEW', 'Full').tenantId]",
-						"objectId": "[reference('Microsoft.ManagedIdentity/userAssignedIdentities/BrianTest/', '2015-08-31-PREVIEW', 'Full').principalId]", 
+						"tenantId": "[reference('Microsoft.ManagedIdentity/userAssignedIdentities/BrianTest/', '2015-08-31-PREVIEW', 'Full').properties.accessPolicies.tenantId]",
+						"objectId": "[reference('Microsoft.ManagedIdentity/userAssignedIdentities/BrianTest/', '2015-08-31-PREVIEW', 'Full').properties.accessPolicies.objectId]", 
 						"permissions": {
 							"keys": "all",
 							"secrets": "all"
