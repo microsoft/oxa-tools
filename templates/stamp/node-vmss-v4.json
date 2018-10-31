@@ -387,7 +387,7 @@
                     "osProfile": {
                         "computerNamePrefix": "[parameters('networkSettings').clusterVirtualMachineScaleSetDomainName]",
                         "adminUsername": "[parameters('networkSettings').adminUsername]",
-						"adminPassword": "foo"
+						"adminPassword": "foo",
                         "linuxConfiguration": {
                             "disablePasswordAuthentication": "false"
                         }
