@@ -541,8 +541,7 @@
 						"tenantId": "[reference('Microsoft.ManagedIdentity/userAssignedIdentities/BrianTest/', '2015-08-31-PREVIEW', 'Full').properties.tenantId]",
 						"objectId": "[reference('Microsoft.ManagedIdentity/userAssignedIdentities/BrianTest/', '2015-08-31-PREVIEW', 'Full').properties.principalId]", 
 						"permissions": {
-							"keys": "all",
-							"secrets": "all"
+							"secrets": ["get", "list"]
 						}
 					}
 				]
