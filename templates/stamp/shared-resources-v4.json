@@ -135,8 +135,7 @@
             "properties": {
                 "storageAccounts": [
                     {
-                        "id": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageSettings').wamsStorageAccountName)]",
-                        "type": "Primary"
+                        "id": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageSettings').wamsStorageAccountName)]"
                     }
                 ]
             },
