@@ -542,13 +542,13 @@
         "apiVersion": "2016-09-01",
         "availabilitySetApiVersion": "2015-06-15",
         "networkApiVersion": "2016-03-30",
-        "computeApiVersion": "2016-03-30",
+        "computeApiVersion": "2018-06-01",
         "insightsApiVersion": "2015-04-01",
         "keyVaultApiversion": "2015-06-01",
         "trafficManagerApiversion": "2015-11-01",
         "mediaServicesApiVersion": "2015-10-01",
         "storageApiVersion": "2016-01-01",
-        "servicebusApiVersion": "2017-04-01",
+        "servicebusApiVersion": "2017-04-01"
         
         "virtualMachineExtensionsApiVersion": "[variables('defaultApiVersion')]",
         "virtualMachineApiVersion": "[variables('defaultApiVersion')]",
@@ -812,7 +812,7 @@
             "keyVaultApiversion": "[variables('keyVaultApiversion')]",
             "trafficManagerApiversion": "[variables('trafficManagerApiversion')]",
             "mediaServicesApiVersion": "[variables('mediaServicesApiVersion')]",
-            "serviceBusApiVersion": "[variables('servicebusApiVersion')]"          
+            "serviceBusApiVersion": "[variables('servicebusApiVersion')]"
         },
         "keyVaultSettings": {
             "enabledForDeployment": "[variables('keyVaultEnabledForDeployment')]",
