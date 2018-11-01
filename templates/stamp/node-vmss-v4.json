@@ -569,7 +569,7 @@
 			"dependsOn": [
 			    "BrianTest",
 				"[parameters('networkSettings').clusterVirtualMachineScaleSetName]",
-				"[parameters('networkSettings').clusterKeyVaultName)]"
+				"[parameters('networkSettings').clusterKeyVaultName]"
 			]
         }
     ],
