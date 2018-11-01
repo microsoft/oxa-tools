@@ -564,7 +564,7 @@
             "properties": {
                 "roleDefinitionId": "[concat(subscription().Id, '/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c')]",
                 "principalId": "[reference('Microsoft.ManagedIdentity/userAssignedIdentities/BrianTest/', '2015-08-31-PREVIEW', 'Full').properties.principalId]",
-                "scope": "[resourceId(resourceGroup().name, 'Microsoft.KeyVault/vaults', parameters('networkSettings').clusterKeyVaultName)]"
+                "scope": "[resourceGroup().id]"
             },
 			"dependsOn": [
 			    "BrianTest",
