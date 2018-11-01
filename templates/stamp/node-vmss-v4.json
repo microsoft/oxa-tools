@@ -559,7 +559,7 @@
 		{
             "type": "Microsoft.KeyVault/vaults/providers/roleAssignments",
             "name": "[concat(parameters('networkSettings').clusterKeyVaultName, '/Microsoft.Authorization/', guid(resourceGroup().id))]",
-            "apiVersion": "[parameters('apiSettings').keyVaultApiversion]",
+            "apiVersion": "2018-09-01-preview",
             "properties": {
                 "roleDefinitionId": "[concat(subscription().Id, '/providers/Microsoft.Authorization/roleDefinitions/acdd72a7-3385-48ef-bd42-f606fba81ae7')]",
                 "principalId": "[reference('Microsoft.ManagedIdentity/userAssignedIdentities/BrianTest/', '2015-08-31-PREVIEW', 'Full').properties.principalId]"
