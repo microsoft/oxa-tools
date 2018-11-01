@@ -555,6 +555,22 @@
 			"dependsOn": [
 				"[parameters('networkSettings').clusterVirtualMachineScaleSetName]"
 			]
+        },
+		{
+            "type": "Microsoft.Authorization/roleAssignments",
+            "name": "[guid(resourceGroup().id)]",
+            "apiVersion": "2017-10-01-preview",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "roleDefinitionId": "[concat(subscription().Id, '/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c')]",
+                "principalId": "[reference('Microsoft.ManagedIdentity/userAssignedIdentities/BrianTest/', '2015-08-31-PREVIEW', 'Full').properties.principalId]",
+                "scope": "[resourceId(resourceGroup().name, 'Microsoft.KeyVault/vaults', parameters('networkSettings').clusterKeyVaultName)]"
+            },
+			"dependsOn": [
+			    "BrianTest",
+				"[parameters('networkSettings').clusterVirtualMachineScaleSetName]",
+				"[parameters('networkSettings').clusterKeyVaultName)]"
+			]
         }
     ],
 	
