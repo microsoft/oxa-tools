@@ -1,0 +1,57 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "apiSettings": {
+            "type": "object",
+            "metadata": {
+                "Description": "API version of the resource type"
+            }
+        },
+        "networkSettings": {
+            "type": "secureObject",
+            "metadata": {
+                "Description": "Network settings object"
+            }
+        },
+		"vmssIdentityName": {
+            "type": "string",
+            "metadata": {
+				"Description": "Virtual Machine Scale Set Identity Name"
+			}
+        }
+    },
+
+    "resources": [
+		{
+			"name": "[concat(parameters('networkSettings').clusterKeyVaultName, '/add')]",
+			"type": "Microsoft.KeyVault/vaults/accessPolicies",
+			"apiVersion": "[parameters('apiSettings').keyVaultApiversion]",
+			"properties": {
+				"mode": "Incremental",
+				"accessPolicies": [
+					{
+						"tenantId": "[reference(concat('Microsoft.ManagedIdentity/userAssignedIdentities/', parameters('vmssIdentityName'), '/'), '2015-08-31-PREVIEW', 'Full').properties.tenantId]",
+						"objectId": "[reference(concat('Microsoft.ManagedIdentity/userAssignedIdentities/', parameters('vmssIdentityName'), '/'), '2015-08-31-PREVIEW', 'Full').properties.principalId]", 
+						"permissions": {
+							"secrets": ["get", "list"]
+						}
+					}
+				]
+			}
+        },
+		{
+            "type": "Microsoft.KeyVault/vaults/providers/roleAssignments",
+            "name": "[concat(parameters('networkSettings').clusterKeyVaultName, '/Microsoft.Authorization/', guid(resourceGroup().id))]",
+            "apiVersion": "2018-09-01-preview",
+            "properties": {
+                "roleDefinitionId": "[concat(subscription().Id, '/providers/Microsoft.Authorization/roleDefinitions/acdd72a7-3385-48ef-bd42-f606fba81ae7')]",
+                "principalId": "[reference(concat('Microsoft.ManagedIdentity/userAssignedIdentities/', parameters('vmssIdentityName'), '/'), '2015-08-31-PREVIEW', 'Full').properties.principalId]"
+            }
+        }
+	],
+	
+	"outputs": {
+
+    }
+}
