@@ -55,21 +55,21 @@
                 "description": "Azure database for MySQL sku name "
             }
         },
-        "SkuSizeMB": {
+        "skuSizeMB": {
             "type": "int",
             "defaultValue": 5120,
             "metadata": {
                 "description": "Azure database for MySQL Sku Size "
             }
         },
-        "SkuTier": {
+        "skuTier": {
             "type": "string",
 			"allowedValues": [
 				"Basic",
 				"GeneralPurpose",
 				"MemoryOptimized"
 			],
-            "defaultValue": "Basic",
+            "defaultValue": "GeneralPurpose",
             "metadata": {
                 "description": "Azure database for MySQL pricing tier"
             }
