@@ -1145,9 +1145,12 @@
                     "networkSettings": {
                         "value": "[variables('networkSettings')]"
                     },
-                    "vmssIdentityName": {
+                    "identityName": {
                         "value": "[reference('vmss').outputs.vmssIdentityName.value]"
-                    }
+                    },
+					"builtInRoleType": {
+                        "value": "Reader"
+					}
                 }
             }
 		}

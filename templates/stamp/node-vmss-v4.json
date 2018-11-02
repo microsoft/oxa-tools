@@ -53,8 +53,8 @@
             "[concat(variables('newStorageAccountSuffix'), '4')]"
         ],
         "frontendVmStorageAccountCount": "[length(variables('uniqueStringArray'))]",
-		"vmssIdentityNameSuffix": "-identity",
-        "virtualMachineScaleSetIdentityName": "[concat(parameters('networkSettings').clusterVirtualMachineScaleSetName, variables('vmssIdentityNameSuffix'))]",
+		"vmssIdentityNameSuffix": "VmssID",
+        "virtualMachineScaleSetIdentityName": "[concat(parameters('networkSettings').clusterName, variables('vmssIdentityNameSuffix'))]",
         "commandToExecute1": "[replace(parameters('customSettings').commandToExecute, parameters('customSettings').storageKeyPlaceholder, parameters('customSettings').secureGenericStorageAccountKey)]",
         "commandToExecute2": "[replace(variables('commandToExecute1'), parameters('customSettings').servicebusKeyPlaceholder, parameters('customSettings').secureServicebusSharedAccessKey)]"
     },

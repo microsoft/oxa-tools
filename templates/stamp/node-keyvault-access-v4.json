@@ -14,12 +14,29 @@
                 "Description": "Network settings object"
             }
         },
-		"vmssIdentityName": {
+		"identityName": {
             "type": "string",
             "metadata": {
-				"Description": "Virtual Machine Scale Set Identity Name"
+				"Description": "User Assigned Identity Name"
 			}
-        }
+        },
+		"builtInRoleType": {
+			"type": "string",
+			"allowedValues": [
+				"Owner",
+				"Contributor",
+				"Reader"
+			],
+			"metadata": {
+				"description": "Built-in role to assign"
+			}      
+		}
+    },
+	
+	"variables": {
+		"Owner": "[concat(subscription().Id, '/providers/Microsoft.Authorization/roleDefinitions/', '8e3af657-a8ff-443c-a75c-2fe8c4bcb635')]",
+		"Contributor": "[concat(subscription().Id, '/providers/Microsoft.Authorization/roleDefinitions/', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
+		"Reader": "[concat(subscription().Id, '/providers/Microsoft.Authorization/roleDefinitions/', 'acdd72a7-3385-48ef-bd42-f606fba81ae7')]"
     },
 
     "resources": [
@@ -31,8 +48,8 @@
 				"mode": "Incremental",
 				"accessPolicies": [
 					{
-						"tenantId": "[reference(concat('Microsoft.ManagedIdentity/userAssignedIdentities/', parameters('vmssIdentityName'), '/'), '2015-08-31-PREVIEW', 'Full').properties.tenantId]",
-						"objectId": "[reference(concat('Microsoft.ManagedIdentity/userAssignedIdentities/', parameters('vmssIdentityName'), '/'), '2015-08-31-PREVIEW', 'Full').properties.principalId]", 
+						"tenantId": "[reference(concat('Microsoft.ManagedIdentity/userAssignedIdentities/', parameters('identityName'), '/'), '2015-08-31-PREVIEW', 'Full').properties.tenantId]",
+						"objectId": "[reference(concat('Microsoft.ManagedIdentity/userAssignedIdentities/', parameters('identityName'), '/'), '2015-08-31-PREVIEW', 'Full').properties.principalId]", 
 						"permissions": {
 							"secrets": ["get", "list"]
 						}
@@ -45,13 +62,9 @@
             "name": "[concat(parameters('networkSettings').clusterKeyVaultName, '/Microsoft.Authorization/', guid(resourceGroup().id))]",
             "apiVersion": "2018-09-01-preview",
             "properties": {
-                "roleDefinitionId": "[concat(subscription().Id, '/providers/Microsoft.Authorization/roleDefinitions/acdd72a7-3385-48ef-bd42-f606fba81ae7')]",
-                "principalId": "[reference(concat('Microsoft.ManagedIdentity/userAssignedIdentities/', parameters('vmssIdentityName'), '/'), '2015-08-31-PREVIEW', 'Full').properties.principalId]"
+                "roleDefinitionId": "[variables(parameters('builtInRoleType'))]",
+                "principalId": "[reference(concat('Microsoft.ManagedIdentity/userAssignedIdentities/', parameters('identityName'), '/'), '2015-08-31-PREVIEW', 'Full').properties.principalId]"
             }
         }
-	],
-	
-	"outputs": {
-
-    }
+	]
 }
