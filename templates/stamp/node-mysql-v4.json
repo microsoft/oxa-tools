@@ -119,7 +119,7 @@
         },
 		"ignoreMissingVnetServiceEndpoint": {
 			"type": "bool",
-            "defaultValue": "true",
+            "defaultValue": true,
             "metadata": {
                 "description": "Whether to create firewall rule before the virtual network has vnet service endpoint enabled"
             }
