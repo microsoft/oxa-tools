@@ -121,7 +121,7 @@
 			"type": "bool",
             "defaultValue": "true",
             "metadata": {
-                "description": ""
+                "description": "Whether to create firewall rule before the virtual network has vnet service endpoint enabled"
             }
 		}
     },

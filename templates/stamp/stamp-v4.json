@@ -1194,7 +1194,7 @@
                         "value": "[variables('networkSettings')]"
                     },
                     "serverName": {
-                        "value": ""
+                        "value": "[variables('networkSettings').clusterMysqlDataNodeName]"
                     },
 					"administratorLogin": {
                         "value": "[parameters('mysqlServerAdminUserName')]"
