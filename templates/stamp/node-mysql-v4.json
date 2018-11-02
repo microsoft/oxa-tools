@@ -154,7 +154,7 @@
                     "name": "[parameters('virtualNetworkRuleName')]",
                     "apiVersion": "[parameters('apiSettings').mySqlApiVersion]",
                     "properties": {
-                        "virtualNetworkSubnetId": "[resourceId(parameters('networkSettings').subnetRef)]",
+                        "virtualNetworkSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('networkSettings').virtualNetworkName, parameters('networkSettings').subnetName)]",
                         "ignoreMissingVnetServiceEndpoint": "[parameters('ignoreMissingVnetServiceEndpoint')]"
                     },
                     "dependsOn": [
