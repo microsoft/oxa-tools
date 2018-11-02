@@ -385,6 +385,13 @@
                 "description": "Email address of the administrator where system and other notifications will be sent"
             }
         },
+        "mysqlBackupRetentionDays": {
+            "type": "int",
+            "defaultValue": 30,
+            "metadata": {
+                "description": "Number of days to keep old Mysql backups. Backups older than this number of days will be deleted."
+            }
+        },
         "importKitchenSinkCourse": {
             "type": "bool",
             "defaultValue": true,
@@ -549,6 +556,7 @@
         "mediaServicesApiVersion": "2018-06-01-preview",
         "storageApiVersion": "2018-07-01",
         "servicebusApiVersion": "2017-04-01",
+		"mySqlApiVersion": "2017-12-01",
         
         "virtualMachineExtensionsApiVersion": "[variables('defaultApiVersion')]",
         "virtualMachineApiVersion": "[variables('defaultApiVersion')]",
@@ -599,6 +607,8 @@
             "bootstrap": {
                 "sharedResources": true,
                 "jumpbox": true,
+				"mongo": true,
+				"mySql": true,
                 "vmss": true,
                 "keyVault": false,
                 "trafficManagerLms": true,
@@ -608,6 +618,8 @@
             "upgrade": {
                 "sharedResources": false,
                 "jumpbox": false,
+				"mongo": false,
+				"mySql": false,
                 "vmss": true,
                 "keyVault": false,
                 "trafficManagerLms": false,
@@ -617,6 +629,8 @@
             "swap": {
                 "sharedResources": false,
                 "jumpbox": false,
+				"mongo": false,
+				"mySql": false,
                 "vmss": false,
                 "keyVault": false,
                 "trafficManagerLms": true,
@@ -651,6 +665,8 @@
             "clusterKeyVaultName": "[concat(parameters('clusterName'), '-kv')]",
             "clusterJumpBoxName": "[concat(parameters('clusterName'), '-jb', variables('jumpboxNameSuffix'))]",
             "clusterJumpBoxDomainName": "[concat(parameters('clusterName'), 'jb', variables('jumpboxNameSuffix'))]",
+			"clusterMongoDataNodeName": "[concat(parameters('clusterName'), '-mongo')]",
+			"clusterMysqlDataNodeName": "[concat(parameters('clusterName'), '-mysql')]",
             "clusterVirtualMachineScaleSetName": "[variables('vmssName')]",
             "clusterVirtualMachineScaleSetDomainName": "[concat(parameters('clusterName'), 'vmss')]",
             "clusterVirtualMachineScaleSetSettingsName": "[variables('vmssAutoScaleSettingsName')]",
@@ -812,7 +828,8 @@
             "keyVaultApiversion": "[variables('keyVaultApiversion')]",
             "trafficManagerApiversion": "[variables('trafficManagerApiversion')]",
             "mediaServicesApiVersion": "[variables('mediaServicesApiVersion')]",
-            "serviceBusApiVersion": "[variables('servicebusApiVersion')]"
+            "serviceBusApiVersion": "[variables('servicebusApiVersion')]",
+			"mySqlApiVersion": "[variables('mySqlApiVersion')]"
         },
         "keyVaultSettings": {
             "enabledForDeployment": "[variables('keyVaultEnabledForDeployment')]",
@@ -866,6 +883,7 @@
         "trafficManagerTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-trafficmanager.json')]",
         "vmssTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-vmss-v4.json')]",
 		"keyVaultAccessTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-keyvault-access-v4.json')]",
+		"mySqlTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-mysql-azure-v4.json')]",
         "installerUtilitiesScript": "utilities.sh",
 
         "jumpBoxInstallerSettings": {
@@ -1150,6 +1168,42 @@
                     },
 					"builtInRoleType": {
                         "value": "Reader"
+					}
+                }
+            }
+		},
+		{
+			"name": "mySql",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('apiVersion')]",
+			"condition": "[variables('resourcesToDeploy')[parameters('deploymentType')].mySql]",
+			"dependsOn": [
+				"[concat('Microsoft.Resources/deployments/', 'shared-resources')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('mySqlTemplateUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "apiSettings": {
+                        "value": "[variables('apiSettings')]"
+                    },
+                    "networkSettings": {
+                        "value": "[variables('networkSettings')]"
+                    },
+                    "serverName": {
+                        "value": ""
+                    },
+					"administratorLogin": {
+                        "value": "[parameters('mysqlServerAdminUserName')]"
+					},
+					"administratorLoginPassword": {
+                        "value": "[parameters('mysqlServerAdminPassword')]"
+					},
+					"backupRetentionDays": {
+						"value": "[parameters('mysqlBackupRetentionDays')]"
 					}
                 }
             }
