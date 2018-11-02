@@ -537,26 +537,6 @@
             }
 		},
 		{
-			"name": "[concat(parameters('networkSettings').clusterKeyVaultName, '/add')]",
-			"type": "Microsoft.KeyVault/vaults/accessPolicies",
-			"apiVersion": "[parameters('apiSettings').keyVaultApiversion]",
-			"properties": {
-				"mode": "Incremental",
-				"accessPolicies": [
-					{
-						"tenantId": "[reference('Microsoft.ManagedIdentity/userAssignedIdentities/BrianTest/', '2015-08-31-PREVIEW', 'Full').properties.tenantId]",
-						"objectId": "[reference('Microsoft.ManagedIdentity/userAssignedIdentities/BrianTest/', '2015-08-31-PREVIEW', 'Full').properties.principalId]", 
-						"permissions": {
-							"secrets": ["get", "list"]
-						}
-					}
-				]
-			},
-			"dependsOn": [
-				"[parameters('networkSettings').clusterVirtualMachineScaleSetName]"
-			]
-        },
-		{
             "type": "Microsoft.KeyVault/vaults/providers/roleAssignments",
             "name": "[concat(parameters('networkSettings').clusterKeyVaultName, '/Microsoft.Authorization/', guid(resourceGroup().id))]",
             "apiVersion": "2018-09-01-preview",
