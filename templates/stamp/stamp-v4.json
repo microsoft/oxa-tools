@@ -883,7 +883,7 @@
         "trafficManagerTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-trafficmanager.json')]",
         "vmssTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-vmss-v4.json')]",
 		"keyVaultAccessTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-keyvault-access-v4.json')]",
-		"mySqlTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-mysql-azure-v4.json')]",
+		"mySqlTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-mysql-v4.json')]",
         "installerUtilitiesScript": "utilities.sh",
 
         "jumpBoxInstallerSettings": {
