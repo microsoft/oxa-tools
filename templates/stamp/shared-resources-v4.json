@@ -34,7 +34,7 @@
         {
             "type": "Microsoft.Network/virtualNetworks",
             "name": "[parameters('networkSettings').virtualNetworkName]",
-            "apiVersion": "[parameters('apiSettings').apiVersion]",
+            "apiVersion": "[parameters('networkSettings').apiVersion]",
             "location": "[resourceGroup().location]",
             "properties": {
                 "addressSpace": {
@@ -49,7 +49,9 @@
                             "addressPrefix": "[parameters('networkSettings').subnetPrefix]"
                         }
                     }
-                ]
+                ],
+                "enableDdosProtection": true,
+                "enableVmProtection": true
             }
         },
         {

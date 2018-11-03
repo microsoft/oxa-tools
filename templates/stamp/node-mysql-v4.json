@@ -76,6 +76,10 @@
         },
         "skuFamily": {
             "type": "string",
+			"allowedValues": [
+				"Gen4",
+				"Gen5"
+			],
             "defaultValue": "Gen4",
             "metadata": {
                 "description": "Azure database for MySQL sku family"
