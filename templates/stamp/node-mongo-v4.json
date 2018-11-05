@@ -17,26 +17,13 @@
 		"offerType": {
 			"type": "string",
 			"metadata": {
-				"description": "The Azure Cosmos DB API type, by default MongoDB; otherwise one of Cassandra, Gremlin, SQL, or Table"
+				"description": "The Azure Cosmos DB offer type, by default Standard"
 			},
 			"allowedValues": [
+				"Basic",
 				"Standard"
 			],
 			"defaultValue": "Standard"
-		},
-		"apiType": {
-			"type": "string",
-			"metadata": {
-				"description": "The Azure Cosmos DB API type, by default MongoDB; otherwise one of Cassandra, Gremlin, SQL, or Table"
-			},
-			"allowedValues": [
-				"Cassandra",
-				"Gremlin",
-				"MongoDB",
-				"SQL",
-				"Table"
-			],
-			"defaultValue": "MongoDB"
 		},
 		"databaseName": {
 			"type": "string",
@@ -66,24 +53,16 @@
 			"name": "[parameters('databaseName')]",
 			"apiVersion": "[parameters('apiSettings').documentDbApiVersion]",
 			"location": "[resourceGroup().location]",
-			"kind": "[if(equals(parameters('apiType'), 'MongoDB'), 'MongoDB', 'GlobalDocumentDB')]",
+			"kind": "MongoDB",
+			"scale": null,
 			"properties": {
 				"name": "[parameters('databaseName')]",
 				"databaseAccountOfferType": "[parameters('offerType')]",
-				"locations": [
-					{
-						"id": "[concat(parameters('databaseName'), '-', resourceGroup().location)]",
-						"failoverPriority": 0,
-						"locationName": "[resourceGroup().location]"
-					}
-				],
-				"virtualNetworkRules": [
-					{
-						"id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('networkSettings').virtualNetworkName, parameters('networkSettings').subnetName)]"
-					}
-				],
-                "enableMultipleWriteLocations": true,
-                "isVirtualNetworkFilterEnabled": true
+				"consistencyPolicy": {
+                    "defaultConsistencyLevel": "Session",
+                    "maxIntervalInSeconds": 5,
+                    "maxStalenessPrefix": 100
+                }
 			}
 		}
 	]
