@@ -1,0 +1,79 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"apiSettings": {
+            "type": "object",
+            "metadata": {
+                "Description": "API version of the resource type"
+            }
+        },
+        "networkSettings": {
+            "type": "secureObject",
+            "metadata": {
+                "Description": "Network settings object"
+            }
+        },
+		"offerType": {
+			"type": "string",
+			"metadata": {
+				"description": "The Azure Cosmos DB API type, by default MongoDB; otherwise one of Cassandra, Gremlin, SQL, or Table"
+			},
+			"allowedValues": [
+				"Standard"
+			],
+			"defaultValue": "Standard"
+		},
+		"apiType": {
+			"type": "string",
+			"metadata": {
+				"description": "The Azure Cosmos DB API type, by default MongoDB; otherwise one of Cassandra, Gremlin, SQL, or Table"
+			},
+			"allowedValues": [
+				"Cassandra",
+				"Gremlin",
+				"MongoDB",
+				"SQL",
+				"Table"
+			],
+			"defaultValue": "MongoDB"
+		},
+		"databaseName": {
+			"type": "string",
+			"metadata": {
+				"description": "The Azure Cosmos DB name."
+			}
+		}
+	},
+
+	"resources": [
+		{
+			"apiVersion": "[parameters('apiSettings').documentDbApiVersion]",
+			"type": "Microsoft.DocumentDB/databaseAccounts",
+			"kind": "[if(equals(parameters('apiType'), 'MongoDB'), 'MongoDB', 'GlobalDocumentDB')]",
+			"name": "[parameters('databaseName')]",
+			"location": "[resourceGroup().location]",
+			"properties": {
+				"name": "[parameters('databaseName')]",
+				"databaseAccountOfferType": "[variables('offerType')]",
+				"locations": [
+					{
+						"locationName": "[resourceGroup().location]"
+					}
+				],
+				"capabilities": [
+					{
+						"name": "[if(equals(parameters('apiType'), 'Cassandra'), 'EnableCassandra', if(equals(parameters('apiType'), 'Gremlin'), 'EnableGremlin', if(equals(parameters('apiType'), 'MongoDB'), '', if(equals(parameters('apiType'), 'SQL'), '', if(equals(parameters('apiType'), 'Table'), 'EnableTable', '')))))]"
+					}
+				],
+				"virtualNetworkRules": [
+					{
+						"id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('networkSettings').virtualNetworkName, parameters('networkSettings').subnetName)]"
+					}
+				],
+				"ipRangeFilter": "string",
+				"isVirtualNetworkFilterEnabled": boolean,
+			}
+		}
+	]
+}
