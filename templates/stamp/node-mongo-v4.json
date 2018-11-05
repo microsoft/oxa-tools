@@ -71,8 +71,8 @@
 						"id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('networkSettings').virtualNetworkName, parameters('networkSettings').subnetName)]"
 					}
 				],
-				"ipRangeFilter": "string",
-				"isVirtualNetworkFilterEnabled": boolean,
+				"ipRangeFilter": "",
+				"isVirtualNetworkFilterEnabled": false,
 			}
 		}
 	]
