@@ -62,7 +62,7 @@
 
 	"resources": [
 		{
-			"apiVersion": "[parameters('apiSettings').documentDbApiVersion]",
+			"apiVersion": "2018-01-01",
 			"type": "Microsoft.DocumentDB/databaseAccounts",
 			"kind": "[if(equals(parameters('apiType'), 'MongoDB'), 'MongoDB', 'GlobalDocumentDB')]",
 			"name": "[parameters('databaseName')]",
@@ -86,7 +86,7 @@
 					}
 				],
 				"ipRangeFilter": "",
-				"isVirtualNetworkFilterEnabled": false,
+				"isVirtualNetworkFilterEnabled": false
 			}
 		}
 	]
