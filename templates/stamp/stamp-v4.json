@@ -557,7 +557,7 @@
         "storageApiVersion": "2018-07-01",
         "servicebusApiVersion": "2017-04-01",
 		"mySqlApiVersion": "2017-12-01",
-		"documentDbApiVersion": "2015-04-08",
+		"documentDbApiVersion": "2016-03-31",
         
         "virtualMachineExtensionsApiVersion": "[variables('defaultApiVersion')]",
         "virtualMachineApiVersion": "[variables('defaultApiVersion')]",

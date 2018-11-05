@@ -62,7 +62,7 @@
 
 	"resources": [
 		{
-			"apiVersion": "2018-01-01",
+			"apiVersion": "[parameters('apiSettings').documentDbApiVersion]",
 			"type": "Microsoft.DocumentDB/databaseAccounts",
 			"kind": "[if(equals(parameters('apiType'), 'MongoDB'), 'MongoDB', 'GlobalDocumentDB')]",
 			"name": "[parameters('databaseName')]",
