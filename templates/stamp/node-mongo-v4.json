@@ -69,7 +69,7 @@
 			"location": "[resourceGroup().location]",
 			"properties": {
 				"name": "[parameters('databaseName')]",
-				"databaseAccountOfferType": "[variables('offerType')]",
+				"databaseAccountOfferType": "[parameters('offerType')]",
 				"locations": [
 					{
 						"locationName": "[resourceGroup().location]"
