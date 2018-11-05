@@ -1232,7 +1232,7 @@
                     "networkSettings": {
                         "value": "[variables('networkSettings')]"
                     },
-                    "databaseName": {
+                    "name": {
                         "value": "[variables('networkSettings').clusterMongoDataNodeName]"
                     }
                 }

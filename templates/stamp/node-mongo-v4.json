@@ -17,7 +17,7 @@
 		"offerType": {
 			"type": "string",
 			"metadata": {
-				"description": "The Azure Cosmos DB offer type, by default Standard"
+				"description": "The Azure Cosmos offer type, by default Standard"
 			},
 			"allowedValues": [
 				"Basic",
@@ -25,10 +25,10 @@
 			],
 			"defaultValue": "Standard"
 		},
-		"databaseName": {
+		"name": {
 			"type": "string",
 			"metadata": {
-				"description": "The Azure Cosmos DB name."
+				"description": "The Azure Cosmos instance name."
 			}
 		}
 	},
