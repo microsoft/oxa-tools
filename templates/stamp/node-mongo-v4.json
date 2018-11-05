@@ -40,7 +40,6 @@
 			"apiVersion": "[parameters('apiSettings').documentDbApiVersion]",
 			"location": "[resourceGroup().location]",
 			"kind": "MongoDB",
-			"scale": null,
 			"properties": {
 				"name": "[parameters('name')]",
 				"databaseAccountOfferType": "[parameters('offerType')]",
@@ -48,15 +47,22 @@
                     "defaultConsistencyLevel": "Session",
                     "maxIntervalInSeconds": 5,
                     "maxStalenessPrefix": 100
-                },
-				"isVirtualNetworkFilterEnabled": true,
-				"virtualNetworkRules": [
-					{
-						"virtualNetworkSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('networkSettings').virtualNetworkName, parameters('networkSettings').subnetName)]"
-					}
-				],
-				"ipRangeFilter": "[parameters('networkSettings').subnetPrefix]"
-			}
+                }
+			},
+			"resources": [
+                {
+					"type": "virtualNetworkRules",
+                    "name": "AllowSubnet-mongo",
+                    "apiVersion": "[parameters('apiSettings').documentDbApiVersion]",
+                    "properties": {
+                        "virtualNetworkSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('networkSettings').virtualNetworkName, parameters('networkSettings').subnetName)]",
+                        "ignoreMissingVnetServiceEndpoint": "[parameters('ignoreMissingVnetServiceEndpoint')]"
+                    },
+                    "dependsOn": [
+                        "[concat('Microsoft.DocumentDB/databaseAccounts/', parameters('name'))]"
+                    ]
+                }
+            ]
 		}
 	]
 }
