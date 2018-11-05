@@ -76,14 +76,9 @@
 						"failoverPriority": 0
 					}
 				],
-				"capabilities": [
-					{
-						"name": "[if(equals(parameters('apiType'), 'Cassandra'), 'EnableCassandra', if(equals(parameters('apiType'), 'Gremlin'), 'EnableGremlin', if(equals(parameters('apiType'), 'MongoDB'), '', if(equals(parameters('apiType'), 'SQL'), '', if(equals(parameters('apiType'), 'Table'), 'EnableTable', '')))))]"
-					}
-				],
 				"virtualNetworkRules": [
 					{
-						"id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('networkSettings').virtualNetworkName, parameters('networkSettings').subnetName)]"
+						"virtualNetworkSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('networkSettings').virtualNetworkName, parameters('networkSettings').subnetName)]"
 					}
 				]
 			}
