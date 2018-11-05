@@ -42,7 +42,7 @@
 			"kind": "MongoDB",
 			"scale": null,
 			"properties": {
-				"name": "[parameters('databaseName')]",
+				"name": "[parameters('name')]",
 				"databaseAccountOfferType": "[parameters('offerType')]",
 				"consistencyPolicy": {
                     "defaultConsistencyLevel": "Session",
