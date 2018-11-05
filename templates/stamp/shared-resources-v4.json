@@ -52,6 +52,27 @@
                 ]
             }
         },
+		{
+            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "name": "[concat('Microsoft.Network/virtualNetworks/subnets/', parameters('networkSettings').virtualNetworkName, '/', parameters('networkSettings').subnetName)]",
+            "apiVersion": "2018-02-01",
+            "scale": null,
+            "properties": {
+                "provisioningState": "Succeeded",
+                "addressPrefix": "[parameters('networkSettings').subnetPrefix]",
+                "serviceEndpoints": [
+                    {
+                        "service": "Microsoft.Sql",
+                        "locations": [
+                            "[resourceGroup().location]"
+                        ]
+                    }
+                ]
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('networkSettings').virtualNetworkName)]"
+            ]
+        },
         {
             "name": "[parameters('storageSettings').storageAccountName]",
             "type": "Microsoft.Storage/storageAccounts",
