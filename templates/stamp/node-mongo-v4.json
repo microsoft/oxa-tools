@@ -62,25 +62,28 @@
 
 	"resources": [
 		{
-			"apiVersion": "[parameters('apiSettings').documentDbApiVersion]",
 			"type": "Microsoft.DocumentDB/databaseAccounts",
-			"kind": "[if(equals(parameters('apiType'), 'MongoDB'), 'MongoDB', 'GlobalDocumentDB')]",
 			"name": "[parameters('databaseName')]",
+			"apiVersion": "[parameters('apiSettings').documentDbApiVersion]",
 			"location": "[resourceGroup().location]",
+			"kind": "[if(equals(parameters('apiType'), 'MongoDB'), 'MongoDB', 'GlobalDocumentDB')]",
 			"properties": {
 				"name": "[parameters('databaseName')]",
 				"databaseAccountOfferType": "[parameters('offerType')]",
 				"locations": [
 					{
-						"locationName": "[resourceGroup().location]",
-						"failoverPriority": 0
+						"id": "[concat(parameters('databaseName'), '-', resourceGroup().location)]",
+						"failoverPriority": 0,
+						"locationName": "[resourceGroup().location]"
 					}
 				],
 				"virtualNetworkRules": [
 					{
 						"id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('networkSettings').virtualNetworkName, parameters('networkSettings').subnetName)]"
 					}
-				]
+				],
+                "enableMultipleWriteLocations": true,
+                "isVirtualNetworkFilterEnabled": true
 			}
 		}
 	]
