@@ -36,7 +36,7 @@
 	"resources": [
 		{
 			"type": "Microsoft.DocumentDB/databaseAccounts",
-			"name": "[parameters('databaseName')]",
+			"name": "[parameters('name')]",
 			"apiVersion": "[parameters('apiSettings').documentDbApiVersion]",
 			"location": "[resourceGroup().location]",
 			"kind": "MongoDB",
