@@ -72,7 +72,8 @@
 				"databaseAccountOfferType": "[parameters('offerType')]",
 				"locations": [
 					{
-						"locationName": "[resourceGroup().location]"
+						"locationName": "[resourceGroup().location]",
+						"failoverPriority": 0
 					}
 				],
 				"capabilities": [
@@ -84,9 +85,7 @@
 					{
 						"id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('networkSettings').virtualNetworkName, parameters('networkSettings').subnetName)]"
 					}
-				],
-				"ipRangeFilter": "",
-				"isVirtualNetworkFilterEnabled": false
+				]
 			}
 		}
 	]
