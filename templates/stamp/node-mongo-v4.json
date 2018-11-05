@@ -78,7 +78,7 @@
 				],
 				"virtualNetworkRules": [
 					{
-						"virtualNetworkSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('networkSettings').virtualNetworkName, parameters('networkSettings').subnetName)]"
+						"id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('networkSettings').virtualNetworkName, parameters('networkSettings').subnetName)]"
 					}
 				]
 			}
