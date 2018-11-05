@@ -25,7 +25,7 @@
         {
             "type": "Microsoft.KeyVault/vaults",
             "name": "[parameters('networkSettings').clusterKeyVaultName]",
-            "apiVersion": "[parameters('apiSettings').keyVaultApiversion]",
+            "apiVersion": "[parameters('apiSettings').keyVaultApiVersion]",
             "location": "[resourceGroup().location]",
             "tags": {},
             "properties": {
