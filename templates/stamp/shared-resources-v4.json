@@ -34,7 +34,7 @@
         {
             "type": "Microsoft.Network/virtualNetworks",
             "name": "[parameters('networkSettings').virtualNetworkName]",
-            "apiVersion": "[parameters('apiSettings').apiVersion]",
+            "apiVersion": "[parameters('apiSettings').networkApiVersion]",
             "location": "[resourceGroup().location]",
             "properties": {
                 "addressSpace": {
@@ -55,7 +55,7 @@
 		{
             "type": "Microsoft.Network/virtualNetworks/subnets",
             "name": "[concat(parameters('networkSettings').virtualNetworkName, '/', parameters('networkSettings').subnetName)]",
-            "apiVersion": "2018-02-01",
+            "apiVersion": "[parameters('apiSettings').networkApiVersion]",
             "scale": null,
             "properties": {
                 "provisioningState": "Succeeded",
