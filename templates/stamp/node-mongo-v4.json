@@ -43,6 +43,20 @@
 			"metadata": {
 				"description": "The Azure Cosmos DB name."
 			}
+		},
+		"administratorLogin": {
+			"type": "string",
+			"minLength": 1,
+			"metadata": {
+				"description": "Database administrator login name"
+			}
+		},
+		"administratorLoginPassword": {
+			"type": "securestring",
+			"minLength": 8,
+			"metadata": {
+				"description": "Database administrator password"
+			}
 		}
 	},
 
