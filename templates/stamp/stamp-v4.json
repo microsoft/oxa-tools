@@ -1234,13 +1234,7 @@
                     },
                     "databaseName": {
                         "value": "[variables('networkSettings').clusterMongoDataNodeName]"
-                    },
-					"administratorLogin": {
-                        "value": "[parameters('mongoServerAdminUserName')]"
-					},
-					"administratorLoginPassword": {
-                        "value": "[parameters('mongoServerAdminPassword')]"
-					}
+                    }
                 }
             }
 		}
