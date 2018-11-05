@@ -52,7 +52,7 @@
 				"isVirtualNetworkFilterEnabled": true,
 				"virtualNetworkRules": [
 					{
-						"id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('networkSettings').virtualNetworkName, parameters('networkSettings').subnetName)]"
+						"virtualNetworkSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('networkSettings').virtualNetworkName, parameters('networkSettings').subnetName)]"
 					}
 				],
 				"ipRangeFilter": "[parameters('networkSettings').subnetPrefix]"
