@@ -47,8 +47,7 @@
                     "defaultConsistencyLevel": "Session",
                     "maxIntervalInSeconds": 5,
                     "maxStalenessPrefix": 100
-                },
-				"sslEnforcement": "[parameters('sslEnforcement')]"
+                }
 			},
 			"resources": [
                 {
