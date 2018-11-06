@@ -48,6 +48,7 @@
                     "maxIntervalInSeconds": 5,
                     "maxStalenessPrefix": 100
                 },
+				"isVirtualNetworkFilterEnabled": true,
 				"virtualNetworkRules": [
 					{
 						"name": "allowSubnet-mongo",
