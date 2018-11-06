@@ -121,11 +121,15 @@
                 "description": "Virtual Network RuleName"
             }
         },
-		"ignoreMissingVnetServiceEndpoint": {
-			"type": "bool",
-            "defaultValue": false,
+		"sslEnforcement": {
+			"type": "string",
+			"allowedValues": [
+				"Enabled",
+				"Disabled"
+			],
+			"defaultValue": "Enabled",
             "metadata": {
-                "description": "Whether to create firewall rule before the virtual network has vnet service endpoint enabled"
+                "description": "SSL enforcement"
             }
 		}
     },
@@ -150,16 +154,17 @@
                     "storageMB": "[parameters('skuSizeMB')]",
                     "backupRetentionDays": "[parameters('backupRetentionDays')]",
                     "geoRedundantBackup": "[parameters('geoRedundantBackup')]"
-                }
+                },
+				"sslEnforcement": "[parameters('sslEnforcement')]"
             },
             "resources": [
                 {
 					"type": "virtualNetworkRules",
-                    "name": "[parameters('virtualNetworkRuleName')]",
+                    "name": "allowSubnet-mySql",
                     "apiVersion": "[parameters('apiSettings').mySqlApiVersion]",
                     "properties": {
                         "virtualNetworkSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('networkSettings').virtualNetworkName, parameters('networkSettings').subnetName)]",
-                        "ignoreMissingVnetServiceEndpoint": "[parameters('ignoreMissingVnetServiceEndpoint')]"
+                        "ignoreMissingVnetServiceEndpoint": false
                     },
                     "dependsOn": [
                         "[concat('Microsoft.DBforMySQL/servers/', parameters('serverName'))]"

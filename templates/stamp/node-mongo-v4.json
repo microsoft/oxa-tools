@@ -47,16 +47,17 @@
                     "defaultConsistencyLevel": "Session",
                     "maxIntervalInSeconds": 5,
                     "maxStalenessPrefix": 100
-                }
+                },
+				"sslEnforcement": "[parameters('sslEnforcement')]"
 			},
 			"resources": [
                 {
 					"type": "virtualNetworkRules",
-                    "name": "AllowSubnet-mongo",
+                    "name": "allowSubnet-mongo",
                     "apiVersion": "[parameters('apiSettings').documentDbApiVersion]",
                     "properties": {
                         "virtualNetworkSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('networkSettings').virtualNetworkName, parameters('networkSettings').subnetName)]",
-                        "ignoreMissingVnetServiceEndpoint": "[parameters('ignoreMissingVnetServiceEndpoint')]"
+                        "ignoreMissingVnetServiceEndpoint": false
                     },
                     "dependsOn": [
                         "[concat('Microsoft.DocumentDB/databaseAccounts/', parameters('name'))]"
