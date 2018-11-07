@@ -60,7 +60,7 @@
 		{
             "type": "Microsoft.KeyVault/vaults/providers/roleAssignments",
             "name": "[concat(parameters('networkSettings').clusterKeyVaultName, '/Microsoft.Authorization/', guid(resourceGroup().id))]",
-            "apiVersion": "2018-09-01-preview",
+            "apiVersion": "[parameters('apiSettings').authorizationApiVersion]",
             "properties": {
                 "roleDefinitionId": "[variables(parameters('builtInRoleType'))]",
                 "principalId": "[reference(concat('Microsoft.ManagedIdentity/userAssignedIdentities/', parameters('identityName'), '/'), parameters('apiSettings').managedIdentityApiVersion, 'Full').properties.principalId]"
