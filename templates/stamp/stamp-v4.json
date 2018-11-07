@@ -546,7 +546,7 @@
     },
     "variables": {
         "defaultApiVersion": "2018-06-01",
-        "apiVersion": "2016-09-01",
+        "resourcesApiVersion": "2018-09-01",
         "availabilitySetApiVersion": "2018-06-01",
         "networkApiVersion": "2018-08-01",
         "computeApiVersion": "2018-06-01",
@@ -560,8 +560,6 @@
 		"documentDbApiVersion": "2016-03-31",
 		"managedIdentityApiVersion": "2015-08-31-preview",
         
-        "virtualMachineExtensionsApiVersion": "[variables('defaultApiVersion')]",
-        "virtualMachineApiVersion": "[variables('defaultApiVersion')]",
         "slot1Status": "[if(equals(parameters('deploymentSlot'), 'slot1'), 'Enabled','Disabled')]",
         "slot2Status": "[if(equals(parameters('deploymentSlot'), 'slot2'), 'Enabled','Disabled')]",
         "memcacheServer": "[if(equals(parameters('deploymentSlot'), 'slot1'), '10.0.0.16','10.0.0.17')]",
@@ -821,9 +819,7 @@
         "apiSettings": {
             "apiVersion": "[variables('apiVersion')]",
             "storageApiVersion": "[variables('storageApiVersion')]",
-            "virtualMachineApiVersion": "[variables('virtualMachineApiVersion')]",
             "availabilitySetApiVersion": "[variables('availabilitySetApiVersion')]",
-            "virtualMachineExtensionsApiVersion": "[variables('virtualMachineExtensionsApiVersion')]",
             "networkApiVersion": "[variables('networkApiVersion')]",
             "computeApiVersion": "[variables('computeApiVersion')]",
             "insightsApiVersion": "[variables('insightsApiVersion')]",
@@ -913,7 +909,7 @@
         {
             "name": "shared-resources",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('apiVersion')]",
+            "apiVersion": "[variables('resourcesApiVersion')]",
             "condition": "[variables('resourcesToDeploy')[parameters('deploymentType')].sharedResources]",
             "properties": {
                 "mode": "Incremental",
@@ -940,7 +936,7 @@
         {
             "name": "jumpbox",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('apiVersion')]",
+            "apiVersion": "[variables('resourcesApiVersion')]",
             "condition": "[variables('resourcesToDeploy')[parameters('deploymentType')].jumpbox]",
             "dependsOn": [
                 "[concat('Microsoft.Resources/deployments/', 'shared-resources')]",
@@ -982,7 +978,7 @@
         {
             "name": "vmss",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('apiVersion')]",
+            "apiVersion": "[variables('resourcesApiVersion')]",
             "condition": "[variables('resourcesToDeploy')[parameters('deploymentType')].vmss]",
             "dependsOn": [
                 "[concat('Microsoft.Resources/deployments/', 'shared-resources')]",
@@ -1027,7 +1023,7 @@
         {
             "name": "keyVault",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('apiVersion')]",
+            "apiVersion": "[variables('resourcesApiVersion')]",
             "condition": "[variables('resourcesToDeploy')[parameters('deploymentType')].keyVault]",
             "properties": {
                 "mode": "Incremental",
@@ -1051,7 +1047,7 @@
         {
             "name": "trafficManagerLms",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('apiVersion')]",
+            "apiVersion": "[variables('resourcesApiVersion')]",
             "condition": "[variables('resourcesToDeploy')[parameters('deploymentType')].trafficManagerLms]",
             "dependsOn": [
                 "vmss"
@@ -1084,7 +1080,7 @@
         {
             "name": "trafficManagerCms",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('apiVersion')]",
+            "apiVersion": "[variables('resourcesApiVersion')]",
             "condition": "[variables('resourcesToDeploy')[parameters('deploymentType')].trafficManagerCms]",
             "dependsOn": [
                 "vmss"
@@ -1117,7 +1113,7 @@
         {
             "name": "trafficManagerPreview",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('apiVersion')]",
+            "apiVersion": "[variables('resourcesApiVersion')]",
             "condition": "[variables('resourcesToDeploy')[parameters('deploymentType')].trafficManagerPreview]",
             "dependsOn": [
                 "vmss"
@@ -1150,7 +1146,7 @@
 		{
 			"name": "keyVaultAccess",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('apiVersion')]",
+            "apiVersion": "[variables('resourcesApiVersion')]",
 			"dependsOn": [
 				"keyVault",
                 "vmss"
@@ -1180,7 +1176,7 @@
 		{
 			"name": "mySql",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('apiVersion')]",
+            "apiVersion": "[variables('resourcesApiVersion')]",
 			"condition": "[variables('resourcesToDeploy')[parameters('deploymentType')].mySql]",
 			"dependsOn": [
 				"[concat('Microsoft.Resources/deployments/', 'shared-resources')]"
@@ -1216,7 +1212,7 @@
 		{
 			"name": "mongo",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('apiVersion')]",
+            "apiVersion": "[variables('resourcesApiVersion')]",
 			"condition": "[variables('resourcesToDeploy')[parameters('deploymentType')].mongo]",
 			"dependsOn": [
 				"[concat('Microsoft.Resources/deployments/', 'shared-resources')]"
