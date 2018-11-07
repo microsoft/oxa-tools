@@ -59,7 +59,12 @@
                     "maxStalenessPrefix": 100
                 },
 				"capabilities": [],
-                "locations": []
+                "locations": [
+					{
+						"locationName": "[resourceGroup().location]",
+						"failoverPriority": 0
+					}
+				]
 			}
 		}
 	]
