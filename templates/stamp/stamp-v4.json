@@ -557,7 +557,8 @@
         "storageApiVersion": "2018-07-01",
         "servicebusApiVersion": "2017-04-01",
 		"mySqlApiVersion": "2017-12-01",
-		"documentDbApiVersion": "2015-04-08",
+		"documentDbApiVersion": "2017-12-01",
+		"managedIdentityApiVersion": "2015-08-31-preview",
         
         "virtualMachineExtensionsApiVersion": "[variables('defaultApiVersion')]",
         "virtualMachineApiVersion": "[variables('defaultApiVersion')]",
@@ -831,7 +832,8 @@
             "mediaServicesApiVersion": "[variables('mediaServicesApiVersion')]",
             "serviceBusApiVersion": "[variables('servicebusApiVersion')]",
 			"mySqlApiVersion": "[variables('mySqlApiVersion')]",
-			"documentDbApiVersion": "[variables('documentDbApiVersion')]"
+			"documentDbApiVersion": "[variables('documentDbApiVersion')]",
+			"managedIdentityApiVersion": "[variables('managedIdentityApiVersion')]"
         },
         "keyVaultSettings": {
             "enabledForDeployment": "[variables('keyVaultEnabledForDeployment')]",

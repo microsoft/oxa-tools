@@ -48,8 +48,8 @@
 				"mode": "Incremental",
 				"accessPolicies": [
 					{
-						"tenantId": "[reference(concat('Microsoft.ManagedIdentity/userAssignedIdentities/', parameters('identityName'), '/'), '2015-08-31-PREVIEW', 'Full').properties.tenantId]",
-						"objectId": "[reference(concat('Microsoft.ManagedIdentity/userAssignedIdentities/', parameters('identityName'), '/'), '2015-08-31-PREVIEW', 'Full').properties.principalId]", 
+						"tenantId": "[reference(concat('Microsoft.ManagedIdentity/userAssignedIdentities/', parameters('identityName'), '/'), parameters('apiSettings').managedIdentityApiVersion, 'Full').properties.tenantId]",
+						"objectId": "[reference(concat('Microsoft.ManagedIdentity/userAssignedIdentities/', parameters('identityName'), '/'), parameters('apiSettings').managedIdentityApiVersion, 'Full').properties.principalId]", 
 						"permissions": {
 							"secrets": ["get", "list"]
 						}
@@ -63,7 +63,7 @@
             "apiVersion": "2018-09-01-preview",
             "properties": {
                 "roleDefinitionId": "[variables(parameters('builtInRoleType'))]",
-                "principalId": "[reference(concat('Microsoft.ManagedIdentity/userAssignedIdentities/', parameters('identityName'), '/'), '2015-08-31-PREVIEW', 'Full').properties.principalId]"
+                "principalId": "[reference(concat('Microsoft.ManagedIdentity/userAssignedIdentities/', parameters('identityName'), '/'), parameters('apiSettings').managedIdentityApiVersion, 'Full').properties.principalId]"
             }
         }
 	]

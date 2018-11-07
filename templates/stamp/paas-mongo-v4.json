@@ -72,7 +72,7 @@
 	"outputs": {
 		"connectionString": {
 			"type": "securestring",
-			"value": "[concat('mongodb://', parameters('name'), ':', listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('name')), '2015-11-06').primaryMasterKey, '@', parameters('name'), '.documents.azure.com:10255/?ssl=true&replicaSet=globaldb')]"
+			"value": "[concat('mongodb://', parameters('name'), ':', listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('name')), parameters('apiSettings').documentDbApiVersion).primaryMasterKey, '@', parameters('name'), '.documents.azure.com:10255/?ssl=true&replicaSet=globaldb')]"
 		}
 	}
 }

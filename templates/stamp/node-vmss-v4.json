@@ -339,7 +339,7 @@
 		{
 			"type": "Microsoft.ManagedIdentity/userAssignedIdentities",
 			"name": "[variables('virtualMachineScaleSetIdentityName')]",
-			"apiVersion": "2015-08-31-PREVIEW",
+			"apiVersion": "[parameters('apiSettings').managedIdentityApiVersion]",
 			"location": "[resourceGroup().location]"
 		},
         {
@@ -414,7 +414,8 @@
                                                 ]
                                             }
                                         }
-                                    ]
+                                    ],
+									"enableAcceleratedNetworking": true,
                                 }
                             }
                         ]
