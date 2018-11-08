@@ -237,16 +237,21 @@
         }
     },
     "variables": {
-        "defaultApiVersion": "2015-05-01-preview",
-        "apiVersion": "2016-09-01",
-        "availabilitySetApiVersion": "2015-06-15",
-        "networkApiVersion": "2016-03-30",
-        "computeApiVersion": "2016-03-30",
+        "resourcesApiVersion": "2018-09-01",
+        "availabilitySetApiVersion": "2018-06-01",
+        "networkApiVersion": "2018-08-01",
+        "computeApiVersion": "2018-06-01",
         "insightsApiVersion": "2015-04-01",
-
-        "virtualMachineExtensionsApiVersion": "[variables('defaultApiVersion')]",
-        "virtualMachineApiVersion": "[variables('defaultApiVersion')]",
-        "storageApiVersion": "[variables('defaultApiVersion')]",
+        "keyVaultApiVersion": "2018-02-14",
+        "trafficManagerApiversion": "2017-05-01",
+        "mediaServicesApiVersion": "2018-06-01-preview",
+        "storageApiVersion": "2018-07-01",
+        "servicebusApiVersion": "2017-04-01",
+		"mySqlApiVersion": "2017-12-01",
+		"documentDbApiVersion": "2016-03-31",
+		"managedIdentityApiVersion": "2015-08-31-preview",
+		"authorizationApiVersion": "2018-09-01-preview",
+		"networkVirtualNetworksSubnetsApiVersion": "2016-12-01",
 
         "diagnosticStorageAccountName": "[concat(toLower(parameters('clusterName')), 'diagnostics')]",
         "storageAccountName": "[concat(toLower(parameters('clusterName')), 'vhdsa')]",
@@ -382,14 +387,20 @@
             "dataDiskSize": 256
         },
         "apiSettings": {
-            "apiVersion": "[variables('apiVersion')]",
             "storageApiVersion": "[variables('storageApiVersion')]",
-            "virtualMachineApiVersion": "[variables('virtualMachineApiVersion')]",
             "availabilitySetApiVersion": "[variables('availabilitySetApiVersion')]",
-            "virtualMachineExtensionsApiVersion": "[variables('virtualMachineExtensionsApiVersion')]",
             "networkApiVersion": "[variables('networkApiVersion')]",
             "computeApiVersion": "[variables('computeApiVersion')]",
-            "insightsApiVersion": "[variables('insightsApiVersion')]"
+            "insightsApiVersion": "[variables('insightsApiVersion')]",
+            "keyVaultApiVersion": "[variables('keyVaultApiVersion')]",
+            "trafficManagerApiversion": "[variables('trafficManagerApiversion')]",
+            "mediaServicesApiVersion": "[variables('mediaServicesApiVersion')]",
+            "serviceBusApiVersion": "[variables('servicebusApiVersion')]",
+			"mySqlApiVersion": "[variables('mySqlApiVersion')]",
+			"documentDbApiVersion": "[variables('documentDbApiVersion')]",
+			"managedIdentityApiVersion": "[variables('managedIdentityApiVersion')]",
+			"authorizationApiVersion": "[variables('authorizationApiVersion')]",
+			"networkVirtualNetworksSubnetsApiVersion": "[variables('networkVirtualNetworksSubnetsApiVersion')]"
         },
 
         "azureSharedScriptUrl": "[concat('https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/shared_scripts/', variables('supportedOSName'), '/')]",
@@ -398,7 +409,7 @@
         "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'), ' -a ', parameters('customInstallerGithubAccountName'),' -n ', parameters('customInstallerGithubProjectName'),' -b ', parameters('customInstallerGithubBranch'),' -i ', parameters('customInstallerMainScriptRelativePath'),' -p ', parameters('customInstallerGithubAccessToken'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'))]",
 
         "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources-4.json')]",
-        "jumpboxTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-jumpbox.json')]",
+        "jumpboxTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-jumpbox-v4.json')]",
         "vmssTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-vmss-v4.json')]",
 
         "installerUtilitiesScript": "utilities.sh",
@@ -433,7 +444,7 @@
         {
             "name": "vmss",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('apiVersion')]",
+            "apiVersion": "[variables('resourcesApiVersion')]",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {

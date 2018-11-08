@@ -538,21 +538,22 @@
         }
     },
     "variables": {
-        "defaultApiVersion": "2015-05-01-preview",
-        "apiVersion": "2016-09-01",
-        "availabilitySetApiVersion": "2015-06-15",
-        "networkApiVersion": "2016-03-30",
-        "computeApiVersion": "2016-03-30",
+        "resourcesApiVersion": "2018-09-01",
+        "availabilitySetApiVersion": "2018-06-01",
+        "networkApiVersion": "2018-08-01",
+        "computeApiVersion": "2018-06-01",
         "insightsApiVersion": "2015-04-01",
-        "keyVaultApiversion": "2015-06-01",
-        "trafficManagerApiversion": "2015-11-01",
-        "mediaServicesApiVersion": "2015-10-01",
-        "storageApiVersion": "2016-01-01",
+        "keyVaultApiVersion": "2018-02-14",
+        "trafficManagerApiversion": "2017-05-01",
+        "mediaServicesApiVersion": "2018-06-01-preview",
+        "storageApiVersion": "2018-07-01",
         "servicebusApiVersion": "2017-04-01",
+		"mySqlApiVersion": "2017-12-01",
+		"documentDbApiVersion": "2016-03-31",
+		"managedIdentityApiVersion": "2015-08-31-preview",
+		"authorizationApiVersion": "2018-09-01-preview",
 		"networkVirtualNetworksSubnetsApiVersion": "2016-12-01",
-        
-        "virtualMachineExtensionsApiVersion": "[variables('defaultApiVersion')]",
-        "virtualMachineApiVersion": "[variables('defaultApiVersion')]",
+		
         "slot1Status": "[if(equals(parameters('deploymentSlot'), 'slot1'), 'Enabled','Disabled')]",
         "slot2Status": "[if(equals(parameters('deploymentSlot'), 'slot2'), 'Enabled','Disabled')]",
         "memcacheServer": "[if(equals(parameters('deploymentSlot'), 'slot1'), '10.0.0.16','10.0.0.17')]",
@@ -651,6 +652,8 @@
             "clusterKeyVaultName": "[concat(parameters('clusterName'), '-kv')]",
             "clusterJumpBoxName": "[concat(parameters('clusterName'), '-jb', variables('jumpboxNameSuffix'))]",
             "clusterJumpBoxDomainName": "[concat(parameters('clusterName'), 'jb', variables('jumpboxNameSuffix'))]",
+			"clusterMongoDataNodeName": "[concat(parameters('clusterName'), '-mongo')]",
+			"clusterMysqlDataNodeName": "[concat(parameters('clusterName'), '-mysql')]",
             "clusterVirtualMachineScaleSetName": "[variables('vmssName')]",
             "clusterVirtualMachineScaleSetDomainName": "[concat(parameters('clusterName'), 'vmss')]",
             "clusterVirtualMachineScaleSetSettingsName": "[variables('vmssAutoScaleSettingsName')]",
@@ -801,19 +804,20 @@
             "dataDiskSize": 256
         },
         "apiSettings": {
-            "apiVersion": "[variables('apiVersion')]",
             "storageApiVersion": "[variables('storageApiVersion')]",
-            "virtualMachineApiVersion": "[variables('virtualMachineApiVersion')]",
             "availabilitySetApiVersion": "[variables('availabilitySetApiVersion')]",
-            "virtualMachineExtensionsApiVersion": "[variables('virtualMachineExtensionsApiVersion')]",
             "networkApiVersion": "[variables('networkApiVersion')]",
             "computeApiVersion": "[variables('computeApiVersion')]",
             "insightsApiVersion": "[variables('insightsApiVersion')]",
-            "keyVaultApiversion": "[variables('keyVaultApiversion')]",
+            "keyVaultApiVersion": "[variables('keyVaultApiVersion')]",
             "trafficManagerApiversion": "[variables('trafficManagerApiversion')]",
             "mediaServicesApiVersion": "[variables('mediaServicesApiVersion')]",
             "serviceBusApiVersion": "[variables('servicebusApiVersion')]",
-			"networkVirtualNetworksSubnetsApiVersion": "[variables('networkVirtualNetworksSubnetsApiVersion')]"     
+			"mySqlApiVersion": "[variables('mySqlApiVersion')]",
+			"documentDbApiVersion": "[variables('documentDbApiVersion')]",
+			"managedIdentityApiVersion": "[variables('managedIdentityApiVersion')]",
+			"authorizationApiVersion": "[variables('authorizationApiVersion')]",
+			"networkVirtualNetworksSubnetsApiVersion": "[variables('networkVirtualNetworksSubnetsApiVersion')]"
         },
         "keyVaultSettings": {
             "enabledForDeployment": "[variables('keyVaultEnabledForDeployment')]",
@@ -897,7 +901,7 @@
         {
             "name": "keyVault",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('apiVersion')]",
+            "apiVersion": "[variables('resourcesApiVersion')]",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -920,7 +924,7 @@
         {
             "name": "shared-resources",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('apiVersion')]",
+            "apiVersion": "[variables('resourcesApiVersion')]",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
