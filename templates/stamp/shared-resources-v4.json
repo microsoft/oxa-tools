@@ -55,7 +55,7 @@
 		{
             "type": "Microsoft.Network/virtualNetworks/subnets",
             "name": "[concat(parameters('networkSettings').virtualNetworkName, '/', parameters('networkSettings').subnetName)]",
-            "apiVersion": "[parameters('apiSettings').networkApiVersion]",
+            "apiVersion": "[parameters('apiSettings').networkVirtualNetworksSubnetsApiVersion]",
             "scale": null,
             "properties": {
                 "provisioningState": "Succeeded",
