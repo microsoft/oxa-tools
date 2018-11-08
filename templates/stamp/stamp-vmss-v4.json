@@ -237,7 +237,7 @@
         }
     },
     "variables": {
-        "resourcesApiVersion": "2018-09-01",
+        "resourcesApiVersion": "2016-09-01",
         "availabilitySetApiVersion": "2018-06-01",
         "networkApiVersion": "2018-08-01",
         "computeApiVersion": "2018-06-01",
@@ -409,7 +409,7 @@
         "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'), ' -a ', parameters('customInstallerGithubAccountName'),' -n ', parameters('customInstallerGithubProjectName'),' -b ', parameters('customInstallerGithubBranch'),' -i ', parameters('customInstallerMainScriptRelativePath'),' -p ', parameters('customInstallerGithubAccessToken'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'))]",
 
         "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources-4.json')]",
-        "jumpboxTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-jumpbox.json')]",
+        "jumpboxTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-jumpbox-v4.json')]",
         "vmssTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-vmss-v4.json')]",
 
         "installerUtilitiesScript": "utilities.sh",
