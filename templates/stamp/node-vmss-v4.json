@@ -388,9 +388,16 @@
                     "osProfile": {
                         "computerNamePrefix": "[parameters('networkSettings').clusterVirtualMachineScaleSetDomainName]",
                         "adminUsername": "[parameters('networkSettings').adminUsername]",
-						"adminPassword": "1_Foo!",
-                        "linuxConfiguration": {
-                            "disablePasswordAuthentication": "false"
+						"linuxConfiguration": {
+                            "disablePasswordAuthentication": "true",
+							"ssh": {
+                                "publicKeys": [
+                                    {
+                                        "path": "[concat('/home/', parameters('networkSettings').adminUsername, '/.ssh/authorized_keys')]",
+                                        "keyData": "[parameters('networkSettings').adminPublicKey]"
+                                    }
+                                ]
+                            }
                         }
                     },
 

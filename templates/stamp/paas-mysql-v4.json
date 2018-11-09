@@ -127,7 +127,7 @@
 				"Enabled",
 				"Disabled"
 			],
-			"defaultValue": "Disabled",
+			"defaultValue": "Enabled",
             "metadata": {
                 "description": "SSL enforcement"
             }
