@@ -58,7 +58,14 @@
                     "maxIntervalInSeconds": 5,
                     "maxStalenessPrefix": 100
                 },
-				"capabilities": [],
+		"capabilities": [
+                    {
+                        "name": "EnableAggregationPipeline"
+                    },
+                    {
+                        "name": "MongoDBv3.4"
+                    }
+                ],
                 "locations": [
 					{
 						"locationName": "[resourceGroup().location]",
