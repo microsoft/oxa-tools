@@ -35,7 +35,7 @@
                 "Standard_DS15_v2"
             ]
         },
-		"mongoVmSize": {
+        "mongoVmSize": {
             "type": "string",
             "defaultValue": "Standard_D2_v2",
             "allowedValues": [
@@ -278,7 +278,7 @@
                 "description": "The Azure Ubuntu Image version to use for VMSS instances"
             }
         },
-		"mongoUbuntuOsImageSku": {
+        "mongoUbuntuOsImageSku": {
             "type": "string",
             "defaultValue": "16.04.0-LTS",
             "allowedValues": [
@@ -309,7 +309,7 @@
                 "description": "The size of data disk to provision and attach to the VM"
             }
         },
-		"mongoNodeDataDiskSizeGB": {
+        "mongoNodeDataDiskSizeGB": {
             "type": "int",
             "defaultValue": 256,
             "metadata": {
@@ -423,7 +423,7 @@
                 "description": "Email address of the administrator where system and other notifications will be sent"
             }
         },
-		"mongoBackupFrequency": {
+        "mongoBackupFrequency": {
             "type": "string",
             "defaultValue": "0 0 * * * *",
             "metadata": {
@@ -719,9 +719,9 @@
             "clusterKeyVaultName": "[concat(parameters('clusterName'), '-kv')]",
             "clusterJumpBoxName": "[concat(parameters('clusterName'), '-jb', variables('jumpboxNameSuffix'))]",
             "clusterJumpBoxDomainName": "[concat(parameters('clusterName'), 'jb', variables('jumpboxNameSuffix'))]",
-			"clusterMongoDataNodeName": "[concat(parameters('clusterName'), '-mongo')]",
+            "clusterMongoDataNodeName": "[concat(parameters('clusterName'), '-mongo')]",
             "clusterMongoDataNodeDomainName": "[concat(parameters('clusterName'), 'mongo')]",
-			"clusterMysqlDataNodeName": "[concat(parameters('clusterName'), '-mysql')]",
+            "clusterMysqlDataNodeName": "[concat(parameters('clusterName'), '-mysql')]",
             "clusterVirtualMachineScaleSetName": "[variables('vmssName')]",
             "clusterVirtualMachineScaleSetDomainName": "[concat(parameters('clusterName'), 'vmss')]",
             "clusterVirtualMachineScaleSetSettingsName": "[variables('vmssAutoScaleSettingsName')]",
@@ -862,7 +862,7 @@
             },
             "dataDiskSize": "[parameters('jumpBoxDataDiskSizeGB')]"
         },
-		"mongoMachineSettings": {
+        "mongoMachineSettings": {
             "vmSize": "[parameters('mongoVmSize')]",
             "osImageReference": {
                 "publisher": "[variables('supportedOSImagePublisher')]",
@@ -954,8 +954,8 @@
         "trafficManagerTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-trafficmanager.json')]",
         "mongoNodeTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-mongo-v4.json')]",
         "vmssTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-vmss-v4.json')]",
-		"keyVaultAccessTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-keyvault-access-v4.json')]",
-		"mySqlTemplateUrl": "[concat(variables('templateBaseUrl'), 'paas-mysql-v4.json')]",
+        "keyVaultAccessTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-keyvault-access-v4.json')]",
+        "mySqlTemplateUrl": "[concat(variables('templateBaseUrl'), 'paas-mysql-v4.json')]",
         "mongoReplicaSetName": "[concat(parameters('clusterName'), 'rs1')]",
         "mongoReplicaSetKey": "[uniqueString(resourceGroup().id)]",
 

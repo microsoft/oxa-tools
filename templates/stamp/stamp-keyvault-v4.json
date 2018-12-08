@@ -35,7 +35,7 @@
                 "Standard_DS15_v2"
             ]
         },
-		"mongoVmSize": {
+         "mongoVmSize": {
             "type": "string",
             "defaultValue": "Standard_D2_v2",
             "allowedValues": [
@@ -278,7 +278,7 @@
                 "description": "The Azure Ubuntu Image version to use for VMSS instances"
             }
         },
-		"mongoUbuntuOsImageSku": {
+        "mongoUbuntuOsImageSku": {
             "type": "string",
             "defaultValue": "16.04.0-LTS",
             "allowedValues": [
@@ -309,7 +309,7 @@
                 "description": "The size of data disk to provision and attach to the VM"
             }
         },
-		"mongoNodeDataDiskSizeGB": {
+        "mongoNodeDataDiskSizeGB": {
             "type": "int",
             "defaultValue": 256,
             "metadata": {
@@ -423,7 +423,7 @@
                 "description": "Email address of the administrator where system and other notifications will be sent"
             }
         },
-		"mongoBackupFrequency": {
+        "mongoBackupFrequency": {
             "type": "string",
             "defaultValue": "0 0 * * * *",
             "metadata": {
@@ -653,7 +653,7 @@
             "bootstrap": {
                 "sharedResources": true,
                 "jumpbox": true,
-				"mongo": true,
+                "mongo": true,
                 "vmss": true,
                 "keyVault": false,
                 "trafficManagerLms": true,
@@ -663,7 +663,7 @@
             "upgrade": {
                 "sharedResources": false,
                 "jumpbox": false,
-				"mongo": false,
+                "mongo": false,
                 "vmss": true,
                 "keyVault": false,
                 "trafficManagerLms": false,
@@ -673,7 +673,7 @@
             "swap": {
                 "sharedResources": false,
                 "jumpbox": false,
-				"mongo": false,
+                "mongo": false,
                 "vmss": false,
                 "keyVault": false,
                 "trafficManagerLms": true,
@@ -704,14 +704,14 @@
             "mysqlServerIpOffset": 15,
             "jbNetworkSecurityGroupName": "[concat(parameters('clusterName'),'-jb-', 'nsg')]",
             "vmssNetworkSecurityGroupName": "[concat(parameters('clusterName'), '-vmss-', 'nsg')]",
-			"mongoNetworkSecurityGroupName": "[concat(parameters('clusterName'), '-mongo-', 'nsg')]",
+            "mongoNetworkSecurityGroupName": "[concat(parameters('clusterName'), '-mongo-', 'nsg')]",
             "mysqlNetworkSecurityGroupName": "[concat(parameters('clusterName'), '-mysql-', 'nsg')]",
             "clusterKeyVaultName": "[concat(parameters('clusterName'), '-kv')]",
             "clusterJumpBoxName": "[concat(parameters('clusterName'), '-jb', variables('jumpboxNameSuffix'))]",
             "clusterJumpBoxDomainName": "[concat(parameters('clusterName'), 'jb', variables('jumpboxNameSuffix'))]",
-			"clusterMongoDataNodeName": "[concat(parameters('clusterName'), '-mongo')]",
-			"clusterMongoDataNodeDomainName": "[concat(parameters('clusterName'), 'mongo')]",
-			"clusterMysqlDataNodeName": "[concat(parameters('clusterName'), '-mysql')]",
+            "clusterMongoDataNodeName": "[concat(parameters('clusterName'), '-mongo')]",
+            "clusterMongoDataNodeDomainName": "[concat(parameters('clusterName'), 'mongo')]",
+            "clusterMysqlDataNodeName": "[concat(parameters('clusterName'), '-mysql')]",
             "clusterVirtualMachineScaleSetName": "[variables('vmssName')]",
             "clusterVirtualMachineScaleSetDomainName": "[concat(parameters('clusterName'), 'vmss')]",
             "clusterVirtualMachineScaleSetSettingsName": "[variables('vmssAutoScaleSettingsName')]",
@@ -852,7 +852,7 @@
             },
             "dataDiskSize": "[parameters('jumpBoxDataDiskSizeGB')]"
         },
-		"mongoMachineSettings": {
+        "mongoMachineSettings": {
             "vmSize": "[parameters('mongoVmSize')]",
             "osImageReference": {
                 "publisher": "[variables('supportedOSImagePublisher')]",
@@ -930,13 +930,13 @@
         "authenticationParameters": "[concat(' --enable-thirdparty-auth ', parameters('enableThirdPartyAuth'), ' --aad-loginbutton-text \"', replace(parameters('aadLoginButtonText'), ' ', '_'), '\"')]",
         "databaseParameters": "[concat(' --mongo-adminuser ', parameters('mongoServerAdminUserName'), ' --mongo-adminuserpassword \"', parameters('mongoServerAdminPassword'), '\" --mongo-replicasetkey \"', variables('mongoReplicaSetKey'), '\" --mysql-backupuser ', parameters('mysqlBackupUserName'), ' --mysql-backupuserpassword \"', parameters('mysqlBackupUserPassword'), '\" --mysql-repluser \"', parameters('mysqlServerReplUserName'), '\" --mysql-repluserpassword \"', parameters('mysqlServerReplPassword'), '\" --mysql-adminuser \"', parameters('mysqlServerAdminUserName'), '\" --mysql-adminuserpassword \"', parameters('mysqlServerAdminPassword'), '\" --mysql-repluser \"', parameters('mysqlServerReplUserName'), '\" --mysql-repluserpassword \"', parameters('mysqlServerReplPassword'), '\" --mysql-adminuser \"', parameters('mysqlServerAdminUserName'), '\" --mysql-adminuserpassword \"', parameters('mysqlServerAdminPassword'), '\"')]",
 
-		"customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'), variables('backupParameters'), variables('sampleCourseParameters'), variables('comprehensiveThemingParameters'), variables('authenticationParameters'), variables('customInstallerDomainOverrideParameters'), variables('databaseParameters'), variables('edxappParameters'), variables('memcacheParameters'), variables('azureCliParameters'), variables('customInstallerMobileRestApiParameters'), variables('customInstallerEdxAppSecretKeyParameters'), variables('customInstallerEdxAppLmsAllowedHostsParameters'), variables('customInstallerEdxAppCmsAllowedHostsParameters'), variables('jumpboxBootstrapParameters'), variables('customInstallerOutputRedirect') )]",
+        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'), variables('backupParameters'), variables('sampleCourseParameters'), variables('comprehensiveThemingParameters'), variables('authenticationParameters'), variables('customInstallerDomainOverrideParameters'), variables('databaseParameters'), variables('edxappParameters'), variables('memcacheParameters'), variables('azureCliParameters'), variables('customInstallerMobileRestApiParameters'), variables('customInstallerEdxAppSecretKeyParameters'), variables('customInstallerEdxAppLmsAllowedHostsParameters'), variables('customInstallerEdxAppCmsAllowedHostsParameters'), variables('jumpboxBootstrapParameters'), variables('customInstallerOutputRedirect') )]",
 
         "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources-v4.json')]",
         "jumpboxTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-jumpbox.json')]",
         "keyvaultTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-keyvault-v4.json')]",
         "trafficManagerTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-trafficmanager.json')]",
-		"mongoNodeTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-mongo.json')]",
+        "mongoNodeTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-mongo.json')]",
         "vmssTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-vmss-v4.json')]",
         "mongoReplicaSetName": "[concat(parameters('clusterName'), 'rs1')]",
         "mongoReplicaSetKey": "[uniqueString(resourceGroup().id)]",
