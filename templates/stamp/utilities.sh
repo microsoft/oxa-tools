@@ -820,8 +820,9 @@ install-azure-cli-2()
 
         log "Install Azure CLI 2.0"
         log "Adding Azure Cli 2.0 Repository for package installation"
-        echo "deb [arch=amd64] https://apt-mo.trafficmanager.net/repos/azure-cli/ wheezy main" | tee /etc/apt/sources.list.d/azure-cli.list
-        apt-key adv --keyserver apt-mo.trafficmanager.net --recv-keys 417A0893
+        AZ_REPO=$(lsb_release -cs)
+        echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | sudo tee /etc/apt/sources.list.d/azure-cli.list
+        curl -L https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
     
         log "Updating Repository"
         apt-get update -y -qq
