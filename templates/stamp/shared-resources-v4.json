@@ -166,7 +166,7 @@
         {
             "name": "[parameters('networkSettings').mongoNetworkSecurityGroupName]",
             "type": "Microsoft.Network/networkSecurityGroups",
-            "apiVersion": "[parameters('apiSettings').apiVersion]",
+            "apiVersion": "[parameters('apiSettings').networkApiVersion]",
             "location": "[resourceGroup().location]",
             "properties": {
                 "securityRules": [
