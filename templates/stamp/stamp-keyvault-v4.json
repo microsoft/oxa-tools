@@ -605,6 +605,7 @@
         "managedIdentityApiVersion": "2015-08-31-preview",
         "authorizationApiVersion": "2018-09-01-preview",
         "networkVirtualNetworksSubnetsApiVersion": "2016-12-01",
+        "virtualMachineApiVersion": "2018-10-01",
 		
         "slot1Status": "[if(equals(parameters('deploymentSlot'), 'slot1'), 'Enabled','Disabled')]",
         "slot2Status": "[if(equals(parameters('deploymentSlot'), 'slot2'), 'Enabled','Disabled')]",
@@ -889,7 +890,8 @@
             "documentDbApiVersion": "[variables('documentDbApiVersion')]",
             "managedIdentityApiVersion": "[variables('managedIdentityApiVersion')]",
             "authorizationApiVersion": "[variables('authorizationApiVersion')]",
-            "networkVirtualNetworksSubnetsApiVersion": "[variables('networkVirtualNetworksSubnetsApiVersion')]"
+            "networkVirtualNetworksSubnetsApiVersion": "[variables('networkVirtualNetworksSubnetsApiVersion')]",
+            "virtualMachineApiVersion": "[variables('virtualMachineApiVersion')]",
         },
         "keyVaultSettings": {
             "enabledForDeployment": "[variables('keyVaultEnabledForDeployment')]",
