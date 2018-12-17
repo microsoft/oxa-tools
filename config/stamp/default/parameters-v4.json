@@ -14,6 +14,9 @@
         "jumpBoxVmSize": {
             "value": "Standard_D1_v2"
         },
+        "mongoVmSize": {
+            "value": "Standard_D2_v2"
+        },
         "frontendVmSize": {
             "value": "Standard_D2_v2"
         },
@@ -110,11 +113,17 @@
         "vmssUbuntuOsImageSku": {
             "value": "16.04.0-LTS"
         },
+        "mongoUbuntuOsImageSku": {
+            "value": "16.04.0-LTS"
+        },
         "defaultUbuntuOsImageSku": {
             "value": "16.04.0-LTS"
         },
         "jumpBoxDataDiskSizeGB": {
             "value": 50
+        },
+        "mongoNodeDataDiskSizeGB": {
+            "value": 256
         },
         "customInstallerLaunchScript": {
             "value": "run-customizations.sh"
@@ -164,6 +173,12 @@
         },
         "clusterAdmininistratorEmailAddress": {
             "value": "{ADMINEMAILADDRESS}"
+        },
+        "mongoBackupFrequency": {
+            "value": "0 0 * * *"
+        },
+        "mongoBackupRetentionDays": {
+            "value": 30
         },
         "importKitchenSinkCourse": {
             "value": false

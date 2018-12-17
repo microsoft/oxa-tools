@@ -50,7 +50,7 @@
         },
         "skuName": {
             "type": "string",
-            "defaultValue": "GP_Gen4_2",
+            "defaultValue": "GP_Gen5_2",
             "metadata": {
                 "description": "Azure database for MySQL sku name "
             }
@@ -80,7 +80,7 @@
 				"Gen4",
 				"Gen5"
 			],
-            "defaultValue": "Gen4",
+            "defaultValue": "Gen5",
             "metadata": {
                 "description": "Azure database for MySQL sku family"
             }

@@ -35,6 +35,25 @@
                 "Standard_DS15_v2"
             ]
         },
+        "mongoVmSize": {
+            "type": "string",
+            "defaultValue": "Standard_D2_v2",
+            "allowedValues": [
+                "Standard_D1_v2",
+                "Standard_D2_v2",
+                "Standard_D3_v2",
+                "Standard_D4_v2",
+                "Standard_DS2_v2",
+                "Standard_DS3_v2",
+                "Standard_DS4_v2",
+                "Standard_DS5_v2",
+                "Standard_DS11_v2",
+                "Standard_DS12_v2",
+                "Standard_DS13_v2",
+                "Standard_DS14_v2",
+                "Standard_DS15_v2"
+            ]
+        },
         "frontendVmSize": {
             "type": "string",
             "defaultValue": "Standard_D2_v2",
@@ -259,6 +278,18 @@
                 "description": "The Azure Ubuntu Image version to use for VMSS instances"
             }
         },
+        "mongoUbuntuOsImageSku": {
+            "type": "string",
+            "defaultValue": "16.04.0-LTS",
+            "allowedValues": [
+                "16.04.0-LTS",
+                "14.04.5-LTS",
+                "12.04.5-LTS"
+            ],
+            "metadata": {
+                "description": "The Azure Ubuntu Image version to use for Mongo instances"
+            }
+        },
         "defaultUbuntuOsImageSku": {
             "type": "string",
             "defaultValue": "16.04.0-LTS",
@@ -274,6 +305,13 @@
         "jumpBoxDataDiskSizeGB": {
             "type": "int",
             "defaultValue": 50,
+            "metadata": {
+                "description": "The size of data disk to provision and attach to the VM"
+            }
+        },
+        "mongoNodeDataDiskSizeGB": {
+            "type": "int",
+            "defaultValue": 256,
             "metadata": {
                 "description": "The size of data disk to provision and attach to the VM"
             }
@@ -383,6 +421,20 @@
             "type": "string",
             "metadata": {
                 "description": "Email address of the administrator where system and other notifications will be sent"
+            }
+        },
+        "mongoBackupFrequency": {
+            "type": "string",
+            "defaultValue": "0 0 * * * *",
+            "metadata": {
+                "description": "Cron tab frequency for running a full backup of the mongo database. The expected format is parameter|value as supported by Ansible. See http://docs.ansible.com/ansible/cron_module.html for details"
+            }
+        },
+        "mongoBackupRetentionDays": {
+            "type": "int",
+            "defaultValue": 30,
+            "metadata": {
+                "description": "Number of days to keep old Mongo database backups. Backups older than this number of days will be deleted."
             }
         },
         "mysqlBackupRetentionDays": {
@@ -555,11 +607,12 @@
         "mediaServicesApiVersion": "2018-06-01-preview",
         "storageApiVersion": "2018-07-01",
         "servicebusApiVersion": "2017-04-01",
-		"mySqlApiVersion": "2017-12-01",
-		"documentDbApiVersion": "2016-03-31",
-		"managedIdentityApiVersion": "2015-08-31-preview",
-		"authorizationApiVersion": "2018-09-01-preview",
-		"networkVirtualNetworksSubnetsApiVersion": "2016-12-01",
+        "mySqlApiVersion": "2017-12-01",
+        "documentDbApiVersion": "2016-03-31",
+        "managedIdentityApiVersion": "2015-08-31-preview",
+        "authorizationApiVersion": "2018-09-01-preview",
+        "networkVirtualNetworksSubnetsApiVersion": "2016-12-01",
+        "virtualMachineApiVersion": "2018-10-01",
         
         "slot1Status": "[if(equals(parameters('deploymentSlot'), 'slot1'), 'Enabled','Disabled')]",
         "slot2Status": "[if(equals(parameters('deploymentSlot'), 'slot2'), 'Enabled','Disabled')]",
@@ -608,8 +661,8 @@
             "bootstrap": {
                 "sharedResources": true,
                 "jumpbox": true,
-				"mongo": true,
-				"mySql": true,
+                "mongo": true,
+                "mysql": true,
                 "vmss": true,
                 "keyVault": false,
                 "trafficManagerLms": true,
@@ -619,8 +672,8 @@
             "upgrade": {
                 "sharedResources": false,
                 "jumpbox": false,
-				"mongo": false,
-				"mySql": false,
+                "mongo": false,
+                "mysql": false,
                 "vmss": true,
                 "keyVault": false,
                 "trafficManagerLms": false,
@@ -630,8 +683,8 @@
             "swap": {
                 "sharedResources": false,
                 "jumpbox": false,
-				"mongo": false,
-				"mySql": false,
+                "mongo": false,
+                "mysql": false,
                 "vmss": false,
                 "keyVault": false,
                 "trafficManagerLms": true,
@@ -663,16 +716,20 @@
             "mysqlServerIpOffset": 15,
             "jbNetworkSecurityGroupName": "[concat(parameters('clusterName'),'-jb-', 'nsg')]",
             "vmssNetworkSecurityGroupName": "[concat(parameters('clusterName'), '-vmss-', 'nsg')]",
+            "mongoNetworkSecurityGroupName": "[concat(parameters('clusterName'), '-mongo-', 'nsg')]",
             "clusterKeyVaultName": "[concat(parameters('clusterName'), '-kv')]",
             "clusterJumpBoxName": "[concat(parameters('clusterName'), '-jb', variables('jumpboxNameSuffix'))]",
             "clusterJumpBoxDomainName": "[concat(parameters('clusterName'), 'jb', variables('jumpboxNameSuffix'))]",
-			"clusterMongoDataNodeName": "[concat(parameters('clusterName'), '-mongo')]",
-			"clusterMysqlDataNodeName": "[concat(parameters('clusterName'), '-mysql')]",
+            "clusterMongoDataNodeName": "[concat(parameters('clusterName'), '-mongo')]",
+            "clusterMongoDataNodeDomainName": "[concat(parameters('clusterName'), 'mongo')]",
+            "clusterMysqlDataNodeName": "[concat(parameters('clusterName'), '-mysql')]",
             "clusterVirtualMachineScaleSetName": "[variables('vmssName')]",
             "clusterVirtualMachineScaleSetDomainName": "[concat(parameters('clusterName'), 'vmss')]",
             "clusterVirtualMachineScaleSetSettingsName": "[variables('vmssAutoScaleSettingsName')]",
             "jumpBoxAvailabilitySetFaultDomainCount": "1",
             "jumpBoxNodeCount": "1",
+            "mongoDataNodesAvailabilitySetFaultDomainCount": "3",
+            "mongoDataNodeCount": 3,
 
             "trafficManagerSettings": {
                 "dnsTtlSeconds": 30,
@@ -806,6 +863,18 @@
             },
             "dataDiskSize": "[parameters('jumpBoxDataDiskSizeGB')]"
         },
+        "mongoMachineSettings": {
+            "vmSize": "[parameters('mongoVmSize')]",
+            "osImageReference": {
+                "publisher": "[variables('supportedOSImagePublisher')]",
+                "offer": "[variables('supportedOSImageOffer')]",
+                "sku": "[parameters('mongoUbuntuOsImageSku')]",
+                "version": "latest"
+            },
+            "dataDiskSize": "[parameters('mongoNodeDataDiskSizeGB')]",
+            "installerBaseUrl": "http://repo.mongodb.org/apt/ubuntu",
+            "installerPackages": "mongodb-org"
+        },
         "frontendMachineSettings": {
             "vmSize": "[parameters('frontendVmSize')]",
             "osImageReference": {
@@ -827,11 +896,12 @@
             "trafficManagerApiversion": "[variables('trafficManagerApiversion')]",
             "mediaServicesApiVersion": "[variables('mediaServicesApiVersion')]",
             "serviceBusApiVersion": "[variables('servicebusApiVersion')]",
-			"mySqlApiVersion": "[variables('mySqlApiVersion')]",
-			"documentDbApiVersion": "[variables('documentDbApiVersion')]",
-			"managedIdentityApiVersion": "[variables('managedIdentityApiVersion')]",
-			"authorizationApiVersion": "[variables('authorizationApiVersion')]",
-			"networkVirtualNetworksSubnetsApiVersion": "[variables('networkVirtualNetworksSubnetsApiVersion')]"
+            "mySqlApiVersion": "[variables('mySqlApiVersion')]",
+            "documentDbApiVersion": "[variables('documentDbApiVersion')]",
+            "managedIdentityApiVersion": "[variables('managedIdentityApiVersion')]",
+            "authorizationApiVersion": "[variables('authorizationApiVersion')]",
+            "networkVirtualNetworksSubnetsApiVersion": "[variables('networkVirtualNetworksSubnetsApiVersion')]",
+            "virtualMachineApiVersion": "[variables('virtualMachineApiVersion')]"
         },
         "keyVaultSettings": {
             "enabledForDeployment": "[variables('keyVaultEnabledForDeployment')]",
@@ -865,11 +935,12 @@
 
         "secureGenericStorageAccountId": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/','Microsoft.Storage/storageAccounts/', variables('secureGenericStorageAccountName'))]",
         "storageKeyPlaceholder": "STORAGE_PLACEHOLDER_KEY",
+        "backupParameters": "[concat(' --storage-account-key ', variables('storageKeyPlaceholder'),' --storage-account-name ', variables('secureGenericStorageAccountName'), ' --mongo-backup-frequency \"', replace(parameters('mongoBackupFrequency'), ' ', '_'), '\" --mongo-backup-retention-days ', parameters('mongoBackupRetentionDays'))]",
 
         "sampleCourseParameters": "[concat(' --import-kitchensink-course ', parameters('importKitchenSinkCourse'))]",
         "comprehensiveThemingParameters": "[concat(' --enable-comprehensive-theming ', parameters('enableComprehensiveTheming'), ' --comprehensive-theming-directory ', parameters('comprehensiveThemingDirectory'), ' --comprehensive-theming-name ', parameters('comprehensiveThemingName'))]",
         "authenticationParameters": "[concat(' --enable-thirdparty-auth ', parameters('enableThirdPartyAuth'), ' --aad-loginbutton-text \"', replace(parameters('aadLoginButtonText'), ' ', '_'), '\"')]",
-        "databaseParameters": "[concat(' --mongo-adminuser ', parameters('mongoServerAdminUserName'), ' --mongo-adminuserpassword \"', parameters('mongoServerAdminPassword'), '\" --mysql-adminuser \"', parameters('mysqlServerAdminUserName'), '\" --mysql-adminuserpassword \"', parameters('mysqlServerAdminPassword'), '\" --mysql-adminuser \"', parameters('mysqlServerAdminUserName'), '\" --mysql-adminuserpassword \"', parameters('mysqlServerAdminPassword'), '\"')]",
+        "databaseParameters": "[concat(' --mongo-adminuser ', parameters('mongoServerAdminUserName'), ' --mongo-adminuserpassword \"', parameters('mongoServerAdminPassword'), '\" --mongo-replicasetkey \"', variables('mongoReplicaSetKey'), '\" --mysql-adminuser \"', parameters('mysqlServerAdminUserName'), '\" --mysql-adminuserpassword \"', parameters('mysqlServerAdminPassword'), '\"')]",
         "edxappParameters": "[concat(' --platform-email \"', parameters('edxPlatformEmail'), '\" --platform-name \"', base64(parameters('edxPlatformName')), '\" --edxapp-superuser \"', parameters('edxappSuperUserName'), '\" --edxapp-superuserpassword \"', parameters('edxappSuperUserPassword'), '\" --edxapp-superuseremail \"', parameters('edxappSuperUserEmail'), '\"')]",
         "memcacheParameters": "[concat(' --memcache-server \"', base64(variables('memcacheServer')), '\"')]",
         "azureCliParameters": "[concat(' --azurecli-version \"', parameters('azureCliVersion'), '\"')]",
@@ -877,17 +948,33 @@
         "servicebusKeyPlaceholder": "SERVICEBUS_PLACEHOLDER_KEY",
         "servicebusParameters": "[concat(' --servicebus-namespace \"', variables('serviceBusNameSpace'), '\" --servicebus-queue-name \"', variables('serviceBusQueueName'), '\" --servicebus-shared-access-key \"', variables('servicebusKeyPlaceholder'), '\"')]",
 
-        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'), variables('sampleCourseParameters'), variables('comprehensiveThemingParameters'), variables('authenticationParameters'), variables('customInstallerDomainOverrideParameters'), variables('databaseParameters'), variables('edxappParameters'), variables('memcacheParameters'), variables('azureCliParameters'), variables('customInstallerMobileRestApiParameters'), variables('customInstallerEdxAppSecretKeyParameters'), variables('customInstallerEdxAppLmsAllowedHostsParameters'), variables('customInstallerEdxAppCmsAllowedHostsParameters'), variables('jumpboxBootstrapParameters'), variables('servicebusParameters'), variables('customInstallerOutputRedirect') )]",
+        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'), variables('backupParameters'), variables('sampleCourseParameters'), variables('comprehensiveThemingParameters'), variables('authenticationParameters'), variables('customInstallerDomainOverrideParameters'), variables('databaseParameters'), variables('edxappParameters'), variables('memcacheParameters'), variables('azureCliParameters'), variables('customInstallerMobileRestApiParameters'), variables('customInstallerEdxAppSecretKeyParameters'), variables('customInstallerEdxAppLmsAllowedHostsParameters'), variables('customInstallerEdxAppCmsAllowedHostsParameters'), variables('jumpboxBootstrapParameters'), variables('servicebusParameters'), variables('customInstallerOutputRedirect') )]",
 
         "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources-v4.json')]",
         "jumpboxTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-jumpbox-v4.json')]",
         "keyvaultTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-keyvault-v4.json')]",
         "trafficManagerTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-trafficmanager.json')]",
+        "mongoNodeTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-mongo-v4.json')]",
         "vmssTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-vmss-v4.json')]",
-		"keyVaultAccessTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-keyvault-access-v4.json')]",
-		"mySqlTemplateUrl": "[concat(variables('templateBaseUrl'), 'paas-mysql-v4.json')]",
-		"mongoTemplateUrl": "[concat(variables('templateBaseUrl'), 'paas-mongo-v4.json')]",
+        "keyVaultAccessTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-keyvault-access-v4.json')]",
+        "mySqlTemplateUrl": "[concat(variables('templateBaseUrl'), 'paas-mysql-v4.json')]",
+        "mongoReplicaSetName": "[concat(parameters('clusterName'), 'rs1')]",
+        "mongoReplicaSetKey": "[uniqueString(resourceGroup().id)]",
+
         "installerUtilitiesScript": "utilities.sh",
+        "mongoDbInstallerScript": "[concat('mongodb-', variables('supportedOSName'), '-install.sh')]",
+        "mongoDbInstallerCommand": "[concat('bash ', variables('mongoDbInstallerScript'), ' -i ', variables('mongoMachineSettings').installerBaseUrl, ' -b ', variables('mongoMachineSettings').installerPackages, ' -r ', variables('mongoReplicaSetName'), ' -k ', variables('mongoReplicaSetKey'), ' -u ', parameters('mongoServerAdminUserName'), ' -p ', base64(parameters('mongoServerAdminPassword')), ' -x ', variables('networkSettings').serverIpPrefix, ' -n ', variables('networkSettings').mongoDataNodeCount)]",
+        "mongoDBInstallerSettings": {
+            "scriptsToDownload": [
+                "[concat(variables('templateBaseUrl'), variables('mongoDbInstallerScript'))]",
+                "[concat(variables('azureSharedScriptUrl'), 'vm-disk-utils-0.1.sh')]",
+                "[concat(variables('clusterCustomInstallerScriptFullPath'))]",
+                "[concat(variables('templateBaseUrl'), variables('installerUtilitiesScript'))]",
+                "[concat(variables('clusterCustomInstallerScriptFullPath'))]"
+            ],
+            "regularNodeInstallCommand": "[concat(variables('customInstallerCommand'), ' && ', variables('mongoDbInstallerCommand'))]",
+            "lastNodeInstallCommand": "[concat(variables('customInstallerCommand'), ' && ', variables('mongoDbInstallerCommand'), ' -l ')]"
+        },
 
         "jumpBoxInstallerSettings": {
             "scriptsToDownload": [
@@ -942,6 +1029,7 @@
             "condition": "[variables('resourcesToDeploy')[parameters('deploymentType')].jumpbox]",
             "dependsOn": [
                 "[concat('Microsoft.Resources/deployments/', 'shared-resources')]",
+                "mongoNodesLoop",
                 "keyVault"
             ],
             "properties": {
@@ -971,6 +1059,56 @@
                             "servicebusKeyPlaceholder": "[variables('servicebusKeyPlaceholder')]",
                             "secureGenericStorageAccountKey": "[listKeys(variables('secureGenericStorageAccountId'), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value]",
                             "secureServicebusSharedAccessKey": "[listkeys(variables('authRuleResourceId'), variables('servicebusApiVersion')).primaryKey]"
+                        }
+                    }
+                }
+            }
+        },
+		
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(variables('networkSettings').clusterMongoDataNodeName, copyindex(1))]",
+            "apiVersion": "[variables('resourcesApiVersion')]",
+            "condition": "[variables('resourcesToDeploy')[parameters('deploymentType')].mongo]",
+            "dependsOn": [
+                "[concat('Microsoft.Resources/deployments/', 'shared-resources')]",
+                "keyVault"
+            ],
+            "copy": {
+                "name": "mongoNodesLoop",
+                "count": "[int(variables('networkSettings').mongoDataNodeCount)]"
+            },
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('mongoNodeTemplateUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "networkSettings": {
+                        "value": "[variables('networkSettings')]"
+                    },
+                    "apiSettings": {
+                        "value": "[variables('apiSettings')]"
+                    },
+                    "machineSettings": {
+                        "value": "[variables('mongoMachineSettings')]"
+                    },
+                    "storageSettings": {
+                        "value": "[variables('storageSettings')]"
+                    },
+                    "customSettings": {
+                        "value": {
+                            "machineIndex": "[copyindex(1)]",
+                            "vmScripts": "[variables('mongoDBInstallerSettings').scriptsToDownload]",
+                            "adminUsername": "[variables('networkSettings').adminUsername]",
+                            "adminPassword": "[variables('networkSettings').mongoServerAdminPassword]",
+                            "machineNamePrefix": "[variables('networkSettings').clusterMongoDataNodeName]",
+                            "osImageReference": "[variables('mongoMachineSettings').osImageReference]",
+                            "vmSize": "[variables('mongoMachineSettings').vmSize]",
+                            "dataDiskSize": "[variables('mongoMachineSettings').dataDiskSize]",
+                            "commandToExecute": "[variables('mongoDBInstallerSettings').regularNodeInstallCommand]",
+                            "machineIpOffset": "[int(variables('networkSettings').mongoServerIpOffset)]"
                         }
                     }
                 }
@@ -1145,12 +1283,12 @@
                 }
             }
         },
-		{
-			"name": "keyVaultAccess",
+        {
+            "name": "keyVaultAccess",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[variables('resourcesApiVersion')]",
-			"dependsOn": [
-				"keyVault",
+            "dependsOn": [
+                "keyVault",
                 "vmss"
             ],
             "properties": {
@@ -1169,19 +1307,19 @@
                     "identityName": {
                         "value": "[reference('vmss').outputs.vmssIdentityName.value]"
                     },
-					"builtInRoleType": {
+                    "builtInRoleType": {
                         "value": "Reader"
-					}
+                    }
                 }
             }
 		},
-		{
-			"name": "mySql",
+        {
+            "name": "mySql",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[variables('resourcesApiVersion')]",
-			"condition": "[variables('resourcesToDeploy')[parameters('deploymentType')].mySql]",
-			"dependsOn": [
-				"[concat('Microsoft.Resources/deployments/', 'shared-resources')]"
+            "condition": "[variables('resourcesToDeploy')[parameters('deploymentType')].mysql]",
+            "dependsOn": [
+                "[concat('Microsoft.Resources/deployments/', 'shared-resources')]"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -1199,47 +1337,29 @@
                     "serverName": {
                         "value": "[variables('networkSettings').clusterMysqlDataNodeName]"
                     },
-					"administratorLogin": {
+                    "administratorLogin": {
                         "value": "[parameters('mysqlServerAdminUserName')]"
-					},
-					"administratorLoginPassword": {
+                    },
+                    "administratorLoginPassword": {
                         "value": "[parameters('mysqlServerAdminPassword')]"
-					},
-					"backupRetentionDays": {
+                    },
+                    "backupRetentionDays": {
 						"value": "[parameters('mysqlBackupRetentionDays')]"
-					}
-                }
-            }
-		},
-		{
-			"name": "mongo",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('resourcesApiVersion')]",
-			"condition": "[variables('resourcesToDeploy')[parameters('deploymentType')].mongo]",
-			"dependsOn": [
-				"[concat('Microsoft.Resources/deployments/', 'shared-resources')]"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('mongoTemplateUrl')]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "apiSettings": {
-                        "value": "[variables('apiSettings')]"
-                    },
-                    "networkSettings": {
-                        "value": "[variables('networkSettings')]"
-                    },
-                    "name": {
-                        "value": "[variables('networkSettings').clusterMongoDataNodeName]"
                     }
                 }
             }
 		}
     ],
     "outputs": {
+	    "mongoReplicaSetKey": {
+            "type": "string",
+            "value": "[variables('mongoReplicaSetKey')]"
+        },
+        "mongoReplicaSetName": {
+            "type": "string",
+            "value": "[variables('mongoReplicaSetName')]"
+        },
+
         "resourceGroupLocation": {
             "type": "string",
             "value": "[resourceGroup().location]"
