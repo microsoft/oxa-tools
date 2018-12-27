@@ -663,7 +663,7 @@
                 "jumpbox": true,
                 "mongo": true,
                 "mysql": true,
-                "vmss": true,
+                "vmss": false,
                 "keyVault": false,
                 "trafficManagerLms": true,
                 "trafficManagerCms": true,
@@ -1030,7 +1030,8 @@
             "dependsOn": [
                 "[concat('Microsoft.Resources/deployments/', 'shared-resources')]",
                 "mongoNodesLoop",
-                "keyVault"
+                "keyVault",
+                "mySql"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -1284,11 +1285,11 @@
             }
         },
         {
-            "name": "keyVaultAccess",
+            "name": "vmssKeyVaultAccess",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[variables('resourcesApiVersion')]",
+            "condition": "[variables('resourcesToDeploy')[parameters('deploymentType')].vmss]",
             "dependsOn": [
-                "keyVault",
                 "vmss"
             ],
             "properties": {
