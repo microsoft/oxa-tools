@@ -642,7 +642,7 @@ persist_deployment_time_values()
        log "Overriding 'EDXAPP_MYSQL_CLOUD_SERVER_NAME'"
        sed -i "s#^EDXAPP_MYSQL_CLOUD_SERVER_NAME=.*#EDXAPP_MYSQL_CLOUD_SERVER_NAME=${azure_mysql_server_name}#I" $config_file
     else
-       log "CMS whitelist of allowed hosts not specified"
+       log "Azure Mysql server is not specified"
     fi
 
     # Re-source the cloud configurations
