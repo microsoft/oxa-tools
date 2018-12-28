@@ -47,14 +47,14 @@ EDXAPP_EMAIL_UNIVERSITY="${PLATFORM_EMAIL}"
 
 # config/versions.yml
 CONFIGURATION_REPO=https://github.com/Microsoft/edx-configuration.git
-CONFIGURATION_VERSION=oxa/dev.haw_migration_2
+CONFIGURATION_VERSION=oxa/dev.haw
 PLATFORM_REPO=https://github.com/Microsoft/edx-platform.git
-PLATFORM_VERSION=oxa/dev.haw_migration_2
+PLATFORM_VERSION=oxa/dev.haw
 THEME_REPO=https://github.com/Microsoft/edx-theme.git
-THEME_VERSION=oxa/dev.haw_migration_2
+THEME_VERSION=oxa/dev.haw
 EDX_VERSION=open-release/hawthorn.master
-FORUM_VERSION=oxa/dev.haw_migration_2
-AZURE_MEDIA_VERSION=oxa/dev.haw_migration_2
+FORUM_VERSION=oxa/dev.haw
+AZURE_MEDIA_VERSION=oxa/dev.haw
 KITCHEN_SINK_COURSE_VERSION=oxa/dev.haw_migration_2
 
 # fullstack uses default EMAIL_HOST=localhost
