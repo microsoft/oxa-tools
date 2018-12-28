@@ -663,7 +663,7 @@
                 "jumpbox": true,
                 "mongo": true,
                 "mysql": true,
-                "vmss": true,
+                "vmss": false,
                 "keyVault": false,
                 "trafficManagerLms": true,
                 "trafficManagerCms": true,
@@ -947,8 +947,9 @@
         "jumpboxBootstrapParameters": "[concat(' --bootstrap-jumpbox \"', variables('jumpboxBootstrapIndicator'), '\"')]",
         "servicebusKeyPlaceholder": "SERVICEBUS_PLACEHOLDER_KEY",
         "servicebusParameters": "[concat(' --servicebus-namespace \"', variables('serviceBusNameSpace'), '\" --servicebus-queue-name \"', variables('serviceBusQueueName'), '\" --servicebus-shared-access-key \"', variables('servicebusKeyPlaceholder'), '\"')]",
+        "deploymentTypeParameters": "[concat(' --deployment-type \"', parameters('deploymentType'), '\"')]",
 
-        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'), variables('backupParameters'), variables('sampleCourseParameters'), variables('comprehensiveThemingParameters'), variables('authenticationParameters'), variables('customInstallerDomainOverrideParameters'), variables('databaseParameters'), variables('edxappParameters'), variables('memcacheParameters'), variables('azureCliParameters'), variables('customInstallerMobileRestApiParameters'), variables('customInstallerEdxAppSecretKeyParameters'), variables('customInstallerEdxAppLmsAllowedHostsParameters'), variables('customInstallerEdxAppCmsAllowedHostsParameters'), variables('jumpboxBootstrapParameters'), variables('servicebusParameters'), variables('customInstallerOutputRedirect') )]",
+        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'), variables('backupParameters'), variables('sampleCourseParameters'), variables('comprehensiveThemingParameters'), variables('authenticationParameters'), variables('customInstallerDomainOverrideParameters'), variables('databaseParameters'), variables('edxappParameters'), variables('memcacheParameters'), variables('azureCliParameters'), variables('customInstallerMobileRestApiParameters'), variables('customInstallerEdxAppSecretKeyParameters'), variables('customInstallerEdxAppLmsAllowedHostsParameters'), variables('customInstallerEdxAppCmsAllowedHostsParameters'), variables('jumpboxBootstrapParameters'), variables('servicebusParameters'), variables('deploymentTypeParameters'), variables('customInstallerOutputRedirect') )]",
 
         "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources-v4.json')]",
         "jumpboxTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-jumpbox-v4.json')]",
@@ -1030,7 +1031,8 @@
             "dependsOn": [
                 "[concat('Microsoft.Resources/deployments/', 'shared-resources')]",
                 "mongoNodesLoop",
-                "keyVault"
+                "keyVault",
+                "mySql"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -1284,11 +1286,11 @@
             }
         },
         {
-            "name": "keyVaultAccess",
+            "name": "vmssKeyVaultAccess",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[variables('resourcesApiVersion')]",
+            "condition": "[variables('resourcesToDeploy')[parameters('deploymentType')].vmss]",
             "dependsOn": [
-                "keyVault",
                 "vmss"
             ],
             "properties": {

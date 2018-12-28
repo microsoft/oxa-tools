@@ -24,7 +24,7 @@
             "value": "lexoxaadmin"
         },
         "adminPublicKey": {
-            "value": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQChlkZZutmR72txwoqreEJI+iq2STI51EfwytFOBXx6OK95fkiDPtz0raPSAYUA+APejtIPAuPJewJAWNmGTSiEezKjw9qwiF6JwEi7NS8W97ODPtzxzdn+vcw/wDJoKhU6o9E47vwsP49NGZRwnGHkXByu9hq608+E2tx8QYY0ylrisb28DYulQ6D6E1lF0T8eL6EICR5mfV/XO6uOXZ5DjlkCV0lVoadohd1erXlkU7kgcSbyO5ALhGLtzxRrG3WLvzVaxamxs+rioKB/VVjL6t9vq2aCKJtmNBTJyIC6XReBkDek9VTO/2aN3E/iKIaTsThOTK8Doim0ddgX7amHvbho/2dDbTevn3F+phHvAgT3e9OmYlXL5f2N50jLDc+hkvWB00VnlrYSBeJ/8zaf4KMKq047WwnQp0kZtqNI4ePSvhHbGBvC4WsSTxJpA9+AWtzdShVr5WuhW6eryuE20nA5i8yvxOSsORbZ4sHXKQ+xIW8EoFmfHvOAdW3QPAMeCqQHGwT0KGPz99BZ2twqklZiH7+fqMJ4S/8wJJmw77QkBy4G8oiHiYG8Isittto5GPpuMILgmVz6/poFpmyzO0T4c8yRLNnNx1TfMIeeH9cOQBNx155du8ZZ5ibXfPJ3/kEF3CMyDNWU7GyFZDIlPaWVu5ri0iA8h+0ee5UH5Q== btelnes@btelnes1"
+            "value": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCj0GHnhX8L8cPtCFhNPTClvDMzeMsB+ys5uMaqFgTa2mrWSUBsbsVwK91H6mwtrKRJf42Ry5DVYKLPf8XSz22v5iyZ1DrbkGJcmHRWEBFA47habQFg+eXBUSENUf1cMOh4RwkN1olCLpsdeKrF0Rj6k3ZFODUJIf+v5HYKFkj+8iVdQh0wgnPVxneqIKcbqNLO8ymmAiTT+fYaubPWzJmq8nUKoNZRiPXSSAwHHtNouR4vvPtOU7je2TxzoYIcM/Ja6YycBx44W+A7ygY5/hmij4Byhm20MLZLoBLX2AMp8horzqWhdF/wvFMhv8FTTzlWpwhuEpbd2M4B6Tylajm8lwA9u/9MO6lEbqnX/XH/KS9hPZdKvqXgbPTzM265Aea0LPXHDdF0f9AID6Xl3grHrtkKFGMzbgqFtF9nd51kwDTZr2b1zIVWb6XxDXXVhX4XqWniCT8xEzuGyMp4/mhaghRDhT45Alu6Frv6d5+IjeabBSXOwwe+8NpTDc0+hxM/MYiE4K6EHpPqwxOoRJcZFrjdSxQGGrCD+bLJbGfI8tn96Wq4zBBUMp+iX1iXXNScgqUAaSoNKEH8ag177oOvtH3AsB/b7Nm/eUIr/WYfYESlft1M1h25Lvu6QgFyqJlwdXSPCiIYbR6nK6WI2Zz6cActCLoJaN7IPw6RLeY+tw== admin@contoso.com"
         },
         "mongoServerAdminUserName": {
             "value": "oxamongoadmin"

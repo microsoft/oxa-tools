@@ -445,20 +445,18 @@ update_stamp_jb()
 {
     SUBJECT="${MAIL_SUBJECT} - EdX Database (Mysql) Setup Failed"
 
-    # edx playbooks - mysql and memcached
-    $ANSIBLE_PLAYBOOK -i $MYSQL_MASTER_IP, $OXA_SSH_ARGS -e@$OXA_PLAYBOOK_CONFIG edx_mysql.yml
-    exit_on_error "Execution of edX MySQL playbook failed (Stamp JB)" 1 "${SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
+    # 1. setup the OPENEDX_RELEASE variable:
+    export OPENEDX_RELEASE=$EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH
+    export EDX_OPENEDX_RELEASE=$EDX_VERSION
 
-    # minimize tags? "install:base,install:system-requirements,install:configuration,install:app-requirements,install:code"
-    $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_sandbox.yml -e "migrate_db=yes" --tags "edxapp-sandbox,install,migrate"
-    exit_on_error "Execution of edX MySQL migrations failed" 1 "${SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
-  
-    # oxa playbooks - mongo (enable when customized) and mysql
-    #$ANSIBLE_PLAYBOOK -i ${CLUSTERNAME}mongo1, $OXA_SSH_ARGS -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mongo"
-    #exit_on_error "Execution of OXA Mongo playbook failed"
+    # 2. Bootstrap the Ansible installation:
+    bash $ANSIBLE_BOOTSTRAP_INSTALLER
+    exit_on_error "Execution of ansible bootstrap  installer failed (Stamp JB: ${ANSIBLE_BOOTSTRAP_INSTALLER})" 1 "${SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
 
-    $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK --tags "mysql"
-    exit_on_error "Execution of OXA MySQL playbook failed" 1 "${SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
+    # 3. Install Open edX using custom native installer
+    target_playbook="edx-stateful.yml"
+    bash $NATIVE_INSTALLER --playbook $target_playbook --config $OXA_PLAYBOOK_CONFIG --vault "${CLUSTER_NAME}-kv"
+    exit_on_error "Execution of native installer failed (Stamp JB: ${NATIVE_INSTALLER}, ${target_playbook}, ${OXA_PLAYBOOK_CONFIG})" 1 "${SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
 
     # if the Memcache Server is different than the Mysql Master server, we have to install memcache with default configs
     if [ "$MEMCACHE_SERVER_IP" != "$MYSQL_MASTER_IP" ];
@@ -472,10 +470,20 @@ update_stamp_jb()
 update_stamp_vmss() 
 {
     SUBJECT="${MAIL_SUBJECT} - EdX App (VMSS) Setup Failed"
-    # edx playbooks - sandbox with remote mongo/mysql
-    $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG edx_sandbox.yml -e "migrate_db=no" --skip-tags=demo_course
-    exit_on_error "Execution of edX sandbox playbook failed" 1 "${SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
-  
+
+    # 1. setup the OPENEDX_RELEASE variable:
+    export OPENEDX_RELEASE=$EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH
+    export EDX_OPENEDX_RELEASE=$EDX_VERSION
+
+    # 2. Bootstrap the Ansible installation:
+    bash $ANSIBLE_BOOTSTRAP_INSTALLER
+    exit_on_error "Execution of ansible bootstrap  installer failed (Stamp VMSS: ${ANSIBLE_BOOTSTRAP_INSTALLER})" 1 "${SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
+
+    # 3. Install Open edX using custom native installer
+    target_playbook="edx-stateless.yml"
+    bash $NATIVE_INSTALLER --playbook $target_playbook --config $OXA_PLAYBOOK_CONFIG --vault "${CLUSTER_NAME}-kv"
+    exit_on_error "Execution of native installer failed (Stamp VMSS: ${NATIVE_INSTALLER}, ${target_playbook}, ${OXA_PLAYBOOK_CONFIG})" 1 "${SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
+
     # oxa playbooks
     $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK $THEME_ARGS --tags "edxapp"
     exit_on_error "Execution of OXA edxapp playbook failed" 1 "${SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
@@ -628,6 +636,12 @@ OXA_PLAYBOOK_CONFIG=$OXA_PATH/oxa.yml
 
 # setup the installer path & key variables
 INSTALLER_BASEPATH="${OXA_TOOLS_PATH}/scripts"
+
+# Ansible bootstrap installer
+ANSIBLE_BOOTSTRAP_INSTALLER="${CONFIGURATION_PATH}/util/install/ansible-bootstrap.sh"
+
+# Custom native.sh installer script
+NATIVE_INSTALLER="${CONFIGURATION_PATH}/util/install/oxa.native.sh"
 
 # create the overrides settings file
 setup_overrides_file
