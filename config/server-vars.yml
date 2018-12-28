@@ -179,5 +179,15 @@ EDXAPP_ENABLE_CUSTOM_AUTH: "%%EDXAPP_ENABLE_CUSTOM_AUTH%%"
 NGINX_SERVER_RATE_LIMIT_ERROR_MSG: 'We have been notified of the error and we are actively working on restoring service.'
 NGINX_SERVER_ERROR_MSG: 'We have been notified of the error and we are actively working on restoring service.'
 
+EDXAPP_ONLY_THIRD_PARTY_AUTH: "%%%EDXAPP_ONLY_THIRD_PARTY_AUTH%"
+EDXAPP_THIRD_PARTY_AUTH_BACKENDS:
+  - "social_core.backends.google.GoogleOAuth2"
+  - "social_core.backends.live.LiveOAuth2"
+  - "social_core.backends.linkedin.LinkedinOAuth2"
+  - "social_core.backends.facebook.FacebookOAuth2"
+  - "social_core.backends.azuread.AzureADOAuth2"
+  - "third_party_auth.saml.SAMLAuthBackend"
+  - "third_party_auth.lti.LTIAuthBackend"
+
 #Insights
 EDXAPP_ANALYTICS_DASHBOARD_URL = "%%EDXAPP_ANALYTICS_DASHBOARD_URL%%"
