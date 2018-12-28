@@ -480,7 +480,7 @@ parse_args()
                 ;;
             --deployment-type)
                 deployment_type="${arg_value,,}"
-                if ( ! is_valid_arg "bootstrap, upgrade, swap" $deployment_type ) ; 
+                if ( ! is_valid_arg "bootstrap upgrade swap" $deployment_type ) ; 
                 then
                   echo "Invalid deployment type specified"
                   help
