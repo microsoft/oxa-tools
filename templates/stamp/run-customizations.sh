@@ -895,7 +895,7 @@ fi
 #####################################
 
 # execute the installer if present
-if [[ $BOOTSTRAP_JUMPBOX == 1 ]] and [[ $deployment_type != "bootstrap" ]];
+if [[ $BOOTSTRAP_JUMPBOX == 1 ]] && [[ $deployment_type != "bootstrap" ]];
 then
     # we are bootstrapping a new jumpbox. The only relevant action left is to setup ssh
     log "Setting up SSH"
