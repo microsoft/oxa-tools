@@ -24,6 +24,13 @@ NOTIFICATION_MESSAGE=""
 SECONDARY_LOG="/var/log/bootstrap.log"
 PRIMARY_LOG="/var/log/bootstrap.csx.log"
 
+# enable_database_setup: 
+# 3: setup both Mongo & Mysql databases (default)
+# 2: setup Mongo database
+# 1: setup Mysql database
+# 0: setup None
+enable_database_setup=3
+
 display_usage() {
     echo "Usage: $0 [-e|--environment {dev|bvt|prod}] [--phase {0 1}] --keyvault-name {azure keyvault name} --aad-webclient-id {AAD web application client id} --aad-webclient-appkey {AAD web application client key} --aad-tenant-id {AAD Tenant to authenticate against} --azure-subscription-id {Azure subscription Id}"
     exit 1
@@ -59,14 +66,14 @@ parse_args()
         echo "Option '$1' set with value '${arg_value}'"
 
         case "$1" in
-          -e|--environment)
-            DEPLOYMENT_ENV="${arg_value,,}" # convert to lowercase
-            is_valid=$(is_valid_arg "dev bvt int prod" $DEPLOYMENT_ENV)
-            if [[ $is_valid -eq 1 ]] ; then
-              echo "Invalid environment specified\n"
-              display_usage
-            fi
-            ;;
+            -e|--environment)
+                DEPLOYMENT_ENV="${arg_value,,}" # convert to lowercase
+                is_valid=$(is_valid_arg "dev bvt int prod" $DEPLOYMENT_ENV)
+                if [[ $is_valid -eq 1 ]] ; then
+                    echo "Invalid environment specified\n"
+                    display_usage
+                fi
+                ;;
             --phase)
                 if is_valid_arg "0 1" "${arg_value}"; then
                     BOOTSTRAP_PHASE="${arg_value}"
@@ -75,35 +82,44 @@ parse_args()
                     help
                     exit 2
                 fi
-            ;;
-          --tools-version-override)
-            OXA_TOOLS_VERSION_OVERRIDE="${arg_value}"
-            ;;
-          --keyvault-name)
-            KEYVAULT_NAME="${arg_value}"
-            ;;
-          --aad-webclient-id)
-            AAD_WEBCLIENT_ID="${arg_value}"
-            ;;
-          --aad-webclient-appkey)
-            AAD_WEBCLIENT_APPKEY="${arg_value}"
-            ;;
-          --aad-tenant-id)
-            AAD_TENANT_ID="${arg_value}"
-            ;;
-          --azure-subscription-id)
-            AZURE_SUBSCRIPTION_ID="${arg_value}"
-            ;;
-          --cluster-admin-email)
-            CLUSTER_ADMIN_EMAIL="${arg_value}"
-            ;;
-          --cluster-name)
-            CLUSTER_NAME="${arg_value}"
-            MAIL_SUBJECT="${MAIL_SUBJECT} - ${arg_value,,}"
-            ;;
-          *) # Unknown option encountered
-            display_usage
-            ;;
+                ;;
+            --tools-version-override)
+                OXA_TOOLS_VERSION_OVERRIDE="${arg_value}"
+                ;;
+            --keyvault-name)
+                KEYVAULT_NAME="${arg_value}"
+                ;;
+            --aad-webclient-id)
+                AAD_WEBCLIENT_ID="${arg_value}"
+                ;;
+            --aad-webclient-appkey)
+                AAD_WEBCLIENT_APPKEY="${arg_value}"
+                ;;
+            --aad-tenant-id)
+                AAD_TENANT_ID="${arg_value}"
+                ;;
+            --azure-subscription-id)
+                AZURE_SUBSCRIPTION_ID="${arg_value}"
+                ;;
+            --cluster-admin-email)
+                CLUSTER_ADMIN_EMAIL="${arg_value}"
+                ;;
+            --cluster-name)
+                CLUSTER_NAME="${arg_value}"
+                MAIL_SUBJECT="${MAIL_SUBJECT} - ${arg_value,,}"
+                ;;
+            --enable-database-setup)
+                enable_database_setup="${arg_value}"
+                if ( ! is_valid_arg "0 1 2 3" $enable_database_setup ) ; 
+                then
+                    # fall back to default:
+                    echo "Invalid database setup flag specified. Falling back to default=3"
+                    enable_database_setup=3
+                fi
+                ;;
+            *) # Unknown option encountered
+                display_usage
+                ;;
         esac
 
         shift # past argument or value
@@ -188,51 +204,68 @@ setup()
 
     wget -q https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/shared_scripts/ubuntu/vm-disk-utils-0.1.sh -O $OXA_TOOLS_PATH/templates/stamp/vm-disk-utils-0.1.sh
 
-    if [ "$MACHINE_ROLE" == "jumpbox" ] && [ "$BOOTSTRAP_PHASE" == "0" ] ;
+    if [[ "$MACHINE_ROLE" == "jumpbox" ]] && [[ "$BOOTSTRAP_PHASE" == "0" ]] ;
     then
         # check if this is already done
         
-        if [ ! -e $TARGET_FILE ];
+        if [[ ! -e $TARGET_FILE ]];
         then
-            # Setup each mongo server
-            count=1
-            mongo_servers=(`echo $MONGO_SERVER_LIST | tr , ' ' `)
-            for ip in "${mongo_servers[@]}"; do
-                last=
-                if [[ $count == ${#mongo_servers[@]} ]]; then
-                    last="-l"
-                fi
+            log "Database Setup Flag: enable_database_setup=${enable_database_setup}"
 
-                exec_mongo $ip $count $last
-                ((count++))
-            done
+            # Setup each mongo server
+            if [[ enable_database_setup == 3 ]] || [[ enable_database_setup == 2 ]];
+            then
+                log "Proceeding with Mongo setup"
+
+                count=1
+                mongo_servers=(`echo $MONGO_SERVER_LIST | tr , ' ' `)
+                for ip in "${mongo_servers[@]}"; do
+                    last=
+                    if [[ $count == ${#mongo_servers[@]} ]]; then
+                        last="-l"
+                    fi
+
+                    exec_mongo $ip $count $last
+                    ((count++))
+                done
+            else
+                log "Skipped Mongo Setup"
+            fi
  
             # Setup each mysql server
-            count=1
-            mysql_servers=(`echo $MYSQL_SERVER_LIST | tr , ' ' `)
-            for ip in "${mysql_servers[@]}"; do
-                exec_mysql $ip $count
-                ((count++))
-            done
+            if [[ enable_database_setup == 3 ]] || [[ enable_database_setup == 1 ]];
+            then
+                log "Proceeding with Mysql setup"
 
-            # Secure the mysql installation after replication has been setup (only run against the Mysql Master)
-            # Specifically: remove anonymous users, remove root network login (only local host allowed), remove test db
-            # This step was previously executed during the replication configuration but it may be contributing to breaking replication immediately following setup
-            log "Securing Mysql Installation: removing anonymous users, removing root network login, removing test databases"
+                count=1
+                mysql_servers=(`echo $MYSQL_SERVER_LIST | tr , ' ' `)
+                for ip in "${mysql_servers[@]}"; do
+                    exec_mysql $ip $count
+                    ((count++))
+                done
 
-            # generate the query
-            temp_query_file="tmp.query.secure.sql"
-            tee ./$temp_query_file > /dev/null <<EOF
+                # Secure the mysql installation after replication has been setup (only run against the Mysql Master)
+                # Specifically: remove anonymous users, remove root network login (only local host allowed), remove test db
+                # This step was previously executed during the replication configuration but it may be contributing to breaking replication immediately following setup
+                log "Securing Mysql Installation: removing anonymous users, removing root network login, removing test databases"
+
+                # generate the query
+                temp_query_file="tmp.query.secure.sql"
+                tee ./$temp_query_file > /dev/null <<EOF
 DELETE FROM mysql.user WHERE User='';
 DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
 DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
 EOF
 
-            # execute the query
-            mysql -h $MYSQL_MASTER_IP -u root -p$MYSQL_ADMIN_PASSWORD< ./$temp_query_file
+                # execute the query
+                mysql -h $MYSQL_MASTER_IP -u root -p$MYSQL_ADMIN_PASSWORD< ./$temp_query_file
 
-            # remove the temp file (security reasons)
-            rm $temp_query_file
+                # remove the temp file (security reasons)
+                rm $temp_query_file
+            
+            else
+                log "Skipped Mysql Setup"
+            fi
         else
             log "Skipping the 'Infrastructure Bootstrap - Server Application Installation' since this is already done"
         fi

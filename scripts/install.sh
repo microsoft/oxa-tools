@@ -69,6 +69,13 @@ servicebus_queue_name=""
 servicebus_shared_access_key_name="RootManageSharedAccessKey"
 servicebus_shared_access_key=""
 
+# enable_database_setup: 
+# 3: setup both Mongo & Mysql databases (default)
+# 2: setup Mongo database
+# 1: setup Mysql database
+# 0: setup None
+enable_database_setup=3
+
 help()
 {
     echo "This script sets up SSH, installs MDSD and runs the DB bootstrap"
@@ -112,6 +119,7 @@ help()
     echo "        --edxapp-secretkey Secret key used to secure the session cookie"
     echo "        --edxapp-lms-allowed-hosts LMS whitelist of allowed hosts"
     echo "        --edxapp-cms-allowed-hosts CMS whitelist of allowed hosts"
+    echo "        --enable-database-setup Specifies the database(s) to setup"
 }
 
 # Parse script parameters
@@ -254,6 +262,15 @@ parse_args()
             --edxapp-cms-allowed-hosts)
                 EDXAPP_CMS_ALLOWED_HOSTS="${arg_value}"
                 ;;
+            --enable-database-setup)
+                enable_database_setup="${arg_value}"
+                if ( ! is_valid_arg "0 1 2 3" $enable_database_setup ) ; 
+                then
+                    # fall back to default:
+                    echo "Invalid database setup flag specified. Falling back to default=3"
+                    enable_database_setup=3
+                fi
+                ;;
             -h|--help)  # Helpful hints
                 help
                 exit 2
@@ -326,8 +343,22 @@ fi
 # 2. Run Bootstrap for Mongo & MySql [Jumpbox Only]
 # Infrastracture Bootstrap - Install & Configure 3-node Replicated Mysql Server cluster & 3-node Mongo Server ReplicaSet
 # This execution is now generic and will account for machine roles
-# TODO: break out shared functionalities to utilities so that they can be called independently
-bash $CURRENT_PATH/bootstrap-db.sh -e $CLOUD_NAME --phase $BOOTSTRAP_PHASE --tools-version-override $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID --cluster-admin-email $CLUSTER_ADMIN_EMAIL --cluster-name $CLUSTER_NAME
+
+# When transitioning to Azure MySql and/or Azure CosmosDB/Mongo Atlas (Hawthorn migration)
+# no further setup for Mysql & Mongo is required
+bash $CURRENT_PATH/bootstrap-db.sh \
+    -e $CLOUD_NAME \
+    --phase $BOOTSTRAP_PHASE \
+    --tools-version-override $OXA_TOOLS_PUBLIC_GITHUB_PROJECTBRANCH \
+    --keyvault-name $KEYVAULT_NAME \
+    --aad-webclient-id $AAD_WEBCLIENT_ID \
+    --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY \
+    --aad-tenant-id $AAD_TENANT_ID \
+    --azure-subscription-id $AZURE_SUBSCRIPTION_ID \
+    --cluster-admin-email $CLUSTER_ADMIN_EMAIL \
+    --cluster-name $CLUSTER_NAME \
+    --enable-database-setup $enable_database_setup
+
 exit_on_error "Phase 0 Bootstrap for Mongo & Mysql failed for $HOST" 1 "${MAIL_SUBJECT} Failed" "$CLUSTER_ADMIN_EMAIL" "$PRIMARY_LOG" "$SECONDARY_LOG"
 
 # OpenEdX Bootstrap (EdX Database - Mysql & EdX App - VMSS)
