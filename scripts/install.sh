@@ -423,7 +423,7 @@ fi
 
 exit_on_error "OXA Installation failed" 1 "${MAIL_SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
 
-if [ "$MACHINE_ROLE" == "jumpbox" ];
+if [[ "$MACHINE_ROLE" == "jumpbox" ]] && [[ "${enable_database_setup}" != "0" ]];
 then
 
     # In order to support upgrade scenario, a secondary memcache server is required.
@@ -450,6 +450,8 @@ then
     rm "${temp_utilities}"
 
     log "Completed installation of secondary memcached."
+else
+    log "Skipped secondary memcached installation."
 fi
 
 # at this point, we have succeeded
