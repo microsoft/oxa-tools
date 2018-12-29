@@ -217,6 +217,18 @@ EDXAPP_THIRD_PARTY_AUTH_BACKENDS:
   - "third_party_auth.saml.SAMLAuthBackend"
   - "third_party_auth.lti.LTIAuthBackend"
 
+# Rabbitmq related credentials
+RABBIT_ADMIN_PASSWORD: "%%RABBIT_ADMIN_PASSWORD%%"
+EDXAPP_CELERY_PASSWORD: "%%EDXAPP_CELERY_PASSWORD%%"
+XQUEUE_RABBITMQ_PASS: "%%XQUEUE_RABBITMQ_PASS%%"
+RABBIT_USERS:
+  - name: 'admin'
+    password: "{{ RABBIT_ADMIN_PASSWORD }}"
+  - name: 'edx'
+    password: "{{ XQUEUE_RABBITMQ_PASS }}"
+  - name: 'celery'
+    password: "{{ EDXAPP_CELERY_PASSWORD }}"
+
 #newrelic 
 NEWRELIC_INFRASTRUCTURE_LICENSE_KEY:
 COMMON_ENABLE_NEWRELIC_INFRASTRUCTURE: "%%COMMON_ENABLE_NEWRELIC_INFRASTRUCTURE%%"
