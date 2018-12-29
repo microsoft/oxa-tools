@@ -256,12 +256,14 @@ get_bootstrap_status()
             # The Mysql master is known. This is the one we really care about. If it is up, we will call backend bootstrap done
             # It is expected that the client tools are already installed
             #echo "Testing connection to edxapp database on '${MYSQL_MASTER_IP}'"
-            AUTH_USER_COUNT=`mysql -u $MYSQL_ADMIN_USER -p$MYSQL_ADMIN_PASSWORD -h $MYSQL_MASTER_IP -s -N -e "use edxapp; select count(*) from auth_user;"`
-            if [[ $? -ne 0 ]];
-            then
-                #echo "Connection test failed. Keeping holding pattern for VMSS bootstrap"
-                # The crumb doesn't exist:: we need to execute boostrap, but we have unmet dependency (wait)
-                PRESENCE=1
+            if [[ -z ${EDXAPP_MYSQL_CLOUD_SERVER_NAME// } ]]; then
+                AUTH_USER_COUNT=`mysql -u $MYSQL_ADMIN_USER -p$MYSQL_ADMIN_PASSWORD -h $MYSQL_MASTER_IP -s -N -e "use edxapp; select count(*) from auth_user;"`
+                if [[ $? -ne 0 ]];
+                then
+                    #echo "Connection test failed. Keeping holding pattern for VMSS bootstrap"
+                    # The crumb doesn't exist:: we need to execute boostrap, but we have unmet dependency (wait)
+                    PRESENCE=1
+                fi
             fi
         fi
     fi
