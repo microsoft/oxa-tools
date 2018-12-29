@@ -692,7 +692,7 @@
                 "trafficManagerPreview": true
             }
         },
-        "jumpboxBootstrapIndicator": "[if(greater(parameters('bootstrapJumpbox'), 0), 1, 0)]",
+        "jumpboxBootstrapIndicator": "[if( and( greater(parameters('bootstrapJumpbox'), 0), equals(parameters('deploymentType'), 'bootstrap'), 1, 0)]",
         "jumpboxNameSuffix": "[if(greater(parameters('bootstrapJumpbox'), 0), parameters('bootstrapJumpbox'), '')]",
         
         "networkSettings": {

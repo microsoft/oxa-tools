@@ -641,6 +641,9 @@ persist_deployment_time_values()
     then
        log "Overriding 'EDXAPP_MYSQL_CLOUD_SERVER_NAME'"
        sed -i "s#^EDXAPP_MYSQL_CLOUD_SERVER_NAME=.*#EDXAPP_MYSQL_CLOUD_SERVER_NAME=${azure_mysql_server_name}#I" $config_file
+       sed -i "s#^MYSQL_MASTER_IP=.*#MYSQL_MASTER_IP=${azure_mysql_server_name}#I" $config_file
+       sed -i "s#^MYSQL_SERVER_LIST=.*#MYSQL_SERVER_LIST=${azure_mysql_server_name}#I" $config_file
+       sed -i "s#^MYSQL_MASTER_PORT=.*#MYSQL_MASTER_PORT=3306#I" $config_file
     else
        log "Azure Mysql server is not specified"
     fi

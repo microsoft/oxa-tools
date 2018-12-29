@@ -462,13 +462,6 @@ update_stamp_jb()
     bash $NATIVE_INSTALLER
     exit_on_error "Execution of native installer failed (Stamp JB: ${NATIVE_INSTALLER}, ${target_playbook}, ${OXA_PLAYBOOK_CONFIG})" 1 "${SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
 
-    # 4. Run stateless for the purposes of running migrations
-    target_playbook="edx-stateless.yml"
-    export OXA_TARGET_PLAYBOOK=$target_playbook
-
-    bash $NATIVE_INSTALLER -e "migrate_db=yes" --tags "migrate"
-    exit_on_error "Execution of native installer failed (Stamp JB: ${NATIVE_INSTALLER}, ${target_playbook}, ${OXA_PLAYBOOK_CONFIG})" 1 "${SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
-
     # if the Memcache Server is different than the Mysql Master server, we have to install memcache with default configs
     if [ "$MEMCACHE_SERVER_IP" != "$MYSQL_MASTER_IP" ];
     then
