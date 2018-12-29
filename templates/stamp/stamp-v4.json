@@ -1309,7 +1309,7 @@
                         "value": "[variables('networkSettings')]"
                     },
                     "identityName": {
-                        "value": "[reference('vmss').outputs.vmssIdentityName.value]"
+                        "value": "[reference('vmss', variables('resourcesApiVersion')).outputs.vmssIdentityName.value]"
                     },
                     "builtInRoleType": {
                         "value": "Reader"
