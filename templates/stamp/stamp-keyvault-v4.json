@@ -283,6 +283,7 @@
             "defaultValue": "16.04.0-LTS",
             "allowedValues": [
                 "16.04.0-LTS",
+                "14.04.0-LTS",
                 "14.04.5-LTS",
                 "12.04.5-LTS"
             ],
