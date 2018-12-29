@@ -1004,7 +1004,7 @@ function Get-OxaDisabledDeploymentSlot
             Log-Message "Getting '$($TrafficManagerProfileSite)' traffic manager profile:";
 
             # Getting LMS traffic manager profile to identify the disabled slot
-            $trafficManager = $resourceList -match "Microsoft.Network/trafficManagerProfiles" | Where-Object{ $_ -imatch $TrafficManagerProfileSite };
+            $trafficManager = $resourceList  | Where-Object {$_.ResourceId -imatch "Microsoft.Network/trafficmanagerprofiles" -and $_.ResourceId -imatch $TrafficManagerProfileSite };
 
             if ( !$trafficManager )
             {
@@ -1324,7 +1324,7 @@ function Remove-OxaDeploymentSlotResources
     if ($NetworkResourceList -and $NetworkResourceList.Count -gt 1)
     {
         # some resources are specified
-        [array]$targetedResources = $NetworkResourceList | Where-Object { $_.ResourceName.Contains($TargetDeploymentSlot) };
+        [array]$targetedResources = $NetworkResourceList | Where-Object { $_.Name.Contains($TargetDeploymentSlot) };
         Log-Message "$($targetedResources.Count) resources targeted for removal from '$($TargetDeploymentSlot)'" -ClearLine -ClearLineAfter
 
         if (!$targetedResources -or $targetedResources.Count -eq 0)
@@ -2859,7 +2859,7 @@ System.String. Get-OxaLocalCertificateStore returns certificate store path.
 #>
 function Get-OxaLocalCertificateStore
 {
-    return "\CurrentUser\My"
+    return "\LocalMachine\My"
 }
 
 <#

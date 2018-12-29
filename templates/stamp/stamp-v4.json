@@ -283,6 +283,7 @@
             "defaultValue": "16.04.0-LTS",
             "allowedValues": [
                 "16.04.0-LTS",
+                "14.04.0-LTS",
                 "14.04.5-LTS",
                 "12.04.5-LTS"
             ],
@@ -692,7 +693,7 @@
                 "trafficManagerPreview": true
             }
         },
-        "jumpboxBootstrapIndicator": "[if(greater(parameters('bootstrapJumpbox'), 0), 1, 0)]",
+        "jumpboxBootstrapIndicator": "[if( and( greater(parameters('bootstrapJumpbox'), 0), equals(parameters('deploymentType'), 'bootstrap')), 1, 0)]",
         "jumpboxNameSuffix": "[if(greater(parameters('bootstrapJumpbox'), 0), parameters('bootstrapJumpbox'), '')]",
         
         "networkSettings": {
@@ -948,8 +949,9 @@
         "servicebusKeyPlaceholder": "SERVICEBUS_PLACEHOLDER_KEY",
         "servicebusParameters": "[concat(' --servicebus-namespace \"', variables('serviceBusNameSpace'), '\" --servicebus-queue-name \"', variables('serviceBusQueueName'), '\" --servicebus-shared-access-key \"', variables('servicebusKeyPlaceholder'), '\"')]",
         "deploymentTypeParameters": "[concat(' --deployment-type \"', parameters('deploymentType'), '\"')]",
-
-        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'), variables('backupParameters'), variables('sampleCourseParameters'), variables('comprehensiveThemingParameters'), variables('authenticationParameters'), variables('customInstallerDomainOverrideParameters'), variables('databaseParameters'), variables('edxappParameters'), variables('memcacheParameters'), variables('azureCliParameters'), variables('customInstallerMobileRestApiParameters'), variables('customInstallerEdxAppSecretKeyParameters'), variables('customInstallerEdxAppLmsAllowedHostsParameters'), variables('customInstallerEdxAppCmsAllowedHostsParameters'), variables('jumpboxBootstrapParameters'), variables('servicebusParameters'), variables('deploymentTypeParameters'), variables('customInstallerOutputRedirect') )]",
+        "azureMysqlParameters": "[concat(' --azure-mysql-server-name \"', variables('networkSettings').clusterMysqlDataNodeName, '\"')]",
+        
+        "customInstallerCommand": "[concat('bash ', parameters('customInstallerLaunchScript'),' -i ', parameters('customInstallerMainScriptRelativePath'), ' -c ', parameters('cloud'), ' -m ', parameters('clusterName'), ' -u ', parameters('adminUsername'), ' --cluster-name ', parameters('clusterName'), variables('customInstallerKeyVaultParameters'), variables('customInstallerOxaToolsGitHubRepositoryParameters'), variables('customInstallerEdxConfigurationGitHubRepositoryParameters'), variables('smtpParameters'), variables('customInstallerEdxPlatformGitHubRepositoryParameters'), variables('customInstallerEdxThemeGitHubRepositoryParameters'), variables('customInstallerMiscRepositoryVersionParameters'), variables('customInstallerAnsibleGitHubRepositoryParameters'), variables('backupParameters'), variables('sampleCourseParameters'), variables('comprehensiveThemingParameters'), variables('authenticationParameters'), variables('customInstallerDomainOverrideParameters'), variables('databaseParameters'), variables('edxappParameters'), variables('memcacheParameters'), variables('azureCliParameters'), variables('customInstallerMobileRestApiParameters'), variables('customInstallerEdxAppSecretKeyParameters'), variables('customInstallerEdxAppLmsAllowedHostsParameters'), variables('customInstallerEdxAppCmsAllowedHostsParameters'), variables('jumpboxBootstrapParameters'), variables('servicebusParameters'), variables('deploymentTypeParameters'), variables('azureMysqlParameters'), variables('customInstallerOutputRedirect') )]",
 
         "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources-v4.json')]",
         "jumpboxTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-jumpbox-v4.json')]",
@@ -1307,7 +1309,7 @@
                         "value": "[variables('networkSettings')]"
                     },
                     "identityName": {
-                        "value": "[reference('vmss').outputs.vmssIdentityName.value]"
+                        "value": "[reference('vmss', variables('resourcesApiVersion')).outputs.vmssIdentityName.value]"
                     },
                     "builtInRoleType": {
                         "value": "Reader"

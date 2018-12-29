@@ -123,6 +123,9 @@ deployment_type="upgrade"
 # when refreshed in persist_deployment_time_values
 OXA_BOOTSTRAP_ENABLE_DATABASE_SETUP=3
 
+# azure mysql server name (non-qualified)
+azure_mysql_server_name=""
+
 help()
 {
     echo "This script bootstraps the OXA Stamp"
@@ -188,6 +191,7 @@ help()
     echo "        --edxapp-lms-allowed-hosts LMS whitelist of allowed domains"
     echo "        --edxapp-cms-allowed-hosts CMS whitelist of allowed domains"
     echo "        --deployment-type Type of the deployment (bootstrap, upgrade, swap)"
+    echo "        --azure-mysql-server-name Name of the Azure mysql server to use (base name, not the FQDN)"
 }
 
 # Parse script parameters
@@ -480,12 +484,15 @@ parse_args()
                 ;;
             --deployment-type)
                 deployment_type="${arg_value,,}"
-                if ( ! is_valid_arg "bootstrap, upgrade, swap" $deployment_type ) ; 
+                if ( ! is_valid_arg "bootstrap upgrade swap" $deployment_type ) ; 
                 then
                   echo "Invalid deployment type specified"
                   help
                   exit 2
                 fi
+                ;;
+            --azure-mysql-server-name)
+                azure_mysql_server_name="${arg_value}"
                 ;;
             -h|--help)  # Helpful hints
                 help
@@ -629,6 +636,18 @@ persist_deployment_time_values()
        log "CMS whitelist of allowed hosts not specified"
     fi
 
+    # If the azure mysql option is specified, replace the mysql server name referenced
+    if [[ -n ${azure_mysql_server_name} ]];  
+    then
+       log "Overriding 'EDXAPP_MYSQL_CLOUD_SERVER_NAME'"
+       sed -i "s#^EDXAPP_MYSQL_CLOUD_SERVER_NAME=.*#EDXAPP_MYSQL_CLOUD_SERVER_NAME=${azure_mysql_server_name}#I" $config_file
+       sed -i "s#^MYSQL_MASTER_IP=.*#MYSQL_MASTER_IP=${azure_mysql_server_name}#I" $config_file
+       sed -i "s#^MYSQL_SERVER_LIST=.*#MYSQL_SERVER_LIST=${azure_mysql_server_name}#I" $config_file
+       sed -i "s#^MYSQL_MASTER_PORT=.*#MYSQL_MASTER_PORT=3306#I" $config_file
+    else
+       log "Azure Mysql server is not specified"
+    fi
+
     # Re-source the cloud configurations
     source $config_file
     exit_on_error "Failed sourcing the environment configuration file after transform" 1 "${MAIL_SUBJECT} Failed" $CLUSTER_ADMIN_EMAIL $PRIMARY_LOG $SECONDARY_LOG
@@ -726,8 +745,11 @@ then
     # the type of deployment    
     DEPLOYMENT_TYPE_PARAMS="--deployment-type '${deployment_type}'"
 
+    # azure mysql deployment parameter
+    AZURE_MYSQL_PARAMS="--azure-mysql-server-name '${azure_mysql_server_name}'"
+
     # Create the cron job & exit
-    INSTALL_COMMAND="sudo flock -n /var/log/bootstrap-run-customization.lock bash $CURRENT_PATH/run-customizations.sh -c $CLOUDNAME -u $OS_ADMIN_USERNAME -i $CUSTOM_INSTALLER_RELATIVEPATH -m $MONITORING_CLUSTER_NAME -s $BOOTSTRAP_PHASE -u $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --crontab-interval $CRONTAB_INTERVAL_MINUTES --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID --smtp-server $SMTP_SERVER --smtp-server-port $SMTP_SERVER_PORT --smtp-auth-user $SMTP_AUTH_USER --smtp-auth-user-password $SMTP_AUTH_USER_PASSWORD --cluster-admin-email $CLUSTER_ADMIN_EMAIL --cluster-name $CLUSTER_NAME ${OXA_TOOLS_GITHUB_PARAMS} ${EDX_CONFIGURATION_GITHUB_PARAMS} ${EDX_PLATFORM_GITHUB_PARAMS} ${EDX_THEME_GITHUB_PARAMS} ${ANSIBLE_GITHUB_PARAMS} ${BACKUP_PARAMS} ${SAMPLE_COURSE_PARAMS} ${COMPREHENSIVE_THEMING_PARAMS} ${AUTHENTICATION_PARAMS} ${DOMAIN_PARAMS} ${EDXAPP_PARAMS} --edxversion ${EDX_VERSION} --forumversion ${FORUM_VERSION} ${DATABASE_PARAMS} ${MEMCACHE_PARAMS} ${AZURE_CLI_VERSION} ${MOBILE_REST_API_PARAMS} ${JUMPBOX_BOOTSTRAP_PARAMS} ${SERVICEBUS_PARAMS} ${EDXAPP_SECRET_KEY_PARAMS} ${EDXAPP_LMS_ALLOWED_HOSTS_PARAMS} ${EDXAPP_CMS_ALLOWED_HOSTS_PARAMS} ${DEPLOYMENT_TYPE_PARAMS} --cron >> $SECONDARY_LOG 2>&1"
+    INSTALL_COMMAND="sudo flock -n /var/log/bootstrap-run-customization.lock bash $CURRENT_PATH/run-customizations.sh -c $CLOUDNAME -u $OS_ADMIN_USERNAME -i $CUSTOM_INSTALLER_RELATIVEPATH -m $MONITORING_CLUSTER_NAME -s $BOOTSTRAP_PHASE -u $OS_ADMIN_USERNAME --monitoring-cluster $MONITORING_CLUSTER_NAME --crontab-interval $CRONTAB_INTERVAL_MINUTES --keyvault-name $KEYVAULT_NAME --aad-webclient-id $AAD_WEBCLIENT_ID --aad-webclient-appkey $AAD_WEBCLIENT_APPKEY --aad-tenant-id $AAD_TENANT_ID --azure-subscription-id $AZURE_SUBSCRIPTION_ID --smtp-server $SMTP_SERVER --smtp-server-port $SMTP_SERVER_PORT --smtp-auth-user $SMTP_AUTH_USER --smtp-auth-user-password $SMTP_AUTH_USER_PASSWORD --cluster-admin-email $CLUSTER_ADMIN_EMAIL --cluster-name $CLUSTER_NAME ${OXA_TOOLS_GITHUB_PARAMS} ${EDX_CONFIGURATION_GITHUB_PARAMS} ${EDX_PLATFORM_GITHUB_PARAMS} ${EDX_THEME_GITHUB_PARAMS} ${ANSIBLE_GITHUB_PARAMS} ${BACKUP_PARAMS} ${SAMPLE_COURSE_PARAMS} ${COMPREHENSIVE_THEMING_PARAMS} ${AUTHENTICATION_PARAMS} ${DOMAIN_PARAMS} ${EDXAPP_PARAMS} --edxversion ${EDX_VERSION} --forumversion ${FORUM_VERSION} ${DATABASE_PARAMS} ${MEMCACHE_PARAMS} ${AZURE_CLI_VERSION} ${MOBILE_REST_API_PARAMS} ${JUMPBOX_BOOTSTRAP_PARAMS} ${SERVICEBUS_PARAMS} ${EDXAPP_SECRET_KEY_PARAMS} ${EDXAPP_LMS_ALLOWED_HOSTS_PARAMS} ${EDXAPP_CMS_ALLOWED_HOSTS_PARAMS} ${DEPLOYMENT_TYPE_PARAMS} ${AZURE_MYSQL_PARAMS} --cron >> $SECONDARY_LOG 2>&1"
     echo $INSTALL_COMMAND > $CRON_INSTALLER_SCRIPT
 
     # Remove the task if it is already setup
@@ -895,7 +917,7 @@ fi
 #####################################
 
 # execute the installer if present
-if [[ $BOOTSTRAP_JUMPBOX == 1 ]] and [[ $deployment_type != "bootstrap" ]];
+if [[ $BOOTSTRAP_JUMPBOX == 1 ]] && [[ $deployment_type != "bootstrap" ]];
 then
     # we are bootstrapping a new jumpbox. The only relevant action left is to setup ssh
     log "Setting up SSH"

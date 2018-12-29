@@ -445,9 +445,11 @@ update_stamp_jb()
 {
     SUBJECT="${MAIL_SUBJECT} - EdX Database (Mysql) Setup Failed"
 
-    # 1. setup the OPENEDX_RELEASE variable:
+    # 1. setup the OPENEDX_RELEASE and other variables:
     export OPENEDX_RELEASE=$EDX_PLATFORM_PUBLIC_GITHUB_PROJECTBRANCH
     export EDX_OPENEDX_RELEASE=$EDX_VERSION
+    export OXA_PLAYBOOK_CONFIGS=$OXA_PLAYBOOK_CONFIG
+    export OXA_VAULT_NAME="${CLUSTER_NAME}-kv"
 
     # 2. Bootstrap the Ansible installation:
     bash $ANSIBLE_BOOTSTRAP_INSTALLER
@@ -455,7 +457,9 @@ update_stamp_jb()
 
     # 3. Install Open edX using custom native installer
     target_playbook="edx-stateful.yml"
-    bash $NATIVE_INSTALLER --playbook $target_playbook --config $OXA_PLAYBOOK_CONFIG --vault "${CLUSTER_NAME}-kv"
+    export OXA_TARGET_PLAYBOOK=$target_playbook
+
+    bash $NATIVE_INSTALLER
     exit_on_error "Execution of native installer failed (Stamp JB: ${NATIVE_INSTALLER}, ${target_playbook}, ${OXA_PLAYBOOK_CONFIG})" 1 "${SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
 
     # if the Memcache Server is different than the Mysql Master server, we have to install memcache with default configs
@@ -481,7 +485,13 @@ update_stamp_vmss()
 
     # 3. Install Open edX using custom native installer
     target_playbook="edx-stateless.yml"
-    bash $NATIVE_INSTALLER --playbook $target_playbook --config $OXA_PLAYBOOK_CONFIG --vault "${CLUSTER_NAME}-kv"
+
+    # switching to export since edx uses $@ to pass additional environment vars to the playbooks
+    export OXA_TARGET_PLAYBOOK=$target_playbook
+    export OXA_PLAYBOOK_CONFIGS=$OXA_PLAYBOOK_CONFIG
+    export OXA_VAULT_NAME="${CLUSTER_NAME}-kv"
+
+    bash $NATIVE_INSTALLER
     exit_on_error "Execution of native installer failed (Stamp VMSS: ${NATIVE_INSTALLER}, ${target_playbook}, ${OXA_PLAYBOOK_CONFIG})" 1 "${SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
 
     # oxa playbooks
