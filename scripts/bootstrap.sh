@@ -709,6 +709,12 @@ verify_state
 
 setup
 
+# override oxa.yml with master configs from keyvault (if available)
+if [[ -f "${OXA_ENV_PATH}/oxa.yml" ]]; then
+    log "Using master override of oxa.yml from keyvault"
+    OXA_PLAYBOOK_CONFIG="${OXA_ENV_PATH}/oxa.yml"
+fi
+
 ##
 ## Execute role-based automation (edX and OXA playbooks)
 ## stamp note: assumes DB installations and SSH keys are already in place
