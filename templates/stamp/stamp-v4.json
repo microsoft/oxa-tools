@@ -777,13 +777,13 @@
                     "monitorConfigPort": 443,
                     "monitorConfigPath": "/",
                     "endpoint1": {
-                        "target": "[concat('preview-', parameters('clusterName'), '-slot1.',resourceGroup().location, '.cloudapp.azure.com')]",
+                        "target": "[concat('lms-', parameters('clusterName'), '-slot1.',resourceGroup().location, '.cloudapp.azure.com')]",
                         "status": "[variables('slot1Status')]",
                         "location": "[resourceGroup().location]",
                         "priority": "1"
                     },
                     "endpoint2": {
-                        "target": "[concat('preview-', parameters('clusterName'), '-slot2.',resourceGroup().location, '.cloudapp.azure.com')]",
+                        "target": "[concat('lms-', parameters('clusterName'), '-slot2.',resourceGroup().location, '.cloudapp.azure.com')]",
                         "status": "[variables('slot2Status')]",
                         "location": "[resourceGroup().location]",
                         "priority": "2"
