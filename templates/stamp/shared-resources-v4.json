@@ -46,38 +46,19 @@
                     {
                         "name": "[parameters('networkSettings').subnetName]",
                         "properties": {
-                            "addressPrefix": "[parameters('networkSettings').subnetPrefix]"
+                            "addressPrefix": "[parameters('networkSettings').subnetPrefix]",
+                            "serviceEndpoints": [
+                                {
+                                  "service": "Microsoft.Sql"
+                                },
+                                {
+                                    "service": "Microsoft.Storage"
+                                }
+                            ]
                         }
                     }
                 ]
             }
-        },
-		{
-            "type": "Microsoft.Network/virtualNetworks/subnets",
-            "name": "[concat(parameters('networkSettings').virtualNetworkName, '/', parameters('networkSettings').subnetName)]",
-            "apiVersion": "[parameters('apiSettings').networkVirtualNetworksSubnetsApiVersion]",
-            "scale": null,
-            "properties": {
-                "provisioningState": "Succeeded",
-                "addressPrefix": "[parameters('networkSettings').subnetPrefix]",
-                "serviceEndpoints": [
-                    {
-                        "service": "Microsoft.Sql",
-                        "locations": [
-                            "[resourceGroup().location]"
-                        ]
-                    },
-					{
-						"service": "Microsoft.AzureCosmosDB",
-						"locations": [
-							"[resourceGroup().location]"
-						]
-					}
-                ]
-            },
-            "dependsOn": [
-                "[resourceId('Microsoft.Network/virtualNetworks', parameters('networkSettings').virtualNetworkName)]"
-            ]
         },
         {
             "name": "[parameters('storageSettings').storageAccountName]",
