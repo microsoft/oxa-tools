@@ -490,7 +490,7 @@ update_stamp_vmss()
 
     # switching to export since edx uses $@ to pass additional environment vars to the playbooks
     export OXA_TARGET_PLAYBOOK=$target_playbook
-    export OXA_PLAYBOOK_CONFIGS=$OXA_PLAYBOOK_CONFIG
+    export OXA_PLAYBOOK_CONFIGS="${OXA_ENV_PATH}/${DEPLOYMENT_ENV}/oxa.yml"
     export OXA_VAULT_NAME="${CLUSTER_NAME}-kv"
 
     bash $NATIVE_INSTALLER
