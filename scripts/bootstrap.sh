@@ -490,15 +490,15 @@ update_stamp_vmss()
 
     # switching to export since edx uses $@ to pass additional environment vars to the playbooks
     export OXA_TARGET_PLAYBOOK=$target_playbook
-    export OXA_PLAYBOOK_CONFIGS="${OXA_ENV_PATH}/${DEPLOYMENT_ENV}/oxa.yml"
+    export OXA_PLAYBOOK_CONFIGS=$OXA_PLAYBOOK_CONFIG
     export OXA_VAULT_NAME="${CLUSTER_NAME}-kv"
 
     bash $NATIVE_INSTALLER
     exit_on_error "Execution of native installer failed (Stamp VMSS: ${NATIVE_INSTALLER}, ${target_playbook}, ${OXA_PLAYBOOK_CONFIG})" 1 "${SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
 
     # oxa playbooks
-    $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK $THEME_ARGS --tags "edxapp"
-    exit_on_error "Execution of OXA edxapp playbook failed" 1 "${SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
+    #$ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK $THEME_ARGS --tags "edxapp"
+    #exit_on_error "Execution of OXA edxapp playbook failed" 1 "${SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
 }
 
 update_scalable_mongo() {
