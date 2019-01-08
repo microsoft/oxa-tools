@@ -27,7 +27,7 @@ EDXAPP_MYSQL_PORT: "%%MYSQL_MASTER_PORT%%"
 
 # As a fix, we will support 2 targets for memcache when supporting multiple version of VMSS, giving each VMSS access to its own memcache
 # It is assumed that the memcache application is already installed on the specified server with 'MEMCACHE_SERVER_IP'
-EDXAPP_MEMCACHE: ["%%MEMCACHE_SERVER_IP%%:11211"]
+EDXAPP_MEMCACHE: ["localhost:11211"]
 
 FORUM_MONGO_HOSTS:
   - "%%MONGO_SERVER_IP_PREFIX%%11"
