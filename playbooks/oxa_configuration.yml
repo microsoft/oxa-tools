@@ -13,3 +13,4 @@
     - { role: mongo, tags: [ 'mongo' ] }
     - { role: mysql, tags: [ 'mysql' ] }
     - { role: memcached, tags: [ 'memcached' ] }
+    - { role: theme, tags: [ 'theme' ] }
