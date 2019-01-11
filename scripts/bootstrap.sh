@@ -496,6 +496,12 @@ update_stamp_vmss()
     bash $NATIVE_INSTALLER
     exit_on_error "Execution of native installer failed (Stamp VMSS: ${NATIVE_INSTALLER}, ${target_playbook}, ${OXA_PLAYBOOK_CONFIG})" 1 "${SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
 
+   # 3. Install Open edX using custom native installer
+    target_playbook="ora2.yml"
+
+    bash $NATIVE_INSTALLER
+    exit_on_error "Execution of ora2.yml failed (Stamp VMSS: ${NATIVE_INSTALLER}, ${target_playbook}, ${OXA_PLAYBOOK_CONFIG})" 1 "${SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
+
     # oxa playbooks
     $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK $THEME_ARGS --tags "theme"
     exit_on_error "Execution of OXA edxapp playbook failed" 1 "${SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
