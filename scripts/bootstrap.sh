@@ -486,15 +486,20 @@ update_stamp_vmss()
     exit_on_error "Execution of ansible bootstrap  installer failed (Stamp VMSS: ${ANSIBLE_BOOTSTRAP_INSTALLER})" 1 "${SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
 
     # 3. Install Open edX using custom native installer
-    target_playbook="edx-stateless.yml"
+    target_playbooks=( 'edx-stateless.yml' 'ora2.yml' )
 
-    # switching to export since edx uses $@ to pass additional environment vars to the playbooks
-    export OXA_TARGET_PLAYBOOK=$target_playbook
-    export OXA_PLAYBOOK_CONFIGS=$OXA_PLAYBOOK_CONFIG
-    export OXA_VAULT_NAME="${CLUSTER_NAME}-kv"
+    for target_playbook in "${target_playbooks[@]}"
+    do
+        log "Running '${target_playbook}' playbook"
+        
+        # switching to export since edx uses $@ to pass additional environment vars to the playbooks
+        export OXA_TARGET_PLAYBOOK=$target_playbook
+        export OXA_PLAYBOOK_CONFIGS=$OXA_PLAYBOOK_CONFIG
+        export OXA_VAULT_NAME="${CLUSTER_NAME}-kv"
 
-    bash $NATIVE_INSTALLER
-    exit_on_error "Execution of native installer failed (Stamp VMSS: ${NATIVE_INSTALLER}, ${target_playbook}, ${OXA_PLAYBOOK_CONFIG})" 1 "${SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
+        bash $NATIVE_INSTALLER
+        exit_on_error "Execution of native installer failed (Stamp VMSS: ${NATIVE_INSTALLER}, ${target_playbook}, ${OXA_PLAYBOOK_CONFIG})" 1 "${SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
+    done
 
     # oxa playbooks
     $ANSIBLE_PLAYBOOK -i localhost, -c local -e@$OXA_PLAYBOOK_CONFIG $OXA_PLAYBOOK_ARGS $OXA_PLAYBOOK $THEME_ARGS --tags "theme"
