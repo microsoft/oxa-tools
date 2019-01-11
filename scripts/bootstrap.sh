@@ -496,7 +496,7 @@ update_stamp_vmss()
     bash $NATIVE_INSTALLER
     exit_on_error "Execution of native installer failed (Stamp VMSS: ${NATIVE_INSTALLER}, ${target_playbook}, ${OXA_PLAYBOOK_CONFIG})" 1 "${SUBJECT}" "${CLUSTER_ADMIN_EMAIL}" "${PRIMARY_LOG}" "${SECONDARY_LOG}"
 
-   # 3. Install Open edX using custom native installer
+   # 4. Install Ora2 xblock
     target_playbook="ora2.yml"
 
     bash $NATIVE_INSTALLER
