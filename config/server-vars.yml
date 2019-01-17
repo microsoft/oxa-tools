@@ -40,6 +40,13 @@ EDXAPP_COURSE_ABOUT_VISIBILITY_PERMISSION: "see_about_page"
 EDXAPP_MKTG_URL_LINK_MAP:
   DN: "dn"
 
+EDXAPP_RETIREMENT_STATES:
+  - "PENDING"
+  - "LOCKING_ACCOUNT"
+  - "ERRORED"
+  - "ABORTED"
+  - "COMPLETE"
+
 # Country made required field in registration.
 EDXAPP_REGISTRATION_EXTRA_FIELDS: 
   city: "hidden"
