@@ -1,0 +1,176 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+		"apiSettings": {
+            "type": "object",
+            "metadata": {
+                "Description": "API version of the resource type"
+            }
+        },
+        "networkSettings": {
+            "type": "secureObject",
+            "metadata": {
+                "Description": "Network settings object"
+            }
+        },
+        "serverName": {
+            "type": "string",
+            "metadata": {
+                "description": "Server Name for Azure database for MySQL"
+            }
+        },
+        "administratorLogin": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "Database administrator login name"
+            }
+        },
+        "administratorLoginPassword": {
+            "type": "securestring",
+            "minLength": 8,
+            "metadata": {
+                "description": "Database administrator password"
+            }
+        },
+        "skuCapacity": {
+            "type": "int",
+			"allowedValues": [
+                2,
+				4,
+				8,
+				16,
+				32
+            ],
+            "defaultValue": 2,
+            "metadata": {
+                "description": "Azure database for MySQL compute capacity in vCores (2,4,8,16,32)"
+            }
+        },
+        "skuName": {
+            "type": "string",
+            "defaultValue": "GP_Gen5_2",
+            "metadata": {
+                "description": "Azure database for MySQL sku name "
+            }
+        },
+        "skuSizeMB": {
+            "type": "int",
+            "defaultValue": 5120,
+            "metadata": {
+                "description": "Azure database for MySQL Sku Size "
+            }
+        },
+        "skuTier": {
+            "type": "string",
+			"allowedValues": [
+				"Basic",
+				"GeneralPurpose",
+				"MemoryOptimized"
+			],
+            "defaultValue": "GeneralPurpose",
+            "metadata": {
+                "description": "Azure database for MySQL pricing tier"
+            }
+        },
+        "skuFamily": {
+            "type": "string",
+			"allowedValues": [
+				"Gen4",
+				"Gen5"
+			],
+            "defaultValue": "Gen5",
+            "metadata": {
+                "description": "Azure database for MySQL sku family"
+            }
+        },
+        "mysqlVersion": {
+            "type": "string",
+            "allowedValues": [
+                "5.6",
+                "5.7"
+            ],
+            "defaultValue": "5.7",
+            "metadata": {
+                "description": "MySQL version"
+            }
+        },
+        "backupRetentionDays": {
+            "type": "int",
+            "defaultValue": 30,
+            "metadata": {
+                "description": "MySQL Server backup retention days"
+            }
+        },
+        "geoRedundantBackup": {
+            "type": "string",
+			"allowedValues": [
+				"Enabled",
+				"Disabled"
+			],
+            "defaultValue": "Disabled",
+            "metadata": {
+                "description": "Geo-Redundant Backup setting"
+            }
+        },
+        "virtualNetworkRuleName": {
+            "type": "string",
+            "defaultValue": "AllowSubnet",
+            "metadata": {
+                "description": "Virtual Network RuleName"
+            }
+        },
+		"sslEnforcement": {
+			"type": "string",
+			"allowedValues": [
+				"Enabled",
+				"Disabled"
+			],
+			"defaultValue": "Enabled",
+            "metadata": {
+                "description": "SSL enforcement"
+            }
+		}
+    },
+    "resources": [
+        {
+			"type": "Microsoft.DBforMySQL/servers",
+			"name": "[parameters('serverName')]",
+            "apiVersion": "[parameters('apiSettings').mySqlApiVersion]",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "[parameters('skuName')]",
+                "tier": "[parameters('skuTier')]",
+                "capacity": "[parameters('skuCapacity')]",
+                "size": "[parameters('skuSizeMB')]",
+                "family": "[parameters('skuFamily')]"
+            },
+            "properties": {
+                "version": "[parameters('mysqlVersion')]",
+                "administratorLogin": "[parameters('administratorLogin')]",
+                "administratorLoginPassword": "[parameters('administratorLoginPassword')]",
+                "storageProfile": {
+                    "storageMB": "[parameters('skuSizeMB')]",
+                    "backupRetentionDays": "[parameters('backupRetentionDays')]",
+                    "geoRedundantBackup": "[parameters('geoRedundantBackup')]"
+                },
+				"sslEnforcement": "[parameters('sslEnforcement')]"
+            },
+            "resources": [
+                {
+					"type": "virtualNetworkRules",
+                    "name": "allowSubnet-mySql",
+                    "apiVersion": "[parameters('apiSettings').mySqlApiVersion]",
+                    "properties": {
+                        "virtualNetworkSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('networkSettings').virtualNetworkName, parameters('networkSettings').subnetName)]",
+                        "ignoreMissingVnetServiceEndpoint": false
+                    },
+                    "dependsOn": [
+                        "[concat('Microsoft.DBforMySQL/servers/', parameters('serverName'))]"
+                    ]
+                }
+            ]
+        }
+    ]
+}

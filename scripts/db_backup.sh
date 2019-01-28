@@ -53,6 +53,12 @@ SETTINGS_FILE=
     # debug mode: 0=set +x, 1=set -x
     debug_mode=0
 
+    # Azure Mysql mode (populated from setting)
+    is_azure_mysql_db="false"
+
+    # List of databases to backup (populated from setting)
+    target_databases=
+
 help()
 {
     SCRIPT_NAME=`basename "$0"`
@@ -186,7 +192,11 @@ EOF
         sed -i "s/{TEMP_DATABASE_USER}/${TEMP_DATABASE_USER}/I" $TMP_QUERY_ADD
         sed -i "s/{TEMP_DATABASE_PASSWORD}/${TEMP_DATABASE_PASSWORD}/I" $TMP_QUERY_ADD
 
-        mysql -u $DATABASE_USER -p$DATABASE_PASSWORD -h $1 < $TMP_QUERY_ADD
+        if [[ "$is_azure_mysql_db" == "true" ]]; then
+            mysql -u "${DATABASE_USER}@${MYSQL_SERVER_IP}" -p$DATABASE_PASSWORD -h "${1}.mysql.database.azure.com" --ssl=true --ssl-ca=/etc/ssl/certs/Baltimore_CyberTrust_Root.pem < $TMP_QUERY_ADD
+        else
+            mysql -u $DATABASE_USER -p$DATABASE_PASSWORD -h $1 < $TMP_QUERY_ADD
+        fi
     fi
 }
 
@@ -207,7 +217,11 @@ EOF
 
         sed -i "s/{TEMP_DATABASE_USER}/${TEMP_DATABASE_USER}/I" $TMP_QUERY_REMOVE
 
-        mysql -u $DATABASE_USER -p$DATABASE_PASSWORD -h $1 < $TMP_QUERY_REMOVE
+        if [[ "$is_azure_mysql_db" == "true" ]]; then
+            mysql -u "${DATABASE_USER}@${MYSQL_SERVER_IP}" -p$DATABASE_PASSWORD -h "${1}.mysql.database.azure.com" --ssl=true --ssl-ca=/etc/ssl/certs/Baltimore_CyberTrust_Root.pem < $TMP_QUERY_REMOVE
+        else
+            mysql -u $DATABASE_USER -p$DATABASE_PASSWORD -h $1 < $TMP_QUERY_REMOVE
+        fi
     fi
 }
 
@@ -226,8 +240,14 @@ create_compressed_db_dump()
     if [[ "$DATABASE_TYPE" == "mysql" ]]; then
         add_temp_mysql_user $MYSQL_SERVER_IP
 
-        # execute dump of all databases
-        mysqldump -u $DATABASE_USER -p$DATABASE_PASSWORD -h $MYSQL_SERVER_IP -P $MYSQL_SERVER_PORT --all-databases --single-transaction --set-gtid-purged=OFF --triggers --routines --events > $BACKUP_PATH
+        if [[ "$is_azure_mysql_db" == "true" ]]; then
+            # execute dump of all databases
+            mysqldump -u "${DATABASE_USER}@${MYSQL_SERVER_IP}" -p$DATABASE_PASSWORD -h "${MYSQL_SERVER_IP}.mysql.database.azure.com" --ssl=true --ssl-ca=/etc/ssl/certs/Baltimore_CyberTrust_Root.pem -P $MYSQL_SERVER_PORT --all-databases --single-transaction --set-gtid-purged=OFF --triggers --routines --events > $BACKUP_PATH
+        else
+            # execute dump of all databases
+            mysqldump -u $DATABASE_USER -p$DATABASE_PASSWORD -h $MYSQL_SERVER_IP -P $MYSQL_SERVER_PORT --single-transaction --set-gtid-purged=OFF --triggers --routines --databases $target_databases > $BACKUP_PATH
+        fi
+
         exit_on_error "Unable to backup ${DATABASE_TYPE}!" "${ERROR_DB_BACKUP_FAILED}" "${notification_email_subject}" "${CLUSTER_ADMIN_EMAIL}" "${main_logfile}"
 
         remove_temp_mysql_user $MYSQL_SERVER_IP

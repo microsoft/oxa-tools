@@ -1150,6 +1150,8 @@ BACKUP_LOCAL_PATH=${backupLocalPath}
 CLUSTER_ADMIN_EMAIL=${clusterAdminEmail}
 AZURE_CLI_VERSION=${azureCliVersion}
 AZURE_STORAGEACCOUNT_CONNECTIONSTRING=\"${storage_connection_string}\"
+is_azure_mysql_db=\"true\"
+target_databases=\"analytics-api credentials dashboard discovery ecommerce edx_notes_api edxapp edxapp_csmh journals programs reports veda xqueue\"
 EOF"
 
     # this file contains secrets (like storage account key). Secure it

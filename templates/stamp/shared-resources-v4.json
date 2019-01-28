@@ -1,0 +1,229 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "apiSettings": {
+            "type": "object",
+            "metadata": {
+                "Description": "API version of the resource type"
+            }
+        },
+        "networkSettings": {
+            "type": "secureObject",
+            "metadata": {
+                "Description": "Network settings object"
+            }
+        },
+        "storageSettings": {
+            "type": "object",
+            "metadata": {
+                "Description": "Storage settings object"
+            }
+        },
+        "serviceBusSettings": {
+            "type": "object",
+            "metadata": {
+                "Description": "Service Bus  settings object"
+            }  
+        }            
+    },
+    "variables": {
+        "loadBalancerIpName": "[concat(parameters('networkSettings').loadbalancerSettings.loadBalancerName, parameters('networkSettings').publicIPAddressNameSuffix)]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Network/virtualNetworks",
+            "name": "[parameters('networkSettings').virtualNetworkName]",
+            "apiVersion": "[parameters('apiSettings').networkApiVersion]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[parameters('networkSettings').addressPrefix]"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[parameters('networkSettings').subnetName]",
+                        "properties": {
+                            "addressPrefix": "[parameters('networkSettings').subnetPrefix]",
+                            "serviceEndpoints": [
+                                {
+                                  "service": "Microsoft.Sql"
+                                },
+                                {
+                                    "service": "Microsoft.Storage"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "[parameters('storageSettings').storageAccountName]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "[parameters('apiSettings').storageApiVersion]",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "[parameters('storageSettings').storageAccountType]",
+                "tier": "Standard"
+            },
+            "kind": "Storage"
+        },
+        {
+            "name": "[parameters('storageSettings').diagnosticStorageAccountName]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "[parameters('apiSettings').storageApiVersion]",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "[parameters('storageSettings').storageAccountType]",
+                "tier": "Standard"
+            },
+            "kind": "Storage"
+        },
+        {
+            "comments": "This is the secure storage account used for backups and other admin functions",
+
+            "name": "[parameters('storageSettings').secureGenericStorageAccountName]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "[parameters('apiSettings').storageApiVersion]",
+            "location": "[resourceGroup().location]",
+
+            "sku": {
+                "name": "[parameters('storageSettings').storageAccountType]",
+                "tier": "Standard"
+            },
+            "kind": "Storage",
+            "properties": {
+                "encryption": {
+                    "keySource": "Microsoft.Storage",
+                    "services": {
+                        "blob": {
+                            "enabled": true
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "comments": "This is the storage account used for video uploads",
+
+            "name": "[parameters('storageSettings').videoUploadsStorageAccountName]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "[parameters('apiSettings').storageApiVersion]",
+            "location": "[resourceGroup().location]",
+
+            "sku": {
+                "name": "[parameters('storageSettings').storageAccountType]",
+                "tier": "Standard"
+            },
+            "kind": "Storage"
+        },
+        {
+            "comments": "This is the storage account used for WAMS",
+
+            "name": "[parameters('storageSettings').wamsStorageAccountName]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "[parameters('apiSettings').storageApiVersion]",
+            "location": "[resourceGroup().location]",
+
+            "sku": {
+                "name": "[parameters('storageSettings').storageAccountType]",
+                "tier": "Standard"
+            },
+            "kind": "Storage"
+        },
+        {
+            "type": "Microsoft.Compute/availabilitySets",
+            "name": "[concat(parameters('networkSettings').clusterMongoDataNodeName, parameters('networkSettings').availabilitySetNameSuffix)]",
+            "apiVersion": "[parameters('apiSettings').availabilitySetApiVersion]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "platformFaultDomainCount": "[parameters('networkSettings').mongoDataNodesAvailabilitySetFaultDomainCount]",
+                "platformUpdateDomainCount": "[parameters('networkSettings').mongoDataNodeCount]"
+            }
+        },
+        {
+            "name": "[parameters('networkSettings').mongoNetworkSecurityGroupName]",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "[parameters('apiSettings').networkApiVersion]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "default-allow-ssh",
+                        "properties": {
+                            "priority": 1000,
+                            "sourceAddressPrefix": "*",
+                            "protocol": "TCP",
+                            "destinationPortRange": "22",
+                            "access": "Allow",
+                            "direction": "Inbound",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*"
+                        }
+                    },
+                    {
+                        "name": "allow-mongodb",
+                        "properties": {
+                            "priority": 2000,
+                            "sourceAddressPrefix": "*",
+                            "protocol": "TCP",
+                            "destinationPortRange": "27017",
+                            "access": "Allow",
+                            "direction": "Inbound",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "comments": "Windows Media service",
+            "type": "Microsoft.Media/mediaservices",
+            "name": "[parameters('storageSettings').mediaServicesAccountName]",
+            "apiVersion": "[parameters('apiSettings').mediaServicesApiVersion]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "storageAccounts": [
+                    {
+                        "id": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageSettings').wamsStorageAccountName)]"
+                    }
+                ]
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageSettings').wamsStorageAccountName)]"
+            ]
+        },   
+        {
+            "comments": "Service bus Service",
+            "apiVersion": "[parameters('apiSettings').serviceBusApiVersion]",
+            "name": "[parameters('serviceBusSettings').serviceBusNameSpace]",
+            "type": "Microsoft.ServiceBus/Namespaces",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Basic",
+                "tier": "Basic",
+                "capacity": 1
+            },
+            "properties": {},
+            "resources": [
+                {
+                    "apiVersion": "[parameters('apiSettings').serviceBusApiVersion]",
+                    "name": "[parameters('serviceBusSettings').serviceBusQueueName]",
+                    "type": "Queues",
+                    "dependsOn": [
+                        "[concat('Microsoft.ServiceBus/namespaces/', parameters('serviceBusSettings').serviceBusNameSpace)]"
+                    ],
+                    "properties": {
+                        "lockDuration": "PT5M",
+                        "maxSizeInMegabytes": "1024",
+                        "defaultMessageTimeToLive": "PT5H"
+                    }
+                }
+            ]
+        }
+    ]
+}
