@@ -219,3 +219,17 @@ NGINX_EDXAPP_ENABLE_MAINTENANCE: %%NGINX_EDXAPP_ENABLE_MAINTENANCE%%
 EDXAPP_ENABLE_COURSE_DISCOVERY: %%EDXAPP_ENABLE_COURSE_DISCOVERY%%
 
 MONGO_ADMIN_USER: "%%MONGO_ADMIN_USER%%"
+
+# ORA2 Configs
+EDXAPP_ORA2_STORAGE_CLASS: "{{ AZURE_STORAGE_PROVIDER }}"
+EDXAPP_ORA2_STORAGE_KWARGS:
+  account_name: "{{ EDXAPP_AZURE_ACCOUNT_NAME }}"
+  account_key: "{{ EDXAPP_AZURE_ACCOUNT_KEY }}"
+  azure_container: "{{ EDXAPP_AZURE_CONTAINER }}"
+  azure_ssl: true
+  upload_max_conn: 2
+  timeout: 20
+  max_memory_size: 2*1024*1024
+  expiration_secs: "{{ AZURE_URL_EXPIRATION_SECS }}"
+  overwrite_files: false
+  is_emulated: false
