@@ -121,6 +121,7 @@ NGINX_SSL_KEY: %%NGINX_SSL_KEY%%
 STORAGE_TYPE: "azure"
 AZURE_STORAGE_PROVIDER: "storages.backends.azure_storage.AzureStorage"
 EDXAPP_DEFAULT_FILE_STORAGE: "django.core.files.storage.FileSystemStorage"
+EDXAPP_AZURE_URL_EXPIRATION_SECS: "%%EDXAPP_AZURE_URL_EXPIRATION_SECS%%"
 EDXAPP_AZURE_ACCOUNT_NAME: "%%AZURE_ACCOUNT_NAME%%"
 EDXAPP_AZURE_ACCOUNT_KEY: "%%AZURE_ACCOUNT_KEY%%"
 EDXAPP_AZURE_CONTAINER: "uploads"
@@ -231,6 +232,6 @@ EDXAPP_ORA2_STORAGE_KWARGS:
   upload_max_conn: 2
   timeout: 20
   max_memory_size: 2*1024*1024
-  expiration_secs: "{{ AZURE_URL_EXPIRATION_SECS }}"
+  expiration_secs: "{{ EDXAPP_AZURE_URL_EXPIRATION_SECS }}"
   overwrite_files: false
   is_emulated: false
