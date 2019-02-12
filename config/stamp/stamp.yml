@@ -227,7 +227,6 @@ ORA2_FILEUPLOAD_BACKEND: "django"
 EDXAPP_ORA2_STORAGE_CLASS: "{{ AZURE_STORAGE_PROVIDER }}"
 EDXAPP_ORA2_STORAGE_KWARGS:
   account_name: "{{ EDXAPP_AZURE_ACCOUNT_NAME }}"
-  account_key: "{{ EDXAPP_AZURE_ACCOUNT_KEY }}"
   azure_container: "{{ EDXAPP_AZURE_CONTAINER }}"
   azure_ssl: true
   upload_max_conn: 2
