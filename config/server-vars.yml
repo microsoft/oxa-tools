@@ -273,7 +273,7 @@ EDXAPP_COURSE_MODE_DEFAULTS":
     min_price: 0
     name: "Honor"
     sku: null
-    slug: "audit",
+    slug: "honor"
     suggested_prices: ""
 
 # Enable/Disable SSL forwarding for nginx
