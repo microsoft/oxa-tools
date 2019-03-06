@@ -265,7 +265,7 @@ EDXAPP_CMS_SECURE_KEY_NAME: "%%EDXAPP_CMS_SECURE_KEY_NAME%%"
 EDXAPP_ENCRYPT_SESSION_KEY_USING_MD5: false
 
 # EDX defaults course mode to Audit, this setting overrides that default
-EDXAPP_COURSE_MODE_DEFAULTS":
+EDXAPP_COURSE_MODE_DEFAULTS:
     bulk_sku: null
     currency: "usd"
     description": null
