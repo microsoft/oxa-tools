@@ -275,3 +275,8 @@ EDXAPP_COURSE_MODE_DEFAULTS:
     sku: null
     slug: "honor"
     suggested_prices: ""
+
+# Enable/Disable SSL forwarding for nginx
+# In some specific cases, requests being forwarded from nginx to gunicorn are downgraded to HTTP
+# Enabling SSL forwarding forces SSL for those forwarded requests
+EDXAPP_NGINX_ENABLE_SSL_FORWARDING: true
