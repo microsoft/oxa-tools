@@ -268,7 +268,7 @@ EDXAPP_ENCRYPT_SESSION_KEY_USING_MD5: false
 EDXAPP_COURSE_MODE_DEFAULTS:
     bulk_sku: null
     currency: "usd"
-    description": ""
+    description: null
     expiration_datetime: null
     min_price: 0
     name: "Honor"
