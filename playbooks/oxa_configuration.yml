@@ -5,6 +5,7 @@
     secrets_path: "{{ oxa_tools_config_path }}"
     roles_path: "{{ oxa_tools_path }}/playbooks/roles"
     edxapp_files_path: "{{ roles_path }}/edxapp/files"
+    tracking_files_path: "{{ roles_path }}/tracking/files"
     mysql_files_path: "{{ roles_path }}/mysql/files"
   sudo: True
   gather_facts: True
@@ -14,3 +15,4 @@
     - { role: mysql, tags: [ 'mysql' ] }
     - { role: memcached, tags: [ 'memcached' ] }
     - { role: theme, tags: [ 'theme' ] }
+    - { role: tracking, tags: [ 'tracking' ] }
