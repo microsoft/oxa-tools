@@ -2336,7 +2336,7 @@ function Get-DefaultDeploymentVersionId
             [Parameter(Mandatory=$false)][int]$MaxRetries=3
          )
 
-    $deploymentVersionIdFormat = "yyyyMMddHmmss";
+    $deploymentVersionIdFormat = "yyyyMMddHms";
 
     if ( $DeploymentType -ne "swap" )
     {

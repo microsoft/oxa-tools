@@ -263,3 +263,20 @@ EDXAPP_CMS_NON_SECURE_KEY_NAME: "%%EDXAPP_CMS_NON_SECURE_KEY_NAME%%"
 EDXAPP_CMS_SECURE_KEY_NAME: "%%EDXAPP_CMS_SECURE_KEY_NAME%%"
 
 EDXAPP_ENCRYPT_SESSION_KEY_USING_MD5: false
+
+# EDX defaults course mode to Audit, this setting overrides that default
+EDXAPP_COURSE_MODE_DEFAULTS:
+    bulk_sku: null
+    currency: "usd"
+    description: null
+    expiration_datetime: null
+    min_price: 0
+    name: "Honor"
+    sku: null
+    slug: "honor"
+    suggested_prices: ""
+
+# Enable/Disable SSL forwarding for nginx
+# In some specific cases, requests being forwarded from nginx to gunicorn are downgraded to HTTP
+# Enabling SSL forwarding forces SSL for those forwarded requests
+EDXAPP_NGINX_ENABLE_SSL_FORWARDING: true

@@ -219,3 +219,19 @@ NGINX_EDXAPP_ENABLE_MAINTENANCE: %%NGINX_EDXAPP_ENABLE_MAINTENANCE%%
 EDXAPP_ENABLE_COURSE_DISCOVERY: %%EDXAPP_ENABLE_COURSE_DISCOVERY%%
 
 MONGO_ADMIN_USER: "%%MONGO_ADMIN_USER%%"
+
+# ORA2 Configs
+# boolean indicator of whether or not the ORA2 Azure Storage URL will expire & the duration (in secs) before expiration
+EDXAPP_ORA2_FILEUPLOAD_BACKEND: "django"
+EDXAPP_ORA2_STORAGE_CLASS: "{{ AZURE_STORAGE_PROVIDER }}"
+EDXAPP_ORA2_STORAGE_KWARGS:
+  account_name: "{{ EDXAPP_AZURE_ACCOUNT_NAME }}"
+  azure_container: "{{ EDXAPP_AZURE_CONTAINER }}"
+  azure_ssl: true
+  upload_max_conn: 2
+  timeout: 20
+  max_memory_size: 2*1024*1024
+  expires: %%EDXAPP_ORA2_AZURE_STORAGE_URL_EXPIRES%%
+  expiration_secs: %%EDXAPP_ORA2_AZURE_STORAGE_URL_EXPIRATION_SECS%%
+  overwrite_files: false
+  is_emulated: false

@@ -119,7 +119,7 @@
         "autoScaleCapacityDefault": {
             "type": "int",
             "maxValue": 20,
-            "defaultValue": 5,
+            "defaultValue": 2,
             "metadata": {
                 "description": "Default number of application virtual machines within the VM Scale Set."
             }
