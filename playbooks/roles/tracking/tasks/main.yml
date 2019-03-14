@@ -1,0 +1,4 @@
+---
+- name: Create 'Upload Tracking Logs' daily cron script
+  sudo: yes
+  copy: src="{{ tracking_files_path }}/oxa-tracking.sh" dest="/etc/cron.hourly/oxa-tracking" owner=root group=root mode=755
