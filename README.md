@@ -272,6 +272,7 @@ account, or if you logged into Azure with your work or school account, this woul
 organization. 
 
 ![locate_aad](images/figure-3.png "Locate your Azure Active Directory")
+
 Figure 3: Locate your Azure Active Directory
 
 Keep this AAD selection for the remaining steps.
@@ -282,11 +283,13 @@ In the Azure Portal, select “More services” in the blade. Search for the ser
 Select “Azure Active Directory.
 
 ![locate_aad_more](images/figure-4.png "Locate Azure Active Directory under More Services")
+
 Figure 4: Locate Azure Active Directory under More Services
 
 Select “Properties.” 
 
 ![locate_aadtenantid](images/figure-5.png "AADTenantId is the Directory ID")
+
 Figure 5: AADTenantId is the Directory ID
 
 Locate the Directory ID, and this is your parameter for AADTenantId.
@@ -299,11 +302,13 @@ Starting from the Azure Portal, select “Azure Active Directory”. Under Manag
 registrations.”
 
 ![aad_app_registrations](images/figure-6.png "Azure Active Directory, App registrations")
+
 Figure 6: Azure Active Directory, App registrations
 
 Select “+ New application registration”. 
 
 ![new_app_registration](images/figure-7.png "New application registration")
+
 Figure 7: New application registration
 
 Enter a Name for your AAD app (This can be any name.). Select the Application type to be “Web app /
@@ -312,17 +317,20 @@ the contoso example shown. Select the Create button at the bottom of the page to
 application.
 
 ![create_aad_app](images/figure-8.png "Create AAD Application")
+
 Figure 8: Create AAD Application
 
 The AAD application you just created will be in the App Registrations page now. Select the AAD
 application you just registered by clicking on the Application name.
 
 ![locate_aad_app](images/figure-9.png "Locate AAD Application")
+
 Figure 9: Locate AAD Application
 
 Select the AAD application you just registered by clicking on the Application name.
 
 ![aadwebclientid](images/figure-10.png "Application ID is the AADWebClientId parameter")
+
 Figure 10: Application ID is the AADWebClientId parameter
 
 Locate the Application ID, and this is your parameter for AADWebClientId.
@@ -332,16 +340,19 @@ The AADWebClientAppKey is found in the Azure portal and is called the AAD WebCli
 Start at the same location as where you located the Application ID and select Keys. 
 
 ![keys](images/figure-11.png "Keys")
+
 Figure 11: Keys
 
 Enter Key description (e.g. aadKey), select Duration, select Save.
 
 ![key_settings](images/figure-12.png "Key settings")
+
 Figure 12: Key settings
 
 Copy the key Value. This is the only time you will be able to see the Value, so you must retrieve it now.
 
 ![key_value](images/figure-13.png "Key Value")
+
 Figure 13: Key Value
 
 Locate the parameter, and this is your value for AadWebClientAppKey.
@@ -351,12 +362,14 @@ Go to main azure portal page, https://portal.azure.com. Navigate to your subscri
 “Subscriptions” in the search bar at the top of the Azure portal. Select Subscriptions.) 
 
 ![search_and_select_subscription](images/figure-14.png "Search and select Subscriptions")
+
 Figure 14: Search and select Subscriptions
 
 Select any subscription associated with your default AAD. This will also be the Azure subscription you
 will use to deploy your Open edX on Azure.
 
 ![locate_subscription_name](images/figure-15.png "Locate Subscription Name")
+
 Figure 15: Locate Subscription Name
 
 Locate the Subscription name, and this is your parameter for AzureSubscriptionName.
@@ -368,6 +381,7 @@ Select the subscription. Select Access control (IAM). Select “+ Add” option 
 to the subscription.
 
 ![app_subscription](images/figure-16.png "Add AAD application to Subscription")
+
 Figure 16: Add AAD application to Subscription
 
 In the Role field, select “Owner”. In the Select field, enter the AAD application name you created in a
@@ -426,12 +440,14 @@ Deployment is a two-step process.
 2. Deploying the bits to VMs: Takes ~2 hours
 
 ![deployment_process](images/figure-17.png "Deployment Process")
+
 Figure 17: Deployment Process
 
 After the initial cluster is set up, you should see the following screen in your PowerShell window. Your
 deployment is not complete yet.
 
 ![powershell_view](images/figure-18.png "PowerShell view after running deployment script")
+
 Figure 18: PowerShell view after running deployment script
 
 #### 5.3. Email Notifications
@@ -463,6 +479,7 @@ In the Azure portal, select Resource groups (icon ) to see all the resources ass
 deployment.
 
 ![all_resources](images/figure-19.png "See all Resources in your deployment")
+
 Figure 19: See all Resources in your deployment
 
 To access the LMS and CMS, enter ‘Traffic Manager profile’ into the ‘Filter by type’ field. This will filter
@@ -470,6 +487,7 @@ the resources so that it’s easier to find the LMS and CMS.
 Select the LMS or CMS resources, and the DNS name will be shown.
 
 ![find_lms_or_cms](images/figure-20.png "Find LMS or CMS URL")
+
 Figure 20: Find LMS or CMS URL
 
 If you can access the LMS and CMS, the installation is successful. Congratulations!
