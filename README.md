@@ -60,7 +60,7 @@ This guide covers how to gather the various parameters used in the script.
 Note: After retrieving the parameters and creating your deployment script, you will run the PowerShell
 script in Administrator mode.
 
-````
+~~~~
 [Enlistment Root]\oxa-tools\scripts\Deploy-OxaStamp.ps1 -ResourceGroupName [Cluster
 Name] -Location "[Location]" -TargetPath "[Enlistment Root]\oxatools\config\stamp\default" -AadWebClientId “<AADWebClientId>” -AadWebClientAppKey
 “<AADWebClientAppKey>” -AadTenantId “<AADTenantId>” -AzureSubscriptionName
@@ -73,7 +73,7 @@ User>” -SmtpAuthenticationUserPassword “<SMTP Auth User password>” -
 ServiceAccountPassword “<Service Account Password>” -EnableMobileRestApi -
 AzureCliVersion 2 -PlatformName “<Name of the Open edX Site>” -PlatformEmailAddress
 “<PlatformEmailAddress>”
-````
+~~~~
 
  ### 2. Prepare for Collecting Parameters
  You will do several steps to get tools, commandlets, and settings to collect your parameters.
@@ -84,16 +84,18 @@ before you start the deployment.
  #### 2.2. Install Azure Command Line Interface
  Download and install Azure CLI from https://aka.ms/InstallAzureCliWindows. Confirm you have Azure
 CLI version 2.0 or greater by opening the Windows command prompt and enter
-````
+~~~~
 az --version 
-````
+~~~~
 You will see azure-cli (2.x.xx) in the response. 
  #### 2.3. Install Azure PowerShell Cmdlets
  Go to https://docs.microsoft.com/en-us/powershell/azure/install-azurerm-ps?view=azurermps-4.4.1
 You need to open Windows PowerShell in administrator (elevated) mode first
 You may need to change the default execution policy on your machine to install AzureRM module using
 the following command.
-````Set-ExecutionPolicy Bypass````
+~~~~
+Set-ExecutionPolicy Bypass
+~~~~
 This installation may take 10 minutes. 
 
  #### 2.4. Install Bash
@@ -115,7 +117,7 @@ Note: There is a sample SSL certificate in the default configuration folder
 [Enlistment Root]/oxa-tools/config/stamp/default
 The sample is a self-signed certificate and will give an SSL warning in the browser if used. 
  ##### 2.6.1. Convert SSL Certificate to obtain public and private keys
- ````
+ ~~~~
     1. Export the private key:
     openssl pkcs12 -in [ PATH-TO-PFX ] -nocerts -out ~/key.pem -nodes
     2. Export the certificate:
@@ -124,7 +126,7 @@ The sample is a self-signed certificate and will give an SSL warning in the brow
     openssl rsa -in ~/key.pem -out ~/cert.key
     4. Copy the cert.crt and cert.key to the folder:
     [Enlistment Root]/oxa-tools/config/stamp/default
- ```` 
+ ~~~~
  ### 3. Modifying Deployment Scripts
  To prepare your cluster configuration, familiarize yourself with the LaaS architecture.
 In this step, you’ll be modifying files that you downloaded from GitHub (example: c:/laas/oxatools/config/stamp/default).
@@ -143,15 +145,16 @@ Navigate to the configuration files you downloaded (example: c:/laas/oxa-tools/c
 You will be replacing the SSH keys in the files id_rsa and id_rsa.pub. 
 ##### 3.3.1. Create SSH Keys
 From Git Bash command prompt, run the following command
-````
+~~~~
 ssh-keygen -b 4096 -t rsa -f [Enlistment Root]/oxa-tools/config/stamp/default/id_rsa
-````
+~~~~
 Enter ‘y” in response to the overwrite prompt. Do not specify any passphrase for the keys.
 Your files id_rsa and id_rsa.pub will be updated.
 Run the following command to set the correct permissions on your SSH private key.
-````
+~~~~
 chmod 600 [Enlistment Root]/oxa-tools/config/stamp/default/id_rsa
-````
+~~~~
+
 The SSH private key is required to access the JumpBox. The Administrator identified in the deployment
 script will also be the Administrator of JumpBox.
 #### 3.4. Modify parameters.json file
@@ -168,11 +171,11 @@ https://azure.microsoft.com/en-us/pricing/details/virtual-machines/linux/.
 ##### 3.4.2. Modify Administrator Public Key
 There are several default values in this file. It is very important to change “adminPublicKey” parameter.
 Replace the content of “value” parameter with entire contents of id_rsa.pub file generated earlier.
-````
+~~~~
 "adminPublicKey": {
 "value": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCj0GHnhX8L8cPtCFhNPTClvD
 /b7Nm/eUIr/WYfYESlft1M1h25Lvu6QgFyqJlwdXSPCiIYbR6nK6WI2Zz6cA… == admin@contoso.com"
-````
+~~~~
 ##### 3.4.3. Modify LMS and CMS Domains
 Since you’ll have custom domains for your Learning Management System and Content Management
 System, you need make few changes to two configuration files: parameters.json and bvt.sh.
@@ -186,21 +189,21 @@ Subject alternate name for *.contosoacademy.com
 From [Enlistment Root]\oxa-tools\config\stamp\default, open parameters.json file and look for
 “baseDomain” property. Change the default value to “” 
 
-````
+~~~~
 "baseDomain": {
  "value": ""
 }
-````
+~~~~
 
 This will enable the domain parameters to be specified from the bvt.sh file.
 From [Enlistment Root]\oxa-tools\config\stamp\default, open bvt.sh file and change the following. 
 
-````
+~~~~
 BASE_URL=contosoacademy.com
 LMS_URL=$BASE_URL
 CMS_URL=studio.$BASE_URL
 PREVIEW_URL=preview.$BASE_URL
-````
+~~~~
 
 ##### 3.4.4. Change the cloud environment
 Skip this step if you have not changed the cloud environment in step 3.2. If you changed the
@@ -218,7 +221,7 @@ Table below describes each parameter. This section covers detailed instructions 
 of these parameters. We recommend that you read all of Section 4 before starting these steps. Do
 these steps in the order presented.
 
-````
+~~~~
 [Enlistment Root]\oxa-tools\scripts\Deploy-OxaStamp.ps1 -ResourceGroupName [Cluster
 Name] -Location "[Location]" -TargetPath "[Enlistment Root]\oxatools\config\stamp\default" -AadWebClientId “<AADWebClientId>” -AadWebClientAppKey
 “<AADWebClientAppKey>” -AadTenantId “<AADTenantId>” -AzureSubscriptionName
@@ -231,7 +234,7 @@ User>” -SmtpAuthenticationUserPassword “<SMTP Auth User password>” -
 ServiceAccountPassword “<Service Account Password>” -EnableMobileRestApi -
 AzureCliVersion 2 -PlatformName “<Name of the Open edX Site>” -PlatformEmailAddress
 “<PlatformEmailAddress>”
-````
+~~~~
 
 |    | Parameter                          | Notes/Examples                                                                                                                                                                                                              |
 |----|------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -276,6 +279,7 @@ organization.
 Figure 3: Locate your Azure Active Directory
 
 Keep this AAD selection for the remaining steps.
+
 ##### 4.1.5. AADTenantId
 The AADTenantId is found in the Azure portal and is called the Directory ID.
 Here are the steps to locate your AADTenantId.
@@ -429,7 +433,10 @@ Email address used by the platform (application) as default email address for se
 #### 5.1. Run Deployment Script
 Open Windows PowerShell as an Administrator and run your deployment script.
 Note: You may want to set Execution policy to bypass to run the script.
-````Set-ExecutionPolicy Bypass````
+~~~~
+Set-ExecutionPolicy Bypass
+~~~~
+
 Note: Disregard the following error message if the rest of the deployment runs without any errors.
 
 ![error_message](images/error-message.png "Disregard following error message")
@@ -546,9 +553,11 @@ Here is an example.
 I have an Office 365 account oxa-admin@contoso.com. To login to this account, I use the following
 password: 123@contoso_com. I’d like to send all notifications to oxanotifications@contoso.com which
 is a distribution list to my engineering team. The email portion of the deployment script would be:
-`-ClusterAdministratorEmailAddress oxanotifications@contoso.com -SmtpServer "smtp.office365.com" -
+~~~~
+-ClusterAdministratorEmailAddress oxanotifications@contoso.com -SmtpServer "smtp.office365.com" -
 SmtpServerPort 587 -SmtpAuthenticationUser "oxa-admin@contoso.com" -
-SmtpAuthenticationUserPassword "123@contoso_com" -PlatoformEmailAddress "enrollments@contoso.com" `
+SmtpAuthenticationUserPassword "123@contoso_com" -PlatoformEmailAddress "enrollments@contoso.com"
+~~~~
 
 ##### 7.1.2. Gmail settings
 The SMTPServer & SMTPServerPort details for Gmail can be found here:
@@ -566,17 +575,22 @@ Here is an example.
 I have a Gmail account oxa-admin-team1@gmail.com. To login to this account, I use the following
 password: 123@contoso_com. I want to send all notifications to oxanotifications-team1@gmail.com. I
 also need a separate App password which I generated as eekqiutsqrvliube under my “oxa-adminteam1@gmail.com” account. The email portion of the deployment script would be:
-`-ClusterAdministratorEmailAddress oxanotifications-team1@gmail.com -SmtpServer "smtp.gmail.com" -
+~~~~
+-ClusterAdministratorEmailAddress oxanotifications-team1@gmail.com -SmtpServer "smtp.gmail.com" -
 SmtpServerPort 587 -SmtpAuthenticationUser "oxa-admin-team1@gmail.com" -
-SmtpAuthenticationUserPassword "eekqiutsqrvliube" -PlatoformEmailAddress "enrollmentteam1@gmail.com"`
+SmtpAuthenticationUserPassword "eekqiutsqrvliube" -PlatoformEmailAddress "enrollmentteam1@gmail.com"
+~~~~
 
 Hint: You can optionally test SMTP settings in a sample application before using them in the deployment
 script.
 #### 7.2. Deployment failed due to exceeding quota limits of Core
 The error message below typically is shown if your subscription doesn’t have capacity support enough
 cores. You should file a ticket with Azure to increase more VM Capacity (cores) to your subscription.
-`Message=Operation results in exceeding quota limits of Core. Maximum allowed: 10, Current in use: 5,
-Additional requested: 12.`
+~~~~
+Message=Operation results in exceeding quota limits of Core. Maximum allowed: 10, Current in use: 5,
+Additional requested: 12.
+~~~~
+
 #### 7.3. How do I access the VMs after deployment?
 Accessing the VMs is done via SSH. There is only one entry point and that is the JumpBox.
 It is assumed you have logged into the azure portal (portal.azure.com) and selected your target azure
@@ -621,10 +635,16 @@ flow working. The below changes are ONLY to be used if you already have Open edX
 users taking courses on a paltform that is deployed prior to July 7th .
 Sync the configuration files from the repository, https://github.com/Microsoft/oxatools/tree/oxa/master.fic, to new local folder. This path will become your [Enlistment Root].
 From your Bash console, run the following command:
-```git clone -b oxa/master.fic https://github.com/Microsoft/oxa-tools.git```
+
+~~~~
+git clone -b oxa/master.fic https://github.com/Microsoft/oxa-tools.git
+~~~~
+
 Run an update script which sets up right configurations.
 From a PowerShell session in Administrator mode, execute the following commands:
-`[array]$upgradeParameters = @( @{"name"="target-user"; "value"="[the adminUsername from
+
+~~~~
+[array]$upgradeParameters = @( @{"name"="target-user"; "value"="[the adminUsername from
 your parameters.json file]"}, @{"name"="cluster-admin-email"; "value"="[Your Email Address]"})
 [Enlistment Root]\scripts\Deploy-CustomScriptsExtension-v2.ps1 -AzureSubscriptionName
 [Subscription Name] -ResourceGroupName [Cluster Name] -AadWebClientId "[AAD web client ID]" -
@@ -632,7 +652,9 @@ AadWebClientAppKey "[AAD web client app key]" -AadTenantId "[AAD tenant id]" -Te
 "[Enlistment Root]\templates\stamp\stamp-v2-backend-upgrade.json" -TemplateParameterFile
 "[Enlistment Root]\templates\stamp\stamp-v2-backend-upgrade-parameters.json" -
 ClusterAdmininistratorEmailAddress [Your Email Address] -InstallerPackageName
-"enablemobileapi" -UpgradeParameters $upgradeParameters`
+"enablemobileapi" -UpgradeParameters $upgradeParameters
+~~~~
+
 Note: Replace all the highlighted parameters with your own settings. Then run the following commands.
 It will approximately take 2-5 minutes for these commands to run and update the settings.
 Settings:
@@ -650,6 +672,7 @@ update
 * [AAD tenant id] - Tenant Id of the AAD entity in which you have the web client
 * [Your Email Address] - Your/Admin email address
 Once these commands are executed, the configurations on your VMs will be updated and your end-toend integration with academy.microsoft.com will work.
+
 #### 7.7. My deployment failed, and I am getting several emails with error logs
 If your deployment failed and email settings are setup correctly, you will start getting several emails
 with log files attached. Log files have important diagnostic information on what went wrong. It is good
