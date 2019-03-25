@@ -41,6 +41,7 @@ are three basic steps to onboard into the LaaS program:
 3. Getting the Microsoft Certificates ready for users.
 This Deployment Guide covers getting your Open edX on Azure instance running (Step 2)
 
+![laas_program](images/figure-1.png "LaaS Program")
 Figure 1: LaaS Program
 
 When you complete the step in this guide, your Content Management System (CMS, also called Studio)
@@ -48,6 +49,7 @@ and your Learning Management System (LMS) will be operational.
 The deployment covered in this guide has the architecture shown below. This architecture is designed
 to be a scalable and highly available Open edX solution.
 
+![laas_architecture](images/figure-2.png "LaaS Architecture")
 Figure 2: LaaS Architecture
 
 To do the Open edX Deployment, you’ll create and then run a PowerShell script. The script will
@@ -236,16 +238,16 @@ AzureCliVersion 2 -PlatformName “<Name of the Open edX Site>” -PlatformEmail
 | 1  | [Enlistment Root]                  | Root of your local GitHub repositories ex: “C:\laas”                                                                                                                                                                        |
 | 2  | [Cluster Name]                     | Unique cluster name (or resource group) you want to create on Azure. All the resources will be provisioned using this prefix in your resource group. Tip: Limit to 8 lowercase alphanumeric characters.                     |
 | 3  | [Location]                         | Azure location where the VMs will be deployed. Choose the closest Azure data center location to your geographical area. Example “central us”                                                                                |
-| 4  | <AADTenantId>                      | Directory ID for AAD                                                                                                                                                                                                        |
-| 5  | <AADWebClientId>                   | Web Client Application ID                                                                                                                                                                                                   |
-| 6  | <AADWebClientAppKey>               | AAD WebClient Key                                                                                                                                                                                                           |
+| 4  | `<AADTenantId>`                    | Directory ID for AAD                                                                                                                                                                                                        |
+| 5  | `<AADWebClientId>`                   | Web Client Application ID                                                                                                                                                                                                   |
+| 6  | `<AADWebClientAppKey>`              | AAD WebClient Key                                                                                                                                                                                                           |
 | 7  | [Subscription Name]                | Name of the Azure subscription you are using. Note: you can use Get-AzureSubscription PowerShell command to list all the subscriptions you have access to and select the one where you will be deploying Open edX on Azure. |
 | 8  | [ClusterAdministratorEmailAddress] | Administrator email address for Open edX instance (Note: This email address can be different from SMTP Auth User email address                                                                                              |
-| 9  | <Service Account Password>         | Password (Do not use ‘@’ or ‘!’ symbols) for admin access to open edx site. Tip: Use alpha numeric and _                                                                                                                    |
-| 10 | <SMTP Server Name>                 | SMTP Server Name                                                                                                                                                                                                            |
-| 11 | <SMTP Server Port>                 | SMTP Server Port                                                                                                                                                                                                            |
-| 12 | <SMTP Auth User>                   | SMTP Auth user where the email will be sent fromSMTP Server Name                                                                                                                                                            |
-| 13 | <SMTP Auth User password>          | SMTP Auth user credentials. Note: You can test the SMTP credentials by writing sample SMTP application before starting the deployment.                                                                                      |
+| 9  | `<Service Account Password>`        | Password (Do not use ‘@’ or ‘!’ symbols) for admin access to open edx site. Tip: Use alpha numeric and _                                                                                                                    |
+| 10 | `<SMTP Server Name> `                | SMTP Server Name                                                                                                                                                                                                            |
+| 11 | `<SMTP Server Port>`                 | SMTP Server Port                                                                                                                                                                                                            |
+| 12 | `<SMTP Auth User> `                  | SMTP Auth user where the email will be sent fromSMTP Server Name                                                                                                                                                            |
+| 13 | `<SMTP Auth User password> `         | SMTP Auth user credentials. Note: You can test the SMTP credentials by writing sample SMTP application before starting the deployment.                                                                                      |
 | 14 | AzureCliVersion                    | You can get Azure CLI version by running “az --version” in the windows command prompt. If you follow this guide, the AzureCliVersion will be 2 as shown in the example deployment script.                                   |
 | 15 | PlatformName                       | Name of the site. This will appear in several places in the site: Currently defaulted to Contoso Learning. Ex: Change to “Contoso Academy”                                                                                  |
 | 16 | PlatformEmailAddress               | Email address used by the platform (application) as default email address for sending email messages                                                                                                                        |
@@ -269,6 +271,7 @@ Directories associated with your login are displayed. Select the default directo
 account, or if you logged into Azure with your work or school account, this would likely be name of your
 organization. 
 
+![locate_aad](images/figure-3.png "Locate your Azure Active Directory")
 Figure 3: Locate your Azure Active Directory
 
 Keep this AAD selection for the remaining steps.
@@ -278,12 +281,16 @@ Here are the steps to locate your AADTenantId.
 In the Azure Portal, select “More services” in the blade. Search for the service “Azure Active Directory”.
 Select “Azure Active Directory.
 
+![locate_aad_more](images/figure-4.png "Locate Azure Active Directory under More Services")
 Figure 4: Locate Azure Active Directory under More Services
 
 Select “Properties.” 
 
+![locate_aadtenantid](images/figure-5.png "AADTenantId is the Directory ID")
 Figure 5: AADTenantId is the Directory ID
+
 Locate the Directory ID, and this is your parameter for AADTenantId.
+
 ##### 4.1.6. AADWebClientId
 The AADWebClientId is found in the Azure portal and is called the Web Client Application ID.
 First, you’ll create a new application registration, and then you’ll retrieve the AADWebClientId for the
@@ -291,96 +298,142 @@ new application. Here are the steps.
 Starting from the Azure Portal, select “Azure Active Directory”. Under Manage, select “App
 registrations.”
 
+![aad_app_registrations](images/figure-6.png "Azure Active Directory, App registrations")
 Figure 6: Azure Active Directory, App registrations
+
 Select “+ New application registration”. 
 
+![new_app_registration](images/figure-7.png "New application registration")
 Figure 7: New application registration
+
 Enter a Name for your AAD app (This can be any name.). Select the Application type to be “Web app /
 API”. Enter a Sign-on URL (e.g. http://www.contoso.com); and this URL is not used and can literally be
 the contoso example shown. Select the Create button at the bottom of the page to create an AAD
 application.
 
+![create_aad_app](images/figure-8.png "Create AAD Application")
 Figure 8: Create AAD Application
+
 The AAD application you just created will be in the App Registrations page now. Select the AAD
 application you just registered by clicking on the Application name.
+
+![locate_aad_app](images/figure-9.png "Locate AAD Application")
 Figure 9: Locate AAD Application
+
 Select the AAD application you just registered by clicking on the Application name.
 
+![aadwebclientid](images/figure-10.png "Application ID is the AADWebClientId parameter")
 Figure 10: Application ID is the AADWebClientId parameter
+
 Locate the Application ID, and this is your parameter for AADWebClientId.
 
 ##### 4.1.7. AADWebClientAppKey
 The AADWebClientAppKey is found in the Azure portal and is called the AAD WebClient Key.
 Start at the same location as where you located the Application ID and select Keys. 
 
+![keys](images/figure-11.png "Keys")
 Figure 11: Keys
+
 Enter Key description (e.g. aadKey), select Duration, select Save.
+
+![key_settings](images/figure-12.png "Key settings")
 Figure 12: Key settings
+
 Copy the key Value. This is the only time you will be able to see the Value, so you must retrieve it now.
+
+![key_value](images/figure-13.png "Key Value")
 Figure 13: Key Value
+
 Locate the parameter, and this is your value for AadWebClientAppKey.
+
 ##### 4.1.8. Subscription Name
 Go to main azure portal page, https://portal.azure.com. Navigate to your subscription (Hint: Search for
 “Subscriptions” in the search bar at the top of the Azure portal. Select Subscriptions.) 
 
+![search_and_select_subscription](images/figure-14.png "Search and select Subscriptions")
 Figure 14: Search and select Subscriptions
+
 Select any subscription associated with your default AAD. This will also be the Azure subscription you
 will use to deploy your Open edX on Azure.
+
+![locate_subscription_name](images/figure-15.png "Locate Subscription Name")
 Figure 15: Locate Subscription Name
+
 Locate the Subscription name, and this is your parameter for AzureSubscriptionName.
 Stay at this location in the Azure Portal for the next step.
+
 ##### 4.1.9. Grant access to your AAD Application
 In this step, you will use your grant access to the to the AAD Application you created.
 Select the subscription. Select Access control (IAM). Select “+ Add” option to add your AAD application
 to the subscription.
 
+![app_subscription](images/figure-16.png "Add AAD application to Subscription")
 Figure 16: Add AAD application to Subscription
+
 In the Role field, select “Owner”. In the Select field, enter the AAD application name you created in a
 previous step. Click on the “Save” button to grant “Owner” access to your AAD application.
+
 ##### 4.1.10. ClusterAdministratorEmailAddress
 Provide an email address for your Open edX on Azure administrator.
+
 ##### 4.1.11. Service Account Password
 Provide the password that your Open edX on Azure administrator will use to access the LMS, CMS, and Django
 Administrator Console. Do not use the ‘@’ symbol in the password. Note for later that the default administrator
 name for the Django Administrator Console is edxappadmin.
+
 ##### 4.1.12. SMTP Server Name
 This is your SMTP Server Name. Refer to Appendix FAQs for guidance on retrieving this value for Office
 365 or Gmail.
+
 ##### 4.1.13. SMTP Server port
 This is your SMTP Server port. Refer to Appendix FAQs for guidance on retrieving this value for Office
 365 or Gmail.
+
 ##### 4.1.14. SMTP Auth User
 This is your SMTP Auth User. Refer to Appendix FAQs for guidance on retrieving this value for Office
-365or Gmail.
+365 or Gmail.
+
 ##### 4.1.15. SMTP Auth User password
 This is your SMTP Auth User password. Refer to Appendix FAQs for guidance on retrieving this value for
 Office 365 or Gmail.
+
 ##### 4.1.16. AzureCliVersion
 The Azure CLI version is 2 if you used the instructions in this guide. If your Azure CLI version is any version, use that
 as the parameter. Find the Azure CLI version by running “az --version” in the Windows command prompt.
+
 ##### 4.1.17. PlatformName
 The platform name will be used in various places in the Open edX application (This can be your company name).
 For example: following the naming convention we are using in this document, we can change this to “Contoso
 Academy”.
+
 ##### 4.1.18. PlatformEmailAddress
 Email address used by the platform (application) as default email address for sending email messages.
 
- ### 5. Deployment
+### 5. Deployment
  You are now ready to deploy the LaaS configuration of Open edX on Azure.
+
 #### 5.1. Run Deployment Script
 Open Windows PowerShell as an Administrator and run your deployment script.
 Note: You may want to set Execution policy to bypass to run the script.
 ````Set-ExecutionPolicy Bypass````
 Note: Disregard the following error message if the rest of the deployment runs without any errors.
+
+![error_message](images/error-message.png "Disregard following error message")
+
 #### 5.2. Two-Step Process
 Deployment is a two-step process.
 1. Provisioning of the resources (VMs) : Takes ~15 minutes
 2. Deploying the bits to VMs: Takes ~2 hours
 
+![deployment_process](images/figure-17.png "Deployment Process")
 Figure 17: Deployment Process
+
 After the initial cluster is set up, you should see the following screen in your PowerShell window. Your
 deployment is not complete yet.
+
+![powershell_view](images/figure-18.png "PowerShell view after running deployment script")
 Figure 18: PowerShell view after running deployment script
+
 #### 5.3. Email Notifications
 If your SMTP settings are setup correctly, within 20-minutes you will receive an email with Subject “OXA
 Bootstrap – [Cluster Name] “ and the body of the email states “Installation of EDX Application (VMSS)
@@ -409,12 +462,16 @@ https://cms-[Cluster Name]-tm.trafficmanager.net
 In the Azure portal, select Resource groups (icon ) to see all the resources associated with your
 deployment.
 
+![all_resources](images/figure-19.png "See all Resources in your deployment")
 Figure 19: See all Resources in your deployment
+
 To access the LMS and CMS, enter ‘Traffic Manager profile’ into the ‘Filter by type’ field. This will filter
 the resources so that it’s easier to find the LMS and CMS.
 Select the LMS or CMS resources, and the DNS name will be shown.
 
+![find_lms_or_cms](images/figure-20.png "Find LMS or CMS URL")
 Figure 20: Find LMS or CMS URL
+
 If you can access the LMS and CMS, the installation is successful. Congratulations!
 
  ### 6. Post Deployment
