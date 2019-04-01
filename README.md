@@ -1,6 +1,6 @@
 
 # Open edX on Azure Deployment Guide
-### 1. Deployment Guide Overview
+
 This guide is for Open edX on Azure Deployment for the Learning as a Service (LaaS) program. There
 are three basic steps to on board into the LaaS program:
 1. Acceptance into the LaaS program
