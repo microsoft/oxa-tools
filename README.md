@@ -35,10 +35,10 @@ The following server requirements will be fine for supporting hundreds of regist
 
 Note: This will run MySQL, Memcache, Mongo, nginx, and all of the Open edX services (LMS, Studio, Forums, ORA, etc) on a single server. In production configurations we recommend that these services run on different servers and that a load balancer be used for redundancy. Setting up production configurations is beyond the scope of this wiki page.
 
-Ubuntu 16.04 amd64 (oraclejdk required). It may seem like other versions of Ubuntu will be fine, but they are not.  Only 16.04 is known to work.
-Minimum 8GB of memory
-At least one 2.00GHz CPU
-Minimum 25GB of free disk, 50GB recommended for production level use
+* Ubuntu 16.04 amd64 (oraclejdk required). It may seem like other versions of Ubuntu will be fine, but they are not.  Only 16.04 is known to work.
+* Minimum 8GB of memory
+* At least one 2.00GHz CPU
+* Minimum 25GB of free disk, 50GB recommended for production level use
 
 ### Installation Instructions
 
@@ -95,20 +95,20 @@ AzureCliVersion 2 -PlatformName “<Name of the Open edX Site>” -PlatformEmail
 “<PlatformEmailAddress>”
 ~~~~
 
- ### 2. Prepare for Collecting Parameters
+ ### 1. Prepare for Collecting Parameters
  You will do several steps to get tools, commandlets, and settings to collect your parameters.
- #### 2.1. Azure Subscription
+ #### 1.1. Azure Subscription
  You need an Azure subscription for this installation. To install Open edX on Azure for LaaS, you will need
 a minimum of 16-cores. Make sure that your subscription is equipped to provision 16 or more cores
 before you start the deployment.
- #### 2.2. Install Azure Command Line Interface
+ #### 1.2. Install Azure Command Line Interface
  Download and install Azure CLI from https://aka.ms/InstallAzureCliWindows. Confirm you have Azure
 CLI version 2.0 or greater by opening the Windows command prompt and enter
 ~~~~
 az --version 
 ~~~~
 You will see azure-cli (2.x.xx) in the response. 
- #### 2.3. Install Azure PowerShell Cmdlets
+ #### 1.3. Install Azure PowerShell Cmdlets
  Go to https://docs.microsoft.com/en-us/powershell/azure/install-azurerm-ps?view=azurermps-4.4.1
 You need to open Windows PowerShell in administrator (elevated) mode first
 You may need to change the default execution policy on your machine to install AzureRM module using
@@ -118,16 +118,16 @@ Set-ExecutionPolicy Bypass
 ~~~~
 This installation may take 10 minutes. 
 
- #### 2.4. Install Bash
+ #### 1.4. Install Bash
  Download and Install Git Bash for Windows here: https://git-scm.com/download/win. Select default
 options when prompted.
- #### 2.5. Sync Configuration Files 
+ #### 1.5. Sync Configuration Files 
  From your Bash console (Launch Git Bash by typing Git Bash from Windows start menu), run the
 following command to clone the source to your local folder. In this example, the clone is downloaded to
 the c:/laas/oxa-tools folder.
 ````git clone -b oxa/master.fic https://github.com/Microsoft/oxa-tools.git c:/laas/oxa-tools````
 In this example your [Enlistment Root] folder is “c:/laas”. 
- #### 2.6. Get SSL Certificate and prepare for use in deployment
+ #### 1.6. Get SSL Certificate and prepare for use in deployment
  In this step, you’ll create SSL certificate and key files so that you can use customized URLs for your
 production LMS and CMS. For example, if your URLs are going to be https://www.contosoacademy.com
 (LMS) and http://www.studio.contosoacademy.com (CMS) you need to get the base URL SSL for
@@ -136,7 +136,7 @@ contosoacademy.com and the subject alternate name from certification authority f
 Note: There is a sample SSL certificate in the default configuration folder
 [Enlistment Root]/oxa-tools/config/stamp/default
 The sample is a self-signed certificate and will give an SSL warning in the browser if used. 
- ##### 2.6.1. Convert SSL Certificate to obtain public and private keys
+ ##### 1.6.1. Convert SSL Certificate to obtain public and private keys
  ~~~~
     1. Export the private key:
     openssl pkcs12 -in [ PATH-TO-PFX ] -nocerts -out ~/key.pem -nodes
@@ -147,23 +147,23 @@ The sample is a self-signed certificate and will give an SSL warning in the brow
     4. Copy the cert.crt and cert.key to the folder:
     [Enlistment Root]/oxa-tools/config/stamp/default
  ~~~~
- ### 3. Modifying Deployment Scripts
+ ### 2. Modifying Deployment Scripts
  To prepare your cluster configuration, familiarize yourself with the LaaS architecture.
 In this step, you’ll be modifying files that you downloaded from GitHub (example: c:/laas/oxatools/config/stamp/default).
-#### 3.1. Determine deployment environment
+#### 2.1. Determine deployment environment
 You may choose to have multiple instances running, one for Production, another for Testing, and
 another for Build-Verify-Test (bvt). For this documentation, the examples reference a bvt environment.
- #### 3.2. Name the deployment environment
+ #### 2.2. Name the deployment environment
  Navigate to the configuration files you downloaded (example: c:/laas/oxa-tools/config/stamp/default).
 Keep bvt.sh file for now. Soon we will release updated document with guidance on maintaining different
 environment files (for test, intermediate and production). Stay tuned. Make sure the bvt.sh file has unix
 line endings.
-#### 3.3. Generate SSH Keys
+#### 2.3. Generate SSH Keys
 Private and Public SSH Keys are needed for access to JumpBox. We have provided sample keys.
 However, you must create your own public and private SSH keys.
 Navigate to the configuration files you downloaded (example: c:/laas/oxa-tools/config/stamp/default).
 You will be replacing the SSH keys in the files id_rsa and id_rsa.pub. 
-##### 3.3.1. Create SSH Keys
+##### 2.3.1. Create SSH Keys
 From Git Bash command prompt, run the following command
 ~~~~
 ssh-keygen -b 4096 -t rsa -f [Enlistment Root]/oxa-tools/config/stamp/default/id_rsa
@@ -177,18 +177,18 @@ chmod 600 [Enlistment Root]/oxa-tools/config/stamp/default/id_rsa
 
 The SSH private key is required to access the JumpBox. The Administrator identified in the deployment
 script will also be the Administrator of JumpBox.
-#### 3.4. Modify parameters.json file
+#### 2.4. Modify parameters.json file
 
 Open parameters.json file. This file contains the LaaS configuration parameters; and each parameter is
 defined in the file. You can choose to change parameters such as VM size. You must modify the
 Administrator Public Key and the LMS and CMS domains.
-##### 3.4.1. Confirm Azure Resources
+##### 2.4.1. Confirm Azure Resources
 You may want to change the SKU of the VMs to accommodate the cost and scale you’ve planned for this
 deployment. In the parameters.json file, these are listed under “mongoVmSize”, “mysqlVmSize” and
 “frontendVmSize” parameters. For more information on Azure Linux VM pricing, please visit
 https://azure.microsoft.com/en-us/pricing/details/virtual-machines/linux/. 
 
-##### 3.4.2. Modify Administrator Public Key
+##### 2.4.2. Modify Administrator Public Key
 There are several default values in this file. It is very important to change “adminPublicKey” parameter.
 Replace the content of “value” parameter with entire contents of id_rsa.pub file generated earlier.
 ~~~~
@@ -196,7 +196,7 @@ Replace the content of “value” parameter with entire contents of id_rsa.pub 
 "value": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCj0GHnhX8L8cPtCFhNPTClvD
 /b7Nm/eUIr/WYfYESlft1M1h25Lvu6QgFyqJlwdXSPCiIYbR6nK6WI2Zz6cA… == admin@contoso.com"
 ~~~~
-##### 3.4.3. Modify LMS and CMS Domains
+##### 2.4.3. Modify LMS and CMS Domains
 Since you’ll have custom domains for your Learning Management System and Content Management
 System, you need make few changes to two configuration files: parameters.json and bvt.sh.
 For example, if you want to use the following custom domains for LMS, CMS and preview
@@ -225,14 +225,14 @@ CMS_URL=studio.$BASE_URL
 PREVIEW_URL=preview.$BASE_URL
 ~~~~
 
-##### 3.4.4. Change the cloud environment
+##### 2.4.4. Change the cloud environment
 Skip this step if you have not changed the cloud environment in step 3.2. If you changed the
 environment type from step 3.2 to “prod” (If you keep bvt as your environment, skip this step), change
 the cloud parameter value to “prod”
 
- ### 4. Deployment Parameters
+ ### 3. Deployment Parameters
 In this section you’ll create a deployment script.
-#### 4.1. Construct PowerShell Script
+#### 3.1. Construct PowerShell Script
 Construct the following command by replacing the highlighted parameters with appropriate values.
 Refer to Parameter Table for a detailed description of the highlighted parameters. We recommend that
 you construct this script in Notepad++ or some other editor. Be sure that no additional line breaks are
@@ -275,19 +275,19 @@ AzureCliVersion 2 -PlatformName “<Name of the Open edX Site>” -PlatformEmail
 | 15 | PlatformName                       | Name of the site. This will appear in several places in the site: Currently defaulted to Contoso Learning. Ex: Change to “Contoso Academy”                                                                                  |
 | 16 | PlatformEmailAddress               | Email address used by the platform (application) as default email address for sending email messages                                                                                                                        |
 
-##### 4.1.1. Enlistment Root
+##### 3.1.1. Enlistment Root
 This is the root of when you sync’d the files from GitHub. See step Sync Configuration Files.
-##### 4.1.2. Cluster Name
+##### 3.1.2. Cluster Name
 Choose a unique name for your Open edX on Azure cluster. After deployment, this will be the name
 shown in the Azure Portal under Resource groups. All the resources will be provisioned using this prefix
 in your resource group.
 
 Tip: Limit the Cluster Name to 8 lowercase alpha-numeric characters. Numbers are fine, but avoid %, $,
 etc.
-##### 4.1.3. Location
+##### 3.1.3. Location
 This is the Azure location where the VMs will be deployed. Choose the closest Azure data center location
 to your geographical area. An example is “east us”.
-##### 4.1.4. Located the correct AAD
+##### 3.1.4. Located the correct AAD
 Most likely you already have an Active Directory associated with your organization or subscription. Go to
 http://portal.azure.com, select your login name on the top righthand side of the screen. The Azure Active
 Directories associated with your login are displayed. Select the default directory associated with your
@@ -300,7 +300,7 @@ organization.
 
 Keep this AAD selection for the remaining steps.
 
-##### 4.1.5. AADTenantId
+##### 3.1.5. AADTenantId
 The AADTenantId is found in the Azure portal and is called the Directory ID.
 Here are the steps to locate your AADTenantId.
 In the Azure Portal, select “More services” in the blade. Search for the service “Azure Active Directory”.
@@ -318,7 +318,7 @@ Select “Properties.”
 
 Locate the Directory ID, and this is your parameter for AADTenantId.
 
-##### 4.1.6. AADWebClientId
+##### 3.1.6. AADWebClientId
 The AADWebClientId is found in the Azure portal and is called the Web Client Application ID.
 First, you’ll create a new application registration, and then you’ll retrieve the AADWebClientId for the
 new application. Here are the steps.
@@ -359,7 +359,7 @@ Select the AAD application you just registered by clicking on the Application na
 
 Locate the Application ID, and this is your parameter for AADWebClientId.
 
-##### 4.1.7. AADWebClientAppKey
+##### 3.1.7. AADWebClientAppKey
 The AADWebClientAppKey is found in the Azure portal and is called the AAD WebClient Key.
 Start at the same location as where you located the Application ID and select Keys. 
 
@@ -381,7 +381,7 @@ Copy the key Value. This is the only time you will be able to see the Value, so 
 
 Locate the parameter, and this is your value for AadWebClientAppKey.
 
-##### 4.1.8. Subscription Name
+##### 3.1.8. Subscription Name
 Go to main azure portal page, https://portal.azure.com. Navigate to your subscription (Hint: Search for
 “Subscriptions” in the search bar at the top of the Azure portal. Select Subscriptions.) 
 
@@ -399,7 +399,7 @@ will use to deploy your Open edX on Azure.
 Locate the Subscription name, and this is your parameter for AzureSubscriptionName.
 Stay at this location in the Azure Portal for the next step.
 
-##### 4.1.9. Grant access to your AAD Application
+##### 3.1.9. Grant access to your AAD Application
 In this step, you will use your grant access to the to the AAD Application you created.
 Select the subscription. Select Access control (IAM). Select “+ Add” option to add your AAD application
 to the subscription.
@@ -411,46 +411,46 @@ to the subscription.
 In the Role field, select “Owner”. In the Select field, enter the AAD application name you created in a
 previous step. Click on the “Save” button to grant “Owner” access to your AAD application.
 
-##### 4.1.10. ClusterAdministratorEmailAddress
+##### 3.1.10. ClusterAdministratorEmailAddress
 Provide an email address for your Open edX on Azure administrator.
 
-##### 4.1.11. Service Account Password
+##### 3.1.11. Service Account Password
 Provide the password that your Open edX on Azure administrator will use to access the LMS, CMS, and Django
 Administrator Console. Do not use the ‘@’ symbol in the password. Note for later that the default administrator
 name for the Django Administrator Console is edxappadmin.
 
-##### 4.1.12. SMTP Server Name
+##### 3.1.12. SMTP Server Name
 This is your SMTP Server Name. Refer to Appendix FAQs for guidance on retrieving this value for Office
 365 or Gmail.
 
-##### 4.1.13. SMTP Server port
+##### 3.1.13. SMTP Server port
 This is your SMTP Server port. Refer to Appendix FAQs for guidance on retrieving this value for Office
 365 or Gmail.
 
-##### 4.1.14. SMTP Auth User
+##### 3.1.14. SMTP Auth User
 This is your SMTP Auth User. Refer to Appendix FAQs for guidance on retrieving this value for Office
 365 or Gmail.
 
-##### 4.1.15. SMTP Auth User password
+##### 3.1.15. SMTP Auth User password
 This is your SMTP Auth User password. Refer to Appendix FAQs for guidance on retrieving this value for
 Office 365 or Gmail.
 
-##### 4.1.16. AzureCliVersion
+##### 3.1.16. AzureCliVersion
 The Azure CLI version is 2 if you used the instructions in this guide. If your Azure CLI version is any version, use that
 as the parameter. Find the Azure CLI version by running “az --version” in the Windows command prompt.
 
-##### 4.1.17. PlatformName
+##### 3.1.17. PlatformName
 The platform name will be used in various places in the Open edX application (This can be your company name).
 For example: following the naming convention we are using in this document, we can change this to “Contoso
 Academy”.
 
-##### 4.1.18. PlatformEmailAddress
+##### 3.1.18. PlatformEmailAddress
 Email address used by the platform (application) as default email address for sending email messages.
 
-### 5. Deployment
+### 4. Deployment
  You are now ready to deploy the LaaS configuration of Open edX on Azure.
 
-#### 5.1. Run Deployment Script
+#### 4.1. Run Deployment Script
 Open Windows PowerShell as an Administrator and run your deployment script.
 Note: You may want to set Execution policy to bypass to run the script.
 ~~~~
@@ -461,7 +461,7 @@ Note: Disregard the following error message if the rest of the deployment runs w
 
 ![error_message](images/error-message.png "Disregard following error message")
 
-#### 5.2. Two-Step Process
+#### 4.2. Two-Step Process
 Deployment is a two-step process.
 1. Provisioning of the resources (VMs) : Takes ~15 minutes
 2. Deploying the bits to VMs: Takes ~2 hours
@@ -477,7 +477,7 @@ deployment is not complete yet.
 
 *Figure 18: PowerShell view after running deployment script*
 
-#### 5.3. Email Notifications
+#### 4.3. Email Notifications
 If your SMTP settings are setup correctly, within 20-minutes you will receive an email with Subject “OXA
 Bootstrap – [Cluster Name] “ and the body of the email states “Installation of EDX Application (VMSS)
 has been scheduled.” At this point the system starts to provision and setup necessary VMs and
@@ -498,7 +498,7 @@ minutes, there is a problem that needs to be fixed. If email is not set up prope
 to your learners later.
 Your deployment is successful only if you receive all 5 emails messages with successful completion
 status.
-#### 5.4. Completion and Testing
+#### 4.4. Completion and Testing
 Once the deployment is complete, you can access the LMS and CMS. The URLs will look similar to this.
 • https://lms-[Cluster Name]-tm.trafficmanager.net
 https://cms-[Cluster Name]-tm.trafficmanager.net
@@ -519,11 +519,11 @@ Select the LMS or CMS resources, and the DNS name will be shown.
 
 If you can access the LMS and CMS, the installation is successful. Congratulations!
 
- ### 6. Post Deployment
+ ### 5. Post Deployment
  You now have the LaaS configuration for Open edX on Azure running. There are a few post deployment
 steps. After these steps are completed, follow the Microsoft Certificate Onboarding Document to
 enable certificate issuance on your Open edX platform.
-#### 6.1. Register your domains
+#### 5.1. Register your domains
 * Register dns
 * Through admin panel create a cname entry connecting your registered domain to traffic
 manager end-point
@@ -534,19 +534,19 @@ manager end-point
         * Do cname mapping of studio.contosoacademy.com to name of your traffic manager CMS endpoint. cms-[clustername]-tm.trafficmanager.net
     * If your preview endpoint is preview.contosoacademy.com
         * Do cname mapping of preview.contosoacademy.com to name of your traffic manager preview endpoint. Preview--[clustername]-tm.trafficmanager.net
-#### 6.2. Login with Admin credentials
+#### 5.2. Login with Admin credentials
 These steps cover login to LMS, CMS, and Django Administrator Console.
-##### 6.2.1. LMS and CMS admin credentials
+##### 5.2.1. LMS and CMS admin credentials
 The email address is the cluster email address ClusterAdministratorEmailAddress you specified in
 PowerShell deployment script. The password is the Service Account Password you specified in
 PowerShell deployment script.
-##### 6.2.2. Django admin credentials
+##### 5.2.2. Django admin credentials
 The URL for Django admin panel will be your lmsurl/admin. In our example, it would be
 www.contosoacacademy.com/admin. The default UserName is edxappadmin. The password is the
 Service Account Password you specified in PowerShell deployment script
- ### 7. FAQs
+ ### 6. FAQs
  Here are answers to frequently asked questions.
-#### 7.1. Why aren’t the deployment status emails working?
+#### 6.1. Why aren’t the deployment status emails working?
 We have worked on this issue and have updated the instructions for Office 365 and Gmail. Please follow
 the following guidance to receive deployment notifications and the ability to email users.
 This deployment configures an SMTP relay that allows deployment notifications and other system emails
@@ -563,7 +563,7 @@ notification emails will be sent.
 specified above.
 * SMTPAuthenticationUserPassword – This is the corresponding password for authentication.
 * PlatformEmailAddress – Email address used for all platform communications.
-##### 7.1.1. Office 365 settings
+##### 6.1.1. Office 365 settings
 The SMTPServer & SMTPServerPort details for Office 365 can be found here:
 https://support.office.com/en-us/article/POP-and-IMAP-settings-for-Outlook-Office-365-for-business7fc677eb-2491-4cbc-8153-8e7113525f6c
 See the “POP and IMAP settings for Office 365 for business email” section.
@@ -579,7 +579,7 @@ SmtpServerPort 587 -SmtpAuthenticationUser "oxa-admin@contoso.com" -
 SmtpAuthenticationUserPassword "123@contoso_com" -PlatoformEmailAddress "enrollments@contoso.com"
 ~~~~
 
-##### 7.1.2. Gmail settings
+##### 6.1.2. Gmail settings
 The SMTPServer & SMTPServerPort details for Gmail can be found here:
 https://support.google.com/a/answer/176600?hl=en
 See the “Use the Gmail SMTP Server” section.
@@ -603,7 +603,7 @@ SmtpAuthenticationUserPassword "eekqiutsqrvliube" -PlatoformEmailAddress "enroll
 
 Hint: You can optionally test SMTP settings in a sample application before using them in the deployment
 script.
-#### 7.2. Deployment failed due to exceeding quota limits of Core
+#### 6.2. Deployment failed due to exceeding quota limits of Core
 The error message below typically is shown if your subscription doesn’t have capacity support enough
 cores. You should file a ticket with Azure to increase more VM Capacity (cores) to your subscription.
 ~~~~
@@ -611,7 +611,7 @@ Message=Operation results in exceeding quota limits of Core. Maximum allowed: 10
 Additional requested: 12.
 ~~~~
 
-#### 7.3. How do I access the VMs after deployment?
+#### 6.3. How do I access the VMs after deployment?
 Accessing the VMs is done via SSH. There is only one entry point and that is the JumpBox.
 It is assumed you have logged into the azure portal (portal.azure.com) and selected your target azure
 subscription.
@@ -641,15 +641,15 @@ LMS/CMS frontend, the resource will be named like “[Cluster Name]-vmss-
     * ssh [IP Address]
     where [IP Address] is the private IP address of the NIC associated with server you’d like to
 connect to.
-#### 7.4. Why am I seeing degrading status on the VMs in the Azure portal?
+#### 6.4. Why am I seeing degrading status on the VMs in the Azure portal?
 This typically means something went wrong with the deployment. The only way to know the details of
 error is to have correct email configuration where you will see notifications and details of failed
 deployments. Please revisit the instructions on email parameters.
-#### 7.5. I’m having trouble with my service account password
+#### 6.5. I’m having trouble with my service account password
 There is now a parameter included in the deployment script for the service account password. Please
 make sure that this password doesn’t have any non-alpha numeric characters. Mongo DB has some
 restrictions.
-#### 7.6. What updates effect installations prior to July 2017?
+#### 6.6. What updates effect installations prior to July 2017?
 Open edX deployments prior to July 7, 2017 need few configuration updates to have end-to-end LaaS
 flow working. The below changes are ONLY to be used if you already have Open edX running with
 users taking courses on a paltform that is deployed prior to July 7th .
@@ -693,7 +693,7 @@ update
 * [Your Email Address] - Your/Admin email address
 Once these commands are executed, the configurations on your VMs will be updated and your end-toend integration with academy.microsoft.com will work.
 
-#### 7.7. My deployment failed, and I am getting several emails with error logs
+#### 6.7. My deployment failed, and I am getting several emails with error logs
 If your deployment failed and email settings are setup correctly, you will start getting several emails
 with log files attached. Log files have important diagnostic information on what went wrong. It is good
 to delete the resource group from the Azure portal (portal.azure.com) so that you will not use Azure
