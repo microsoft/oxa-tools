@@ -26,7 +26,7 @@ Below are a list of pre-defined/restricted deployment options based on typical d
 | Deployment Type            | Description                                                                                                    | Environment Preferred |
 |----------------------------|----------------------------------------------------------------------------------------------------------------|-----------------------|
 | Minimal                    | Single machine instance                                                                                        | Development and Test  |
-| High availability instance | A production stack comprising of VMSS, Load balancer, MySQL cluster, Mongo cluster and other Open edX servcies | Production            |
+| High availability instance | A production stack comprising of various Azure components as mentioned in LaaS Architecture | Production            |
 
 ## Deploying single machine instance (for development and test)
 
