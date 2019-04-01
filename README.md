@@ -1,8 +1,46 @@
-# oxa-tools
 
-Deploying and maintaining Open edX on Azure
+# Open edX on Azure Deployment Guide
+### 1. Deployment Guide Overview
+This guide is for Open edX on Azure Deployment for the Learning as a Service (LaaS) program. There
+are three basic steps to on board into the LaaS program:
+1. Acceptance into the LaaS program
+2. Deploying your Open edX on Azure and
+3. Getting the Microsoft Certificates ready for users.
+This Deployment Guide covers getting your Open edX on Azure instance running (Step 2)
+
+![laas_program](images/figure-1.png "LaaS Program")
+
+*Figure 1: LaaS Program*
+
+# Deploying your Open edX on Azure
+This repo contains guides and tools designed to help you deploy and manage a highly available and scalable Open edX on Azure.
+If you have Azure account you can deploy Open edX via the Azure portal using the guidelines below. Please note that while you can use an Azure free account to get started depending on which configuration you choose you will likely be required to upgrade to a paid account.
+
+
+## Fully configurable deployment
+The number of configuration options might be overwhelming, so some pre-defined/restricted deployment options for typical Open edX scenarios follow this.
+
+## Predefined deployment options
+Below are a list of pre-defined/restricted deployment options based on typical deployment scenarios (i.e. dev/test, production etc.)
+
+| Deployment Type            | Description                                                                                                    | Environment Preferred |
+|----------------------------|----------------------------------------------------------------------------------------------------------------|-----------------------|
+| Minimal                    | Single machine instance                                                                                        | Development and Test  |
+| High availability instance | A production stack comprising of VMSS, Load balancer, MySQL cluster, Mongo cluster and other Open edX servcies | Production            |
 
 ## Deploying single machine instance (for development and test)
+
+### Server Requirements 
+The following server requirements will be fine for supporting hundreds of registered students on a single server.
+
+Note: This will run MySQL, Memcache, Mongo, nginx, and all of the Open edX services (LMS, Studio, Forums, ORA, etc) on a single server. In production configurations we recommend that these services run on different servers and that a load balancer be used for redundancy. Setting up production configurations is beyond the scope of this wiki page.
+
+Ubuntu 16.04 amd64 (oraclejdk required). It may seem like other versions of Ubuntu will be fine, but they are not.  Only 16.04 is known to work.
+Minimum 8GB of memory
+At least one 2.00GHz CPU
+Minimum 25GB of free disk, 50GB recommended for production level use
+
+### Installation Instructions
 
 Execute `onebox.sh` on any Ubuntu 16 machine.
 
@@ -25,26 +63,6 @@ What's been tested: server edition on azure, desktop edition in virtualbox VM, d
 
 ## Deploying high availability instance (for production-like environments)
 
-(pdf) https://assets.microsoft.com/en-us/openedx-on-azure-ficus-stamp-deployment.pdf
-
-## todo:
- * 100628 more documentation for onebox (fullstack and devstack) deployments like
-   *  more details on the various way of provisioning the OS
-   *  hyperlinks to edx documentation for using fullstack and devstack deployments
-   
-## Open edX on Azure Deployment Guide
- ### 1. Deployment Guide Overview
- This guide is for Open edX on Azure Deployment for the Learning as a Service (LaaS) program. There
-are three basic steps to onboard into the LaaS program:
-1. Acceptance into the LaaS program
-2. Deploying your Open edX on Azure and
-3. Getting the Microsoft Certificates ready for users.
-This Deployment Guide covers getting your Open edX on Azure instance running (Step 2)
-
-![laas_program](images/figure-1.png "LaaS Program")
-
-*Figure 1: LaaS Program*
-
 When you complete the step in this guide, your Content Management System (CMS, also called Studio)
 and your Learning Management System (LMS) will be operational.
 The deployment covered in this guide has the architecture shown below. This architecture is designed
@@ -64,10 +82,10 @@ script in Administrator mode.
 
 ~~~~
 [Enlistment Root]\oxa-tools\scripts\Deploy-OxaStamp.ps1 -ResourceGroupName [Cluster
-Name] -Location "[Location]" -TargetPath "[Enlistment Root]\oxatools\config\stamp\default" -AadWebClientId “<AADWebClientId>” -AadWebClientAppKey
-“<AADWebClientAppKey>” -AadTenantId “<AADTenantId>” -AzureSubscriptionName
-“[Subscription Name]” -KeyVaultDeploymentArmTemplateFile "[Enlistment Root]\oxatools\templates\stamp\stamp-keyvault.json" -FullDeploymentParametersFile "[Enlistment
-Root]\oxa-tools\config\stamp\default\parameters.json" -FullDeploymentArmTemplateFile
+Name] -Location "[Location]" -TargetPath "[Enlistment Root]\oxatools\config\stamp\default" -AadWebClientId 
+“<AADWebClientId>” -AadWebClientAppKey “<AADWebClientAppKey>” -AadTenantId “<AADTenantId>” -AzureSubscriptionName
+“[Subscription Name]” -KeyVaultDeploymentArmTemplateFile "[Enlistment Root]\oxatools\templates\stamp\stamp-keyvault.json" 
+-FullDeploymentParametersFile "[Enlistment Root]\oxa-tools\config\stamp\default\parameters.json" -FullDeploymentArmTemplateFile
 "[Enlistment Root]\oxa-tools\templates\stamp\stamp-v2.json" -
 ClusterAdministratorEmailAddress [ClusterAdministratorEmailAddress] -SmtpServer “<SMTP
 Server Name>” -SmtpServerPort <SMTP Server Port> -SmtpAuthenticationUser “<SMTP Auth
@@ -680,3 +698,10 @@ If your deployment failed and email settings are setup correctly, you will start
 with log files attached. Log files have important diagnostic information on what went wrong. It is good
 to delete the resource group from the Azure portal (portal.azure.com) so that you will not use Azure
 resources.
+
+
+
+## todo:
+ * 100628 more documentation for onebox (fullstack and devstack) deployments like
+   *  more details on the various way of provisioning the OS
+   *  hyperlinks to edx documentation for using fullstack and devstack deployments
