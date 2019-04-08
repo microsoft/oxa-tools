@@ -1,17 +1,4 @@
 
-# Open edX on Azure Deployment Guide
-
-This guide is for Open edX on Azure Deployment for the Learning as a Service (LaaS) program. There
-are three basic steps to on board into the LaaS program:
-1. Acceptance into the LaaS program
-2. Deploying your Open edX on Azure and
-3. Getting the Microsoft Certificates ready for users.
-This Deployment Guide covers getting your Open edX on Azure instance running (Step 2)
-
-![laas_program](images/figure-1.png "LaaS Program")
-
-*Figure 1: LaaS Program*
-
 # Deploying your Open edX on Azure
 This repo contains guides and tools designed to help you deploy and manage a highly available and scalable Open edX on Azure.
 If you have Azure account you can deploy Open edX via the Azure portal using the guidelines below. Please note that while you can use an Azure free account to get started depending on which configuration you choose you will likely be required to upgrade to a paid account.
