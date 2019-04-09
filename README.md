@@ -20,7 +20,7 @@ Below are a list of pre-defined/restricted deployment options based on typical d
 ### Server Requirements 
 The following server requirements will be fine for supporting hundreds of registered students on a single server.
 
-Note: This will run MySQL, Memcache, Mongo, nginx, and all of the Open edX services (LMS, Studio, Forums, ORA, etc) on a single server. In production configurations we recommend that these services run on different servers and that a load balancer be used for redundancy. Setting up production configurations is beyond the scope of this wiki page.
+Note: This will run MySQL, Memcache, Mongo, Nginx, and all of the Open edX services (LMS, Studio, Forums, ORA, etc) on a single server. In production configurations we recommend that these services run on different servers and that a load balancer be used for redundancy. Setting up production configurations is beyond the scope of this README.
 
 * Ubuntu 16.04 amd64 (oraclejdk required). It may seem like other versions of Ubuntu will be fine, but they are not.  Only 16.04 is known to work.
 * Minimum 8GB of memory
@@ -686,9 +686,3 @@ with log files attached. Log files have important diagnostic information on what
 to delete the resource group from the Azure portal (portal.azure.com) so that you will not use Azure
 resources.
 
-
-
-## todo:
- * 100628 more documentation for onebox (fullstack and devstack) deployments like
-   *  more details on the various way of provisioning the OS
-   *  hyperlinks to edx documentation for using fullstack and devstack deployments
