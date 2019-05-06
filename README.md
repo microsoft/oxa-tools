@@ -13,7 +13,7 @@ Below are a list of pre-defined/restricted deployment options based on typical d
 | Deployment Type            | Description                                                                                                    | Environment Preferred |
 |----------------------------|----------------------------------------------------------------------------------------------------------------|-----------------------|
 | Minimal                    | Single machine instance                                                                                        | Development and Test  |
-| High availability instance | A production stack comprising of various Azure components as mentioned in LaaS Architecture | Production            |
+| High availability instance | A production stack comprising of various Azure components | Production            |
 
 ## Deploying single machine instance (for development and test)
 
@@ -53,8 +53,8 @@ What's been tested: server edition on azure, desktop edition in virtualbox VM, d
 The deployment of high availability has the architecture shown below. This architecture is designed
 to be a scalable and highly available Open edX solution.
 
-![laas_architecture](images/figure-2.png "LaaS Architecture")
+![laas_architecture](images/figure-2.png "High Availability Architecture")
 
-*Figure 2: LaaS Architecture*
+*Figure 2: High Availability Architecture*
 
 Detailed guide of deploying high availability instance including deployment pre-requisites, installation steps and other configuration are mentioned in the [Deployment Guide](images/openedx-on-azure-ficus-stamp-deployment-guide.pdf)
