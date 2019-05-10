@@ -1,8 +1,33 @@
-# oxa-tools
 
-Deploying and maintaining Open edX on Azure
+# Deploying your Open edX on Azure
+This repo contains guides and tools designed to help you deploy and manage a highly available and scalable Open edX on Azure.
+If you have Azure account you can deploy Open edX via the Azure portal using the guidelines below. Please note that while you can use an Azure free account to get started depending on which configuration you choose you will likely be required to upgrade to a paid account.
+
+
+## Fully configurable deployment
+The number of configuration options might be overwhelming, so some pre-defined/restricted deployment options for typical Open edX scenarios follow this.
+
+## Predefined deployment options
+Below are a list of pre-defined/restricted deployment options based on typical deployment scenarios (i.e. dev/test, production etc.)
+
+| Deployment Type            | Description                                                                                                    | Environment Preferred |
+|----------------------------|----------------------------------------------------------------------------------------------------------------|-----------------------|
+| Minimal                    | Single machine instance                                                                                        | Development and Test  |
+| High availability instance | A production stack comprising of various Azure components | Production            |
 
 ## Deploying single machine instance (for development and test)
+
+### Server Requirements 
+The following server requirements will be fine for supporting hundreds of registered students on a single server.
+
+Note: This will run MySQL, Memcache, Mongo, Nginx, and all of the Open edX services (LMS, Studio, Forums, ORA, etc) on a single server. In production configurations we recommend that these services run on different servers and that a load balancer be used for redundancy. Setting up production configurations is beyond the scope of this README.
+
+* Ubuntu 16.04 amd64 (oraclejdk required). It may seem like other versions of Ubuntu will be fine, but they are not.  Only 16.04 is known to work.
+* Minimum 8GB of memory
+* At least one 2.00GHz CPU
+* Minimum 25GB of free disk, 50GB recommended for production level use
+
+### Installation Instructions
 
 Execute `onebox.sh` on any Ubuntu 16 machine.
 
@@ -25,9 +50,11 @@ What's been tested: server edition on azure, desktop edition in virtualbox VM, d
 
 ## Deploying high availability instance (for production-like environments)
 
-(pdf) https://assets.microsoft.com/en-us/openedx-on-azure-ficus-stamp-deployment.pdf
+The deployment of high availability has the architecture shown below. This architecture is designed
+to be a scalable and highly available Open edX solution.
 
-## todo:
- * 100628 more documentation for onebox (fullstack and devstack) deployments like
-   *  more details on the various way of provisioning the OS
-   *  hyperlinks to edx documentation for using fullstack and devstack deployments
+![laas_architecture](images/figure-2.png "High Availability Architecture")
+
+*Figure 2: High Availability Architecture*
+
+Detailed guide of deploying high availability instance including deployment pre-requisites, installation steps and other configuration are mentioned in the [Deployment Guide](images/openedx-on-azure-ficus-stamp-deployment-guide.pdf)
