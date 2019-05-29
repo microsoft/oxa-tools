@@ -235,3 +235,13 @@ EDXAPP_ORA2_STORAGE_KWARGS:
   expiration_secs: %%EDXAPP_ORA2_AZURE_STORAGE_URL_EXPIRATION_SECS%%
   overwrite_files: false
   is_emulated: false
+
+EDXAPP_VIDEO_TRANSCRIPTS_SETTINGS:
+  VIDEO_TRANSCRIPTS_MAX_BYTES : 3145728
+  STORAGE_CLASS : "{{ AZURE_STORAGE_PROVIDER }}"
+  STORAGE_KWARGS:
+    account_name: "{{ EDXAPP_AZURE_ACCOUNT_NAME }}"
+    account_key: "{{ EDXAPP_AZURE_ACCOUNT_KEY }}"
+    azure_container: "{{ EDXAPP_AZURE_CONTAINER }}"
+    azure_ssl: true
+  DIRECTORY_PREFIX: "video-transcripts/"
