@@ -16,10 +16,10 @@ ENVIRONMENT=bvt
 ##########################
 
 # the site certificate files (.crt & .key) have to be named after the BASE_URL value
-BASE_URL=bvt.oxa.microsoft.com 
-LMS_URL=lms.$BASE_URL
-CMS_URL=cms.$BASE_URL
-PREVIEW_URL=preview.$BASE_URL
+BASE_URL=cloudswyft.com
+LMS_URL=myoxalms.$BASE_URL
+CMS_URL=myoxacms.$BASE_URL
+PREVIEW_URL=myoxapreview.$BASE_URL
 
 # deployment configuration
 # URL-building will be replaced by the use of LMS_URL | CMS_URL (above)
@@ -69,7 +69,7 @@ EDXAPP_EMAIL_USE_TLS=true
 AZURE_ACCOUNT_NAME={AZURE_ACCOUNT_NAME}
 AZURE_ACCOUNT_KEY={AZURE_ACCOUNT_KEY}
 
-NGINX_ENABLE_SSL=True
+NGINX_ENABLE_SSL=false
 NGINX_SSL_CERTIFICATE="/oxa/oxa-tools-config/env/${ENVIRONMENT}/cert.crt"
 NGINX_SSL_KEY="/oxa/oxa-tools-config/env/${ENVIRONMENT}/cert.key"
 
