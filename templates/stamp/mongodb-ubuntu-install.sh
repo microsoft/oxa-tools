@@ -139,7 +139,7 @@ install_mongodb()
     # Configure mongodb.list file with the correct location
     if (( $(echo "$OS_VER > 16" | bc -l) ))
     then
-        apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv EA312927
+        wget -qO - https://www.mongodb.org/static/pgp/server-3.2.asc | sudo apt-key add -
         echo "deb ${PACKAGE_URL} "$(lsb_release -sc)"/mongodb-org/3.2 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-3.2.list
     else
         apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10

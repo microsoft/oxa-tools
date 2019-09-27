@@ -932,7 +932,7 @@
         "customInstallerEdxAppCmsAllowedHostsParameters": "[concat(' --edxapp-cms-allowed-hosts \"', parameters('edxappCmsAllowedHosts'), '\" ')]",
 
         "customInstallerOutputRedirect": " >> /var/log/bootstrap.csx.log 2>&1",
-        "smtpParameters": "[concat(' --smtp-server ', parameters('smtpServer'), ' --smtp-server-port ', parameters('smtpServerPort'), ' --smtp-auth-user ', parameters('smtpAuthenticationUser'), ' --smtp-auth-user-password ', parameters('smtpAuthenticationUserPassword'), '  --cluster-admin-email ', parameters('clusterAdmininistratorEmailAddress'))]",
+        "smtpParameters": "[concat(' --smtp-server ', parameters('smtpServer'), ' --smtp-server-port ', parameters('smtpServerPort'), ' --smtp-auth-user ', parameters('smtpAuthenticationUser'), ' --smtp-auth-user-password \"', parameters('smtpAuthenticationUserPassword'), '\"  --cluster-admin-email ', parameters('clusterAdmininistratorEmailAddress'))]",
 
         "secureGenericStorageAccountId": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/','Microsoft.Storage/storageAccounts/', variables('secureGenericStorageAccountName'))]",
         "storageKeyPlaceholder": "STORAGE_PLACEHOLDER_KEY",
